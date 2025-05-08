@@ -1,0 +1,481 @@
+N1,preposition,N2,predicate,predicate_sg_pl,context,item,N1_number,N2_number,predicate_sg_pl_number,condition,sentence
+location,of,star,caught,has caught,The %% {preposition} the %% {predicate} attention of some astronomers.,0,singular,singular,singular,sss,the location of the star has caught attention of some astronomers .
+location,of,star,caught,have caught,The %% {preposition} the %% {predicate} attention of some astronomers.,0,singular,singular,plural,ssp,the location of the star have caught attention of some astronomers .
+location,of,stars,caught,has caught,The %% {preposition} the %% {predicate} attention of some astronomers.,0,singular,plural,singular,sps,the location of the stars has caught attention of some astronomers .
+location,of,stars,caught,have caught,The %% {preposition} the %% {predicate} attention of some astronomers.,0,singular,plural,plural,spp,the location of the stars have caught attention of some astronomers .
+locations,of,star,caught,has caught,The %% {preposition} the %% {predicate} attention of some astronomers.,0,plural,singular,singular,pss,the locations of the star has caught attention of some astronomers .
+locations,of,star,caught,have caught,The %% {preposition} the %% {predicate} attention of some astronomers.,0,plural,singular,plural,psp,the locations of the star have caught attention of some astronomers .
+locations,of,stars,caught,has caught,The %% {preposition} the %% {predicate} attention of some astronomers.,0,plural,plural,singular,pps,the locations of the stars has caught attention of some astronomers .
+locations,of,stars,caught,have caught,The %% {preposition} the %% {predicate} attention of some astronomers.,0,plural,plural,plural,ppp,the locations of the stars have caught attention of some astronomers .
+sound,of,string,will be,is,The %% {preposition} the %% {predicate} so gorgeous on this guitar.,1,singular,singular,singular,sss,the sound of the string is so gorgeous on this guitar .
+sound,of,string,will be,are,The %% {preposition} the %% {predicate} so gorgeous on this guitar.,1,singular,singular,plural,ssp,the sound of the string are so gorgeous on this guitar .
+sound,of,strings,will be,is,The %% {preposition} the %% {predicate} so gorgeous on this guitar.,1,singular,plural,singular,sps,the sound of the strings is so gorgeous on this guitar .
+sound,of,strings,will be,are,The %% {preposition} the %% {predicate} so gorgeous on this guitar.,1,singular,plural,plural,spp,the sound of the strings are so gorgeous on this guitar .
+sounds,of,string,will be,is,The %% {preposition} the %% {predicate} so gorgeous on this guitar.,1,plural,singular,singular,pss,the sounds of the string is so gorgeous on this guitar .
+sounds,of,string,will be,are,The %% {preposition} the %% {predicate} so gorgeous on this guitar.,1,plural,singular,plural,psp,the sounds of the string are so gorgeous on this guitar .
+sounds,of,strings,will be,is,The %% {preposition} the %% {predicate} so gorgeous on this guitar.,1,plural,plural,singular,pps,the sounds of the strings is so gorgeous on this guitar .
+sounds,of,strings,will be,are,The %% {preposition} the %% {predicate} so gorgeous on this guitar.,1,plural,plural,plural,ppp,the sounds of the strings are so gorgeous on this guitar .
+cause,of,problem,should be,was,The %% {preposition} the %% {predicate} investigated thoroughly.,2,singular,singular,singular,sss,the cause of the problem was investigated thoroughly .
+cause,of,problem,should be,were,The %% {preposition} the %% {predicate} investigated thoroughly.,2,singular,singular,plural,ssp,the cause of the problem were investigated thoroughly .
+cause,of,problems,should be,was,The %% {preposition} the %% {predicate} investigated thoroughly.,2,singular,plural,singular,sps,the cause of the problems was investigated thoroughly .
+cause,of,problems,should be,were,The %% {preposition} the %% {predicate} investigated thoroughly.,2,singular,plural,plural,spp,the cause of the problems were investigated thoroughly .
+causes,of,problem,should be,was,The %% {preposition} the %% {predicate} investigated thoroughly.,2,plural,singular,singular,pss,the causes of the problem was investigated thoroughly .
+causes,of,problem,should be,were,The %% {preposition} the %% {predicate} investigated thoroughly.,2,plural,singular,plural,psp,the causes of the problem were investigated thoroughly .
+causes,of,problems,should be,was,The %% {preposition} the %% {predicate} investigated thoroughly.,2,plural,plural,singular,pps,the causes of the problems was investigated thoroughly .
+causes,of,problems,should be,were,The %% {preposition} the %% {predicate} investigated thoroughly.,2,plural,plural,plural,ppp,the causes of the problems were investigated thoroughly .
+review,of,exhibition,might be,is,The %% {preposition} the %% {predicate} too pedantic for the readers.,3,singular,singular,singular,sss,the review of the exhibition is too pedantic for the readers .
+review,of,exhibition,might be,are,The %% {preposition} the %% {predicate} too pedantic for the readers.,3,singular,singular,plural,ssp,the review of the exhibition are too pedantic for the readers .
+review,of,exhibitions,might be,is,The %% {preposition} the %% {predicate} too pedantic for the readers.,3,singular,plural,singular,sps,the review of the exhibitions is too pedantic for the readers .
+review,of,exhibitions,might be,are,The %% {preposition} the %% {predicate} too pedantic for the readers.,3,singular,plural,plural,spp,the review of the exhibitions are too pedantic for the readers .
+reviews,of,exhibition,might be,is,The %% {preposition} the %% {predicate} too pedantic for the readers.,3,plural,singular,singular,pss,the reviews of the exhibition is too pedantic for the readers .
+reviews,of,exhibition,might be,are,The %% {preposition} the %% {predicate} too pedantic for the readers.,3,plural,singular,plural,psp,the reviews of the exhibition are too pedantic for the readers .
+reviews,of,exhibitions,might be,is,The %% {preposition} the %% {predicate} too pedantic for the readers.,3,plural,plural,singular,pps,the reviews of the exhibitions is too pedantic for the readers .
+reviews,of,exhibitions,might be,are,The %% {preposition} the %% {predicate} too pedantic for the readers.,3,plural,plural,plural,ppp,the reviews of the exhibitions are too pedantic for the readers .
+speech,of,candidate,will be,is,The %% {preposition} the %% {predicate} summarized in the news show today.,4,singular,singular,singular,sss,the speech of the candidate is summarized in the news show today .
+speech,of,candidate,will be,are,The %% {preposition} the %% {predicate} summarized in the news show today.,4,singular,singular,plural,ssp,the speech of the candidate are summarized in the news show today .
+speech,of,candidates,will be,is,The %% {preposition} the %% {predicate} summarized in the news show today.,4,singular,plural,singular,sps,the speech of the candidates is summarized in the news show today .
+speech,of,candidates,will be,are,The %% {preposition} the %% {predicate} summarized in the news show today.,4,singular,plural,plural,spp,the speech of the candidates are summarized in the news show today .
+speeches,of,candidate,will be,is,The %% {preposition} the %% {predicate} summarized in the news show today.,4,plural,singular,singular,pss,the speeches of the candidate is summarized in the news show today .
+speeches,of,candidate,will be,are,The %% {preposition} the %% {predicate} summarized in the news show today.,4,plural,singular,plural,psp,the speeches of the candidate are summarized in the news show today .
+speeches,of,candidates,will be,is,The %% {preposition} the %% {predicate} summarized in the news show today.,4,plural,plural,singular,pps,the speeches of the candidates is summarized in the news show today .
+speeches,of,candidates,will be,are,The %% {preposition} the %% {predicate} summarized in the news show today.,4,plural,plural,plural,ppp,the speeches of the candidates are summarized in the news show today .
+test,of,device,should be,was,The %% {preposition} the %% {predicate} carried out before packaging.,5,singular,singular,singular,sss,the test of the device was carried out before packaging .
+test,of,device,should be,were,The %% {preposition} the %% {predicate} carried out before packaging.,5,singular,singular,plural,ssp,the test of the device were carried out before packaging .
+test,of,devices,should be,was,The %% {preposition} the %% {predicate} carried out before packaging.,5,singular,plural,singular,sps,the test of the devices was carried out before packaging .
+test,of,devices,should be,were,The %% {preposition} the %% {predicate} carried out before packaging.,5,singular,plural,plural,spp,the test of the devices were carried out before packaging .
+tests,of,device,should be,was,The %% {preposition} the %% {predicate} carried out before packaging.,5,plural,singular,singular,pss,the tests of the device was carried out before packaging .
+tests,of,device,should be,were,The %% {preposition} the %% {predicate} carried out before packaging.,5,plural,singular,plural,psp,the tests of the device were carried out before packaging .
+tests,of,devices,should be,was,The %% {preposition} the %% {predicate} carried out before packaging.,5,plural,plural,singular,pps,the tests of the devices was carried out before packaging .
+tests,of,devices,should be,were,The %% {preposition} the %% {predicate} carried out before packaging.,5,plural,plural,plural,ppp,the tests of the devices were carried out before packaging .
+director,of,film,might plan,has planned,The %% {preposition} the %% {predicate} to hold an audition this week.,6,singular,singular,singular,sss,the director of the film has planned to hold an audition this week .
+director,of,film,might plan,have planned,The %% {preposition} the %% {predicate} to hold an audition this week.,6,singular,singular,plural,ssp,the director of the film have planned to hold an audition this week .
+director,of,films,might plan,has planned,The %% {preposition} the %% {predicate} to hold an audition this week.,6,singular,plural,singular,sps,the director of the films has planned to hold an audition this week .
+director,of,films,might plan,have planned,The %% {preposition} the %% {predicate} to hold an audition this week.,6,singular,plural,plural,spp,the director of the films have planned to hold an audition this week .
+directors,of,film,might plan,has planned,The %% {preposition} the %% {predicate} to hold an audition this week.,6,plural,singular,singular,pss,the directors of the film has planned to hold an audition this week .
+directors,of,film,might plan,have planned,The %% {preposition} the %% {predicate} to hold an audition this week.,6,plural,singular,plural,psp,the directors of the film have planned to hold an audition this week .
+directors,of,films,might plan,has planned,The %% {preposition} the %% {predicate} to hold an audition this week.,6,plural,plural,singular,pps,the directors of the films has planned to hold an audition this week .
+directors,of,films,might plan,have planned,The %% {preposition} the %% {predicate} to hold an audition this week.,6,plural,plural,plural,ppp,the directors of the films have planned to hold an audition this week .
+teacher,of,student,will be,is,The %% {preposition} the %% {predicate} attending a workshop on active learning.,7,singular,singular,singular,sss,the teacher of the student is attending a workshop on active learning .
+teacher,of,student,will be,are,The %% {preposition} the %% {predicate} attending a workshop on active learning.,7,singular,singular,plural,ssp,the teacher of the student are attending a workshop on active learning .
+teacher,of,students,will be,is,The %% {preposition} the %% {predicate} attending a workshop on active learning.,7,singular,plural,singular,sps,the teacher of the students is attending a workshop on active learning .
+teacher,of,students,will be,are,The %% {preposition} the %% {predicate} attending a workshop on active learning.,7,singular,plural,plural,spp,the teacher of the students are attending a workshop on active learning .
+teachers,of,student,will be,is,The %% {preposition} the %% {predicate} attending a workshop on active learning.,7,plural,singular,singular,pss,the teachers of the student is attending a workshop on active learning .
+teachers,of,student,will be,are,The %% {preposition} the %% {predicate} attending a workshop on active learning.,7,plural,singular,plural,psp,the teachers of the student are attending a workshop on active learning .
+teachers,of,students,will be,is,The %% {preposition} the %% {predicate} attending a workshop on active learning.,7,plural,plural,singular,pps,the teachers of the students is attending a workshop on active learning .
+teachers,of,students,will be,are,The %% {preposition} the %% {predicate} attending a workshop on active learning.,7,plural,plural,plural,ppp,the teachers of the students are attending a workshop on active learning .
+photo,of,mountain,will be,is,The %% {preposition} the %% {predicate} displayed in an exhibition at the gallery.,8,singular,singular,singular,sss,the photo of the mountain is displayed in an exhibition at the gallery .
+photo,of,mountain,will be,are,The %% {preposition} the %% {predicate} displayed in an exhibition at the gallery.,8,singular,singular,plural,ssp,the photo of the mountain are displayed in an exhibition at the gallery .
+photo,of,mountains,will be,is,The %% {preposition} the %% {predicate} displayed in an exhibition at the gallery.,8,singular,plural,singular,sps,the photo of the mountains is displayed in an exhibition at the gallery .
+photo,of,mountains,will be,are,The %% {preposition} the %% {predicate} displayed in an exhibition at the gallery.,8,singular,plural,plural,spp,the photo of the mountains are displayed in an exhibition at the gallery .
+photos,of,mountain,will be,is,The %% {preposition} the %% {predicate} displayed in an exhibition at the gallery.,8,plural,singular,singular,pss,the photos of the mountain is displayed in an exhibition at the gallery .
+photos,of,mountain,will be,are,The %% {preposition} the %% {predicate} displayed in an exhibition at the gallery.,8,plural,singular,plural,psp,the photos of the mountain are displayed in an exhibition at the gallery .
+photos,of,mountains,will be,is,The %% {preposition} the %% {predicate} displayed in an exhibition at the gallery.,8,plural,plural,singular,pps,the photos of the mountains is displayed in an exhibition at the gallery .
+photos,of,mountains,will be,are,The %% {preposition} the %% {predicate} displayed in an exhibition at the gallery.,8,plural,plural,plural,ppp,the photos of the mountains are displayed in an exhibition at the gallery .
+editor,of,book,should be,has been,The %% {preposition} the %% {predicate} invited to the seminar.,9,singular,singular,singular,sss,the editor of the book has been invited to the seminar .
+editor,of,book,should be,have been,The %% {preposition} the %% {predicate} invited to the seminar.,9,singular,singular,plural,ssp,the editor of the book have been invited to the seminar .
+editor,of,books,should be,has been,The %% {preposition} the %% {predicate} invited to the seminar.,9,singular,plural,singular,sps,the editor of the books has been invited to the seminar .
+editor,of,books,should be,have been,The %% {preposition} the %% {predicate} invited to the seminar.,9,singular,plural,plural,spp,the editor of the books have been invited to the seminar .
+editors,of,book,should be,has been,The %% {preposition} the %% {predicate} invited to the seminar.,9,plural,singular,singular,pss,the editors of the book has been invited to the seminar .
+editors,of,book,should be,have been,The %% {preposition} the %% {predicate} invited to the seminar.,9,plural,singular,plural,psp,the editors of the book have been invited to the seminar .
+editors,of,books,should be,has been,The %% {preposition} the %% {predicate} invited to the seminar.,9,plural,plural,singular,pps,the editors of the books has been invited to the seminar .
+editors,of,books,should be,have been,The %% {preposition} the %% {predicate} invited to the seminar.,9,plural,plural,plural,ppp,the editors of the books have been invited to the seminar .
+host,of,show,will be,was,The %% {preposition} the %% {predicate} nominated for an award.,10,singular,singular,singular,sss,the host of the show was nominated for an award .
+host,of,show,will be,were,The %% {preposition} the %% {predicate} nominated for an award.,10,singular,singular,plural,ssp,the host of the show were nominated for an award .
+host,of,shows,will be,was,The %% {preposition} the %% {predicate} nominated for an award.,10,singular,plural,singular,sps,the host of the shows was nominated for an award .
+host,of,shows,will be,were,The %% {preposition} the %% {predicate} nominated for an award.,10,singular,plural,plural,spp,the host of the shows were nominated for an award .
+hosts,of,show,will be,was,The %% {preposition} the %% {predicate} nominated for an award.,10,plural,singular,singular,pss,the hosts of the show was nominated for an award .
+hosts,of,show,will be,were,The %% {preposition} the %% {predicate} nominated for an award.,10,plural,singular,plural,psp,the hosts of the show were nominated for an award .
+hosts,of,shows,will be,was,The %% {preposition} the %% {predicate} nominated for an award.,10,plural,plural,singular,pps,the hosts of the shows was nominated for an award .
+hosts,of,shows,will be,were,The %% {preposition} the %% {predicate} nominated for an award.,10,plural,plural,plural,ppp,the hosts of the shows were nominated for an award .
+judge,of,competition,will be,is,The %% {preposition} the %% {predicate} the same as last year.,11,singular,singular,singular,sss,the judge of the competition is the same as last year .
+judge,of,competition,will be,are,The %% {preposition} the %% {predicate} the same as last year.,11,singular,singular,plural,ssp,the judge of the competition are the same as last year .
+judge,of,competitions,will be,is,The %% {preposition} the %% {predicate} the same as last year.,11,singular,plural,singular,sps,the judge of the competitions is the same as last year .
+judge,of,competitions,will be,are,The %% {preposition} the %% {predicate} the same as last year.,11,singular,plural,plural,spp,the judge of the competitions are the same as last year .
+judges,of,competition,will be,is,The %% {preposition} the %% {predicate} the same as last year.,11,plural,singular,singular,pss,the judges of the competition is the same as last year .
+judges,of,competition,will be,are,The %% {preposition} the %% {predicate} the same as last year.,11,plural,singular,plural,psp,the judges of the competition are the same as last year .
+judges,of,competitions,will be,is,The %% {preposition} the %% {predicate} the same as last year.,11,plural,plural,singular,pps,the judges of the competitions is the same as last year .
+judges,of,competitions,will be,are,The %% {preposition} the %% {predicate} the same as last year.,11,plural,plural,plural,ppp,the judges of the competitions are the same as last year .
+friend,of,actor,will,has,The %% {preposition} the %% {predicate} come to see the play.,12,singular,singular,singular,sss,the friend of the actor has come to see the play .
+friend,of,actor,will,have,The %% {preposition} the %% {predicate} come to see the play.,12,singular,singular,plural,ssp,the friend of the actor have come to see the play .
+friend,of,actors,will,has,The %% {preposition} the %% {predicate} come to see the play.,12,singular,plural,singular,sps,the friend of the actors has come to see the play .
+friend,of,actors,will,have,The %% {preposition} the %% {predicate} come to see the play.,12,singular,plural,plural,spp,the friend of the actors have come to see the play .
+friends,of,actor,will,has,The %% {preposition} the %% {predicate} come to see the play.,12,plural,singular,singular,pss,the friends of the actor has come to see the play .
+friends,of,actor,will,have,The %% {preposition} the %% {predicate} come to see the play.,12,plural,singular,plural,psp,the friends of the actor have come to see the play .
+friends,of,actors,will,has,The %% {preposition} the %% {predicate} come to see the play.,12,plural,plural,singular,pps,the friends of the actors has come to see the play .
+friends,of,actors,will,have,The %% {preposition} the %% {predicate} come to see the play.,12,plural,plural,plural,ppp,the friends of the actors have come to see the play .
+bone,of,dinosaur,will be,is,The %% {preposition} the %% {predicate} on display at the Natural History Museum.,13,singular,singular,singular,sss,the bone of the dinosaur is on display at the natural history museum .
+bone,of,dinosaur,will be,are,The %% {preposition} the %% {predicate} on display at the Natural History Museum.,13,singular,singular,plural,ssp,the bone of the dinosaur are on display at the natural history museum .
+bone,of,dinosaurs,will be,is,The %% {preposition} the %% {predicate} on display at the Natural History Museum.,13,singular,plural,singular,sps,the bone of the dinosaurs is on display at the natural history museum .
+bone,of,dinosaurs,will be,are,The %% {preposition} the %% {predicate} on display at the Natural History Museum.,13,singular,plural,plural,spp,the bone of the dinosaurs are on display at the natural history museum .
+bones,of,dinosaur,will be,is,The %% {preposition} the %% {predicate} on display at the Natural History Museum.,13,plural,singular,singular,pss,the bones of the dinosaur is on display at the natural history museum .
+bones,of,dinosaur,will be,are,The %% {preposition} the %% {predicate} on display at the Natural History Museum.,13,plural,singular,plural,psp,the bones of the dinosaur are on display at the natural history museum .
+bones,of,dinosaurs,will be,is,The %% {preposition} the %% {predicate} on display at the Natural History Museum.,13,plural,plural,singular,pps,the bones of the dinosaurs is on display at the natural history museum .
+bones,of,dinosaurs,will be,are,The %% {preposition} the %% {predicate} on display at the Natural History Museum.,13,plural,plural,plural,ppp,the bones of the dinosaurs are on display at the natural history museum .
+doubt,about,product,would be,was,The %% {preposition} the %% {predicate} completely expected.,14,singular,singular,singular,sss,the doubt about the product was completely expected .
+doubt,about,product,would be,were,The %% {preposition} the %% {predicate} completely expected.,14,singular,singular,plural,ssp,the doubt about the product were completely expected .
+doubt,about,products,would be,was,The %% {preposition} the %% {predicate} completely expected.,14,singular,plural,singular,sps,the doubt about the products was completely expected .
+doubt,about,products,would be,were,The %% {preposition} the %% {predicate} completely expected.,14,singular,plural,plural,spp,the doubt about the products were completely expected .
+doubts,about,product,would be,was,The %% {preposition} the %% {predicate} completely expected.,14,plural,singular,singular,pss,the doubts about the product was completely expected .
+doubts,about,product,would be,were,The %% {preposition} the %% {predicate} completely expected.,14,plural,singular,plural,psp,the doubts about the product were completely expected .
+doubts,about,products,would be,was,The %% {preposition} the %% {predicate} completely expected.,14,plural,plural,singular,pps,the doubts about the products was completely expected .
+doubts,about,products,would be,were,The %% {preposition} the %% {predicate} completely expected.,14,plural,plural,plural,ppp,the doubts about the products were completely expected .
+article,about,discovery,should be,is,The %% {preposition} the %% {predicate} very easy to read.,15,singular,singular,singular,sss,the article about the discovery is very easy to read .
+article,about,discovery,should be,are,The %% {preposition} the %% {predicate} very easy to read.,15,singular,singular,plural,ssp,the article about the discovery are very easy to read .
+article,about,discoveries,should be,is,The %% {preposition} the %% {predicate} very easy to read.,15,singular,plural,singular,sps,the article about the discoveries is very easy to read .
+article,about,discoveries,should be,are,The %% {preposition} the %% {predicate} very easy to read.,15,singular,plural,plural,spp,the article about the discoveries are very easy to read .
+articles,about,discovery,should be,is,The %% {preposition} the %% {predicate} very easy to read.,15,plural,singular,singular,pss,the articles about the discovery is very easy to read .
+articles,about,discovery,should be,are,The %% {preposition} the %% {predicate} very easy to read.,15,plural,singular,plural,psp,the articles about the discovery are very easy to read .
+articles,about,discoveries,should be,is,The %% {preposition} the %% {predicate} very easy to read.,15,plural,plural,singular,pps,the articles about the discoveries is very easy to read .
+articles,about,discoveries,should be,are,The %% {preposition} the %% {predicate} very easy to read.,15,plural,plural,plural,ppp,the articles about the discoveries are very easy to read .
+story,about,scientist,will inspire,has inspired,The %% {preposition} the %% {predicate} many people.,16,singular,singular,singular,sss,the story about the scientist has inspired many people .
+story,about,scientist,will inspire,have inspired,The %% {preposition} the %% {predicate} many people.,16,singular,singular,plural,ssp,the story about the scientist have inspired many people .
+story,about,scientists,will inspire,has inspired,The %% {preposition} the %% {predicate} many people.,16,singular,plural,singular,sps,the story about the scientists has inspired many people .
+story,about,scientists,will inspire,have inspired,The %% {preposition} the %% {predicate} many people.,16,singular,plural,plural,spp,the story about the scientists have inspired many people .
+stories,about,scientist,will inspire,has inspired,The %% {preposition} the %% {predicate} many people.,16,plural,singular,singular,pss,the stories about the scientist has inspired many people .
+stories,about,scientist,will inspire,have inspired,The %% {preposition} the %% {predicate} many people.,16,plural,singular,plural,psp,the stories about the scientist have inspired many people .
+stories,about,scientists,will inspire,has inspired,The %% {preposition} the %% {predicate} many people.,16,plural,plural,singular,pps,the stories about the scientists has inspired many people .
+stories,about,scientists,will inspire,have inspired,The %% {preposition} the %% {predicate} many people.,16,plural,plural,plural,ppp,the stories about the scientists have inspired many people .
+alarm,in,station,should be,has been,The %% {preposition} the %% {predicate} maintained regularly.,17,singular,singular,singular,sss,the alarm in the station has been maintained regularly .
+alarm,in,station,should be,have been,The %% {preposition} the %% {predicate} maintained regularly.,17,singular,singular,plural,ssp,the alarm in the station have been maintained regularly .
+alarm,in,stations,should be,has been,The %% {preposition} the %% {predicate} maintained regularly.,17,singular,plural,singular,sps,the alarm in the stations has been maintained regularly .
+alarm,in,stations,should be,have been,The %% {preposition} the %% {predicate} maintained regularly.,17,singular,plural,plural,spp,the alarm in the stations have been maintained regularly .
+alarms,in,station,should be,has been,The %% {preposition} the %% {predicate} maintained regularly.,17,plural,singular,singular,pss,the alarms in the station has been maintained regularly .
+alarms,in,station,should be,have been,The %% {preposition} the %% {predicate} maintained regularly.,17,plural,singular,plural,psp,the alarms in the station have been maintained regularly .
+alarms,in,stations,should be,has been,The %% {preposition} the %% {predicate} maintained regularly.,17,plural,plural,singular,pps,the alarms in the stations has been maintained regularly .
+alarms,in,stations,should be,have been,The %% {preposition} the %% {predicate} maintained regularly.,17,plural,plural,plural,ppp,the alarms in the stations have been maintained regularly .
+musician,in,orchestra,will be,is,The %% {preposition} the %% {predicate} organizing a community concert.,18,singular,singular,singular,sss,the musician in the orchestra is organizing a community concert .
+musician,in,orchestra,will be,are,The %% {preposition} the %% {predicate} organizing a community concert.,18,singular,singular,plural,ssp,the musician in the orchestra are organizing a community concert .
+musician,in,orchestras,will be,is,The %% {preposition} the %% {predicate} organizing a community concert.,18,singular,plural,singular,sps,the musician in the orchestras is organizing a community concert .
+musician,in,orchestras,will be,are,The %% {preposition} the %% {predicate} organizing a community concert.,18,singular,plural,plural,spp,the musician in the orchestras are organizing a community concert .
+musicians,in,orchestra,will be,is,The %% {preposition} the %% {predicate} organizing a community concert.,18,plural,singular,singular,pss,the musicians in the orchestra is organizing a community concert .
+musicians,in,orchestra,will be,are,The %% {preposition} the %% {predicate} organizing a community concert.,18,plural,singular,plural,psp,the musicians in the orchestra are organizing a community concert .
+musicians,in,orchestras,will be,is,The %% {preposition} the %% {predicate} organizing a community concert.,18,plural,plural,singular,pps,the musicians in the orchestras is organizing a community concert .
+musicians,in,orchestras,will be,are,The %% {preposition} the %% {predicate} organizing a community concert.,18,plural,plural,plural,ppp,the musicians in the orchestras are organizing a community concert .
+character,in,episode,might be,was,The %% {preposition} the %% {predicate} too chaotic.,19,singular,singular,singular,sss,the character in the episode was too chaotic .
+character,in,episode,might be,were,The %% {preposition} the %% {predicate} too chaotic.,19,singular,singular,plural,ssp,the character in the episode were too chaotic .
+character,in,episodes,might be,was,The %% {preposition} the %% {predicate} too chaotic.,19,singular,plural,singular,sps,the character in the episodes was too chaotic .
+character,in,episodes,might be,were,The %% {preposition} the %% {predicate} too chaotic.,19,singular,plural,plural,spp,the character in the episodes were too chaotic .
+characters,in,episode,might be,was,The %% {preposition} the %% {predicate} too chaotic.,19,plural,singular,singular,pss,the characters in the episode was too chaotic .
+characters,in,episode,might be,were,The %% {preposition} the %% {predicate} too chaotic.,19,plural,singular,plural,psp,the characters in the episode were too chaotic .
+characters,in,episodes,might be,was,The %% {preposition} the %% {predicate} too chaotic.,19,plural,plural,singular,pps,the characters in the episodes was too chaotic .
+characters,in,episodes,might be,were,The %% {preposition} the %% {predicate} too chaotic.,19,plural,plural,plural,ppp,the characters in the episodes were too chaotic .
+picture,in,album,will remind,reminds,The %% {preposition} the %% {predicate} them of the days they spent together.,20,singular,singular,singular,sss,the picture in the album reminds them of the days they spent together .
+picture,in,album,will remind,remind,The %% {preposition} the %% {predicate} them of the days they spent together.,20,singular,singular,plural,ssp,the picture in the album remind them of the days they spent together .
+picture,in,albums,will remind,reminds,The %% {preposition} the %% {predicate} them of the days they spent together.,20,singular,plural,singular,sps,the picture in the albums reminds them of the days they spent together .
+picture,in,albums,will remind,remind,The %% {preposition} the %% {predicate} them of the days they spent together.,20,singular,plural,plural,spp,the picture in the albums remind them of the days they spent together .
+pictures,in,album,will remind,reminds,The %% {preposition} the %% {predicate} them of the days they spent together.,20,plural,singular,singular,pss,the pictures in the album reminds them of the days they spent together .
+pictures,in,album,will remind,remind,The %% {preposition} the %% {predicate} them of the days they spent together.,20,plural,singular,plural,psp,the pictures in the album remind them of the days they spent together .
+pictures,in,albums,will remind,reminds,The %% {preposition} the %% {predicate} them of the days they spent together.,20,plural,plural,singular,pps,the pictures in the albums reminds them of the days they spent together .
+pictures,in,albums,will remind,remind,The %% {preposition} the %% {predicate} them of the days they spent together.,20,plural,plural,plural,ppp,the pictures in the albums remind them of the days they spent together .
+player,in,game,might have,has,The %% {preposition} the %% {predicate} won several championships.,21,singular,singular,singular,sss,the player in the game has won several championships .
+player,in,game,might have,have,The %% {preposition} the %% {predicate} won several championships.,21,singular,singular,plural,ssp,the player in the game have won several championships .
+player,in,games,might have,has,The %% {preposition} the %% {predicate} won several championships.,21,singular,plural,singular,sps,the player in the games has won several championships .
+player,in,games,might have,have,The %% {preposition} the %% {predicate} won several championships.,21,singular,plural,plural,spp,the player in the games have won several championships .
+players,in,game,might have,has,The %% {preposition} the %% {predicate} won several championships.,21,plural,singular,singular,pss,the players in the game has won several championships .
+players,in,game,might have,have,The %% {preposition} the %% {predicate} won several championships.,21,plural,singular,plural,psp,the players in the game have won several championships .
+players,in,games,might have,has,The %% {preposition} the %% {predicate} won several championships.,21,plural,plural,singular,pps,the players in the games has won several championships .
+players,in,games,might have,have,The %% {preposition} the %% {predicate} won several championships.,21,plural,plural,plural,ppp,the players in the games have won several championships .
+bee,in,flower,may be,is,The %% {preposition} the %% {predicate} collecting pollen.,22,singular,singular,singular,sss,the bee in the flower is collecting pollen .
+bee,in,flower,may be,are,The %% {preposition} the %% {predicate} collecting pollen.,22,singular,singular,plural,ssp,the bee in the flower are collecting pollen .
+bee,in,flowers,may be,is,The %% {preposition} the %% {predicate} collecting pollen.,22,singular,plural,singular,sps,the bee in the flowers is collecting pollen .
+bee,in,flowers,may be,are,The %% {preposition} the %% {predicate} collecting pollen.,22,singular,plural,plural,spp,the bee in the flowers are collecting pollen .
+bees,in,flower,may be,is,The %% {preposition} the %% {predicate} collecting pollen.,22,plural,singular,singular,pss,the bees in the flower is collecting pollen .
+bees,in,flower,may be,are,The %% {preposition} the %% {predicate} collecting pollen.,22,plural,singular,plural,psp,the bees in the flower are collecting pollen .
+bees,in,flowers,may be,is,The %% {preposition} the %% {predicate} collecting pollen.,22,plural,plural,singular,pps,the bees in the flowers is collecting pollen .
+bees,in,flowers,may be,are,The %% {preposition} the %% {predicate} collecting pollen.,22,plural,plural,plural,ppp,the bees in the flowers are collecting pollen .
+rug,under,chair,might be,is,The %% {preposition} the %% {predicate} handmade from wool and silk.,23,singular,singular,singular,sss,the rug under the chair is handmade from wool and silk .
+rug,under,chair,might be,are,The %% {preposition} the %% {predicate} handmade from wool and silk.,23,singular,singular,plural,ssp,the rug under the chair are handmade from wool and silk .
+rug,under,chairs,might be,is,The %% {preposition} the %% {predicate} handmade from wool and silk.,23,singular,plural,singular,sps,the rug under the chairs is handmade from wool and silk .
+rug,under,chairs,might be,are,The %% {preposition} the %% {predicate} handmade from wool and silk.,23,singular,plural,plural,spp,the rug under the chairs are handmade from wool and silk .
+rugs,under,chair,might be,is,The %% {preposition} the %% {predicate} handmade from wool and silk.,23,plural,singular,singular,pss,the rugs under the chair is handmade from wool and silk .
+rugs,under,chair,might be,are,The %% {preposition} the %% {predicate} handmade from wool and silk.,23,plural,singular,plural,psp,the rugs under the chair are handmade from wool and silk .
+rugs,under,chairs,might be,is,The %% {preposition} the %% {predicate} handmade from wool and silk.,23,plural,plural,singular,pps,the rugs under the chairs is handmade from wool and silk .
+rugs,under,chairs,might be,are,The %% {preposition} the %% {predicate} handmade from wool and silk.,23,plural,plural,plural,ppp,the rugs under the chairs are handmade from wool and silk .
+bench,under,tree,should be,is,The %% {preposition} the %% {predicate} cleaned everyday.,24,singular,singular,singular,sss,the bench under the tree is cleaned everyday .
+bench,under,tree,should be,are,The %% {preposition} the %% {predicate} cleaned everyday.,24,singular,singular,plural,ssp,the bench under the tree are cleaned everyday .
+bench,under,trees,should be,is,The %% {preposition} the %% {predicate} cleaned everyday.,24,singular,plural,singular,sps,the bench under the trees is cleaned everyday .
+bench,under,trees,should be,are,The %% {preposition} the %% {predicate} cleaned everyday.,24,singular,plural,plural,spp,the bench under the trees are cleaned everyday .
+benches,under,tree,should be,is,The %% {preposition} the %% {predicate} cleaned everyday.,24,plural,singular,singular,pss,the benches under the tree is cleaned everyday .
+benches,under,tree,should be,are,The %% {preposition} the %% {predicate} cleaned everyday.,24,plural,singular,plural,psp,the benches under the tree are cleaned everyday .
+benches,under,trees,should be,is,The %% {preposition} the %% {predicate} cleaned everyday.,24,plural,plural,singular,pps,the benches under the trees is cleaned everyday .
+benches,under,trees,should be,are,The %% {preposition} the %% {predicate} cleaned everyday.,24,plural,plural,plural,ppp,the benches under the trees are cleaned everyday .
+tunnel,under,lake,will cost,has cost,The %% {preposition} the %% {predicate} a lot of money beyond enigeering challenges.,25,singular,singular,singular,sss,the tunnel under the lake has cost a lot of money beyond enigeering challenges .
+tunnel,under,lake,will cost,have cost,The %% {preposition} the %% {predicate} a lot of money beyond enigeering challenges.,25,singular,singular,plural,ssp,the tunnel under the lake have cost a lot of money beyond enigeering challenges .
+tunnel,under,lakes,will cost,has cost,The %% {preposition} the %% {predicate} a lot of money beyond enigeering challenges.,25,singular,plural,singular,sps,the tunnel under the lakes has cost a lot of money beyond enigeering challenges .
+tunnel,under,lakes,will cost,have cost,The %% {preposition} the %% {predicate} a lot of money beyond enigeering challenges.,25,singular,plural,plural,spp,the tunnel under the lakes have cost a lot of money beyond enigeering challenges .
+tunnels,under,lake,will cost,has cost,The %% {preposition} the %% {predicate} a lot of money beyond enigeering challenges.,25,plural,singular,singular,pss,the tunnels under the lake has cost a lot of money beyond enigeering challenges .
+tunnels,under,lake,will cost,have cost,The %% {preposition} the %% {predicate} a lot of money beyond enigeering challenges.,25,plural,singular,plural,psp,the tunnels under the lake have cost a lot of money beyond enigeering challenges .
+tunnels,under,lakes,will cost,has cost,The %% {preposition} the %% {predicate} a lot of money beyond enigeering challenges.,25,plural,plural,singular,pps,the tunnels under the lakes has cost a lot of money beyond enigeering challenges .
+tunnels,under,lakes,will cost,have cost,The %% {preposition} the %% {predicate} a lot of money beyond enigeering challenges.,25,plural,plural,plural,ppp,the tunnels under the lakes have cost a lot of money beyond enigeering challenges .
+cafe,near,shop,got,has got,The %% {preposition} the %% {predicate} popular around the neighbourhood.,26,singular,singular,singular,sss,the cafe near the shop has got popular around the neighbourhood .
+cafe,near,shop,got,have got,The %% {preposition} the %% {predicate} popular around the neighbourhood.,26,singular,singular,plural,ssp,the cafe near the shop have got popular around the neighbourhood .
+cafe,near,shops,got,has got,The %% {preposition} the %% {predicate} popular around the neighbourhood.,26,singular,plural,singular,sps,the cafe near the shops has got popular around the neighbourhood .
+cafe,near,shops,got,have got,The %% {preposition} the %% {predicate} popular around the neighbourhood.,26,singular,plural,plural,spp,the cafe near the shops have got popular around the neighbourhood .
+cafes,near,shop,got,has got,The %% {preposition} the %% {predicate} popular around the neighbourhood.,26,plural,singular,singular,pss,the cafes near the shop has got popular around the neighbourhood .
+cafes,near,shop,got,have got,The %% {preposition} the %% {predicate} popular around the neighbourhood.,26,plural,singular,plural,psp,the cafes near the shop have got popular around the neighbourhood .
+cafes,near,shops,got,has got,The %% {preposition} the %% {predicate} popular around the neighbourhood.,26,plural,plural,singular,pps,the cafes near the shops has got popular around the neighbourhood .
+cafes,near,shops,got,have got,The %% {preposition} the %% {predicate} popular around the neighbourhood.,26,plural,plural,plural,ppp,the cafes near the shops have got popular around the neighbourhood .
+key,to,office,should be,is,The %% {preposition} the %% {predicate} on the table.,27,singular,singular,singular,sss,the key to the office is on the table .
+key,to,office,should be,are,The %% {preposition} the %% {predicate} on the table.,27,singular,singular,plural,ssp,the key to the office are on the table .
+key,to,offices,should be,is,The %% {preposition} the %% {predicate} on the table.,27,singular,plural,singular,sps,the key to the offices is on the table .
+key,to,offices,should be,are,The %% {preposition} the %% {predicate} on the table.,27,singular,plural,plural,spp,the key to the offices are on the table .
+keys,to,office,should be,is,The %% {preposition} the %% {predicate} on the table.,27,plural,singular,singular,pss,the keys to the office is on the table .
+keys,to,office,should be,are,The %% {preposition} the %% {predicate} on the table.,27,plural,singular,plural,psp,the keys to the office are on the table .
+keys,to,offices,should be,is,The %% {preposition} the %% {predicate} on the table.,27,plural,plural,singular,pps,the keys to the offices is on the table .
+keys,to,offices,should be,are,The %% {preposition} the %% {predicate} on the table.,27,plural,plural,plural,ppp,the keys to the offices are on the table .
+door,to,room,will look,looks,The %% {preposition} the %% {predicate} very festive with the decorations.,28,singular,singular,singular,sss,the door to the room looks very festive with the decorations .
+door,to,room,will look,look,The %% {preposition} the %% {predicate} very festive with the decorations.,28,singular,singular,plural,ssp,the door to the room look very festive with the decorations .
+door,to,rooms,will look,looks,The %% {preposition} the %% {predicate} very festive with the decorations.,28,singular,plural,singular,sps,the door to the rooms looks very festive with the decorations .
+door,to,rooms,will look,look,The %% {preposition} the %% {predicate} very festive with the decorations.,28,singular,plural,plural,spp,the door to the rooms look very festive with the decorations .
+doors,to,room,will look,looks,The %% {preposition} the %% {predicate} very festive with the decorations.,28,plural,singular,singular,pss,the doors to the room looks very festive with the decorations .
+doors,to,room,will look,look,The %% {preposition} the %% {predicate} very festive with the decorations.,28,plural,singular,plural,psp,the doors to the room look very festive with the decorations .
+doors,to,rooms,will look,looks,The %% {preposition} the %% {predicate} very festive with the decorations.,28,plural,plural,singular,pps,the doors to the rooms looks very festive with the decorations .
+doors,to,rooms,will look,look,The %% {preposition} the %% {predicate} very festive with the decorations.,28,plural,plural,plural,ppp,the doors to the rooms look very festive with the decorations .
+tour,to,island,will be,was,The %% {preposition} the %% {predicate} suspended temporarily.,29,singular,singular,singular,sss,the tour to the island was suspended temporarily .
+tour,to,island,will be,were,The %% {preposition} the %% {predicate} suspended temporarily.,29,singular,singular,plural,ssp,the tour to the island were suspended temporarily .
+tour,to,islands,will be,was,The %% {preposition} the %% {predicate} suspended temporarily.,29,singular,plural,singular,sps,the tour to the islands was suspended temporarily .
+tour,to,islands,will be,were,The %% {preposition} the %% {predicate} suspended temporarily.,29,singular,plural,plural,spp,the tour to the islands were suspended temporarily .
+tours,to,island,will be,was,The %% {preposition} the %% {predicate} suspended temporarily.,29,plural,singular,singular,pss,the tours to the island was suspended temporarily .
+tours,to,island,will be,were,The %% {preposition} the %% {predicate} suspended temporarily.,29,plural,singular,plural,psp,the tours to the island were suspended temporarily .
+tours,to,islands,will be,was,The %% {preposition} the %% {predicate} suspended temporarily.,29,plural,plural,singular,pps,the tours to the islands was suspended temporarily .
+tours,to,islands,will be,were,The %% {preposition} the %% {predicate} suspended temporarily.,29,plural,plural,plural,ppp,the tours to the islands were suspended temporarily .
+visit,to,garden,might have,has,The %% {preposition} the %% {predicate} sparked her interest in botany.,30,singular,singular,singular,sss,the visit to the garden has sparked her interest in botany .
+visit,to,garden,might have,have,The %% {preposition} the %% {predicate} sparked her interest in botany.,30,singular,singular,plural,ssp,the visit to the garden have sparked her interest in botany .
+visit,to,gardens,might have,has,The %% {preposition} the %% {predicate} sparked her interest in botany.,30,singular,plural,singular,sps,the visit to the gardens has sparked her interest in botany .
+visit,to,gardens,might have,have,The %% {preposition} the %% {predicate} sparked her interest in botany.,30,singular,plural,plural,spp,the visit to the gardens have sparked her interest in botany .
+visits,to,garden,might have,has,The %% {preposition} the %% {predicate} sparked her interest in botany.,30,plural,singular,singular,pss,the visits to the garden has sparked her interest in botany .
+visits,to,garden,might have,have,The %% {preposition} the %% {predicate} sparked her interest in botany.,30,plural,singular,plural,psp,the visits to the garden have sparked her interest in botany .
+visits,to,gardens,might have,has,The %% {preposition} the %% {predicate} sparked her interest in botany.,30,plural,plural,singular,pps,the visits to the gardens has sparked her interest in botany .
+visits,to,gardens,might have,have,The %% {preposition} the %% {predicate} sparked her interest in botany.,30,plural,plural,plural,ppp,the visits to the gardens have sparked her interest in botany .
+letter,to,editor,might be,is,The %% {preposition} the %% {predicate} published online.,31,singular,singular,singular,sss,the letter to the editor is published online .
+letter,to,editor,might be,are,The %% {preposition} the %% {predicate} published online.,31,singular,singular,plural,ssp,the letter to the editor are published online .
+letter,to,editors,might be,is,The %% {preposition} the %% {predicate} published online.,31,singular,plural,singular,sps,the letter to the editors is published online .
+letter,to,editors,might be,are,The %% {preposition} the %% {predicate} published online.,31,singular,plural,plural,spp,the letter to the editors are published online .
+letters,to,editor,might be,is,The %% {preposition} the %% {predicate} published online.,31,plural,singular,singular,pss,the letters to the editor is published online .
+letters,to,editor,might be,are,The %% {preposition} the %% {predicate} published online.,31,plural,singular,plural,psp,the letters to the editor are published online .
+letters,to,editors,might be,is,The %% {preposition} the %% {predicate} published online.,31,plural,plural,singular,pps,the letters to the editors is published online .
+letters,to,editors,might be,are,The %% {preposition} the %% {predicate} published online.,31,plural,plural,plural,ppp,the letters to the editors are published online .
+applicant,to,school,will receive,has received,The %% {preposition} the %% {predicate} emails about financial assistance.,32,singular,singular,singular,sss,the applicant to the school has received emails about financial assistance .
+applicant,to,school,will receive,have received,The %% {preposition} the %% {predicate} emails about financial assistance.,32,singular,singular,plural,ssp,the applicant to the school have received emails about financial assistance .
+applicant,to,schools,will receive,has received,The %% {preposition} the %% {predicate} emails about financial assistance.,32,singular,plural,singular,sps,the applicant to the schools has received emails about financial assistance .
+applicant,to,schools,will receive,have received,The %% {preposition} the %% {predicate} emails about financial assistance.,32,singular,plural,plural,spp,the applicant to the schools have received emails about financial assistance .
+applicants,to,school,will receive,has received,The %% {preposition} the %% {predicate} emails about financial assistance.,32,plural,singular,singular,pss,the applicants to the school has received emails about financial assistance .
+applicants,to,school,will receive,have received,The %% {preposition} the %% {predicate} emails about financial assistance.,32,plural,singular,plural,psp,the applicants to the school have received emails about financial assistance .
+applicants,to,schools,will receive,has received,The %% {preposition} the %% {predicate} emails about financial assistance.,32,plural,plural,singular,pps,the applicants to the schools has received emails about financial assistance .
+applicants,to,schools,will receive,have received,The %% {preposition} the %% {predicate} emails about financial assistance.,32,plural,plural,plural,ppp,the applicants to the schools have received emails about financial assistance .
+railway,to,village,will promote,has promoted,The %% {preposition} the %% {predicate} economic growth.,33,singular,singular,singular,sss,the railway to the village has promoted economic growth .
+railway,to,village,will promote,have promoted,The %% {preposition} the %% {predicate} economic growth.,33,singular,singular,plural,ssp,the railway to the village have promoted economic growth .
+railway,to,villages,will promote,has promoted,The %% {preposition} the %% {predicate} economic growth.,33,singular,plural,singular,sps,the railway to the villages has promoted economic growth .
+railway,to,villages,will promote,have promoted,The %% {preposition} the %% {predicate} economic growth.,33,singular,plural,plural,spp,the railway to the villages have promoted economic growth .
+railways,to,village,will promote,has promoted,The %% {preposition} the %% {predicate} economic growth.,33,plural,singular,singular,pss,the railways to the village has promoted economic growth .
+railways,to,village,will promote,have promoted,The %% {preposition} the %% {predicate} economic growth.,33,plural,singular,plural,psp,the railways to the village have promoted economic growth .
+railways,to,villages,will promote,has promoted,The %% {preposition} the %% {predicate} economic growth.,33,plural,plural,singular,pps,the railways to the villages has promoted economic growth .
+railways,to,villages,will promote,have promoted,The %% {preposition} the %% {predicate} economic growth.,33,plural,plural,plural,ppp,the railways to the villages have promoted economic growth .
+trail,to,pond,should be,is,The %% {preposition} the %% {predicate} highly recommended for beginner cyclists.,34,singular,singular,singular,sss,the trail to the pond is highly recommended for beginner cyclists .
+trail,to,pond,should be,are,The %% {preposition} the %% {predicate} highly recommended for beginner cyclists.,34,singular,singular,plural,ssp,the trail to the pond are highly recommended for beginner cyclists .
+trail,to,ponds,should be,is,The %% {preposition} the %% {predicate} highly recommended for beginner cyclists.,34,singular,plural,singular,sps,the trail to the ponds is highly recommended for beginner cyclists .
+trail,to,ponds,should be,are,The %% {preposition} the %% {predicate} highly recommended for beginner cyclists.,34,singular,plural,plural,spp,the trail to the ponds are highly recommended for beginner cyclists .
+trails,to,pond,should be,is,The %% {preposition} the %% {predicate} highly recommended for beginner cyclists.,34,plural,singular,singular,pss,the trails to the pond is highly recommended for beginner cyclists .
+trails,to,pond,should be,are,The %% {preposition} the %% {predicate} highly recommended for beginner cyclists.,34,plural,singular,plural,psp,the trails to the pond are highly recommended for beginner cyclists .
+trails,to,ponds,should be,is,The %% {preposition} the %% {predicate} highly recommended for beginner cyclists.,34,plural,plural,singular,pps,the trails to the ponds is highly recommended for beginner cyclists .
+trails,to,ponds,should be,are,The %% {preposition} the %% {predicate} highly recommended for beginner cyclists.,34,plural,plural,plural,ppp,the trails to the ponds are highly recommended for beginner cyclists .
+gift,for,kid,will be,is,The %% {preposition} the %% {predicate} hidden under the bed.,35,singular,singular,singular,sss,the gift for the kid is hidden under the bed .
+gift,for,kid,will be,are,The %% {preposition} the %% {predicate} hidden under the bed.,35,singular,singular,plural,ssp,the gift for the kid are hidden under the bed .
+gift,for,kids,will be,is,The %% {preposition} the %% {predicate} hidden under the bed.,35,singular,plural,singular,sps,the gift for the kids is hidden under the bed .
+gift,for,kids,will be,are,The %% {preposition} the %% {predicate} hidden under the bed.,35,singular,plural,plural,spp,the gift for the kids are hidden under the bed .
+gifts,for,kid,will be,is,The %% {preposition} the %% {predicate} hidden under the bed.,35,plural,singular,singular,pss,the gifts for the kid is hidden under the bed .
+gifts,for,kid,will be,are,The %% {preposition} the %% {predicate} hidden under the bed.,35,plural,singular,plural,psp,the gifts for the kid are hidden under the bed .
+gifts,for,kids,will be,is,The %% {preposition} the %% {predicate} hidden under the bed.,35,plural,plural,singular,pps,the gifts for the kids is hidden under the bed .
+gifts,for,kids,will be,are,The %% {preposition} the %% {predicate} hidden under the bed.,35,plural,plural,plural,ppp,the gifts for the kids are hidden under the bed .
+cake,for,family,will be,was,The %% {preposition} the %% {predicate} prepared by a local bakery.,36,singular,singular,singular,sss,the cake for the family was prepared by a local bakery .
+cake,for,family,will be,were,The %% {preposition} the %% {predicate} prepared by a local bakery.,36,singular,singular,plural,ssp,the cake for the family were prepared by a local bakery .
+cake,for,families,will be,was,The %% {preposition} the %% {predicate} prepared by a local bakery.,36,singular,plural,singular,sps,the cake for the families was prepared by a local bakery .
+cake,for,families,will be,were,The %% {preposition} the %% {predicate} prepared by a local bakery.,36,singular,plural,plural,spp,the cake for the families were prepared by a local bakery .
+cakes,for,family,will be,was,The %% {preposition} the %% {predicate} prepared by a local bakery.,36,plural,singular,singular,pss,the cakes for the family was prepared by a local bakery .
+cakes,for,family,will be,were,The %% {preposition} the %% {predicate} prepared by a local bakery.,36,plural,singular,plural,psp,the cakes for the family were prepared by a local bakery .
+cakes,for,families,will be,was,The %% {preposition} the %% {predicate} prepared by a local bakery.,36,plural,plural,singular,pps,the cakes for the families was prepared by a local bakery .
+cakes,for,families,will be,were,The %% {preposition} the %% {predicate} prepared by a local bakery.,36,plural,plural,plural,ppp,the cakes for the families were prepared by a local bakery .
+ticket,for,game,must be,was,The %% {preposition} the %% {predicate} ordered online.,37,singular,singular,singular,sss,the ticket for the game was ordered online .
+ticket,for,game,must be,were,The %% {preposition} the %% {predicate} ordered online.,37,singular,singular,plural,ssp,the ticket for the game were ordered online .
+ticket,for,games,must be,was,The %% {preposition} the %% {predicate} ordered online.,37,singular,plural,singular,sps,the ticket for the games was ordered online .
+ticket,for,games,must be,were,The %% {preposition} the %% {predicate} ordered online.,37,singular,plural,plural,spp,the ticket for the games were ordered online .
+tickets,for,game,must be,was,The %% {preposition} the %% {predicate} ordered online.,37,plural,singular,singular,pss,the tickets for the game was ordered online .
+tickets,for,game,must be,were,The %% {preposition} the %% {predicate} ordered online.,37,plural,singular,plural,psp,the tickets for the game were ordered online .
+tickets,for,games,must be,was,The %% {preposition} the %% {predicate} ordered online.,37,plural,plural,singular,pps,the tickets for the games was ordered online .
+tickets,for,games,must be,were,The %% {preposition} the %% {predicate} ordered online.,37,plural,plural,plural,ppp,the tickets for the games were ordered online .
+exam,for,student,should be,was,The %% {preposition} the %% {predicate} challenging but interesting.,38,singular,singular,singular,sss,the exam for the student was challenging but interesting .
+exam,for,student,should be,were,The %% {preposition} the %% {predicate} challenging but interesting.,38,singular,singular,plural,ssp,the exam for the student were challenging but interesting .
+exam,for,students,should be,was,The %% {preposition} the %% {predicate} challenging but interesting.,38,singular,plural,singular,sps,the exam for the students was challenging but interesting .
+exam,for,students,should be,were,The %% {preposition} the %% {predicate} challenging but interesting.,38,singular,plural,plural,spp,the exam for the students were challenging but interesting .
+exams,for,student,should be,was,The %% {preposition} the %% {predicate} challenging but interesting.,38,plural,singular,singular,pss,the exams for the student was challenging but interesting .
+exams,for,student,should be,were,The %% {preposition} the %% {predicate} challenging but interesting.,38,plural,singular,plural,psp,the exams for the student were challenging but interesting .
+exams,for,students,should be,was,The %% {preposition} the %% {predicate} challenging but interesting.,38,plural,plural,singular,pps,the exams for the students was challenging but interesting .
+exams,for,students,should be,were,The %% {preposition} the %% {predicate} challenging but interesting.,38,plural,plural,plural,ppp,the exams for the students were challenging but interesting .
+prize,for,winner,will be,is,The %% {preposition} the %% {predicate} a big surprise.,39,singular,singular,singular,sss,the prize for the winner is a big surprise .
+prize,for,winner,will be,are,The %% {preposition} the %% {predicate} a big surprise.,39,singular,singular,plural,ssp,the prize for the winner are a big surprise .
+prize,for,winners,will be,is,The %% {preposition} the %% {predicate} a big surprise.,39,singular,plural,singular,sps,the prize for the winners is a big surprise .
+prize,for,winners,will be,are,The %% {preposition} the %% {predicate} a big surprise.,39,singular,plural,plural,spp,the prize for the winners are a big surprise .
+prizes,for,winner,will be,is,The %% {preposition} the %% {predicate} a big surprise.,39,plural,singular,singular,pss,the prizes for the winner is a big surprise .
+prizes,for,winner,will be,are,The %% {preposition} the %% {predicate} a big surprise.,39,plural,singular,plural,psp,the prizes for the winner are a big surprise .
+prizes,for,winners,will be,is,The %% {preposition} the %% {predicate} a big surprise.,39,plural,plural,singular,pps,the prizes for the winners is a big surprise .
+prizes,for,winners,will be,are,The %% {preposition} the %% {predicate} a big surprise.,39,plural,plural,plural,ppp,the prizes for the winners are a big surprise .
+plan,for,event,will be,was,The %% {preposition} the %% {predicate} discussed at a group meeting.,40,singular,singular,singular,sss,the plan for the event was discussed at a group meeting .
+plan,for,event,will be,were,The %% {preposition} the %% {predicate} discussed at a group meeting.,40,singular,singular,plural,ssp,the plan for the event were discussed at a group meeting .
+plan,for,events,will be,was,The %% {preposition} the %% {predicate} discussed at a group meeting.,40,singular,plural,singular,sps,the plan for the events was discussed at a group meeting .
+plan,for,events,will be,were,The %% {preposition} the %% {predicate} discussed at a group meeting.,40,singular,plural,plural,spp,the plan for the events were discussed at a group meeting .
+plans,for,event,will be,was,The %% {preposition} the %% {predicate} discussed at a group meeting.,40,plural,singular,singular,pss,the plans for the event was discussed at a group meeting .
+plans,for,event,will be,were,The %% {preposition} the %% {predicate} discussed at a group meeting.,40,plural,singular,plural,psp,the plans for the event were discussed at a group meeting .
+plans,for,events,will be,was,The %% {preposition} the %% {predicate} discussed at a group meeting.,40,plural,plural,singular,pps,the plans for the events was discussed at a group meeting .
+plans,for,events,will be,were,The %% {preposition} the %% {predicate} discussed at a group meeting.,40,plural,plural,plural,ppp,the plans for the events were discussed at a group meeting .
+wine,on,table,might be,is,The %% {preposition} the %% {predicate} from Napa Valley.,41,singular,singular,singular,sss,the wine on the table is from napa valley .
+wine,on,table,might be,are,The %% {preposition} the %% {predicate} from Napa Valley.,41,singular,singular,plural,ssp,the wine on the table are from napa valley .
+wine,on,tables,might be,is,The %% {preposition} the %% {predicate} from Napa Valley.,41,singular,plural,singular,sps,the wine on the tables is from napa valley .
+wine,on,tables,might be,are,The %% {preposition} the %% {predicate} from Napa Valley.,41,singular,plural,plural,spp,the wine on the tables are from napa valley .
+wines,on,table,might be,is,The %% {preposition} the %% {predicate} from Napa Valley.,41,plural,singular,singular,pss,the wines on the table is from napa valley .
+wines,on,table,might be,are,The %% {preposition} the %% {predicate} from Napa Valley.,41,plural,singular,plural,psp,the wines on the table are from napa valley .
+wines,on,tables,might be,is,The %% {preposition} the %% {predicate} from Napa Valley.,41,plural,plural,singular,pps,the wines on the tables is from napa valley .
+wines,on,tables,might be,are,The %% {preposition} the %% {predicate} from Napa Valley.,41,plural,plural,plural,ppp,the wines on the tables are from napa valley .
+magazine,on,shelf,will be,was,The %% {preposition} the %% {predicate} moved to a different place.,42,singular,singular,singular,sss,the magazine on the shelf was moved to a different place .
+magazine,on,shelf,will be,were,The %% {preposition} the %% {predicate} moved to a different place.,42,singular,singular,plural,ssp,the magazine on the shelf were moved to a different place .
+magazine,on,shelves,will be,was,The %% {preposition} the %% {predicate} moved to a different place.,42,singular,plural,singular,sps,the magazine on the shelves was moved to a different place .
+magazine,on,shelves,will be,were,The %% {preposition} the %% {predicate} moved to a different place.,42,singular,plural,plural,spp,the magazine on the shelves were moved to a different place .
+magazines,on,shelf,will be,was,The %% {preposition} the %% {predicate} moved to a different place.,42,plural,singular,singular,pss,the magazines on the shelf was moved to a different place .
+magazines,on,shelf,will be,were,The %% {preposition} the %% {predicate} moved to a different place.,42,plural,singular,plural,psp,the magazines on the shelf were moved to a different place .
+magazines,on,shelves,will be,was,The %% {preposition} the %% {predicate} moved to a different place.,42,plural,plural,singular,pps,the magazines on the shelves was moved to a different place .
+magazines,on,shelves,will be,were,The %% {preposition} the %% {predicate} moved to a different place.,42,plural,plural,plural,ppp,the magazines on the shelves were moved to a different place .
+pebble,on,beach,could be,is,The %% {preposition} the %% {predicate} up to 200 million years old.,43,singular,singular,singular,sss,the pebble on the beach is up to 200 million years old .
+pebble,on,beach,could be,are,The %% {preposition} the %% {predicate} up to 200 million years old.,43,singular,singular,plural,ssp,the pebble on the beach are up to 200 million years old .
+pebble,on,beaches,could be,is,The %% {preposition} the %% {predicate} up to 200 million years old.,43,singular,plural,singular,sps,the pebble on the beaches is up to 200 million years old .
+pebble,on,beaches,could be,are,The %% {preposition} the %% {predicate} up to 200 million years old.,43,singular,plural,plural,spp,the pebble on the beaches are up to 200 million years old .
+pebbles,on,beach,could be,is,The %% {preposition} the %% {predicate} up to 200 million years old.,43,plural,singular,singular,pss,the pebbles on the beach is up to 200 million years old .
+pebbles,on,beach,could be,are,The %% {preposition} the %% {predicate} up to 200 million years old.,43,plural,singular,plural,psp,the pebbles on the beach are up to 200 million years old .
+pebbles,on,beaches,could be,is,The %% {preposition} the %% {predicate} up to 200 million years old.,43,plural,plural,singular,pps,the pebbles on the beaches is up to 200 million years old .
+pebbles,on,beaches,could be,are,The %% {preposition} the %% {predicate} up to 200 million years old.,43,plural,plural,plural,ppp,the pebbles on the beaches are up to 200 million years old .
+label,on,box,should be,is,The %% {preposition} the %% {predicate} positioned properly before shipping.,44,singular,singular,singular,sss,the label on the box is positioned properly before shipping .
+label,on,box,should be,are,The %% {preposition} the %% {predicate} positioned properly before shipping.,44,singular,singular,plural,ssp,the label on the box are positioned properly before shipping .
+label,on,boxes,should be,is,The %% {preposition} the %% {predicate} positioned properly before shipping.,44,singular,plural,singular,sps,the label on the boxes is positioned properly before shipping .
+label,on,boxes,should be,are,The %% {preposition} the %% {predicate} positioned properly before shipping.,44,singular,plural,plural,spp,the label on the boxes are positioned properly before shipping .
+labels,on,box,should be,is,The %% {preposition} the %% {predicate} positioned properly before shipping.,44,plural,singular,singular,pss,the labels on the box is positioned properly before shipping .
+labels,on,box,should be,are,The %% {preposition} the %% {predicate} positioned properly before shipping.,44,plural,singular,plural,psp,the labels on the box are positioned properly before shipping .
+labels,on,boxes,should be,is,The %% {preposition} the %% {predicate} positioned properly before shipping.,44,plural,plural,singular,pps,the labels on the boxes is positioned properly before shipping .
+labels,on,boxes,should be,are,The %% {preposition} the %% {predicate} positioned properly before shipping.,44,plural,plural,plural,ppp,the labels on the boxes are positioned properly before shipping .
+painting,on,wall,will be,was,The %% {preposition} the %% {predicate} taken down during the renovation.,45,singular,singular,singular,sss,the painting on the wall was taken down during the renovation .
+painting,on,wall,will be,were,The %% {preposition} the %% {predicate} taken down during the renovation.,45,singular,singular,plural,ssp,the painting on the wall were taken down during the renovation .
+painting,on,walls,will be,was,The %% {preposition} the %% {predicate} taken down during the renovation.,45,singular,plural,singular,sps,the painting on the walls was taken down during the renovation .
+painting,on,walls,will be,were,The %% {preposition} the %% {predicate} taken down during the renovation.,45,singular,plural,plural,spp,the painting on the walls were taken down during the renovation .
+paintings,on,wall,will be,was,The %% {preposition} the %% {predicate} taken down during the renovation.,45,plural,singular,singular,pss,the paintings on the wall was taken down during the renovation .
+paintings,on,wall,will be,were,The %% {preposition} the %% {predicate} taken down during the renovation.,45,plural,singular,plural,psp,the paintings on the wall were taken down during the renovation .
+paintings,on,walls,will be,was,The %% {preposition} the %% {predicate} taken down during the renovation.,45,plural,plural,singular,pps,the paintings on the walls was taken down during the renovation .
+paintings,on,walls,will be,were,The %% {preposition} the %% {predicate} taken down during the renovation.,45,plural,plural,plural,ppp,the paintings on the walls were taken down during the renovation .
+slogan,on,poster,should be,is,The %% {preposition} the %% {predicate} printed in larger font.,46,singular,singular,singular,sss,the slogan on the poster is printed in larger font .
+slogan,on,poster,should be,are,The %% {preposition} the %% {predicate} printed in larger font.,46,singular,singular,plural,ssp,the slogan on the poster are printed in larger font .
+slogan,on,posters,should be,is,The %% {preposition} the %% {predicate} printed in larger font.,46,singular,plural,singular,sps,the slogan on the posters is printed in larger font .
+slogan,on,posters,should be,are,The %% {preposition} the %% {predicate} printed in larger font.,46,singular,plural,plural,spp,the slogan on the posters are printed in larger font .
+slogans,on,poster,should be,is,The %% {preposition} the %% {predicate} printed in larger font.,46,plural,singular,singular,pss,the slogans on the poster is printed in larger font .
+slogans,on,poster,should be,are,The %% {preposition} the %% {predicate} printed in larger font.,46,plural,singular,plural,psp,the slogans on the poster are printed in larger font .
+slogans,on,posters,should be,is,The %% {preposition} the %% {predicate} printed in larger font.,46,plural,plural,singular,pps,the slogans on the posters is printed in larger font .
+slogans,on,posters,should be,are,The %% {preposition} the %% {predicate} printed in larger font.,46,plural,plural,plural,ppp,the slogans on the posters are printed in larger font .
+debate,with,lawyer,will be,is,The %% {preposition} the %% {predicate} broadcast live on the radio.,47,singular,singular,singular,sss,the debate with the lawyer is broadcast live on the radio .
+debate,with,lawyer,will be,are,The %% {preposition} the %% {predicate} broadcast live on the radio.,47,singular,singular,plural,ssp,the debate with the lawyer are broadcast live on the radio .
+debate,with,lawyers,will be,is,The %% {preposition} the %% {predicate} broadcast live on the radio.,47,singular,plural,singular,sps,the debate with the lawyers is broadcast live on the radio .
+debate,with,lawyers,will be,are,The %% {preposition} the %% {predicate} broadcast live on the radio.,47,singular,plural,plural,spp,the debate with the lawyers are broadcast live on the radio .
+debates,with,lawyer,will be,is,The %% {preposition} the %% {predicate} broadcast live on the radio.,47,plural,singular,singular,pss,the debates with the lawyer is broadcast live on the radio .
+debates,with,lawyer,will be,are,The %% {preposition} the %% {predicate} broadcast live on the radio.,47,plural,singular,plural,psp,the debates with the lawyer are broadcast live on the radio .
+debates,with,lawyers,will be,is,The %% {preposition} the %% {predicate} broadcast live on the radio.,47,plural,plural,singular,pps,the debates with the lawyers is broadcast live on the radio .
+debates,with,lawyers,will be,are,The %% {preposition} the %% {predicate} broadcast live on the radio.,47,plural,plural,plural,ppp,the debates with the lawyers are broadcast live on the radio .
+contract,with,company,must be,has been,The %% {preposition} the %% {predicate} examined carefully by a legal consultant.,48,singular,singular,singular,sss,the contract with the company has been examined carefully by a legal consultant .
+contract,with,company,must be,have been,The %% {preposition} the %% {predicate} examined carefully by a legal consultant.,48,singular,singular,plural,ssp,the contract with the company have been examined carefully by a legal consultant .
+contract,with,companies,must be,has been,The %% {preposition} the %% {predicate} examined carefully by a legal consultant.,48,singular,plural,singular,sps,the contract with the companies has been examined carefully by a legal consultant .
+contract,with,companies,must be,have been,The %% {preposition} the %% {predicate} examined carefully by a legal consultant.,48,singular,plural,plural,spp,the contract with the companies have been examined carefully by a legal consultant .
+contracts,with,company,must be,has been,The %% {preposition} the %% {predicate} examined carefully by a legal consultant.,48,plural,singular,singular,pss,the contracts with the company has been examined carefully by a legal consultant .
+contracts,with,company,must be,have been,The %% {preposition} the %% {predicate} examined carefully by a legal consultant.,48,plural,singular,plural,psp,the contracts with the company have been examined carefully by a legal consultant .
+contracts,with,companies,must be,has been,The %% {preposition} the %% {predicate} examined carefully by a legal consultant.,48,plural,plural,singular,pps,the contracts with the companies has been examined carefully by a legal consultant .
+contracts,with,companies,must be,have been,The %% {preposition} the %% {predicate} examined carefully by a legal consultant.,48,plural,plural,plural,ppp,the contracts with the companies have been examined carefully by a legal consultant .
+project,with,team,will be,has been,The %% {preposition} the %% {predicate} very successful.,49,singular,singular,singular,sss,the project with the team has been very successful .
+project,with,team,will be,have been,The %% {preposition} the %% {predicate} very successful.,49,singular,singular,plural,ssp,the project with the team have been very successful .
+project,with,teams,will be,has been,The %% {preposition} the %% {predicate} very successful.,49,singular,plural,singular,sps,the project with the teams has been very successful .
+project,with,teams,will be,have been,The %% {preposition} the %% {predicate} very successful.,49,singular,plural,plural,spp,the project with the teams have been very successful .
+projects,with,team,will be,has been,The %% {preposition} the %% {predicate} very successful.,49,plural,singular,singular,pss,the projects with the team has been very successful .
+projects,with,team,will be,have been,The %% {preposition} the %% {predicate} very successful.,49,plural,singular,plural,psp,the projects with the team have been very successful .
+projects,with,teams,will be,has been,The %% {preposition} the %% {predicate} very successful.,49,plural,plural,singular,pps,the projects with the teams has been very successful .
+projects,with,teams,will be,have been,The %% {preposition} the %% {predicate} very successful.,49,plural,plural,plural,ppp,the projects with the teams have been very successful .
+rehearsal,with,band,will be,is,The %% {preposition} the %% {predicate} rescheduled.,50,singular,singular,singular,sss,the rehearsal with the band is rescheduled .
+rehearsal,with,band,will be,are,The %% {preposition} the %% {predicate} rescheduled.,50,singular,singular,plural,ssp,the rehearsal with the band are rescheduled .
+rehearsal,with,bands,will be,is,The %% {preposition} the %% {predicate} rescheduled.,50,singular,plural,singular,sps,the rehearsal with the bands is rescheduled .
+rehearsal,with,bands,will be,are,The %% {preposition} the %% {predicate} rescheduled.,50,singular,plural,plural,spp,the rehearsal with the bands are rescheduled .
+rehearsals,with,band,will be,is,The %% {preposition} the %% {predicate} rescheduled.,50,plural,singular,singular,pss,the rehearsals with the band is rescheduled .
+rehearsals,with,band,will be,are,The %% {preposition} the %% {predicate} rescheduled.,50,plural,singular,plural,psp,the rehearsals with the band are rescheduled .
+rehearsals,with,bands,will be,is,The %% {preposition} the %% {predicate} rescheduled.,50,plural,plural,singular,pps,the rehearsals with the bands is rescheduled .
+rehearsals,with,bands,will be,are,The %% {preposition} the %% {predicate} rescheduled.,50,plural,plural,plural,ppp,the rehearsals with the bands are rescheduled .
+lawsuit,against,company,will be,was,The %% {preposition} the %% {predicate} resolved in court.,51,singular,singular,singular,sss,the lawsuit against the company was resolved in court .
+lawsuit,against,company,will be,were,The %% {preposition} the %% {predicate} resolved in court.,51,singular,singular,plural,ssp,the lawsuit against the company were resolved in court .
+lawsuit,against,companies,will be,was,The %% {preposition} the %% {predicate} resolved in court.,51,singular,plural,singular,sps,the lawsuit against the companies was resolved in court .
+lawsuit,against,companies,will be,were,The %% {preposition} the %% {predicate} resolved in court.,51,singular,plural,plural,spp,the lawsuit against the companies were resolved in court .
+lawsuits,against,company,will be,was,The %% {preposition} the %% {predicate} resolved in court.,51,plural,singular,singular,pss,the lawsuits against the company was resolved in court .
+lawsuits,against,company,will be,were,The %% {preposition} the %% {predicate} resolved in court.,51,plural,singular,plural,psp,the lawsuits against the company were resolved in court .
+lawsuits,against,companies,will be,was,The %% {preposition} the %% {predicate} resolved in court.,51,plural,plural,singular,pps,the lawsuits against the companies was resolved in court .
+lawsuits,against,companies,will be,were,The %% {preposition} the %% {predicate} resolved in court.,51,plural,plural,plural,ppp,the lawsuits against the companies were resolved in court .
+vote,against,measure,could be,is,The %% {preposition} the %% {predicate} indicative of the ongoing miscommunication.,52,singular,singular,singular,sss,the vote against the measure is indicative of the ongoing miscommunication .
+vote,against,measure,could be,are,The %% {preposition} the %% {predicate} indicative of the ongoing miscommunication.,52,singular,singular,plural,ssp,the vote against the measure are indicative of the ongoing miscommunication .
+vote,against,measures,could be,is,The %% {preposition} the %% {predicate} indicative of the ongoing miscommunication.,52,singular,plural,singular,sps,the vote against the measures is indicative of the ongoing miscommunication .
+vote,against,measures,could be,are,The %% {preposition} the %% {predicate} indicative of the ongoing miscommunication.,52,singular,plural,plural,spp,the vote against the measures are indicative of the ongoing miscommunication .
+votes,against,measure,could be,is,The %% {preposition} the %% {predicate} indicative of the ongoing miscommunication.,52,plural,singular,singular,pss,the votes against the measure is indicative of the ongoing miscommunication .
+votes,against,measure,could be,are,The %% {preposition} the %% {predicate} indicative of the ongoing miscommunication.,52,plural,singular,plural,psp,the votes against the measure are indicative of the ongoing miscommunication .
+votes,against,measures,could be,is,The %% {preposition} the %% {predicate} indicative of the ongoing miscommunication.,52,plural,plural,singular,pps,the votes against the measures is indicative of the ongoing miscommunication .
+votes,against,measures,could be,are,The %% {preposition} the %% {predicate} indicative of the ongoing miscommunication.,52,plural,plural,plural,ppp,the votes against the measures are indicative of the ongoing miscommunication .
+complaint,from,customer,must be,was,The %% {preposition} the %% {predicate} filed in time.,53,singular,singular,singular,sss,the complaint from the customer was filed in time .
+complaint,from,customer,must be,were,The %% {preposition} the %% {predicate} filed in time.,53,singular,singular,plural,ssp,the complaint from the customer were filed in time .
+complaint,from,customers,must be,was,The %% {preposition} the %% {predicate} filed in time.,53,singular,plural,singular,sps,the complaint from the customers was filed in time .
+complaint,from,customers,must be,were,The %% {preposition} the %% {predicate} filed in time.,53,singular,plural,plural,spp,the complaint from the customers were filed in time .
+complaints,from,customer,must be,was,The %% {preposition} the %% {predicate} filed in time.,53,plural,singular,singular,pss,the complaints from the customer was filed in time .
+complaints,from,customer,must be,were,The %% {preposition} the %% {predicate} filed in time.,53,plural,singular,plural,psp,the complaints from the customer were filed in time .
+complaints,from,customers,must be,was,The %% {preposition} the %% {predicate} filed in time.,53,plural,plural,singular,pps,the complaints from the customers was filed in time .
+complaints,from,customers,must be,were,The %% {preposition} the %% {predicate} filed in time.,53,plural,plural,plural,ppp,the complaints from the customers were filed in time .
+question,from,interviewer,might be,is,The %% {preposition} the %% {predicate} too difficult.,54,singular,singular,singular,sss,the question from the interviewer is too difficult .
+question,from,interviewer,might be,are,The %% {preposition} the %% {predicate} too difficult.,54,singular,singular,plural,ssp,the question from the interviewer are too difficult .
+question,from,interviewers,might be,is,The %% {preposition} the %% {predicate} too difficult.,54,singular,plural,singular,sps,the question from the interviewers is too difficult .
+question,from,interviewers,might be,are,The %% {preposition} the %% {predicate} too difficult.,54,singular,plural,plural,spp,the question from the interviewers are too difficult .
+questions,from,interviewer,might be,is,The %% {preposition} the %% {predicate} too difficult.,54,plural,singular,singular,pss,the questions from the interviewer is too difficult .
+questions,from,interviewer,might be,are,The %% {preposition} the %% {predicate} too difficult.,54,plural,singular,plural,psp,the questions from the interviewer are too difficult .
+questions,from,interviewers,might be,is,The %% {preposition} the %% {predicate} too difficult.,54,plural,plural,singular,pps,the questions from the interviewers is too difficult .
+questions,from,interviewers,might be,are,The %% {preposition} the %% {predicate} too difficult.,54,plural,plural,plural,ppp,the questions from the interviewers are too difficult .
+waiter,at,restaurant,will clean,has cleaned,The %% {preposition} the %% {predicate} the room.,55,singular,singular,singular,sss,the waiter at the restaurant has cleaned the room .
+waiter,at,restaurant,will clean,have cleaned,The %% {preposition} the %% {predicate} the room.,55,singular,singular,plural,ssp,the waiter at the restaurant have cleaned the room .
+waiter,at,restaurant,will clean,has cleaned,The %% {preposition} the %% {predicate} the room.,55,singular,plural,singular,sps,the waiter at the restaurant has cleaned the room .
+waiter,at,restaurant,will clean,have cleaned,The %% {preposition} the %% {predicate} the room.,55,singular,plural,plural,spp,the waiter at the restaurant have cleaned the room .
+waiters,at,restaurant,will clean,has cleaned,The %% {preposition} the %% {predicate} the room.,55,plural,singular,singular,pss,the waiters at the restaurant has cleaned the room .
+waiters,at,restaurant,will clean,have cleaned,The %% {preposition} the %% {predicate} the room.,55,plural,singular,plural,psp,the waiters at the restaurant have cleaned the room .
+waiters,at,restaurant,will clean,has cleaned,The %% {preposition} the %% {predicate} the room.,55,plural,plural,singular,pps,the waiters at the restaurant has cleaned the room .
+waiters,at,restaurant,will clean,have cleaned,The %% {preposition} the %% {predicate} the room.,55,plural,plural,plural,ppp,the waiters at the restaurant have cleaned the room .
+bike,at,station,might be,is,The %% {preposition} the %% {predicate} broken.,56,singular,singular,singular,sss,the bike at the station is broken .
+bike,at,station,might be,are,The %% {preposition} the %% {predicate} broken.,56,singular,singular,plural,ssp,the bike at the station are broken .
+bike,at,stations,might be,is,The %% {preposition} the %% {predicate} broken.,56,singular,plural,singular,sps,the bike at the stations is broken .
+bike,at,stations,might be,are,The %% {preposition} the %% {predicate} broken.,56,singular,plural,plural,spp,the bike at the stations are broken .
+bikes,at,station,might be,is,The %% {preposition} the %% {predicate} broken.,56,plural,singular,singular,pss,the bikes at the station is broken .
+bikes,at,station,might be,are,The %% {preposition} the %% {predicate} broken.,56,plural,singular,plural,psp,the bikes at the station are broken .
+bikes,at,stations,might be,is,The %% {preposition} the %% {predicate} broken.,56,plural,plural,singular,pps,the bikes at the stations is broken .
+bikes,at,stations,might be,are,The %% {preposition} the %% {predicate} broken.,56,plural,plural,plural,ppp,the bikes at the stations are broken .
+rice,in,bowl,might be,is,The %% {preposition} the %% {predicate} undercooked.,57,singular,singular,singular,sss,the rice in the bowl is undercooked .
+rice,in,bowl,might be,are,The %% {preposition} the %% {predicate} undercooked.,57,singular,singular,plural,ssp,the rice in the bowl are undercooked .
+rice,in,bowl,might be,is,The %% {preposition} the %% {predicate} undercooked.,57,singular,plural,singular,sps,the rice in the bowl is undercooked .
+rice,in,bowl,might be,are,The %% {preposition} the %% {predicate} undercooked.,57,singular,plural,plural,spp,the rice in the bowl are undercooked .
+rices,in,bowl,might be,is,The %% {preposition} the %% {predicate} undercooked.,57,plural,singular,singular,pss,the rices in the bowl is undercooked .
+rices,in,bowl,might be,are,The %% {preposition} the %% {predicate} undercooked.,57,plural,singular,plural,psp,the rices in the bowl are undercooked .
+rices,in,bowl,might be,is,The %% {preposition} the %% {predicate} undercooked.,57,plural,plural,singular,pps,the rices in the bowl is undercooked .
+rices,in,bowl,might be,are,The %% {preposition} the %% {predicate} undercooked.,57,plural,plural,plural,ppp,the rices in the bowl are undercooked .
+water,in,bottle,might be,is,The %% {preposition} the %% {predicate} too cold.,58,singular,singular,singular,sss,the water in the bottle is too cold .
+water,in,bottle,might be,are,The %% {preposition} the %% {predicate} too cold.,58,singular,singular,plural,ssp,the water in the bottle are too cold .
+water,in,bottles,might be,is,The %% {preposition} the %% {predicate} too cold.,58,singular,plural,singular,sps,the water in the bottles is too cold .
+water,in,bottles,might be,are,The %% {preposition} the %% {predicate} too cold.,58,singular,plural,plural,spp,the water in the bottles are too cold .
+waters,in,bottle,might be,is,The %% {preposition} the %% {predicate} too cold.,58,plural,singular,singular,pss,the waters in the bottle is too cold .
+waters,in,bottle,might be,are,The %% {preposition} the %% {predicate} too cold.,58,plural,singular,plural,psp,the waters in the bottle are too cold .
+waters,in,bottles,might be,is,The %% {preposition} the %% {predicate} too cold.,58,plural,plural,singular,pps,the waters in the bottles is too cold .
+waters,in,bottles,might be,are,The %% {preposition} the %% {predicate} too cold.,58,plural,plural,plural,ppp,the waters in the bottles are too cold .
+meeting,between,senator,will be,is,The %% {preposition} the %% {predicate} held in the conference room.,59,singular,singular,singular,sss,the meeting between the senator is held in the conference room .
+meeting,between,senator,will be,are,The %% {preposition} the %% {predicate} held in the conference room.,59,singular,singular,plural,ssp,the meeting between the senator are held in the conference room .
+meeting,between,senators,will be,is,The %% {preposition} the %% {predicate} held in the conference room.,59,singular,plural,singular,sps,the meeting between the senators is held in the conference room .
+meeting,between,senators,will be,are,The %% {preposition} the %% {predicate} held in the conference room.,59,singular,plural,plural,spp,the meeting between the senators are held in the conference room .
+meetings,between,senator,will be,is,The %% {preposition} the %% {predicate} held in the conference room.,59,plural,singular,singular,pss,the meetings between the senator is held in the conference room .
+meetings,between,senator,will be,are,The %% {preposition} the %% {predicate} held in the conference room.,59,plural,singular,plural,psp,the meetings between the senator are held in the conference room .
+meetings,between,senators,will be,is,The %% {preposition} the %% {predicate} held in the conference room.,59,plural,plural,singular,pps,the meetings between the senators is held in the conference room .
+meetings,between,senators,will be,are,The %% {preposition} the %% {predicate} held in the conference room.,59,plural,plural,plural,ppp,the meetings between the senators are held in the conference room .

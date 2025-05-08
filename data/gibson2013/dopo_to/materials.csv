@@ -1,0 +1,81 @@
+Item,Type,Structure,Plausibility,Sentence,Question,Answer
+1,Target,DO,implausible,The sister mailed the letter the niece.,Did the niece receive something/someone?,No
+1,Target,DO,plausible,The sister mailed the niece the letter.,Did the niece receive something/someone?,Yes
+1,Target,PO,implausible,The sister mailed the niece to the letter.,Did the niece receive something/someone?,No
+1,Target,PO,plausible,The sister mailed the letter to the niece.,Did the niece receive something/someone?,Yes
+2,Target,DO,implausible,The mother gave the candle the daughter.,Did the daughter receive something/someone?,No
+2,Target,DO,plausible,The mother gave the daughter the candle.,Did the daughter receive something/someone?,Yes
+2,Target,PO,implausible,The mother gave the daughter to the candle.,Did the daughter receive something/someone?,No
+2,Target,PO,plausible,The mother gave the candle to the daughter.,Did the daughter receive something/someone?,Yes
+3,Target,DO,implausible,The uncle sold the truck the father.,Did the father receive something/someone?,No
+3,Target,DO,plausible,The uncle sold the father the truck.,Did the father receive something/someone?,Yes
+3,Target,PO,implausible,The uncle sold the father to the truck.,Did the father receive something/someone?,No
+3,Target,PO,plausible,The uncle sold the truck to the father.,Did the father receive something/someone?,Yes
+4,Target,DO,implausible,The contractor lent the saw the homeowner.,Did the homeowner receive something/someone?,No
+4,Target,DO,plausible,The contractor lent the homeowner the saw.,Did the homeowner receive something/someone?,Yes
+4,Target,PO,implausible,The contractor lent the homeowner to the saw.,Did the homeowner receive something/someone?,No
+4,Target,PO,plausible,The contractor lent the saw to the homeowner.,Did the homeowner receive something/someone?,Yes
+5,Target,DO,implausible,The sailing club leased the boat the man.,Did the man receive something/someone?,No
+5,Target,DO,plausible,The sailing club leased the man the boat.,Did the man receive something/someone?,Yes
+5,Target,PO,implausible,The sailing club leased the man to the boat.,Did the man receive something/someone?,No
+5,Target,PO,plausible,The sailing club leased the boat to the man.,Did the man receive something/someone?,Yes
+6,Target,DO,implausible,The girl tossed the apple the boy.,Did the apple receive something/someone?,Yes
+6,Target,DO,plausible,The girl tossed the boy the apple.,Did the apple receive something/someone?,No
+6,Target,PO,implausible,The girl tossed the boy to the apple.,Did the apple receive something/someone?,Yes
+6,Target,PO,plausible,The girl tossed the apple to the boy.,Did the apple receive something/someone?,No
+7,Target,DO,implausible,The daughter passed the bowl the mother.,Did the bowl receive something/someone?,Yes
+7,Target,DO,plausible,The daughter passed the mother the bowl.,Did the bowl receive something/someone?,No
+7,Target,PO,implausible,The daughter passed the mother to the bowl.,Did the bowl receive something/someone?,Yes
+7,Target,PO,plausible,The daughter passed the bowl to the mother.,Did the bowl receive something/someone?,No
+8,Target,DO,implausible,The scuba instructor rented the equipment the tourist.,Did the equipment receive something/someone?,Yes
+8,Target,DO,plausible,The scuba instructor rented the tourist the equipment.,Did the equipment receive something/someone?,No
+8,Target,PO,implausible,The scuba instructor rented the tourist to the equipment.,Did the equipment receive something/someone?,Yes
+8,Target,PO,plausible,The scuba instructor rented the equipment to the tourist.,Did the equipment receive something/someone?,No
+9,Target,DO,implausible,The boy handed the pencil the girl.,Did the pencil receive something/someone?,Yes
+9,Target,DO,plausible,The boy handed the girl the pencil.,Did the pencil receive something/someone?,No
+9,Target,PO,implausible,The boy handed the girl to the pencil.,Did the pencil receive something/someone?,Yes
+9,Target,PO,plausible,The boy handed the pencil to the girl.,Did the pencil receive something/someone?,No
+10,Target,DO,implausible,The nanny threw the toy the child.,Did the toy receive something/someone?,Yes
+10,Target,DO,plausible,The nanny threw the child the toy.,Did the toy receive something/someone?,No
+10,Target,PO,implausible,The nanny threw the child to the toy.,Did the toy receive something/someone?,Yes
+10,Target,PO,plausible,The nanny threw the toy to the child.,Did the toy receive something/someone?,No
+11,Target,DO,implausible,The nephew mailed the postcard the aunt.,Did the postcard receive something/someone?,Yes
+11,Target,DO,plausible,The nephew mailed the aunt the postcard.,Did the postcard receive something/someone?,No
+11,Target,PO,implausible,The nephew mailed the aunt to the postcard.,Did the postcard receive something/someone?,Yes
+11,Target,PO,plausible,The nephew mailed the postcard to the aunt.,Did the postcard receive something/someone?,No
+12,Target,DO,implausible,The father gave the car the son.,Did the car receive something/someone?,Yes
+12,Target,DO,plausible,The father gave the son the car.,Did the car receive something/someone?,No
+12,Target,PO,implausible,The father gave the son to the car.,Did the car receive something/someone?,Yes
+12,Target,PO,plausible,The father gave the car to the son.,Did the car receive something/someone?,No
+13,Target,DO,implausible,The shop sold the bike the student.,Did the bike receive something/someone?,Yes
+13,Target,DO,plausible,The shop sold the student the bike.,Did the bike receive something/someone?,No
+13,Target,PO,implausible,The shop sold the student to the bike.,Did the bike receive something/someone?,Yes
+13,Target,PO,plausible,The shop sold the bike to the student.,Did the bike receive something/someone?,No
+14,Target,DO,implausible,The janitor lent the mop the teacher.,Did the mop receive something/someone?,Yes
+14,Target,DO,plausible,The janitor lent the teacher the mop.,Did the mop receive something/someone?,No
+14,Target,PO,implausible,The janitor lent the teacher to the mop.,Did the mop receive something/someone?,Yes
+14,Target,PO,plausible,The janitor lent the mop to the teacher.,Did the mop receive something/someone?,No
+15,Target,DO,implausible,The car dealer leased the SUV the plumber.,Did the SUV receive something/someone?,Yes
+15,Target,DO,plausible,The car dealer leased the plumber the SUV.,Did the SUV receive something/someone?,No
+15,Target,PO,implausible,The car dealer leased the plumber to the SUV.,Did the SUV receive something/someone?,Yes
+15,Target,PO,plausible,The car dealer leased the SUV to the plumber.,Did the SUV receive something/someone?,No
+16,Target,DO,implausible,The host tossed the microphone the contestant.,Did the contestant receive something/someone?,No
+16,Target,DO,plausible,The host tossed the contestant the microphone.,Did the contestant receive something/someone?,Yes
+16,Target,PO,implausible,The host tossed the contestant to the microphone.,Did the contestant receive something/someone?,No
+16,Target,PO,plausible,The host tossed the microphone to the contestant.,Did the contestant receive something/someone?,Yes
+17,Target,DO,implausible,The quarterback passed the ball the receiver.,Did the receiver receive something/someone?,No
+17,Target,DO,plausible,The quarterback passed the receiver the ball.,Did the receiver receive something/someone?,Yes
+17,Target,PO,implausible,The quarterback passed the receiver to the ball.,Did the receiver receive something/someone?,No
+17,Target,PO,plausible,The quarterback passed the ball to the receiver.,Did the receiver receive something/someone?,Yes
+18,Target,DO,implausible,The videostore rented the DVD the customer.,Did the customer receive something/someone?,No
+18,Target,DO,plausible,The videostore rented the customer the DVD.,Did the customer receive something/someone?,Yes
+18,Target,PO,implausible,The videostore rented the customer to the DVD.,Did the customer receive something/someone?,No
+18,Target,PO,plausible,The videostore rented the DVD to the customer.,Did the customer receive something/someone?,Yes
+19,Target,DO,implausible,The bartender handed the drink the lady.,Did the lady receive something/someone?,No
+19,Target,DO,plausible,The bartender handed the lady the drink.,Did the lady receive something/someone?,Yes
+19,Target,PO,implausible,The bartender handed the lady to the drink.,Did the lady receive something/someone?,No
+19,Target,PO,plausible,The bartender handed the drink to the lady.,Did the lady receive something/someone?,Yes
+20,Target,DO,implausible,The magician threw the hat the assistant.,Did the assistant receive something/someone?,No
+20,Target,DO,plausible,The magician threw the assistant the hat.,Did the assistant receive something/someone?,Yes
+20,Target,PO,implausible,The magician threw the assistant to the hat.,Did the assistant receive something/someone?,No
+20,Target,PO,plausible,The magician threw the hat to the assistant.,Did the assistant receive something/someone?,Yes

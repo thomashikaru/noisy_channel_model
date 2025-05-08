@@ -1,0 +1,80 @@
+the sister mailed the letter the niece .
+the sister mailed the niece the letter .
+the sister mailed the niece to the letter .
+the sister mailed the letter to the niece .
+the mother gave the candle the daughter .
+the mother gave the daughter the candle .
+the mother gave the daughter to the candle .
+the mother gave the candle to the daughter .
+the uncle sold the truck the father .
+the uncle sold the father the truck .
+the uncle sold the father to the truck .
+the uncle sold the truck to the father .
+the contractor lent the saw the homeowner .
+the contractor lent the homeowner the saw .
+the contractor lent the homeowner to the saw .
+the contractor lent the saw to the homeowner .
+the sailing club leased the boat the man .
+the sailing club leased the man the boat .
+the sailing club leased the man to the boat .
+the sailing club leased the boat to the man .
+the girl tossed the apple the boy .
+the girl tossed the boy the apple .
+the girl tossed the boy to the apple .
+the girl tossed the apple to the boy .
+the daughter passed the bowl the mother .
+the daughter passed the mother the bowl .
+the daughter passed the mother to the bowl .
+the daughter passed the bowl to the mother .
+the scuba instructor rented the equipment the tourist .
+the scuba instructor rented the tourist the equipment .
+the scuba instructor rented the tourist to the equipment .
+the scuba instructor rented the equipment to the tourist .
+the boy handed the pencil the girl .
+the boy handed the girl the pencil .
+the boy handed the girl to the pencil .
+the boy handed the pencil to the girl .
+the nanny threw the toy the child .
+the nanny threw the child the toy .
+the nanny threw the child to the toy .
+the nanny threw the toy to the child .
+the nephew mailed the postcard the aunt .
+the nephew mailed the aunt the postcard .
+the nephew mailed the aunt to the postcard .
+the nephew mailed the postcard to the aunt .
+the father gave the car the son .
+the father gave the son the car .
+the father gave the son to the car .
+the father gave the car to the son .
+the shop sold the bike the student .
+the shop sold the student the bike .
+the shop sold the student to the bike .
+the shop sold the bike to the student .
+the janitor lent the mop the teacher .
+the janitor lent the teacher the mop .
+the janitor lent the teacher to the mop .
+the janitor lent the mop to the teacher .
+the car dealer leased the suv the plumber .
+the car dealer leased the plumber the suv .
+the car dealer leased the plumber to the suv .
+the car dealer leased the suv to the plumber .
+the host tossed the microphone the contestant .
+the host tossed the contestant the microphone .
+the host tossed the contestant to the microphone .
+the host tossed the microphone to the contestant .
+the quarterback passed the ball the receiver .
+the quarterback passed the receiver the ball .
+the quarterback passed the receiver to the ball .
+the quarterback passed the ball to the receiver .
+the videostore rented the dvd the customer .
+the videostore rented the customer the dvd .
+the videostore rented the customer to the dvd .
+the videostore rented the dvd to the customer .
+the bartender handed the drink the lady .
+the bartender handed the lady the drink .
+the bartender handed the lady to the drink .
+the bartender handed the drink to the lady .
+the magician threw the hat the assistant .
+the magician threw the assistant the hat .
+the magician threw the assistant to the hat .
+the magician threw the hat to the assistant .

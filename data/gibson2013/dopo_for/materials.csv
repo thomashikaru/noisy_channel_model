@@ -1,0 +1,81 @@
+Item,Type,Structure,Plausibility,Sentence,Question,Answer
+1,Target,DO,implausible,The cook baked a cake Lucy.,Was something baked for Lucy?,No
+1,Target,DO,plausible,The cook baked Lucy a cake.,Was something baked for Lucy?,Yes
+1,Target,PO,implausible,The cook baked Lucy for a cake.,Was something baked for Lucy?,No
+1,Target,PO,plausible,The cook baked a cake for Lucy.,Was something baked for Lucy?,Yes
+2,Target,DO,implausible,The bartender poured a drink the customer.,Was something poured for the customer?,No
+2,Target,DO,plausible,The bartender poured the customer a drink.,Was something poured for the customer?,Yes
+2,Target,PO,implausible,The bartender poured the customer for a drink.,Was something poured for the customer?,No
+2,Target,PO,plausible,The bartender poured a drink for the customer.,Was something poured for the customer?,Yes
+3,Target,DO,implausible,The woman saved a seat her husband.,Was something saved for the husband?,No
+3,Target,DO,plausible,The woman saved her husband a seat.,Was something saved for the husband?,Yes
+3,Target,PO,implausible,The woman saved her husband for a seat.,Was something saved for the husband?,No
+3,Target,PO,plausible,The woman saved a seat for her husband.,Was something saved for the husband?,Yes
+4,Target,DO,implausible,The grandmother made a quilt her granddaughter.,Was something made for the granddaughter?,No
+4,Target,DO,plausible,The grandmother made her granddaughter a quilt.,Was something made for the granddaughter?,Yes
+4,Target,PO,implausible,The grandmother made her granddaughter for a quilt.,Was something made for the granddaughter?,No
+4,Target,PO,plausible,The grandmother made a quilt for her granddaughter.,Was something made for the granddaughter?,Yes
+5,Target,DO,implausible,The apprentice fetched a hammer the carpenter.,Was something fetched for the carpenter?,No
+5,Target,DO,plausible,The apprentice fetched the carpenter a hammer.,Was something fetched for the carpenter?,Yes
+5,Target,PO,implausible,The apprentice fetched the carpenter for a hammer.,Was something fetched for the carpenter?,No
+5,Target,PO,plausible,The apprentice fetched a hammer for the carpenter.,Was something fetched for the carpenter?,Yes
+6,Target,DO,implausible,The secretary ordered some office supplies the boss.,Was something ordered for the boss?,No
+6,Target,DO,plausible,The secretary ordered the boss some office supplies.,Was something ordered for the boss?,Yes
+6,Target,PO,implausible,The secretary ordered the boss for some office supplies.,Was something ordered for the boss?,No
+6,Target,PO,plausible,The secretary ordered some office supplies for the boss.,Was something ordered for the boss?,Yes
+7,Target,DO,implausible,The wife reserved a table her husband.,Was something reserved for the husband?,No
+7,Target,DO,plausible,The wife reserved her husband a table.,Was something reserved for the husband?,Yes
+7,Target,PO,implausible,The wife reserved her husband for a table.,Was something reserved for the husband?,No
+7,Target,PO,plausible,The wife reserved table for her husband.,Was something reserved for the husband?,Yes
+8,Target,DO,implausible,The father bought a bicycle his son.,Was something bought for the son?,No
+8,Target,DO,plausible,The father bought his son a bicycle.,Was something bought for the son?,Yes
+8,Target,PO,implausible,The father bought his son for a bicycle.,Was something bought for the son?,No
+8,Target,PO,plausible,The father bought a bicycle for his son.,Was something bought for the son?,Yes
+9,Target,DO,implausible,The charity built a house the hurricane victim.,Was something built for the hurricane victim?,No
+9,Target,DO,plausible,The charity built the hurricane victim a house.,Was something built for the hurricane victim?,Yes
+9,Target,PO,implausible,The charity built the hurricane victim for a house.,Was something built for the hurricane victim?,No
+9,Target,PO,plausible,The charity built a house for the hurricane victim.,Was something built for the hurricane victim?,Yes
+10,Target,DO,implausible,The waitress fixed a sandwich the customer.,Was something fixed for the customer?,No
+10,Target,DO,plausible,The waitress fixed the customer a sandwich.,Was something fixed for the customer?,Yes
+10,Target,PO,implausible,The waitress fixed the customer for a sandwich.,Was something fixed for the customer?,No
+10,Target,PO,plausible,The waitress fixed a sandwich for the customer.,Was something fixed for the customer?,Yes
+11,Target,DO,implausible,The grandmother baked some cookies the grandson.,Was something baked for the cookies?,Yes
+11,Target,DO,plausible,The grandmother baked the grandson some cookies.,Was something baked for the cookies?,No
+11,Target,PO,implausible,The grandmother baked the grandson for some cookies.,Was something baked for the cookies?,Yes
+11,Target,PO,plausible,The grandmother baked some cookies for the grandson.,Was something baked for the cookies?,No
+12,Target,DO,implausible,The nurse poured some water the old man.,Was something poured for the water?,Yes
+12,Target,DO,plausible,The nurse poured the old man some water.,Was something poured for the water?,No
+12,Target,PO,implausible,The nurse poured the old man for some water.,Was something poured for the water?,Yes
+12,Target,PO,plausible,The nurse poured some water for the old man.,Was something poured for the water?,No
+13,Target,DO,implausible,The receptionist saved some cake her co-worker.,Was something saved for the cake?,Yes
+13,Target,DO,plausible,The receptionist saved her co-worker some cake.,Was something saved for the cake?,No
+13,Target,PO,implausible,The receptionist saved her co-worker for some cake.,Was something saved for the cake?,Yes
+13,Target,PO,plausible,The receptionist saved some cake for her co-worker.,Was something saved for the cake?,No
+14,Target,DO,implausible,The seamstress made a dress her client.,Was something made for the dress?,Yes
+14,Target,DO,plausible,The seamstress made her client a dress.,Was something made for the dress?,No
+14,Target,PO,implausible,The seamstress made her client for a dress.,Was something made for the dress?,Yes
+14,Target,PO,plausible,The seamstress made a dress for her client.,Was something made for the dress?,No
+15,Target,DO,implausible,The lab-assistant fetched a test-tube the scientist.,Was something fetched for the test-tube?,Yes
+15,Target,DO,plausible,The lab-assistant fetched the scientist a test-tube.,Was something fetched for the test-tube?,No
+15,Target,PO,implausible,The lab-assistant fetched the scientist for a test-tube.,Was something fetched for the test-tube?,Yes
+15,Target,PO,plausible,The lab-assistant fetched a test-tube for the scientist.,Was something fetched for the test-tube?,No
+16,Target,DO,implausible,The man ordered some champagne his girlfriend.,Was something ordered for the champagne?,Yes
+16,Target,DO,plausible,The man ordered his girlfriend some champagne.,Was something ordered for the champagne?,No
+16,Target,PO,implausible,The man ordered his girlfriend for some champagne.,Was something ordered for the champagne?,Yes
+16,Target,PO,plausible,The man ordered some champagne for his girlfriend.,Was something ordered for the champagne?,No
+17,Target,DO,implausible,The travel agent reserved a flight the businessman.,Was something reserved for the flight?,Yes
+17,Target,DO,plausible,The travel agent reserved the businessman a flight.,Was something reserved for the flight?,No
+17,Target,PO,implausible,The travel agent reserved the businessman for a flight.,Was something reserved for the flight?,Yes
+17,Target,PO,plausible,The travel agent reserved a flight for the businessman.,Was something reserved for the flight?,No
+18,Target,DO,implausible,The boyfriend obtained some concert tickets his girlfriend.,Was something obtained for the concert tickets?,Yes
+18,Target,DO,plausible,The boyfriend obtained his girlfriend some concert tickets.,Was something obtained for the concert tickets?,No
+18,Target,PO,implausible,The boyfriend obtained his girlfriend for some concert tickets.,Was something obtained for the concert tickets?,Yes
+18,Target,PO,plausible,The boyfriend obtained some concert tickets for his girlfriend.,Was something obtained for the concert tickets?,No
+19,Target,DO,implausible,The church built a shelter the homeless.,Was something built for the shelter?,Yes
+19,Target,DO,plausible,The church built the homeless a shelter.,Was something built for the shelter?,No
+19,Target,PO,implausible,The church built the homeless for a shelter.,Was something built for the shelter?,Yes
+19,Target,PO,plausible,The church built a shelter for the homeless.,Was something built for the shelter?,No
+20,Target,DO,implausible,The babysitter fixed some lunch the child.,Was something fixed for the lunch?,Yes
+20,Target,DO,plausible,The babysitter fixed the child some lunch.,Was something fixed for the lunch?,No
+20,Target,PO,implausible,The babysitter fixed the child for some lunch.,Was something fixed for the lunch?,Yes
+20,Target,PO,plausible,The babysitter fixed some lunch for the child.,Was something fixed for the lunch?,No

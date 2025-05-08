@@ -1,0 +1,81 @@
+Item,Type,Structure,Plausibility,Sentence,Question,Answer
+1,Target,Preposition,implausible,The tax law benefited from the businessman.,Did the tax law benefit from anything?,Yes
+1,Target,Preposition,plausible,The businessman benefited from the tax law.,Did the tax law benefit from anything?,No
+1,Target,Transitive,implausible,The businessman benefited the tax law.,Did the tax law benefit from anything?,Yes
+1,Target,Transitive,plausible,The tax law benefited the businessman.,Did the tax law benefit from anything?,No
+2,Target,Preposition,implausible,The intense practice benefited from the player.,Did the player benefit from anything?,No
+2,Target,Preposition,plausible,The player benefited from the intense practice.,Did the player benefit from anything?,Yes
+2,Target,Transitive,implausible,The player benefited the intense practice.,Did the player benefit from anything?,No
+2,Target,Transitive,plausible,The intense practice benefited the player.,Did the player benefit from anything?,Yes
+3,Target,Preposition,implausible,The extra time benefited from the child with a learning disability.,Did the extra time benefit from anything?,Yes
+3,Target,Preposition,plausible,The child with a learning disability benefited from the extra time.,Did the extra time benefit from anything?,No
+3,Target,Transitive,implausible,The child with a learning disability benefited the extra time.,Did the extra time benefit from anything?,Yes
+3,Target,Transitive,plausible,The extra time benefited the child with a learning disability.,Did the extra time benefit from anything?,No
+4,Target,Preposition,implausible,The bribes profited from the corrupt politicians.,Did the politicians profit from anything?,No
+4,Target,Preposition,plausible,The corrupt politicians profited from the bribes.,Did the politicians profit from anything?,Yes
+4,Target,Transitive,implausible,The corrupt politicians profited the bribes.,Did the politicians profit from anything?,No
+4,Target,Transitive,plausible,The bribes profited the corrupt politicians.,Did the politicians profit from anything?,Yes
+5,Target,Preposition,implausible,The contract profited from the business.,Did the contract profit from anything?,Yes
+5,Target,Preposition,plausible,The business profited from the contract.,Did the contract profit from anything?,No
+5,Target,Transitive,implausible,The business profited the contract.,Did the contract profit from anything?,Yes
+5,Target,Transitive,plausible,The contract profited the business.,Did the contract profit from anything?,No
+6,Target,Preposition,implausible,The tax reduction profited from the millionaire.,Did the millionaire profit from anything?,No
+6,Target,Preposition,plausible,The millionaire profited from the tax reduction.,Did the millionaire profit from anything?,Yes
+6,Target,Transitive,implausible,The millionaire profited the tax reduction.,Did the millionaire profit from anything?,No
+6,Target,Transitive,plausible,The tax reduction profited the millionaire.,Did the millionaire profit from anything?,Yes
+7,Target,Preposition,implausible,The new medicine deteriorated from the patient's condition.,Did the medicine deteriorate from anything?,Yes
+7,Target,Preposition,plausible,The patient's condition deteriorated from the new medicine.,Did the medicine deteriorate from anything?,No
+7,Target,Transitive,implausible,The patient's condition deteriorated the new medicine.,Did the medicine deteriorate from anything?,Yes
+7,Target,Transitive,plausible,The new medicine deteriorated the patient's condition.,Did the medicine deteriorate from anything?,No
+8,Target,Preposition,implausible,The bad lighting deteriorated from the woman's eyesight.,Did the woman's eyesight deteriorate from anything?,No
+8,Target,Preposition,plausible,The woman's eyesight deteriorated from the bad lighting.,Did the woman's eyesight deteriorate from anything?,Yes
+8,Target,Transitive,implausible,The woman's eyesight deteriorated the bad lighting.,Did the woman's eyesight deteriorate from anything?,No
+8,Target,Transitive,plausible,The bad lighting deteriorated the woman's eyesight.,Did the woman's eyesight deteriorate from anything?,Yes
+9,Target,Preposition,implausible,The long drought deteriorated from the soil.,Did the drought deteriorate from anything?,Yes
+9,Target,Preposition,plausible,The soil deteriorated from the long drought.,Did the drought deteriorate from anything?,No
+9,Target,Transitive,implausible,The soil deteriorated the long drought.,Did the drought deteriorate from anything?,Yes
+9,Target,Transitive,plausible,The long drought deteriorated the soil.,Did the drought deteriorate from anything?,No
+10,Target,Preposition,implausible,The washing machine shrank inside the new sweatshirt.,Was the sweatshirt shrunken by anything?,No
+10,Target,Preposition,plausible,The new sweatshirt shrank inside the washing machine.,Was the sweatshirt shrunken by anything?,Yes
+10,Target,Transitive,implausible,The new sweatshirt shrank the washing machine.,Was the sweatshirt shrunken by anything?,No
+10,Target,Transitive,plausible,The washing machine shrank the new sweatshirt.,Was the sweatshirt shrunken by anything?,Yes
+11,Target,Preposition,implausible,The dryer shrank inside the new cotton t-shirt.,Was the dryer shrunken by anything?,Yes
+11,Target,Preposition,plausible,The new cotton t-shirt shrank inside the dryer.,Was the dryer shrunken by anything?,No
+11,Target,Transitive,implausible,The new cotton t-shirt shrank the dryer.,Was the dryer shrunken by anything?,Yes
+11,Target,Transitive,plausible,The dryer shrank the new cotton t-shirt.,Was the dryer shrunken by anything?,No
+12,Target,Preposition,implausible,The chemotherapy shrank from the tumor.,Was the tumor shrunken by anything?,No
+12,Target,Preposition,plausible,The tumor shrank from the chemotherapy.,Was the tumor shrunken by anything?,Yes
+12,Target,Transitive,implausible,The tumor shrank the chemotherapy.,Was the tumor shrunken by anything?,No
+12,Target,Transitive,plausible,The chemotherapy shrank the tumor.,Was the tumor shrunken by anything?,Yes
+13,Target,Preposition,implausible,The hot stove melted from the plastic handle.,Was the hot stove melted by anything?,Yes
+13,Target,Preposition,plausible,The plastic handled melted from the hot stove.,Was the hot stove melted by anything?,No
+13,Target,Transitive,implausible,The plastic handle melted the hot stove.,Was the hot stove melted by anything?,Yes
+13,Target,Transitive,plausible,The hot stove melted the plastic handle.,Was the hot stove melted by anything?,No
+14,Target,Preposition,implausible,The hot coffee melted from the ice cream.,Did the ice cream melt from anything?,No
+14,Target,Preposition,plausible,The ice cream melted from the hot coffee.,Did the ice cream melt from anything?,Yes
+14,Target,Transitive,implausible,The ice cream melted the hot coffee.,Did the ice cream melt from anything?,No
+14,Target,Transitive,plausible,The hot coffee melted the ice cream.,Did the ice cream melt from anything?,Yes
+15,Target,Preposition,implausible,The microwave melted inside the butter.,Was the microwave melted by anything?,Yes
+15,Target,Preposition,plausible,The butter melted inside the microwave.,Was the microwave melted by anything?,No
+15,Target,Transitive,implausible,The butter melted the microwave.,Was the microwave melted by anything?,Yes
+15,Target,Transitive,plausible,The microwave melted the butter.,Was the microwave melted by anything?,No
+16,Target,Preposition,implausible,The humidity worsened from the eczema.,Was the eczema worsened by anything?,No
+16,Target,Preposition,plausible,The eczema worsened from the humidity.,Was the eczema worsened by anything?,Yes
+16,Target,Transitive,implausible,The eczema worsened the humidity.,Was the eczema worsened by anything?,No
+16,Target,Transitive,plausible,The humidity worsened the eczema.,Was the eczema worsened by anything?,Yes
+17,Target,Preposition,implausible,The construction noise worsened from the man's hearing.,Was the construction noise worsened by anything?,Yes
+17,Target,Preposition,plausible,The man's hearing worsened from the construction noise.,Was the construction noise worsened by anything?,No
+17,Target,Transitive,implausible,The man's hearing worsened the construction noise.,Was the construction noise worsened by anything?,Yes
+17,Target,Transitive,plausible,The construction noise worsened the man's hearing.,Was the construction noise worsened by anything?,No
+18,Target,Preposition,implausible,The earthquake shattered from the house.,Was the house shattered by anything?,No
+18,Target,Preposition,plausible,The house shattered from the earthquake.,Was the house shattered by anything?,Yes
+18,Target,Transitive,implausible,The house shattered the earthquake.,Was the house shattered by anything?,No
+18,Target,Transitive,plausible,The earthquake shattered the house.,Was the house shattered by anything?,Yes
+19,Target,Preposition,implausible,The oven defrosted inside the lasagna.,Was the oven defrosted by anything?,Yes
+19,Target,Preposition,plausible,The lasagna defrosted inside the oven.,Was the oven defrosted by anything?,No
+19,Target,Transitive,implausible,The lasagna defrosted the oven.,Was the oven defrosted by anything?,Yes
+19,Target,Transitive,plausible,The oven defrosted the lasagna.,Was the oven defrosted by anything?,No
+20,Target,Preposition,implausible,The microwave defrosted inside the broccoli.,Was the broccoli defrosted by anything?,No
+20,Target,Preposition,plausible,The broccoli defrosted inside the microwave.,Was the broccoli defrosted by anything?,Yes
+20,Target,Transitive,implausible,The broccoli defrosted the microwave.,Was the broccoli defrosted by anything?,No
+20,Target,Transitive,plausible,The microwave defrosted the broccoli.,Was the broccoli defrosted by anything?,Yes
