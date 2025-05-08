@@ -1,5 +1,17 @@
 # Incremental and Approximate Noisy Channel Inference in Gen.jl
 
+## Dependencies
+
+Install Gen.jl: https://github.com/probcomp/Gen.jl
+
+We also use the following Julia libraries:
+
+```
+StatsBase, Memoize, NNlib, Random, CSV, DataFrames, Distributions, KernelDensity, Distances, StringDistances, DelimitedFiles, Statistics, SortingAlgorithms, LinearAlgebra, Base.Threads
+```
+
+We have adapted code from hfppl/llamppl to help with language model queries: https://github.com/genlm/llamppl/tree/main
+
 ## Run inference on a sentence
 
 ```

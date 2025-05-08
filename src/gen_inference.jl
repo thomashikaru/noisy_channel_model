@@ -1,10 +1,8 @@
 include("gen_model.jl")
 
-using StatsBase
 using Statistics
 using SortingAlgorithms
 using LinearAlgebra
-using Random
 using Base.Threads
 
 ENV["JULIA_NUM_THREADS"] = args["num_threads"]
