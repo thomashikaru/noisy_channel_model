@@ -8,9 +8,6 @@ using Printf
 
 ENV["JULIA_NUM_THREADS"] = args["num_threads"]
 
-# mixture distribution of two word dists
-word_mixture_dist = HeterogeneousMixture([word_dist, word_dist])
-
 function custom_sigmoid(x::Float64, center::Float64, spread::Float64)::Float64
     num = exp(-(spread * (x - center)))
     return num / (1.0 + num)
@@ -117,16 +114,14 @@ end
         copy(prev_trace[:intended_sent][end].context)
 
     # assuming the intended sentence RV does not yet contain anything based on the obs yet
-    if !(has_value(get_choices(prev_trace), :intended_sent => i => :w)) &&
+    if !(Gen.has_value(Gen.get_choices(prev_trace), :intended_sent => i => :w)) &&
        (length(sent) == 0 || sent[end] ∉ EOS_TOKENS)
 
-        new_word_dist = startswith(LM_METHOD, "gpt") ? gpt_word_dist : ngram_word_dist
-
-        # if obs ∉ EOS_TOKENS && bernoulli(1 - prev_trace[:action_prior][1])
-        if obs ∉ EOS_TOKENS && bernoulli(1 - prev_trace[:action_prior][1])
-            if bernoulli(0.5)
+        # if obs ∉ EOS_TOKENS && Gen.bernoulli(1 - prev_trace[:action_prior][1])
+        if obs ∉ EOS_TOKENS && Gen.bernoulli(1 - prev_trace[:action_prior][1])
+            if Gen.bernoulli(0.5)
                 # Option A: Propose from the LM distribution given prior context, w/o peeking
-                new_word = {:intended_sent => i => :w} ~ new_word_dist(sent)
+                new_word = {:intended_sent => i => :w} ~ gpt_word_dist(sent)
                 push!(sent, new_word)
             else
                 # Option B: Propose based on similar words/neighbors to the observed word
@@ -154,14 +149,14 @@ end
     elseif "skip" in ACTION_LIST &&
            (length(sent) >= i + 1) &&
            (obs == sent[i+1]) &&
-           bernoulli(0.9)
+           Gen.bernoulli(0.9)
         {:noisy_sent => t => :action} ~ action_dist(action_onehot("skip"))
         i += 2
         {:noisy_sent => t => :idx} ~ dummy_dist(i)
     elseif "backtrack" in ACTION_LIST &&
            (length(sent) >= i - 1) &&
            (obs in sent[1:i-1]) &&
-           bernoulli(0.5)
+           Gen.bernoulli(0.5)
         {:noisy_sent => t => :action} ~ action_dist(action_onehot("backtrack"))
         i = findfirst(x -> x == obs, sent) + 1
         {:noisy_sent => t => :idx} ~ dummy_dist(i)
@@ -174,7 +169,7 @@ end
     elseif length(sent) >= i
         if "sem_sub" in ACTION_LIST &&
            (get_sem_sub_ps(sent[i], prev_trace[:sem_sub_param])[get_vocab_idx(obs)] != 0) &&
-           bernoulli(0.5)
+           Gen.bernoulli(0.5)
             {:noisy_sent => t => :action} ~ action_dist(action_onehot("sem_sub"))
             i += 1
             {:noisy_sent => t => :idx} ~ dummy_dist(i)
@@ -198,7 +193,7 @@ end
 
 # a rejuvenation proposal function that proposes alternative random choices for a given trace
 @gen function rejuv_proposal_add_delete(prev_trace, tt::Int)
-    (T,) = get_args(prev_trace)
+    (T,) = Gen.get_args(prev_trace)
 
     old_idx = tt == 1 ? 1 : prev_trace[:noisy_sent=>tt-1=>:idx]
 
@@ -206,7 +201,7 @@ end
     literal_prefix = [prev_trace[:noisy_sent=>i=>:word] for i = 1:T]
 
     # randomness to decide whether we are generating an alternative or giving back the original (needed for involution to work)
-    add = {:add} ~ bernoulli(0.5)
+    add = {:add} ~ Gen.bernoulli(0.5)
 
     new_sent = copy(prev_trace[:intended_sent][end].context)
     if add && (length(new_sent) >= old_idx - 1)
@@ -218,7 +213,7 @@ end
 
     # if the new sentence we are generating is longer than the old one then we may need to change the lookahead variable
     # lookahead determines how many words ahead of the current observation the LM samples (should be 0 or 1)
-    lookahead = {:lookahead} ~ bernoulli(0.5)
+    lookahead = {:lookahead} ~ Gen.bernoulli(0.5)
 
     # if reverse=true, always just generate the original sentence
     # if reverse=false, always just generate the provided new sentence
@@ -272,7 +267,7 @@ end
         elseif "skip" in ACTION_LIST &&
                length(sent) >= i + 1 &&
                literal_prefix[t] == sent[i+1] &&
-               bernoulli(0.9)
+               Gen.bernoulli(0.9)
             action = {:noisy_sent => t => :action} ~ action_dist(action_onehot("skip"))
             i += 2
             {:noisy_sent => t => :idx} ~ dummy_dist(i)
@@ -280,7 +275,7 @@ end
         elseif "backtrack" in ACTION_LIST &&
                length(sent) >= i - 1 &&
                literal_prefix[t] in sent[1:i-1] &&
-               bernoulli(0.5)
+               Gen.bernoulli(0.5)
             action = {:noisy_sent => t => :action} ~ action_dist(action_onehot("backtrack"))
             i = findfirst(x -> x == literal_prefix[t], sent) + 1
             {:noisy_sent => t => :idx} ~ dummy_dist(i)
@@ -298,7 +293,7 @@ end
                        literal_prefix[t],
                    )] != 0
                ) &&
-               bernoulli(0.5)
+               Gen.bernoulli(0.5)
                 action =
                     {:noisy_sent => t => :action} ~ action_dist(action_onehot("sem_sub"))
                 i += 1
@@ -349,27 +344,27 @@ function involution_add_delete(tr, forward_choices, forward_retval, proposal_arg
     new_trace_choices[:lookahead] = forward_choices[:lookahead]
     backward_choices[:lookahead] = forward_retval
 
-    # we can use the set_submap!() function to change an entire subtree within the hierarchical random choices
+    # we can use the Gen.set_submap!() function to change an entire subtree within the hierarchical random choices
     # then the Gen.update() step will compare trace probabilities but it's OK if the two traces don't share
     # all the same addresses
-    set_submap!(new_trace_choices, :intended_sent, Gen.get_submap(forward_choices, :intended_sent))
-    set_submap!(
+    Gen.set_submap!(new_trace_choices, :intended_sent, Gen.get_submap(forward_choices, :intended_sent))
+    Gen.set_submap!(
         new_trace_choices,
         :noisy_sent,
         Gen.get_submap(forward_choices, :noisy_sent),
     )
-    set_submap!(
+    Gen.set_submap!(
         backward_choices,
         :intended_sent,
         Gen.get_submap(Gen.get_choices(tr), :intended_sent),
     )
-    set_submap!(
+    Gen.set_submap!(
         backward_choices,
         :noisy_sent,
         Gen.get_submap(Gen.get_choices(tr), :noisy_sent),
     )
 
-    new_trace, weight, = Gen.update(tr, get_args(tr), (UnknownChange(),), new_trace_choices)
+    new_trace, weight, = Gen.update(tr, Gen.get_args(tr), (Gen.UnknownChange(),), new_trace_choices)
     (new_trace, backward_choices, weight)
 end
 
@@ -405,7 +400,7 @@ end
 end
 
 function involution_sub(tr, forward_choices, forward_retval, proposal_args)
-    (T,) = get_args(tr)
+    (T,) = Gen.get_args(tr)
     (t, sub_type) = proposal_args
 
     new_trace_choices = Gen.choicemap()
@@ -420,7 +415,7 @@ function involution_sub(tr, forward_choices, forward_retval, proposal_args)
     backward_choices[:intended_sent=>i=>:w] = tr[:intended_sent=>i=>:w]
     backward_choices[:noisy_sent=>t=>:action] = tr[:noisy_sent=>t=>:action]
 
-    new_trace, weight, = Gen.update(tr, get_args(tr), (NoChange(),), new_trace_choices)
+    new_trace, weight, = Gen.update(tr, Gen.get_args(tr), (Gen.NoChange(),), new_trace_choices)
     (new_trace, backward_choices, weight)
 end
 
@@ -456,7 +451,7 @@ function particle_filter_with_rejuv(
         (log_incr_weights,) = Gen.particle_filter_step!(
             state,
             (t,),
-            (UnknownChange(),),
+            (Gen.UnknownChange(),),
             obs,
             choose_action,
             (t, utt[t]),
@@ -493,7 +488,7 @@ function particle_filter_with_rejuv(
             args["conditional_rejuv"] || break
 
             # higher surprisal -> higher probability of applying rejuvenation
-            bernoulli(cond_rejuv_p) || continue
+            Gen.bernoulli(cond_rejuv_p) || continue
 
             timesteps = max(1, t - args["lookback"]):t
             steps =
@@ -504,8 +499,8 @@ function particle_filter_with_rejuv(
                 index_back = tt == 1 ? 1 : state.traces[i][:noisy_sent=>tt-1=>:idx]
 
                 # SUBSTITUTIONS
-                if has_value(
-                    get_choices(state.traces[i]),
+                if Gen.has_value(
+                    Gen.get_choices(state.traces[i]),
                     :intended_sent => index_back => :w,
                 ) && state.traces[i][:intended_sent=>index_back=>:w] != "<nonword>"
 
@@ -565,7 +560,7 @@ function particle_filter_with_rejuv(
 
         args["second_pass_rejuv"] || break
 
-        bernoulli(args["second_pass_rejuv_p"]) || continue
+        Gen.bernoulli(args["second_pass_rejuv_p"]) || continue
 
         timesteps = 1:length(utt)
         steps =
@@ -577,7 +572,7 @@ function particle_filter_with_rejuv(
             index_back = tt == 1 ? 1 : state.traces[i][:noisy_sent=>tt-1=>:idx]
 
             # SUBSTITUTIONS
-            if has_value(get_choices(state.traces[i]), :intended_sent => index_back => :w) &&
+            if Gen.has_value(Gen.get_choices(state.traces[i]), :intended_sent => index_back => :w) &&
                state.traces[i][:intended_sent=>index_back=>:w] != "<nonword>"
 
                 # Phono Sub

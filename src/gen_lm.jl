@@ -1,6 +1,7 @@
 include("./configs/config.jl")
 
-using Gen
+import Gen
+import Gen: @gen, @dist
 using StatsBase
 using Memoize
 using NNlib
@@ -195,7 +196,6 @@ pycall(
     "hfppl_custom",
 )
 
-
 println("Importing transformers...")
 transformers = pyimport("transformers")
 
@@ -203,7 +203,7 @@ hfppl = pyimport("hfppl")
 torch = pyimport("torch")
 np = pyimport("numpy")
 
-println("Loading HF model...")
+println("Loading model...")
 model_name = LM_METHOD
 base_model_name = LM_METHOD
 
@@ -212,7 +212,6 @@ gpt_model = hfppl.CachedCausalLM.from_pretrained(
     auth_token = false,
     load_in_8bit = false,
 )
-
 tokenizer = gpt_model.tokenizer
 
 function tokenize_custom(word::AbstractString, prepend_space::Bool)::Vector{Int}
@@ -332,7 +331,7 @@ function Gen.random(dist::GPTWordDist, prefix::Vector{<:AbstractString})
         probs = NNlib.softmax(mask, dims = 1)
 
         # sample a token
-        new_tok_id = categorical(probs) - 1
+        new_tok_id = Gen.categorical(probs) - 1
         new_tok = dist.tokenizer.convert_ids_to_tokens([new_tok_id])[1]
 
         # if a new word character is generated, break loop

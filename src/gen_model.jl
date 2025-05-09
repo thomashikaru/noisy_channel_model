@@ -22,14 +22,17 @@ for (i, w) in enumerate(words)
 end
 
 # custom distributions
-@dist action_dist(probs) = ACTION_LIST[categorical(probs)]
-@dist word_dist(probs) = vocab_list[categorical(probs)]
-@dist nonword_dist() = ["<nonword>"][categorical([1])]
-@dist disfl_dist() = DISFL_LIST[categorical(fill(1 / length(DISFL_LIST), length(DISFL_LIST)))]
-@dist disfl_dist_one(probs) = DISFL_LIST[categorical(probs)]
-@dist dummy_dist(a::Int) = a + [0][categorical([1])]
-@dist lookahead_dist(probs) = [0, 1][categorical(probs)]
-@dist backtrack_dist(i) = 1 + categorical(fill(1 / (i - 1), i - 1))
+@dist action_dist(probs) = ACTION_LIST[Gen.categorical(probs)]
+@dist word_dist(probs) = vocab_list[Gen.categorical(probs)]
+@dist nonword_dist() = ["<nonword>"][Gen.categorical([1])]
+@dist disfl_dist() = DISFL_LIST[Gen.categorical(fill(1 / length(DISFL_LIST), length(DISFL_LIST)))]
+@dist disfl_dist_one(probs) = DISFL_LIST[Gen.categorical(probs)]
+@dist dummy_dist(a::Int) = a + [0][Gen.categorical([1])]
+@dist lookahead_dist(probs) = [0, 1][Gen.categorical(probs)]
+@dist backtrack_dist(i) = 1 + Gen.categorical(fill(1 / (i - 1), i - 1))
+
+# mixture distribution of two word dists
+word_mixture_dist = Gen.HeterogeneousMixture([word_dist, word_dist])
 
 # convert the name (String) of an action to a 1-hot vector compatible with action_dist
 @memoize function action_onehot(action::String)
@@ -167,15 +170,15 @@ generate_noisy_sentence = Gen.Unfold(model_kernel)
     action_prior = {:action_prior} ~ Main.dirichlet(alphas)
 
     # sample substitution parameters
-    phon_sub_param = {:phon_sub_param} ~ beta(2, 11) # mode = 0.1 (param^x)
-    sem_sub_param = {:sem_sub_param} ~ gamma(6, 1) # mode = 5 (x^param)
+    phon_sub_param = {:phon_sub_param} ~ Gen.beta(2, 11) # mode = 0.1 (param^x)
+    sem_sub_param = {:sem_sub_param} ~ Gen.gamma(6, 1) # mode = 5 (x^param)
 
     # i represents the current index within the current sentence
     i = 1
 
     # lookahead is needed to make skips possible:
     # (there is some probability that future words are generated)
-    lazy_prob = {:lazy_prob} ~ beta(5, 5)
+    lazy_prob = {:lazy_prob} ~ Gen.beta(5, 5)
     lookahead = {:lookahead} ~ lookahead_dist([lazy_prob, 1 - lazy_prob])
 
     intended_sent =
