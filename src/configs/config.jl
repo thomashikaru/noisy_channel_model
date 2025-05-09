@@ -59,7 +59,7 @@ function parse_commandline(args = ARGS)
         "--second_pass_rejuv_p"
         help = "probability of a particle performing second-pass rejuv"
         arg_type = Float64
-        default = 0.5
+        default = 1.0
         "--num_samples"
         help = "number of posterior samples to draw"
         arg_type = Int

@@ -371,36 +371,6 @@ function Gen.random(dist::GPTWordDist, prefix::Vector{<:AbstractString})
     end
 end
 
-# function Gen.logpdf(dist::GPTWordDist, word::String, prefix::Vector{<:AbstractString})
-
-#     logprobs = 0.0
-
-#     if length(prefix) > 0
-#         input_ids =
-#             vcat(dist.tokenizer.bos_token_id, vcat([tokenize_custom(x, !(x ∈ OTHER_PUNCT_TOKENS || x ∈ EOS_TOKENS)) for x in prefix]...))
-#     else
-#         input_ids = [dist.tokenizer.bos_token_id]
-#     end
-#     word_ids = tokenize_custom(
-#         length(prefix) == 0 ? uppercasefirst(word) : word,
-#         !(word ∈ EOS_TOKENS || word ∈ OTHER_PUNCT_TOKENS),
-#     )
-
-#     for (count, word_id) in enumerate(word_ids)
-
-#         # get logits for current prefix
-#         logits = dist.model.next_token_logprobs_unbatched(input_ids)
-#         probs = NNlib.softmax(logits, dims = 1)
-
-#         # update the log probability
-#         logprobs += log(probs[word_id+1])
-
-#         # update the input_ids and generated string
-#         push!(input_ids, word_id)
-#     end
-#     return logprobs
-# end
-
 function Gen.logpdf(dist::GPTWordDist, word::AbstractString, prefix::Vector{<:AbstractString})
 
     logprobs = 0.0

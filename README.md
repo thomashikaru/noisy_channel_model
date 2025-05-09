@@ -74,3 +74,23 @@ This will produce plots like the following:
 ### 3D version showing the count of total rejuvenations.
 
 ![](./log/debug/rejuvenations_grid_3d.png)
+
+## FAQ
+
+### What error operations are included in the error model?
+
+By default, the actions normal, sem_sub, phon_sub, insert, skip, and morph_sub are included. Two other operations, disfl and backtrack, are also included in the model but have not been robustly tested. You can specify the actions that you want to include in the error model as a command line argument:
+
+```
+julia gen_inference.jl --actions "normal,insert,phon_sub,sem_sub"
+```
+
+The insert action acts as a catch-all error in the custom proposal function (if there is no other way to make sense of an input, it can just be labeled an insertion error), so it is recommended that you minimally keep at least normal and insert.
+
+You can also add your own new error functions by modifying the generative function and proposal function.
+
+### How can I speed up inference?
+
+You can use fewer particles, turn off one or both of the rejuvenation strategies, or limit the amount of computation spent on rejuvenation via the `--lookback`, `--logprob_thresh`, `--logprob_spread`, and `--second_pass_rejuv_p` arguments.
+
+If you have access to a GPU, in theory the code can be modified to use autobatching, but this has not been implemented yet. Code contributions are welcome.
