@@ -7,6 +7,7 @@ using NNlib
 using Random
 using CSV, DataFrames
 
+# lookup of irregular english singular/plurals
 const MORPH_SUBS = Dict([
     ("has", "have"),
     ("have", "has"),
@@ -56,15 +57,14 @@ const MORPH_SUBS = Dict([
 
 OTHER_PUNCT_TOKENS = [","]
 
+# load vocabulary from file
 vocab_list = split(rstrip(read(args["vocab_file"], String)), "\n")
-
-# disfluencies which are not already in the vocab
 DISFL_LIST_EXTRA = [x for x in DISFL_LIST if !(x in vocab_list)]
 vocab_list = [vocab_list; DISFL_LIST_EXTRA]
-
 vocab_set = Set(vocab_list)
 
-@memoize function get_vocab_idx(word)
+# function to get index of a given word in the vocabulary list
+@memoize function get_vocab_idx(word::AbstractString)::Int
     if !(word in vocab_list)
         println("$(word) not in vocab list")
     end
@@ -98,8 +98,12 @@ for x in EOS_TOKENS
 end
 unigram_probs_no_eos = unigram_probs_no_eos / sum(unigram_probs_no_eos)
 
+function normalize_array(a::Vector{Float64})::Vector{Float64}
+    return a / sum(a)
+end
+
 # get a probability distribution over vocabulary items, proportional to semantic similarity
-@memoize function get_sem_sub_ps(word, param)
+@memoize function get_sem_sub_ps(word::AbstractString, param::Float64)::Vector{Float64}
     if !haskey(glove_lookup, word)
         return unigram_probs_no_eos
     end
@@ -122,11 +126,11 @@ unigram_probs_no_eos = unigram_probs_no_eos / sum(unigram_probs_no_eos)
         new_sims[get_vocab_idx(x)] = 0
     end
 
-    ps = new_sims ./ sum(new_sims)
-    return ps
+    return normalize_array(new_sims)
 end
 
-@memoize function get_morph_sub_ps(word)
+# finds words which can be morphological neighbors of the input word
+@memoize function get_morph_sub_ps(word::AbstractString)::Vector{Float64}
     if haskey(MORPH_SUBS, word)
         return word_onehot(MORPH_SUBS[word])
     end
@@ -139,24 +143,24 @@ end
             return word_onehot(word * "s")
         end
     end
-    return fill(0, length(vocab_list))
+    return fill(0.0, length(vocab_list))
 end
 
-# get a probability distribution over vocabulary items, proportional to IPA similarity
-@memoize function get_phon_sub_ps(word, param)
+# get a probability distribution over vocabulary items, proportional to form-based similarity
+@memoize function get_phon_sub_ps(word::AbstractString, param::Float64)::Vector{Float64}
     if word == "<nonword>"
         return unigram_probs_no_eos
     end
 
     word_form =
-        DO_TYPO ? vocab_list[get_vocab_idx(word)] : vocab_ipa_list[get_vocab_idx(word)]
+        args["ipa"] ? vocab_ipa_list[get_vocab_idx(word)] : vocab_list[get_vocab_idx(word)]
 
     wl = length(word_form)
     distances = map(
         x -> x == word_form ? wl : Levenshtein()(word_form, x),
-        DO_TYPO ? vocab_list : vocab_ipa_list,
+        args["ipa"] ? vocab_ipa_list : vocab_list,
     )
-    sims = map(x -> x >= 5 ? 0 : param^x, distances)
+    sims = map(x -> x >= 5 ? 0.0 : param^x, distances)
 
     for x in EOS_TOKENS
         sims[get_vocab_idx(x)] = 0
@@ -167,43 +171,17 @@ end
         return unigram_probs_no_eos
     end
 
-    ps = sims ./ sum(sims)
-    return ps
+    return normalize_array(sims)
 end
 
 # cosine similarity between two vectors
-function cosine_sim(v1, v2)
-    return 1 - cosine_dist(v1, v2)
-end
-
-function normalize_array(a)
-    return a / sum(a)
-end
-
-function normalize_approx(arr::Vector{Float64})
-    # Calculate the sum of the array
-    arr_sum = sum(arr)
-
-    if arr_sum == 0.0
-        error("Array sum is zero, cannot normalize.")
-    end
-
-    # Normalize the array approximately
-    normalized_arr = arr / arr_sum
-
-    # Calculate the total sum discrepancy
-    discrepancy = 1.0 - sum(normalized_arr)
-
-    # Correct the largest element by the discrepancy to ensure exact sum of 1.0
-    max_index = argmax(normalized_arr)
-    normalized_arr[max_index] += discrepancy
-
-    return normalized_arr
+function cosine_sim(v1::Vector{Float64}, v2::Vector{Float64})::Float64
+    return 1.0 - cosine_dist(v1, v2)
 end
 
 # return a one-hot vector between the vocab list and a given word
-function word_onehot(word)
-    return vocab_list .== word
+function word_onehot(word::AbstractString)::Vector{Float64}
+    return Float64.(vocab_list .== word)
 end
 
 
@@ -237,7 +215,7 @@ gpt_model = hfppl.CachedCausalLM.from_pretrained(
 
 tokenizer = gpt_model.tokenizer
 
-function tokenize_custom(word, prepend_space)
+function tokenize_custom(word::AbstractString, prepend_space::Bool)::Vector{Int}
     if prepend_space
         return tokenizer.encode(" $(word)", add_special_tokens = false)
     else
@@ -423,7 +401,7 @@ end
 #     return logprobs
 # end
 
-function Gen.logpdf(dist::GPTWordDist, word::String, prefix::Vector{<:AbstractString})
+function Gen.logpdf(dist::GPTWordDist, word::AbstractString, prefix::Vector{<:AbstractString})
 
     logprobs = 0.0
 
@@ -521,8 +499,7 @@ function Gen.logpdf(dist::GPTWordDist, word::String, prefix::Vector{<:AbstractSt
     return logprobs
 end
 
-Gen.logpdf_grad(dist::GPTWordDist, word::String, prefix::Vector{<:AbstractString}) =
-    (nothing, nothing)
+Gen.logpdf_grad(dist::GPTWordDist, word::String, prefix::Vector{<:AbstractString}) = (nothing, nothing)
 Gen.has_output_grad(dist::GPTWordDist) = false
 Gen.has_argument_grads(dist::GPTWordDist) = (false,)
 Gen.is_discrete(dist::GPTWordDist) = true

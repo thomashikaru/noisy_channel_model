@@ -4,18 +4,19 @@ using Statistics
 using SortingAlgorithms
 using LinearAlgebra
 using Base.Threads
+using Printf
 
 ENV["JULIA_NUM_THREADS"] = args["num_threads"]
 
 # mixture distribution of two word dists
 word_mixture_dist = HeterogeneousMixture([word_dist, word_dist])
 
-function custom_sigmoid(x, center, spread)
+function custom_sigmoid(x::Float64, center::Float64, spread::Float64)::Float64
     num = exp(-(spread * (x - center)))
-    return num / (1 + num)
+    return num / (1.0 + num)
 end
 
-function mean(x)
+function mean(x::Vector{Float64})::Float64
     return sum(x) / length(x)
 end
 
@@ -109,7 +110,7 @@ end
 # for use in particle_filter_step
 # given the previous trace, the current time step, and an observation, make random choices 
 # that are consistent with the observation
-@gen function choose_action(prev_trace, t, obs)
+@gen function choose_action(prev_trace, t::Int, obs::String)
     i = t > 1 ? prev_trace[:noisy_sent=>t-1=>:idx] : 1
     sent =
         length(prev_trace[:intended_sent]) == 0 ? String[] :
@@ -196,7 +197,7 @@ end
 end
 
 # a rejuvenation proposal function that proposes alternative random choices for a given trace
-@gen function rejuv_proposal_add_delete(prev_trace, tt)
+@gen function rejuv_proposal_add_delete(prev_trace, tt::Int)
     (T,) = get_args(prev_trace)
 
     old_idx = tt == 1 ? 1 : prev_trace[:noisy_sent=>tt-1=>:idx]
@@ -372,7 +373,8 @@ function involution_add_delete(tr, forward_choices, forward_retval, proposal_arg
     (new_trace, backward_choices, weight)
 end
 
-@gen function rejuv_proposal_phon_sub(prev_trace, t, sub_type)
+# rejuvenation proposal: form-based substitution
+@gen function rejuv_proposal_phon_sub(prev_trace, t::Int, sub_type::String)
     old_index = t == 1 ? 1 : prev_trace[:noisy_sent=>t-1=>:idx]
     ps = get_phon_sub_ps(prev_trace[:intended_sent=>old_index=>:w], prev_trace[:phon_sub_param])
     new_word = {:intended_sent => old_index => :w} ~ word_dist(ps)
@@ -380,7 +382,8 @@ end
     new_action = {:noisy_sent => t => :action} ~ action_dist(action_onehot(err_type))
 end
 
-@gen function rejuv_proposal_sem_sub(prev_trace, t, sub_type)
+# rejuvenation proposal: semantic substitution
+@gen function rejuv_proposal_sem_sub(prev_trace, t::Int, sub_type::String)
     old_index = t == 1 ? 1 : prev_trace[:noisy_sent=>t-1=>:idx]
     ps = get_sem_sub_ps(prev_trace[:intended_sent=>old_index=>:w], prev_trace[:sem_sub_param])
     new_word = {:intended_sent => old_index => :w} ~ word_dist(ps)
@@ -388,7 +391,8 @@ end
     new_action = {:noisy_sent => t => :action} ~ action_dist(action_onehot(err_type))
 end
 
-@gen function rejuv_proposal_morph_sub(prev_trace, t, sub_type)
+# rejuvenation proposal: morphological substitution
+@gen function rejuv_proposal_morph_sub(prev_trace, t::Int, sub_type::String)
     old_index = t == 1 ? 1 : prev_trace[:noisy_sent=>t-1=>:idx]
     ps = get_morph_sub_ps(prev_trace[:intended_sent=>old_index=>:w])
     if sum(ps) == 1
@@ -420,43 +424,6 @@ function involution_sub(tr, forward_choices, forward_retval, proposal_args)
     (new_trace, backward_choices, weight)
 end
 
-function debug_print(traces)
-    for trace in traces
-        println(join(trace[:intended_sent][end].context, " "))
-        println(
-            join(
-                [
-                    Gen.project(
-                        trace,
-                        Gen.select(
-                            :noisy_sent => k => :idx,
-                            :noisy_sent => k => :action,
-                            :noisy_sent => k => :word,
-                        ),
-                    ) for k = 1:t
-                ],
-                " ",
-            ),
-        )
-
-        sem_sub_ps = get_sem_sub_ps(
-            trace[:intended_sent][end].context[end],
-            trace[:sem_sub_param],
-        )
-        sem_idxs = sortperm(sem_sub_ps)[end-5:end]
-        println(vocab_list[sem_idxs], sem_sub_ps[sem_idxs])
-
-        phon_sub_ps = get_phon_sub_ps(
-            trace[:intended_sent][end].context[end],
-            trace[:phon_sub_param],
-        )
-        phon_idxs = sortperm(phon_sub_ps)[end-5:end]
-        println(vocab_list[phon_idxs], phon_sub_ps[phon_idxs])
-
-        println()
-    end
-end
-
 function particle_filter_with_rejuv(
     num_particles::Int,
     utt::Vector{<:AbstractString},
@@ -466,7 +433,6 @@ function particle_filter_with_rejuv(
 
     inferred_sentences_list = []
     log_weights_list = []
-    post_rejuv_log_weights_list = []
     inferred_actions_list = []
 
     # initialize empty choicemap
@@ -478,9 +444,10 @@ function particle_filter_with_rejuv(
     # Prepare a thread-local storage: one array per thread.
     local_results = [Vector{Dict{String,Any}}() for _ = 1:nthreads()]
 
-    for t = 1:length(utt)
+    @printf("%-2s  %-15s %-15s\n", "", "Word", "Surprisal")
+    println("--------------------------------")
 
-        VERBOSE && println("Token $(t)")
+    for t = 1:length(utt)
 
         # adding one observation
         obs = Gen.choicemap((:noisy_sent => t => :word, utt[t]))
@@ -494,8 +461,6 @@ function particle_filter_with_rejuv(
             choose_action,
             (t, utt[t]),
         )
-
-        VERBOSE && debug_print(state.traces)
 
         # particle weights
         t_log_weights = copy(state.log_weights)
@@ -519,7 +484,7 @@ function particle_filter_with_rejuv(
         # trying a change to the resample location
         # after resampling, all log weights will be set to 0 (uniform across particles)
         resampled = Gen.maybe_resample!(state, ess_threshold = ESS_THRESH)
-        println("Resampled: $(resampled)")
+        @printf("%-2s: %-15s %-15.2f\n", t, utt[t], -log_mean_weight)
 
         cond_rejuv_p = custom_sigmoid(log_mean_weight, args["logprob_thresh"], args["logprob_spread"])
 
@@ -527,7 +492,7 @@ function particle_filter_with_rejuv(
         @threads for i = 1:num_particles
             args["conditional_rejuv"] || break
 
-            # lower particle score -> higher probability of applying rejuvenation
+            # higher surprisal -> higher probability of applying rejuvenation
             bernoulli(cond_rejuv_p) || continue
 
             timesteps = max(1, t - args["lookback"]):t
@@ -597,6 +562,7 @@ function particle_filter_with_rejuv(
 
     # SECOND-PASS REJUVENATION
     @threads for i = 1:num_particles
+
         args["second_pass_rejuv"] || break
 
         bernoulli(args["second_pass_rejuv_p"]) || continue
@@ -652,7 +618,6 @@ function particle_filter_with_rejuv(
             end
 
             # ACTION PRIOR and ACTION ALPHAS
-            # state.traces[i], accepted = Gen.mh(state.traces[i], Gen.select(:action_prior, :normal_alpha, :error_alpha))
             state.traces[i], accepted = Gen.mh(state.traces[i], Gen.select(:action_prior))
             log_rejuv_result!(local_results, length(utt), i, "action_prior", accepted, tt)
 

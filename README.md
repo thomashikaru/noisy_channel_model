@@ -7,7 +7,7 @@ Install Gen.jl: https://github.com/probcomp/Gen.jl
 We also use the following Julia libraries:
 
 ```
-StatsBase, Memoize, NNlib, Random, CSV, DataFrames, Distributions, KernelDensity, Distances, StringDistances, DelimitedFiles, Statistics, SortingAlgorithms, LinearAlgebra, Base.Threads
+StatsBase, Memoize, NNlib, Random, CSV, DataFrames, Distributions, KernelDensity, Distances, StringDistances, DelimitedFiles, Statistics, SortingAlgorithms, LinearAlgebra, Base.Threads, ArgParse
 ```
 
 We have adapted code from hfppl/llamppl to help with language model queries: https://github.com/genlm/llamppl/tree/main

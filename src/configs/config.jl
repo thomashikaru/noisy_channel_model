@@ -4,7 +4,6 @@ function parse_commandline(args = ARGS)
     s = ArgParseSettings()
     @add_arg_table s begin
         "--base_directory"
-        help = "input file"
         arg_type = String
         default = ".."
         "--mode"
@@ -32,7 +31,11 @@ function parse_commandline(args = ARGS)
         "--num_particles"
         help = "number of particles"
         arg_type = Int
-        default = 4
+        default = 32
+        "--ipa"
+        help = "set to use IPA edit distance, otherwise will use orthographic edit distance"
+        arg_type = Bool
+        default = false
         "--conditional_rejuv"
         help = "whether to do conditional rejuvenation"
         arg_type = Bool
@@ -42,7 +45,7 @@ function parse_commandline(args = ARGS)
         arg_type = Float64
         default = -10
         "--logprob_spread"
-        help = "spread of sigmoid"
+        help = "spread of sigmoid: set larger values for wider spread"
         arg_type = Float64
         default = 0.5
         "--lookback"
@@ -58,15 +61,15 @@ function parse_commandline(args = ARGS)
         arg_type = Float64
         default = 0.5
         "--num_samples"
-        help = "number of samples"
+        help = "number of posterior samples to draw"
         arg_type = Int
-        default = 32
+        default = 100
         "--lm_method"
         help = "language model"
         arg_type = String
         default = "gpt2"
         "--num_threads"
-        help = "number of samples"
+        help = "number of threads"
         arg_type = Int
         default = 1
         "--normal_alpha"
@@ -77,22 +80,12 @@ function parse_commandline(args = ARGS)
         help = "error alpha parameter"
         arg_type = Int
         default = 1
-        "--prompt_type"
-        help = "type of prompt"
-        arg_type = String
-        default = "none"
         "--vocab_file"
         arg_type = String
         default = "../data/gibson2013/dopo_to/vocab_augmented.txt"
         "--vocab_ipa_file"
         arg_type = String
         default = "../data/gibson2013/dopo_to/vocab_ipa_augmented.txt"
-        "--vocab_is_real_file"
-        arg_type = String
-        default = "../data/gibson2013/dopo_to/vocab_is_real_augmented.txt"
-        "--dataset"
-        arg_type = String
-        default = "nc_gp"
         "--actions"
         arg_type = String
         default = "normal,sem_sub,phon_sub,insert,skip,morph_sub"

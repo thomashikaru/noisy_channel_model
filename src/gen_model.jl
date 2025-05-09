@@ -25,8 +25,7 @@ end
 @dist action_dist(probs) = ACTION_LIST[categorical(probs)]
 @dist word_dist(probs) = vocab_list[categorical(probs)]
 @dist nonword_dist() = ["<nonword>"][categorical([1])]
-@dist disfl_dist() =
-    DISFL_LIST[categorical(fill(1 / length(DISFL_LIST), length(DISFL_LIST)))]
+@dist disfl_dist() = DISFL_LIST[categorical(fill(1 / length(DISFL_LIST), length(DISFL_LIST)))]
 @dist disfl_dist_one(probs) = DISFL_LIST[categorical(probs)]
 @dist dummy_dist(a::Int) = a + [0][categorical([1])]
 @dist lookahead_dist(probs) = [0, 1][categorical(probs)]
@@ -165,7 +164,7 @@ generate_noisy_sentence = Gen.Unfold(model_kernel)
 @gen function model_unfold(T::Int)
 
     # get a probability distribution over actions
-    action_prior = {:action_prior} ~ dirichlet(alphas)
+    action_prior = {:action_prior} ~ Main.dirichlet(alphas)
 
     # sample substitution parameters
     phon_sub_param = {:phon_sub_param} ~ beta(2, 11) # mode = 0.1 (param^x)
