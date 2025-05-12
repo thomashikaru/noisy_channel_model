@@ -88,7 +88,7 @@ function parse_commandline(args = ARGS)
         default = "../data/gibson2013/dopo_to/vocab_ipa_augmented.txt"
         "--actions"
         arg_type = String
-        default = "normal,sem_sub,phon_sub,insert,skip,morph_sub"
+        default = "normal,sem_sub,form_sub,insert,skip,morph_sub"
     end
 
     return parse_args(args, s)

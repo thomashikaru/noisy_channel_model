@@ -14,7 +14,7 @@ action_name_mapping = {
     "skip": "Deletion",
     "backtrack": "Backtrack",
     "disfl": "Filled Pause",
-    "phon_sub": "Form-based Sub.",
+    "form_sub": "Form-based Sub.",
     "sem_sub": "Semantic Sub.",
     "insert": "Insertion",
     "morph_sub": "Morph. Sub.",

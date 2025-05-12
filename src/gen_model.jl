@@ -80,7 +80,7 @@ generate_intended_sentence = Gen.Unfold(lm_kernel)
 # a model state
 struct ModelState
     action_prior::Vector{Float64}
-    phon_sub_param::Float64
+    form_sub_param::Float64
     sem_sub_param::Float64
     sent::Vector{<:AbstractString}
     i::Int
@@ -107,13 +107,13 @@ end
                 ),
             )
         i = {:idx} ~ dummy_dist(prev_state.i + 1)
-    elseif action == "phon_sub"
+    elseif action == "form_sub"
         word =
             {:word} ~ word_dist(
                 normalize_array(
-                    get_phon_sub_ps(
+                    get_form_sub_ps(
                         prev_state.sent[prev_state.i],
-                        prev_state.phon_sub_param,
+                        prev_state.form_sub_param,
                     ),
                 ),
             )
@@ -155,7 +155,7 @@ end
     end
     return ModelState(
         copy(prev_state.action_prior),
-        prev_state.phon_sub_param,
+        prev_state.form_sub_param,
         prev_state.sem_sub_param,
         copy(prev_state.sent),
         i,
@@ -170,7 +170,7 @@ generate_noisy_sentence = Gen.Unfold(model_kernel)
     action_prior = {:action_prior} ~ Main.dirichlet(alphas)
 
     # sample substitution parameters
-    phon_sub_param = {:phon_sub_param} ~ Gen.beta(2, 11) # mode = 0.1 (param^x)
+    form_sub_param = {:form_sub_param} ~ Gen.beta(2, 11) # mode = 0.1 (param^x)
     sem_sub_param = {:sem_sub_param} ~ Gen.gamma(6, 1) # mode = 5 (x^param)
 
     # i represents the current index within the current sentence
@@ -189,7 +189,7 @@ generate_noisy_sentence = Gen.Unfold(model_kernel)
 
     sent = length(intended_sent) == 0 ? String[] : intended_sent[end].context
 
-    init_state = ModelState(action_prior, phon_sub_param, sem_sub_param, sent, i)
+    init_state = ModelState(action_prior, form_sub_param, sem_sub_param, sent, i)
     noisy_sent = {:noisy_sent} ~ generate_noisy_sentence(T, init_state)
 
     result = (action_prior, join(sent, " "))

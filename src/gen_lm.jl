@@ -83,10 +83,11 @@ df = CSV.read(WORD_FREQ_FILE, DataFrame; delim = '\t')
 word2freq = Dict(row.Word => row.Lg10WF for row in eachrow(df))
 
 # Get the minimum frequency from the CSV data
+max_freq = maximum(df.Lg10WF)
 min_freq = minimum(df.Lg10WF)
 
 # Given your vocab list, look up each word's frequency; if not found, assign min_freq
-unigram_freq = [get(word2freq, word, min_freq) for word in vocab_list]
+unigram_freq = [get(word2freq, word, word ∈ OTHER_PUNCT_TOKENS ? max_freq : min_freq) for word in vocab_list]
 unigram_freq = exp10.(unigram_freq)
 unigram_probs = unigram_freq / sum(unigram_freq)
 
@@ -148,7 +149,7 @@ end
 end
 
 # get a probability distribution over vocabulary items, proportional to form-based similarity
-@memoize function get_phon_sub_ps(word::AbstractString, param::Float64)::Vector{Float64}
+@memoize function get_form_sub_ps(word::AbstractString, param::Float64)::Vector{Float64}
     if word == "<nonword>"
         return unigram_probs_no_eos
     end
@@ -226,7 +227,7 @@ vocab_list_tokenized_bos = []
 for word in vocab_list
     push!(
         vocab_list_tokenized_bos,
-        tokenize_custom(uppercasefirst(word), !(word ∈ EOS_TOKENS || word ∈ OTHER_PUNCT_TOKENS))
+        tokenize_custom(uppercasefirst(word), false)
     )
 end
 
@@ -272,7 +273,7 @@ function Gen.random(dist::GPTWordDist, prefix::Vector{<:AbstractString})
 
     if length(prefix) > 0
         input_ids =
-            vcat(dist.tokenizer.bos_token_id, vcat([tokenize_custom(x, !(x ∈ OTHER_PUNCT_TOKENS || x ∈ EOS_TOKENS)) for x in prefix]...))
+            vcat(dist.tokenizer.bos_token_id, vcat([tokenize_custom(i == 1 ? uppercasefirst(x) : x, !(x ∈ OTHER_PUNCT_TOKENS || x ∈ EOS_TOKENS || i == 1)) for (i, x) in enumerate(prefix)]...))
     else
         input_ids = [dist.tokenizer.bos_token_id]
     end
@@ -353,7 +354,7 @@ function Gen.random(dist::GPTWordDist, prefix::Vector{<:AbstractString})
         push!(input_ids, new_tok_id)
 
         # if the word is not sentence initial, it will start with special Ġ character
-        if count == 1 && !(new_tok ∈ EOS_TOKENS || new_tok ∈ OTHER_PUNCT_TOKENS)
+        if count == 1 && !(new_tok ∈ EOS_TOKENS || new_tok ∈ OTHER_PUNCT_TOKENS || length(prefix) == 0)
             generated *= new_tok[nextind(new_tok, 1):end]
         else
             generated *= new_tok
@@ -376,13 +377,13 @@ function Gen.logpdf(dist::GPTWordDist, word::AbstractString, prefix::Vector{<:Ab
 
     if length(prefix) > 0
         input_ids =
-            vcat(dist.tokenizer.bos_token_id, vcat([tokenize_custom(x, !(x ∈ OTHER_PUNCT_TOKENS || x ∈ EOS_TOKENS)) for x in prefix]...))
+            vcat(dist.tokenizer.bos_token_id, vcat([tokenize_custom(i == 1 ? uppercasefirst(x) : x, !(x ∈ OTHER_PUNCT_TOKENS || x ∈ EOS_TOKENS || i == 1)) for (i, x) in enumerate(prefix)]...))
     else
         input_ids = [dist.tokenizer.bos_token_id]
     end
     word_ids = tokenize_custom(
         length(prefix) == 0 ? uppercasefirst(word) : word,
-        !(word ∈ EOS_TOKENS || word ∈ OTHER_PUNCT_TOKENS),
+        !(word ∈ EOS_TOKENS || word ∈ OTHER_PUNCT_TOKENS || length(prefix) == 0),
     )
     generated = ""
 
@@ -458,7 +459,7 @@ function Gen.logpdf(dist::GPTWordDist, word::AbstractString, prefix::Vector{<:Ab
         push!(input_ids, word_id)
 
         # if the word is not sentence initial, it will start with special Ġ character
-        if count == 1 && !(new_tok ∈ EOS_TOKENS || new_tok ∈ OTHER_PUNCT_TOKENS)
+        if count == 1 && !(new_tok ∈ EOS_TOKENS || new_tok ∈ OTHER_PUNCT_TOKENS || length(prefix) == 0)
             generated *= new_tok[nextind(new_tok, 1):end]
         else
             generated *= new_tok
@@ -474,3 +475,7 @@ Gen.has_argument_grads(dist::GPTWordDist) = (false,)
 Gen.is_discrete(dist::GPTWordDist) = true
 
 gpt_word_dist = GPTWordDist(gpt_model, tokenizer)
+
+# for i in 1:100
+#     println(gpt_word_dist(String[]))
+# end

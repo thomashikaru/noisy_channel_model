@@ -90,7 +90,7 @@ function analyze_traces(traces, n, output_dir)
     params_dists = []
     for tr in traces
         param_posterior =
-            [tr[:phon_sub_param], tr[:sem_sub_param]]
+            [tr[:form_sub_param], tr[:sem_sub_param]]
         push!(params_dists, param_posterior)
     end
     param_dist_arr = vcat(transpose(params_dists)...)
@@ -98,7 +98,7 @@ function analyze_traces(traces, n, output_dir)
         join([output_dir, "params_dists.csv"], "/"),
         DataFrame(
             param_dist_arr,
-            ["phon_sub_param", "sem_sub_param"],
+            ["form_sub_param", "sem_sub_param"],
         ),
     )
 
@@ -125,9 +125,9 @@ end
                 push!(sent, new_word)
             else
                 # Option B: Propose based on similar words/neighbors to the observed word
-                p_phon = top_x_mask(get_phon_sub_ps(obs, prev_trace[:phon_sub_param]), 3)
+                p_form = top_x_mask(get_form_sub_ps(obs, prev_trace[:form_sub_param]), 3)
                 p_sem = top_x_mask(get_sem_sub_ps(obs, prev_trace[:sem_sub_param]), 3)
-                new_word = {:intended_sent => i => :w} ~ word_mixture_dist([1.0, 1.0] ./ 2.0, p_phon, p_sem)
+                new_word = {:intended_sent => i => :w} ~ word_mixture_dist([1.0, 1.0] ./ 2.0, p_form, p_sem)
                 push!(sent, new_word)
             end
         else
@@ -173,10 +173,10 @@ end
             {:noisy_sent => t => :action} ~ action_dist(action_onehot("sem_sub"))
             i += 1
             {:noisy_sent => t => :idx} ~ dummy_dist(i)
-        elseif "phon_sub" in ACTION_LIST && (
-            get_phon_sub_ps(sent[i], prev_trace[:phon_sub_param])[get_vocab_idx(obs)] != 0
+        elseif "form_sub" in ACTION_LIST && (
+            get_form_sub_ps(sent[i], prev_trace[:form_sub_param])[get_vocab_idx(obs)] != 0
         )
-            {:noisy_sent => t => :action} ~ action_dist(action_onehot("phon_sub"))
+            {:noisy_sent => t => :action} ~ action_dist(action_onehot("form_sub"))
             i += 1
             {:noisy_sent => t => :idx} ~ dummy_dist(i)
         else
@@ -299,13 +299,13 @@ end
                 i += 1
                 {:noisy_sent => t => :idx} ~ dummy_dist(i)
                 {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-            elseif "phon_sub" in ACTION_LIST && (
-                get_phon_sub_ps(sent[i], prev_trace[:phon_sub_param])[get_vocab_idx(
+            elseif "form_sub" in ACTION_LIST && (
+                get_form_sub_ps(sent[i], prev_trace[:form_sub_param])[get_vocab_idx(
                     literal_prefix[t],
                 )] != 0
             )
                 action =
-                    {:noisy_sent => t => :action} ~ action_dist(action_onehot("phon_sub"))
+                    {:noisy_sent => t => :action} ~ action_dist(action_onehot("form_sub"))
                 i += 1
                 {:noisy_sent => t => :idx} ~ dummy_dist(i)
                 {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
@@ -369,11 +369,11 @@ function involution_add_delete(tr, forward_choices, forward_retval, proposal_arg
 end
 
 # rejuvenation proposal: form-based substitution
-@gen function rejuv_proposal_phon_sub(prev_trace, t::Int, sub_type::String)
+@gen function rejuv_proposal_form_sub(prev_trace, t::Int, sub_type::String)
     old_index = t == 1 ? 1 : prev_trace[:noisy_sent=>t-1=>:idx]
-    ps = get_phon_sub_ps(prev_trace[:intended_sent=>old_index=>:w], prev_trace[:phon_sub_param])
+    ps = get_form_sub_ps(prev_trace[:intended_sent=>old_index=>:w], prev_trace[:form_sub_param])
     new_word = {:intended_sent => old_index => :w} ~ word_dist(ps)
-    err_type = prev_trace[:noisy_sent=>t=>:action] == "normal" ? "phon_sub" : "normal"
+    err_type = prev_trace[:noisy_sent=>t=>:action] == "normal" ? "form_sub" : "normal"
     new_action = {:noisy_sent => t => :action} ~ action_dist(action_onehot(err_type))
 end
 
@@ -504,11 +504,11 @@ function particle_filter_with_rejuv(
                     :intended_sent => index_back => :w,
                 ) && state.traces[i][:intended_sent=>index_back=>:w] != "<nonword>"
 
-                    # Phono Sub
+                    # Form Sub
                     state.traces[i], accepted = Gen.mh(
                         state.traces[i],
-                        rejuv_proposal_phon_sub,
-                        (tt, "phon_sub"),
+                        rejuv_proposal_form_sub,
+                        (tt, "form_sub"),
                         involution_sub,
                     )
                     log_rejuv_result!(local_results, t, i, "sub_error", accepted, tt)
@@ -548,7 +548,7 @@ function particle_filter_with_rejuv(
 
                 # SUBSTITUTION PARAMETERS
                 state.traces[i], accepted =
-                    Gen.mh(state.traces[i], Gen.select(:phon_sub_param, :sem_sub_param))
+                    Gen.mh(state.traces[i], Gen.select(:form_sub_param, :sem_sub_param))
                 log_rejuv_result!(local_results, t, i, "substitution_temp", accepted, tt)
             end
         end
@@ -575,11 +575,11 @@ function particle_filter_with_rejuv(
             if Gen.has_value(Gen.get_choices(state.traces[i]), :intended_sent => index_back => :w) &&
                state.traces[i][:intended_sent=>index_back=>:w] != "<nonword>"
 
-                # Phono Sub
+                # Form Sub
                 state.traces[i], accepted = Gen.mh(
                     state.traces[i],
-                    rejuv_proposal_phon_sub,
-                    (tt, "phon_sub"),
+                    rejuv_proposal_form_sub,
+                    (tt, "form_sub"),
                     involution_sub,
                 )
                 log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
@@ -618,7 +618,7 @@ function particle_filter_with_rejuv(
 
             # SUBSTITUTION PARAMETERS
             state.traces[i], accepted =
-                Gen.mh(state.traces[i], Gen.select(:phon_sub_param, :sem_sub_param))
+                Gen.mh(state.traces[i], Gen.select(:form_sub_param, :sem_sub_param))
             log_rejuv_result!(local_results, length(utt), i, "substitution_temp", accepted, tt)
         end
     end
