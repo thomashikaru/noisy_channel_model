@@ -43,11 +43,11 @@ function parse_commandline(args = ARGS)
         "--logprob_thresh"
         help = "inflection point for logprob"
         arg_type = Float64
-        default = -10
+        default = 0.0
         "--logprob_spread"
         help = "spread of sigmoid: set larger values for wider spread"
         arg_type = Float64
-        default = 0.5
+        default = 1.0
         "--lookback"
         help = "lookback in words"
         arg_type = Int
@@ -60,6 +60,10 @@ function parse_commandline(args = ARGS)
         help = "probability of a particle performing second-pass rejuv"
         arg_type = Float64
         default = 1.0
+        "--second_pass_rejuv_iters"
+        help = "iters of second_pass rejuvenation"
+        arg_type = Int
+        default = 1
         "--num_samples"
         help = "number of posterior samples to draw"
         arg_type = Int
@@ -82,10 +86,10 @@ function parse_commandline(args = ARGS)
         default = 1
         "--vocab_file"
         arg_type = String
-        default = "../data/gibson2013/dopo_to/vocab_augmented.txt"
+        default = "../data/ryskin2021/vocab_augmented.txt"
         "--vocab_ipa_file"
         arg_type = String
-        default = "../data/gibson2013/dopo_to/vocab_ipa_augmented.txt"
+        default = "../data/ryskin2021/vocab_ipa_augmented.txt"
         "--actions"
         arg_type = String
         default = "normal,sem_sub,form_sub,insert,skip,morph_sub"
@@ -130,11 +134,5 @@ const EOS_TOKENS = [".", "?", "!"]
 const REJUVENATE_ORDER = "SHUFFLE"
 
 const DO_TYPO = true
-
-const UTTERANCES = [
-    "the boy handed the pencil the girl .",
-    "the mother gave the candle the daughter .",
-]
-
 
 GPT_PROMPT = String[]

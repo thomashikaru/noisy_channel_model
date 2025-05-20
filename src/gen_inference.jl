@@ -8,9 +8,9 @@ using Printf
 
 ENV["JULIA_NUM_THREADS"] = args["num_threads"]
 
-function custom_sigmoid(x::Float64, center::Float64, spread::Float64)::Float64
-    num = exp(-(spread * (x - center)))
-    return num / (1.0 + num)
+function custom_sigmoid(x::Float64, center::Float64, spread::Float64)
+    num = exp(spread * (x - center))
+    return num / (1 + num)
 end
 
 function mean(x::Vector{Float64})::Float64
@@ -117,7 +117,6 @@ end
     if !(Gen.has_value(Gen.get_choices(prev_trace), :intended_sent => i => :w)) &&
        (length(sent) == 0 || sent[end] ∉ EOS_TOKENS)
 
-        # if obs ∉ EOS_TOKENS && Gen.bernoulli(1 - prev_trace[:action_prior][1])
         if obs ∉ EOS_TOKENS && Gen.bernoulli(1 - prev_trace[:action_prior][1])
             if Gen.bernoulli(0.5)
                 # Option A: Propose from the LM distribution given prior context, w/o peeking
@@ -219,108 +218,24 @@ end
     # if reverse=false, always just generate the provided new sentence
     # a function call with reverse=false can be inverted if reverse=true
     # however a function call with reverse=true leaves a trace unchanged
-    sent =
+    intended_sent =
         {:intended_sent} ~ generate_intended_sentence(
             T + lookahead,
             LMState(GPT_PROMPT, String[], new_sent, false),
         )
-    sent = length(sent) == 0 ? String[] : sent[end].context
+    sent = length(intended_sent) == 0 ? String[] : intended_sent[end].context
 
-    i = 1
-    for t = 1:T
-        if t == tt && add && prev_trace[:noisy_sent=>t=>:action] == "normal"
-            action = {:noisy_sent => t => :action} ~ action_dist(action_onehot("skip"))
-            i += 2
-            {:noisy_sent => t => :idx} ~ dummy_dist(i)
-            {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-        elseif t == tt && add && prev_trace[:noisy_sent=>t=>:action] == "insert"
-            action = {:noisy_sent => t => :action} ~ action_dist(action_onehot("normal"))
-            i += 1
-            {:noisy_sent => t => :idx} ~ dummy_dist(i)
-            {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-        elseif t == tt && !add && prev_trace[:noisy_sent=>t=>:action] == "normal"
-            action = {:noisy_sent => t => :action} ~ action_dist(action_onehot("insert"))
-            {:noisy_sent => t => :idx} ~ dummy_dist(i)
-            {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-        elseif t == tt && !add && prev_trace[:noisy_sent=>t=>:action] == "skip"
-            action = {:noisy_sent => t => :action} ~ action_dist(action_onehot("normal"))
-            i += 1
-            {:noisy_sent => t => :idx} ~ dummy_dist(i)
-            {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-        elseif "disfl" in ACTION_LIST && literal_prefix[t] in DISFL_LIST
-            action = {:noisy_sent => t => :action} ~ action_dist(action_onehot("disfl"))
-            {:noisy_sent => t => :idx} ~ dummy_dist(i)
-            {:noisy_sent => t => :word} ~
-                disfl_dist_one(map(x -> x == literal_prefix[t] ? 1 : 0, DISFL_LIST))
-        elseif "normal" in ACTION_LIST && length(sent) >= i && literal_prefix[t] == sent[i]
-            action = {:noisy_sent => t => :action} ~ action_dist(action_onehot("normal"))
-            i += 1
-            {:noisy_sent => t => :idx} ~ dummy_dist(i)
-            {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-        elseif "insert" in ACTION_LIST &&
-               length(literal_prefix) >= t + 1 &&
-               length(sent) >= i &&
-               literal_prefix[t+1] == sent[i]
-            action = {:noisy_sent => t => :action} ~ action_dist(action_onehot("insert"))
-            {:noisy_sent => t => :idx} ~ dummy_dist(i)
-            {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-        elseif "skip" in ACTION_LIST &&
-               length(sent) >= i + 1 &&
-               literal_prefix[t] == sent[i+1] &&
-               Gen.bernoulli(0.9)
-            action = {:noisy_sent => t => :action} ~ action_dist(action_onehot("skip"))
-            i += 2
-            {:noisy_sent => t => :idx} ~ dummy_dist(i)
-            {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-        elseif "backtrack" in ACTION_LIST &&
-               length(sent) >= i - 1 &&
-               literal_prefix[t] in sent[1:i-1] &&
-               Gen.bernoulli(0.5)
-            action = {:noisy_sent => t => :action} ~ action_dist(action_onehot("backtrack"))
-            i = findfirst(x -> x == literal_prefix[t], sent) + 1
-            {:noisy_sent => t => :idx} ~ dummy_dist(i)
-            {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-        elseif "morph_sub" in ACTION_LIST &&
-               length(sent) >= i &&
-               get_morph_sub_ps(sent[i]) == literal_prefix[t]
-            {:noisy_sent => t => :action} ~ action_dist(action_onehot("morph_sub"))
-            i += 1
-            {:noisy_sent => t => :idx} ~ dummy_dist(i)
-        elseif length(sent) >= i
-            if "sem_sub" in ACTION_LIST &&
-               (
-                   get_sem_sub_ps(sent[i], prev_trace[:sem_sub_param])[get_vocab_idx(
-                       literal_prefix[t],
-                   )] != 0
-               ) &&
-               Gen.bernoulli(0.5)
-                action =
-                    {:noisy_sent => t => :action} ~ action_dist(action_onehot("sem_sub"))
-                i += 1
-                {:noisy_sent => t => :idx} ~ dummy_dist(i)
-                {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-            elseif "form_sub" in ACTION_LIST && (
-                get_form_sub_ps(sent[i], prev_trace[:form_sub_param])[get_vocab_idx(
-                    literal_prefix[t],
-                )] != 0
-            )
-                action =
-                    {:noisy_sent => t => :action} ~ action_dist(action_onehot("form_sub"))
-                i += 1
-                {:noisy_sent => t => :idx} ~ dummy_dist(i)
-                {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-            else
-                action =
-                    {:noisy_sent => t => :action} ~ action_dist(action_onehot("insert"))
-                {:noisy_sent => t => :idx} ~ dummy_dist(i)
-                {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-            end
-        elseif "insert" in ACTION_LIST
-            action = {:noisy_sent => t => :action} ~ action_dist(action_onehot("insert"))
-            {:noisy_sent => t => :idx} ~ dummy_dist(i)
-            {:noisy_sent => t => :word} ~ word_dist(word_onehot(literal_prefix[t]))
-        end
-    end
+    state = ModelProposalState(
+        prev_trace[:form_sub_param],
+        prev_trace[:sem_sub_param],
+        sent,
+        literal_prefix,
+        prev_trace[:noisy_sent=>tt=>:action],
+        1,
+        tt,
+        add
+    )
+    noisy_sent ~ generate_noisy_sent_proposal_unfold(T, state)
 
     return prev_trace[:lookahead]
 end
@@ -439,7 +354,7 @@ function particle_filter_with_rejuv(
     # Prepare a thread-local storage: one array per thread.
     local_results = [Vector{Dict{String,Any}}() for _ = 1:nthreads()]
 
-    @printf("%-2s  %-15s %-15s\n", "", "Word", "Surprisal")
+    @printf("%-2s  %-15s %-15s %-15s %-15s\n", "", "Word", "Surprisal", "Unigram", "P(rejuv)")
     println("--------------------------------")
 
     for t = 1:length(utt)
@@ -479,9 +394,11 @@ function particle_filter_with_rejuv(
         # trying a change to the resample location
         # after resampling, all log weights will be set to 0 (uniform across particles)
         resampled = Gen.maybe_resample!(state, ess_threshold = ESS_THRESH)
-        @printf("%-2s: %-15s %-15.2f\n", t, utt[t], -log_mean_weight)
 
-        cond_rejuv_p = custom_sigmoid(log_mean_weight, args["logprob_thresh"], args["logprob_spread"])
+        surprisal = -log_mean_weight
+        unigram_surp = -log(unigram_probs[get_vocab_idx(utt[t])])
+        cond_rejuv_p = custom_sigmoid(surprisal - unigram_surp, args["logprob_thresh"], args["logprob_spread"])
+        @printf("%-2s: %-15s %-15.2f %-15.2f %-15.2f\n", t, utt[t], surprisal, unigram_surp, cond_rejuv_p)
 
         # Conditional Reanalysis
         @threads for i = 1:num_particles
@@ -556,70 +473,72 @@ function particle_filter_with_rejuv(
     end
 
     # SECOND-PASS REJUVENATION
-    @threads for i = 1:num_particles
+    for j = 1:args["second_pass_rejuv_iters"]
+        for i = 1:num_particles
 
-        args["second_pass_rejuv"] || break
+            args["second_pass_rejuv"] || break
 
-        Gen.bernoulli(args["second_pass_rejuv_p"]) || continue
+            Gen.bernoulli(args["second_pass_rejuv_p"]) || continue
 
-        timesteps = 1:length(utt)
-        steps =
-            (REJUVENATE_ORDER == "BACKWARD") ? reverse(timesteps) :
-            ((REJUVENATE_ORDER == "FORWARD") ? timesteps : shuffle(timesteps))
+            timesteps = 1:length(utt)
+            steps =
+                (REJUVENATE_ORDER == "BACKWARD") ? reverse(timesteps) :
+                ((REJUVENATE_ORDER == "FORWARD") ? timesteps : shuffle(timesteps))
 
-        for tt in steps
+            for tt in steps
 
-            index_back = tt == 1 ? 1 : state.traces[i][:noisy_sent=>tt-1=>:idx]
+                index_back = tt == 1 ? 1 : state.traces[i][:noisy_sent=>tt-1=>:idx]
 
-            # SUBSTITUTIONS
-            if Gen.has_value(Gen.get_choices(state.traces[i]), :intended_sent => index_back => :w) &&
-               state.traces[i][:intended_sent=>index_back=>:w] != "<nonword>"
+                # SUBSTITUTIONS
+                if Gen.has_value(Gen.get_choices(state.traces[i]), :intended_sent => index_back => :w) &&
+                   state.traces[i][:intended_sent=>index_back=>:w] != "<nonword>"
 
-                # Form Sub
-                state.traces[i], accepted = Gen.mh(
-                    state.traces[i],
-                    rejuv_proposal_form_sub,
-                    (tt, "form_sub"),
-                    involution_sub,
-                )
-                log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
+                    # Form Sub
+                    state.traces[i], accepted = Gen.mh(
+                        state.traces[i],
+                        rejuv_proposal_form_sub,
+                        (tt, "form_sub"),
+                        involution_sub,
+                    )
+                    log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
 
-                # Semantic Sub
-                state.traces[i], accepted = Gen.mh(
-                    state.traces[i],
-                    rejuv_proposal_sem_sub,
-                    (tt, "sem_sub"),
-                    involution_sub,
-                )
-                log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
+                    # Semantic Sub
+                    state.traces[i], accepted = Gen.mh(
+                        state.traces[i],
+                        rejuv_proposal_sem_sub,
+                        (tt, "sem_sub"),
+                        involution_sub,
+                    )
+                    log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
 
-                # Morphological Sub
-                state.traces[i], accepted = Gen.mh(
-                    state.traces[i],
-                    rejuv_proposal_morph_sub,
-                    (tt, "morph_sub"),
-                    involution_sub,
-                )
-                log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
+                    # Morphological Sub
+                    state.traces[i], accepted = Gen.mh(
+                        state.traces[i],
+                        rejuv_proposal_morph_sub,
+                        (tt, "morph_sub"),
+                        involution_sub,
+                    )
+                    log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
 
-                # Insertions & Skips
-                state.traces[i], accepted = Gen.mh(
-                    state.traces[i],
-                    rejuv_proposal_add_delete,
-                    (tt,),
-                    involution_add_delete,
-                )
-                log_rejuv_result!(local_results, length(utt), i, "insert_error", accepted, tt)
+                    # Insertions & Skips
+                    state.traces[i], accepted = Gen.mh(
+                        state.traces[i],
+                        rejuv_proposal_add_delete,
+                        (tt,),
+                        involution_add_delete,
+                    )
+                    log_rejuv_result!(local_results, length(utt), i, "insert_error", accepted, tt)
+                end
+
+                # ACTION PRIOR and ACTION ALPHAS
+                state.traces[i], accepted = Gen.mh(state.traces[i], Gen.select(:action_prior))
+                log_rejuv_result!(local_results, length(utt), i, "action_prior", accepted, tt)
+
+                # SUBSTITUTION PARAMETERS
+                state.traces[i], accepted =
+                    Gen.mh(state.traces[i], Gen.select(:form_sub_param, :sem_sub_param))
+                log_rejuv_result!(local_results, length(utt), i, "substitution_temp", accepted, tt)
             end
-
-            # ACTION PRIOR and ACTION ALPHAS
-            state.traces[i], accepted = Gen.mh(state.traces[i], Gen.select(:action_prior))
-            log_rejuv_result!(local_results, length(utt), i, "action_prior", accepted, tt)
-
-            # SUBSTITUTION PARAMETERS
-            state.traces[i], accepted =
-                Gen.mh(state.traces[i], Gen.select(:form_sub_param, :sem_sub_param))
-            log_rejuv_result!(local_results, length(utt), i, "substitution_temp", accepted, tt)
         end
     end
 

@@ -87,7 +87,7 @@ max_freq = maximum(df.Lg10WF)
 min_freq = minimum(df.Lg10WF)
 
 # Given your vocab list, look up each word's frequency; if not found, assign min_freq
-unigram_freq = [get(word2freq, word, word ∈ OTHER_PUNCT_TOKENS ? max_freq : min_freq) for word in vocab_list]
+unigram_freq = [get(word2freq, word, word ∈ OTHER_PUNCT_TOKENS || word ∈ EOS_TOKENS ? max_freq : min_freq) for word in vocab_list]
 unigram_freq = exp10.(unigram_freq)
 unigram_probs = unigram_freq / sum(unigram_freq)
 

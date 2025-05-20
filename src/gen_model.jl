@@ -195,3 +195,122 @@ generate_noisy_sentence = Gen.Unfold(model_kernel)
     result = (action_prior, join(sent, " "))
     return result
 end;
+
+struct ModelProposalState
+    form_sub_param::Float64
+    sem_sub_param::Float64
+    sent::Vector{<:AbstractString}
+    obss::Vector{<:AbstractString}
+    action::String
+    i::Int
+    tt::Int
+    add::Bool
+end
+
+@gen function model_proposal_kernel(t::Int, state::ModelProposalState)
+
+    if t == state.tt && state.add && state.action == "normal"
+        {:action} ~ action_dist(action_onehot("skip"))
+        new_i = state.i + 2
+        {:idx} ~ dummy_dist(new_i)
+        {:word} ~ word_dist(word_onehot(state.obss[t]))
+    elseif t == state.tt && state.add && state.action == "insert"
+        {:action} ~ action_dist(action_onehot("normal"))
+        new_i = state.i + 1
+        {:idx} ~ dummy_dist(new_i)
+        {:word} ~ word_dist(word_onehot(state.obss[t]))
+    elseif t == state.tt && !state.add && state.action == "normal"
+        {:action} ~ action_dist(action_onehot("insert"))
+        new_i = state.i
+        {:idx} ~ dummy_dist(new_i)
+        {:word} ~ word_dist(word_onehot(state.obss[t]))
+    elseif t == state.tt && !state.add && state.action == "skip"
+        {:action} ~ action_dist(action_onehot("normal"))
+        new_i = state.i + 1
+        {:idx} ~ dummy_dist(new_i)
+        {:word} ~ word_dist(word_onehot(state.obss[t]))
+    elseif "disfl" in ACTION_LIST && state.obss[t] in DISFL_LIST
+        {:action} ~ action_dist(action_onehot("disfl"))
+        new_i = state.i
+        {:idx} ~ dummy_dist(new_i)
+        {:word} ~ disfl_dist_one(map(x -> x == state.obss[t] ? 1 : 0, DISFL_LIST))
+    elseif "normal" in ACTION_LIST && length(state.sent) >= state.i && state.obss[t] == state.sent[state.i]
+        {:action} ~ action_dist(action_onehot("normal"))
+        new_i = state.i + 1
+        {:idx} ~ dummy_dist(new_i)
+        {:word} ~ word_dist(word_onehot(state.obss[t]))
+    elseif "insert" in ACTION_LIST &&
+           length(state.obss) >= t + 1 &&
+           length(state.sent) >= state.i &&
+           state.obss[t+1] == state.sent[state.i]
+        {:action} ~ action_dist(action_onehot("insert"))
+        new_i = state.i
+        {:idx} ~ dummy_dist(new_i)
+        {:word} ~ word_dist(word_onehot(state.obss[t]))
+    elseif "skip" in ACTION_LIST &&
+           length(state.sent) >= state.i + 1 &&
+           state.obss[t] == state.sent[state.i+1] &&
+           Gen.bernoulli(0.9)
+        {:action} ~ action_dist(action_onehot("skip"))
+        new_i = state.i + 2
+        {:idx} ~ dummy_dist(new_i)
+        {:word} ~ word_dist(word_onehot(state.obss[t]))
+    elseif "backtrack" in ACTION_LIST &&
+           length(state.sent) >= state.i - 1 &&
+           state.obss[t] in state.sent[1:state.i-1] &&
+           Gen.bernoulli(0.5)
+        {:action} ~ action_dist(action_onehot("backtrack"))
+        new_i = findfirst(x -> x == state.obss[t], state.sent) + 1
+        {:idx} ~ dummy_dist(new_i)
+        {:word} ~ word_dist(word_onehot(state.obss[t]))
+    elseif "morph_sub" in ACTION_LIST &&
+           length(state.sent) >= state.i &&
+           get_morph_sub_ps(state.sent[state.i]) == state.obss[t]
+        {:action} ~ action_dist(action_onehot("morph_sub"))
+        new_i = state.i + 1
+        {:idx} ~ dummy_dist(new_i)
+    elseif length(state.sent) >= state.i
+        if "sem_sub" in ACTION_LIST &&
+           (
+               get_sem_sub_ps(state.sent[state.i], state.sem_sub_param)[get_vocab_idx(
+                   state.obss[t],
+               )] != 0
+           ) &&
+           Gen.bernoulli(0.5)
+            {:action} ~ action_dist(action_onehot("sem_sub"))
+            new_i = state.i + 1
+            {:idx} ~ dummy_dist(new_i)
+            {:word} ~ word_dist(word_onehot(state.obss[t]))
+        elseif "form_sub" in ACTION_LIST && (
+            get_form_sub_ps(state.sent[state.i], state.form_sub_param)[get_vocab_idx(
+                state.obss[t],
+            )] != 0)
+            {:action} ~ action_dist(action_onehot("form_sub"))
+            new_i = state.i + 1
+            {:idx} ~ dummy_dist(new_i)
+            {:word} ~ word_dist(word_onehot(state.obss[t]))
+        else
+            {:action} ~ action_dist(action_onehot("insert"))
+            new_i = state.i
+            {:idx} ~ dummy_dist(new_i)
+            {:word} ~ word_dist(word_onehot(state.obss[t]))
+        end
+    elseif "insert" in ACTION_LIST
+        {:action} ~ action_dist(action_onehot("insert"))
+        new_i = state.i
+        {:idx} ~ dummy_dist(new_i)
+        {:word} ~ word_dist(word_onehot(state.obss[t]))
+    end
+
+    return ModelProposalState(
+        state.form_sub_param,
+        state.sem_sub_param,
+        state.sent,
+        state.obss,
+        state.action,
+        new_i,
+        state.tt,
+        state.add
+    )
+end
+generate_noisy_sent_proposal_unfold = Gen.Unfold(model_proposal_kernel)

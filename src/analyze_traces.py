@@ -409,17 +409,16 @@ def surprisal_plot(
 
     # Surprisal by Particle Plot
     plt.clf()
-    fig, ax = plt.subplots(figsize=(1.5 * len(observed_words), 9))
-    colormap = sns.color_palette("blend:#ffe8e6,#e84631", as_cmap=True)
+    fig, ax = plt.subplots(figsize=(1.5 * len(observed_words), 6))
     lp_ax = sns.stripplot(
         data=surps,
         x="word_pos",
         y="surprisal",
         hue="action",
-        jitter=0.1,
+        jitter=0.2,
         legend=True,
         alpha=0.25,
-        size=5,
+        size=7.5,
         palette=pal,
     )
 
@@ -433,10 +432,10 @@ def surprisal_plot(
         x="word_pos",
         y="surprisal_weighted",
         ax=lp_ax,
-        label="Noisy-Channel Surp.",
+        label="Noisy\nChannel",
         color="black",
-        linestyles="dashed",
-        alpha=0.5,
+        linestyles="solid",
+        alpha=0.75,
         markersize=15,
         linewidth=5,
     )
@@ -450,10 +449,10 @@ def surprisal_plot(
         x="index",
         y="surprisal",
         ax=lp_ax,
-        label="Baseline Surp.",
+        label="Baseline",
         color="gray",
         linestyles="dashed",
-        alpha=0.5,
+        alpha=0.75,
         markersize=15,
         linewidth=5,
     )
@@ -463,12 +462,13 @@ def surprisal_plot(
     plt.xticks(
         ticks=list(range(len(observed_words))),
         labels=observed_words,
-        fontsize=16,
+        fontsize=22,
+        rotation=15,
     )
-    plt.yticks(fontsize=16)
-    plt.xlabel("Word", fontsize=24)
+    plt.yticks(fontsize=20)
+    plt.xlabel("", fontsize=24)
     plt.ylabel("Surprisal (bits)", fontsize=24)
-    plt.legend(fontsize=16)
+    plt.legend(fontsize=16, loc="center left", bbox_to_anchor=(1.0, 0.5))
     plt.savefig(
         os.path.join(output_dir, sent_id, img_out_filename),
         dpi=300,
