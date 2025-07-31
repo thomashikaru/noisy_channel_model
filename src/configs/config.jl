@@ -12,14 +12,11 @@ function parse_commandline(args = ARGS)
         default = "debug_one"
         "--debug_input"
         arg_type = String
-        default = "the boy licked the ball ."
+        default = "the boy handed the pencil the girl ."
         "--test_sents_file"
         help = "file containing test sentences"
         arg_type = String
         default = "data/gibson2013/dopo_to/sentences.txt"
-        "--train_sents_file"
-        help = "file containing train sentences (for ngram)"
-        arg_type = String
         "--sent_id"
         help = "sentence num"
         arg_type = Int
@@ -51,11 +48,11 @@ function parse_commandline(args = ARGS)
         "--lookback"
         help = "lookback in words"
         arg_type = Int
-        default = 1
+        default = 2
         "--second_pass_rejuv"
         help = "whether to do second-pass rejuvenation"
         arg_type = Bool
-        default = true
+        default = false
         "--second_pass_rejuv_p"
         help = "probability of a particle performing second-pass rejuv"
         arg_type = Float64
@@ -86,10 +83,10 @@ function parse_commandline(args = ARGS)
         default = 1
         "--vocab_file"
         arg_type = String
-        default = "../data/ryskin2021/vocab_augmented.txt"
+        default = "../data/gibson2013/dopo_to/vocab_augmented.txt"
         "--vocab_ipa_file"
         arg_type = String
-        default = "../data/ryskin2021/vocab_ipa_augmented.txt"
+        default = "../data/gibson2013/dopo_to/vocab_ipa_augmented.txt"
         "--actions"
         arg_type = String
         default = "normal,sem_sub,form_sub,insert,skip,morph_sub"

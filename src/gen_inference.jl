@@ -355,7 +355,7 @@ function particle_filter_with_rejuv(
     local_results = [Vector{Dict{String,Any}}() for _ = 1:nthreads()]
 
     @printf("%-2s  %-15s %-15s %-15s %-15s\n", "", "Word", "Surprisal", "Unigram", "P(rejuv)")
-    println("--------------------------------")
+    println("-------------------------------------------------------------------------------")
 
     for t = 1:length(utt)
 

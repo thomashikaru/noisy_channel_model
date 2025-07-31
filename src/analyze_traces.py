@@ -7,6 +7,7 @@ import seaborn as sns
 import argparse
 import os
 
+pd.set_option("future.no_silent_downcasting", True)
 np.seterr("raise")
 
 action_name_mapping = {
@@ -175,12 +176,16 @@ def rejuv_plot(output_dir: str, sent_id: str) -> None:
         df_plot = all_combs.merge(df_plot, on=["t", "t_prime"], how="left").fillna(
             {"accepted": 0}
         )
-        df_plot = df_plot[["t", "t_prime", "accepted"]].pivot_table(
-            index="t_prime",
-            columns="t",
-            values="accepted",
-            aggfunc=agg_type,
-            fill_value=0,
+        df_plot = (
+            df_plot[["t", "t_prime", "accepted"]]
+            .pivot_table(
+                index="t_prime",
+                columns="t",
+                values="accepted",
+                aggfunc=agg_type,
+                fill_value=0,
+            )
+            .infer_objects(copy=False)
         )
         ax = sns.heatmap(df_plot, annot=True, fmt=".3f", cmap="Blues")
         plt.xlabel("Rejuvenation Proposed At", fontsize=18)
@@ -285,12 +290,16 @@ def rejuv_plot(output_dir: str, sent_id: str) -> None:
         df_plot = all_combs.merge(df_plot, on=["t", "t_prime"], how="left").fillna(
             {"accepted": 0}
         )
-        df_plot = df_plot[["t", "t_prime", "accepted"]].pivot_table(
-            index="t_prime",
-            columns="t",
-            values="accepted",
-            aggfunc=agg_type,
-            fill_value=0,
+        df_plot = (
+            df_plot[["t", "t_prime", "accepted"]]
+            .pivot_table(
+                index="t_prime",
+                columns="t",
+                values="accepted",
+                aggfunc=agg_type,
+                fill_value=0,
+            )
+            .infer_objects(copy=False)
         )
         ax = sns.heatmap(df_plot, annot=True, fmt=".3f", cmap="Blues")
         plt.xlabel("Rejuvenation Proposed At", fontsize=18)

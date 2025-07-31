@@ -33,9 +33,11 @@ the mother gave the candle the daughter .
 
 The default model vocabulary contains 5000 common English words, found in `data/gibson2013/dopo_to/vocab_augmented.txt`.
 
-You may specify your own vocabulary file by supplying a file name to the `--vocab_file` command line argument.
+You may specify your own vocabulary file by supplying a file name to the `--vocab_file` command line argument. Using words that are not contained within the vocabulary will result in an error.
 
 ## Visualize results of an inference run
+
+Requires Python, pandas, numpy, matplotlib, seaborn.
 
 ```
 # Use default arguments
