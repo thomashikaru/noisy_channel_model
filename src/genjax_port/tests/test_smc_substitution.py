@@ -53,6 +53,34 @@ def test_evidence_matches_word_model_branch_importances():
         assert abs(float(log_ev[1 + k]) - float(w_k)) < 1e-2, (k, float(log_ev[1 + k]), float(w_k))
 
 
+def test_bucket_padding_is_inert():
+    """Fixing max_intended to a bucket leaves the discrete posterior identical to per-sentence
+    sizing. EOS-padded positions beyond i_len don't affect causal-attention logits at i_len-1, so
+    every downstream random draw under the same key is the same and the sampled sentences match
+    exactly. (log_marginal agrees only up to ~1e-1 float noise: XLA tiles the padded [P, bucket]
+    forward differently than [P, M], so the logits differ at ~1e-3 -- benign, never flips a draw.)
+    """
+    obs = jnp.asarray(encode("did you recieve the message"))
+    a, la, _ = run_smc_substitution(jax.random.key(0), obs, num_particles=16, max_dist=2)
+    b, lb, _ = run_smc_substitution(jax.random.key(0), obs, num_particles=16, max_dist=2,
+                                    max_intended=24)
+    assert a == b, (a[:3], b[:3])               # discrete posterior: exact match
+    assert abs(la - lb) < 0.5, (la, lb)         # log-marginal: equal up to XLA float noise
+
+
+def test_run_smc_batch_validates_bucket():
+    """required_buffer_size is respected: a too-small bucket raises before running."""
+    from src.genjax_port.smc_substitution import run_smc_batch, required_buffer_size
+    obs = [jnp.asarray(encode(s)) for s in ("the boy ran", "did you recieve the message")]
+    assert required_buffer_size(obs[1]) > 3
+    raised = False
+    try:
+        run_smc_batch(jax.random.key(0), obs, bucket=3, num_particles=8)
+    except ValueError:
+        raised = True
+    assert raised, "expected ValueError for an undersized bucket"
+
+
 def test_clean_text_stays_literal_smoke():
     """Smoke test: clean text is dominated by the literal reading (any Pythia LM)."""
     obs = jnp.asarray(encode("the boy did an experiment today"))
@@ -73,10 +101,15 @@ def _behavioral_suite():
         ("the boy handed handed the pencil to the girl",
          "insertion: remove the doubled 'handed' (~0.5)", 0, True),
     ]
+    # Fixed buffer bucket so every sentence shares the compiled [P, bucket] forward (the latency
+    # bucketing optimization): only the first sentence pays the ~8s/410m compile, the rest run warm.
+    # All suite sentences need <= 13 (required_buffer_size); 16 is a tight bucket.
+    bucket = 16
     for observed, ideal, max_del, allow_ins in suite:
         obs = jnp.asarray(encode(observed))
         sents, logm, ess = run_smc_substitution(jax.random.key(0), obs, num_particles=64,
-                                                 max_dist=2, max_deletions=max_del,
+                                                 max_intended=bucket, max_dist=2,
+                                                 max_deletions=max_del,
                                                  allow_insertion=allow_ins, progress=False)
         tags = [f"max_deletions={max_del}"] if max_del else []
         tags += ["insertion"] if allow_ins else []

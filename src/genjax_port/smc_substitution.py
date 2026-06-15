@@ -217,3 +217,48 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
 
     sentences = [decode(intended_buf[p, 1:int(i_len[p])]).strip() for p in range(P)]
     return sentences, float(log_marginal), min_ess
+
+
+def required_buffer_size(obs_ids, max_deletions=0):
+    """Minimum ``max_intended`` for a sentence (same formula ``run_smc_substitution`` uses when
+    ``max_intended is None``): the EOS seed + an all-COPY intended sequence + one deletion per gap,
+    plus slack. A bucket must be >= this for every sentence it holds.
+    """
+    words = NW.segment_words([int(i) for i in obs_ids])
+    total_obs = sum(len(ids) for ids, _ in words)
+    return total_obs + len(words) * max_deletions + 4
+
+
+def run_smc_batch(key, obs_id_list, bucket, num_particles=64, max_dist=2, max_deletions=0,
+                  allow_insertion=False, progress=False, **kw):
+    """Run the filter on many sentences in ONE process at a FIXED buffer width ``bucket``.
+
+    Fixing ``max_intended = bucket`` keeps the two compiled LM-forward shapes (``[P, bucket]`` and
+    the lookahead ``[P*lookahead_k, bucket]``) constant across sentences, so the ~8s/410m XLA
+    compile is paid once (on the first sentence) and every later sentence runs warm (~exec only) --
+    the bucketing optimization from the latency note. Padding is inert (EOS-padded positions are
+    ignored by causal attention; ``i_len`` tracks the true length), so results are identical to the
+    per-sentence ``max_intended``. Every sentence must fit: ``required_buffer_size(obs) <= bucket``.
+
+    Returns a list of ``(sentences, log_marginal, min_ess)``, one per input.
+    """
+    too_big = [(i, required_buffer_size(o, max_deletions)) for i, o in enumerate(obs_id_list)
+               if required_buffer_size(o, max_deletions) > bucket]
+    if too_big:
+        raise ValueError(
+            f"bucket={bucket} too small for sentences {[(i, n) for i, n in too_big]}; "
+            f"raise the bucket to >= {max(n for _, n in too_big)}")
+    results = []
+    items = obs_id_list
+    if progress:
+        try:
+            from tqdm import tqdm
+            items = tqdm(obs_id_list, desc=f"batch (bucket={bucket})", unit="sent")
+        except ImportError:
+            pass
+    for obs in items:
+        key, sub = jax.random.split(key)
+        results.append(run_smc_substitution(
+            sub, obs, num_particles=num_particles, max_intended=bucket, max_dist=max_dist,
+            max_deletions=max_deletions, allow_insertion=allow_insertion, **kw))
+    return results
