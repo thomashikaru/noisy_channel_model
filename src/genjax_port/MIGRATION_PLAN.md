@@ -209,10 +209,17 @@ noise. **Note:** the forward filter computes evidence directly (scales to many c
 (branch index + token choices) are materialized/edited. **Formal writeup:** `docs/model.tex`
 (compiles to 10pp) proves SMC proper-weighting + the Rejuvenate/SMCP3 + MH correctness.
 
-**M2 — Deletions via `Scan`+`Mask`.** Add the lookahead deletion gap (omitted single-token words).
-Use masking for the variable number of emitted intended tokens per word. Port the
-lookahead-deletion proposal (`particle_filter_lookahead.py` Phase A). Gate: deletion case
-("he wants _ go"→"to") matches hand-rolled ~0.5.
+**M2 — Deletions. ✅ DONE (2026-06-15).** Ported the lookahead deletion gap (Phase A) into the
+native filter as `smc_substitution.deletion_gap`, wired into `run_smc_substitution` behind
+`max_deletions` (default 0 = pure-M1, unchanged). Per gap slot: Bernoulli delete? proposed at
+`P_DELETE_PROPOSAL` priced at `P_DELETE_PRIOR`; omitted token proposed from top-`LOOKAHEAD_K` LM
+reweighted by one-step lookahead toward the word's first token; gap weight folds into the step
+weight (a properly-weighted SIS pre-extension — proof in `docs/model.tex` §5, eq. gapweight). Gate
+met at P=64/410m: "he wants go home" → "he wants **to** go home" 81% (+to come/have/love ≈97%
+reconstruct "to"), minESS 4.0 (high-variance, as expected); M1 cases unchanged. The forward filter
+ports Phase A directly (vmapped); the genjax `Mask` representation is the trace-carrier concern for
+M5. Note: stronger reconstruction than the unified golden (55%) because no INSERT branch competes
+yet (M3).
 
 **M3 — Insertion.** Per word, the INSERT action (observed word spurious, emit nothing), scored
 `n·(−log V)`. Gate: doubled-word removal matches hand-rolled ~0.5.

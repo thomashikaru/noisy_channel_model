@@ -496,24 +496,56 @@ $\ell$ is the reach/cost knob, and re-scoring the suffix is exactly what lets la
 word $k$. This is why the rejuvenation-bearing trace must keep the suffix tokens as \emph{live}
 addressed LM choices (Section~\ref{sec:genfn}), not as frozen factors.
 
-\section{Extensions present in the unified filter}
+\section{Insertion and deletion}
 \label{sec:extensions}
 
-The deployed reference filter (\code{particle\_filter\_unified.py}) augments $\mathcal A_i$ with two
-further actions, with identical SMC/rejuvenation theory (only $E_i$ and $\mathrm{emit}$ change):
-\begin{itemize}[leftmargin=1.4em,itemsep=1pt]
-  \item \textbf{Insertion} ($\inssact$): $w_i$ is spurious; $\mathrm{emit}(\inssact)=()$ and
-        $\log P(w_i\given\inssact) = n_i\cdot(-\log V)$ (a flat per-token cost). It adds one column to
-        $E_i$ with branch evidence $\log\pi_{\inssact} + n_i(-\log V)$.
-  \item \textbf{Deletion} ($\delact$): an omitted intended single-token word is posited \emph{before}
-        $w_i$, proposed lookahead-guided toward $o_{i,1}$. This is a within-step pre-scan whose
-        importance contribution multiplies into $w_i$; with the lookahead proposal the same
-        weight-collapse argument (Lemma~\ref{lem:collapse}) applies to the augmented branch set.
-\end{itemize}
-In the genjax-native port these correspond to additional \code{Switch} branches (insertion: a branch
-emitting zero tokens; deletion: a masked variable-length pre-emission), handled by the \code{Mask}
-combinator; the proofs above are unchanged because they only use the branch evidences $E_i$ and the
-\GFI{} weight identities.
+The filter augments each step with two further operations. Deletion is implemented in the native
+port (\code{smc\_substitution.run\_smc\_substitution}, \code{max\_deletions}${>}0$; the M2
+milestone) and both are present in the reference filter (\code{particle\_filter\_unified.py}). The
+SMC and rejuvenation theory are unchanged: only the branch set and the per-step weight gain extra,
+\emph{properly weighted}, factors.
+
+\paragraph{Insertion ($\inssact$).} The observed word is spurious: $\mathrm{emit}(\inssact)=()$
+(it consumes $w_i$ and emits no intended token) and $\log P(w_i\given\inssact) = n_i\cdot(-\log V)$,
+a flat per-token cost. It adds one column to $E_i$ with branch evidence
+$\log\pi_{\inssact} + n_i(-\log V)$, so Lemma~\ref{lem:collapse} and Theorem~\ref{thm:smc} apply
+verbatim to the augmented set $\mathcal A_i\cup\{\inssact\}$.
+
+\paragraph{Deletion ($\delact$): a properly weighted pre-extension.} Before explaining $w_i$, a
+particle may posit up to $\Delta$ (=\code{MAX\_DELETIONS}) omitted single-token intended words. Each
+slot is an auxiliary SIS extension that prepends one intended token $x$ to $z_{<i}$. A Bernoulli
+``delete?'' choice is \emph{proposed} at rate $q_\delta = \code{P\_DELETE\_PROPOSAL}$ but
+\emph{priced} at the model rate $p_\delta=\code{P\_DELETE\_PRIOR}$; conditioned on deleting, $x$ is
+proposed from the top-$\kappa$ LM tokens reweighted by a one-step \emph{lookahead} toward the word's
+first token $o_{i,1}$:
+\begin{equation}\label{eq:del-prop}
+  q_\delta(x\given z_{<i}) \;\propto\; \pLM(x\given z_{<i})\,\pLM(o_{i,1}\given z_{<i}\Vert x),
+  \qquad x\in\mathrm{top}\text{-}\kappa\,\pLM(\cdot\given z_{<i}).
+\end{equation}
+The target contribution of a posited deletion is just its LM prior $\pLM(x\given z_{<i})$ (the
+lookahead factor is a proposal device only). The resulting incremental gap weight is, per slot,
+\begin{equation}\label{eq:gapweight}
+  \log w^{\mathrm{gap}} =
+  \begin{cases}
+    \underbrace{\log\tfrac{p_\delta}{q_\delta}}_{\code{log\_del}}
+      \;+\; \underbrace{\log\!\!\sum_{x'}\! e^{\,\ell(x')} - \ell(x)}_{\text{token IS correction}}
+      & \text{delete }x,\\[1.2ex]
+    \underbrace{\log\tfrac{1-p_\delta}{1-q_\delta}}_{\code{log\_keep}} & \text{stop},
+  \end{cases}
+  \qquad \ell(x') = \log\pLM(x'\given z_{<i}) + \log\pLM(o_{i,1}\given z_{<i}\Vert x'),
+\end{equation}
+matching \code{deletion\_gap} in \code{smc\_substitution.py}. The token correction is exactly
+$\log\big[\pLM(x\given z_{<i})/q_\delta(x)\big]$ (the lookahead $\ell$-terms cancel against
+\eqref{eq:del-prop} up to its normalizer), so the slot is a valid SIS step: it multiplies a
+properly weighted factor into the particle weight and Theorem~\ref{thm:smc} extends to the
+gap-augmented sweep. The deletion is applied \emph{before} $E_i$ so the posited token enters the LM
+context of the word that follows.
+
+\paragraph{Native trace carrier.} In the \code{@gen} model these are additional \code{Switch}
+branches (insertion: a zero-token branch; deletion: a masked variable-length pre-emission via the
+\code{Mask} combinator). The forward filter computes the weights directly, as above; the proofs are
+unchanged because they use only the branch evidences $E_i$, the gap weight \eqref{eq:gapweight}, and
+the \GFI{} identities.
 
 \appendix
 \section{Generative function interface weight identities}

@@ -1,7 +1,7 @@
-"""M1: substitution-only word-scan SMC -- the genjax-native port's forward filter.
+"""Word-scan SMC -- the genjax-native port's forward filter (M1 substitution + M2 deletion).
 
-Scope: COPY + SUB only (deletions are M2, insertion M3). Per observed word the model weighs
-explanations exactly as the per-word ``Switch`` in :mod:`genjax_model` (``make_word_model``):
+Per observed word the model weighs explanations exactly as the per-word ``Switch`` in
+:mod:`genjax_model` (``make_word_model``):
 
   COPY : intended word == observed word; emit its n BPE tokens, LM chain-rule scored.
   SUB  : intended word is a single vocab token x (char-edit neighbor of the observed word);
@@ -13,9 +13,15 @@ quantity ``make_word_model(...).importance`` returns per branch (cross-checked i
 gather all sub candidates) rather than enumerating ``Switch`` branches through ``importance``, so
 it scales to many candidates; the ``@gen`` word model is the trace carrier for M5 rejuvenation.
 
-With the local-posterior proposal (``proposal.propose``) the incremental SMC weight collapses to
-``logsumexp`` over branches; we resample every word. Particle state is manual ``vmap``-friendly
-buffers (``intended_buf [P, M]``, ``i_len [P]``), mirroring the hand-rolled unified filter.
+**Deletion (M2, ``max_deletions > 0``).** Before each observed word a particle may posit up to
+``max_deletions`` omitted *intended* single-token words (a "gap"), each proposed lookahead-guided
+toward the word's first token (``deletion_gap``, ported from the unified filter's Phase A). The gap
+contributes a weight ``log_w_gap`` that folds into the step's incremental weight. Insertion is M3.
+
+With the local-posterior proposal (``proposal.propose``) the per-word incremental SMC weight
+collapses to ``logsumexp`` over branches (times the gap weight); we resample every word. Particle
+state is manual ``vmap``-friendly buffers (``intended_buf [P, M]``, ``i_len [P]``), mirroring the
+hand-rolled unified filter.
 """
 
 import math
@@ -28,7 +34,10 @@ from jax.scipy.special import logsumexp
 from . import lm_penzai as L
 from . import noise_word as NW
 from .tokenizer import decode
-from .particle_filter import ACTION_ALPHAS
+from .particle_filter import (
+    ACTION_ALPHAS, MAX_DELETIONS, P_DELETE_PRIOR, P_DELETE_PROPOSAL,
+)
+from .particle_filter_lookahead import LOOKAHEAD_K
 from .model import COPY, SUB
 from .proposal import propose
 
@@ -65,18 +74,72 @@ def word_log_evidence(intended_buf, i_len, log_action_prior, span_ids, subs,
     return jnp.concatenate(cols, axis=1)                     # [P, 1 + n_sub]
 
 
+def deletion_gap(key, intended_buf, i_len, obs0, max_deletions, lookahead_k,
+                 log_del, log_keep, next_logprobs_fn, next_logits_fn):
+    """Posit up to ``max_deletions`` omitted single-token intended words before the observed word
+    whose first token is ``obs0`` (the unified filter's Phase A, vmapped over particles).
+
+    Each deletion slot: decide to delete with proposal rate ``P_DELETE_PROPOSAL`` (priced against
+    ``P_DELETE_PRIOR`` via ``log_del``/``log_keep``); if deleting, propose the omitted token from
+    the LM top-``lookahead_k`` reweighted by how well it makes ``obs0`` likely next (lookahead), and
+    fold the proposal correction into the gap weight. Returns ``(key, intended_buf, i_len,
+    log_w_gap)`` with the buffer/length advanced by the posited deletions.
+    """
+    P = intended_buf.shape[0]
+    rows = jnp.arange(P)
+    still_deleting = jnp.ones((P,), dtype=bool)
+    log_w_gap = jnp.zeros((P,))
+    for _ in range(max_deletions):
+        key, dk_decide, dk_tok = jax.random.split(key, 3)
+        lp_del = next_logprobs_fn(intended_buf, i_len)  # [P, V]
+        delete_now = still_deleting & (jax.random.uniform(dk_decide, (P,)) < P_DELETE_PROPOSAL)
+        log_w_gap += jnp.where(still_deleting,
+                               jnp.where(delete_now, log_del, log_keep), 0.0)
+        cand_lm, cand_ids = jax.lax.top_k(lp_del, lookahead_k)  # [P, K]
+        bufs = jnp.repeat(intended_buf, lookahead_k, axis=0)
+        ilens = jnp.repeat(i_len, lookahead_k)
+        rep_rows = jnp.arange(P * lookahead_k)
+        bufs = bufs.at[rep_rows, ilens].set(cand_ids.reshape(-1))
+        look_o = jax.nn.log_softmax(
+            next_logits_fn(bufs, ilens + 1), axis=-1
+        )[:, obs0].reshape(P, lookahead_k)  # [P, K] log LM(obs0 | ctx + x)
+        q_logits = cand_lm + look_o
+        logZ = logsumexp(q_logits, axis=1)
+        choice = jax.random.categorical(dk_tok, q_logits, axis=1)
+        del_tok = cand_ids[rows, choice]
+        token_w = logZ - look_o[rows, choice]
+        log_w_gap += jnp.where(delete_now, token_w, 0.0)
+        intended_buf = intended_buf.at[rows, i_len].set(
+            jnp.where(delete_now, del_tok, intended_buf[rows, i_len]))
+        i_len = i_len + delete_now.astype(jnp.int32)
+        still_deleting = still_deleting & delete_now
+    return key, intended_buf, i_len, log_w_gap
+
+
 def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
-                         max_dist=2, progress=False, next_logprobs_fn=None):
-    """Substitution-only word-scan SMC. Returns ``(sentences, log_marginal, min_ess)``."""
+                         max_dist=2, max_deletions=0, lookahead_k=LOOKAHEAD_K,
+                         p_delete_prior=P_DELETE_PRIOR, progress=False,
+                         next_logprobs_fn=None, next_logits_fn=None):
+    """Word-scan SMC (substitution + optional deletion gap).
+
+    ``max_deletions=0`` (default) is the pure-substitution M1 filter; ``> 0`` enables the M2
+    lookahead deletion gap. Returns ``(sentences, log_marginal, min_ess)``.
+    """
     if next_logprobs_fn is None:
         next_logprobs_fn = L.next_token_logprobs
+    if next_logits_fn is None:
+        next_logits_fn = L.next_token_logits
+
+    log_del = math.log(p_delete_prior) - math.log(P_DELETE_PROPOSAL)
+    log_keep = math.log(1 - p_delete_prior) - math.log(1 - P_DELETE_PROPOSAL)
 
     P = num_particles
     words = NW.segment_words([int(i) for i in obs_ids])
     W = len(words)
     total_obs = sum(len(ids) for ids, _ in words)
     if max_intended is None:
-        max_intended = total_obs + 4  # subs only shrink length; +slack for the EOS seed
+        # subs shrink length; each of the W gaps may add max_deletions tokens; +EOS-seed slack
+        max_intended = total_obs + W * max_deletions + 4
     rows = jnp.arange(P)
     min_ess = float("inf")
 
@@ -100,12 +163,21 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
         n = len(span_ids)
         subs = NW.word_sub_candidates(word_str, max_dist=max_dist)
 
+        # Phase A (M2): lookahead deletion gap before the observed word. The gap advances the
+        # buffer (posited omitted tokens enter the LM context) and contributes log_w_gap.
+        log_w_gap = jnp.zeros((P,))
+        if max_deletions:
+            key, intended_buf, i_len, log_w_gap = deletion_gap(
+                key, intended_buf, i_len, span_ids[0], max_deletions, lookahead_k,
+                log_del, log_keep, next_logprobs_fn, next_logits_fn)
+
         log_ev = word_log_evidence(intended_buf, i_len, log_action_prior, span_ids, subs,
                                    next_logprobs_fn)
         Cn = log_ev.shape[1]
 
         key, step_key, resample_key = jax.random.split(key, 3)
         option, log_w = propose(step_key, log_ev)
+        log_w = log_w + log_w_gap
         log_marginal += float(logsumexp(log_w) - jnp.log(P))
         min_ess = min(min_ess, float(1.0 / jnp.sum(jax.nn.softmax(log_w) ** 2)))
 

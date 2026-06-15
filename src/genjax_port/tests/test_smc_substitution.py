@@ -63,17 +63,19 @@ def test_clean_text_stays_literal_smoke():
 
 
 def _behavioral_suite():
-    """Substitution suite vs the golden idealized behaviors (P=64, 410m)."""
+    """Substitution (+ M2 deletion) suite vs the golden idealized behaviors (P=64, 410m)."""
     suite = [
-        ("the boy did an experimemt today", "experimemt -> experiment (dominant)"),
-        ("did you recieve the message", "recieve -> receive (weak at 410m)"),
-        ("the boy did an experiment today", "clean: stay literal"),
+        ("the boy did an experimemt today", "experimemt -> experiment (dominant)", 0),
+        ("did you recieve the message", "recieve -> receive (weak at 410m)", 0),
+        ("the boy did an experiment today", "clean: stay literal", 0),
+        ("he wants go home", "deletion: reconstruct omitted 'to' (~0.5, low ESS)", 1),
     ]
-    for observed, ideal in suite:
+    for observed, ideal, max_del in suite:
         obs = jnp.asarray(encode(observed))
         sents, logm, ess = run_smc_substitution(jax.random.key(0), obs, num_particles=64,
-                                                 max_dist=2, progress=False)
-        print(f"\nobserved : {observed}\nideal    : {ideal}\nlogP~={logm:.1f} minESS={ess:.1f}/64")
+                                                 max_dist=2, max_deletions=max_del, progress=False)
+        tag = f" [max_deletions={max_del}]" if max_del else ""
+        print(f"\nobserved : {observed}{tag}\nideal    : {ideal}\nlogP~={logm:.1f} minESS={ess:.1f}/64")
         total = len(sents)
         for s, c in Counter(sents).most_common(5):
             print(f"  {c/total:6.1%}  ({c:>3d})  {s}")
