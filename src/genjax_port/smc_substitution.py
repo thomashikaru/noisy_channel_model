@@ -38,18 +38,20 @@ from .particle_filter import (
     ACTION_ALPHAS, MAX_DELETIONS, P_DELETE_PRIOR, P_DELETE_PROPOSAL,
 )
 from .particle_filter_lookahead import LOOKAHEAD_K
-from .model import COPY, SUB
+from .model import COPY, SUB, INSERT
 from .proposal import propose
 
 
 def word_log_evidence(intended_buf, i_len, log_action_prior, span_ids, subs,
-                      next_logprobs_fn):
-    """Per-branch joint log-density for one observed word: ``[P, 1 + len(subs)]``.
+                      next_logprobs_fn, insertion_loglik=None):
+    """Per-branch joint log-density for one observed word: ``[P, 1 + len(subs) (+ 1)]``.
 
-    Column 0 is COPY (LM chain-rule over the word's ``span_ids``); columns ``1..`` are the SUB
-    candidates ``subs = [(token_id, char_dist), ...]``. Matches ``make_word_model`` branch
-    importances (see test). ``next_logprobs_fn(buf, i_len) -> [P, V]`` is injectable so dedup /
-    a stub LM can be swapped in.
+    Column 0 is COPY (LM chain-rule over the word's ``span_ids``); columns ``1..len(subs)`` are the
+    SUB candidates ``subs = [(token_id, char_dist), ...]``. If ``insertion_loglik`` is given (M3), a
+    final INSERT column is appended (the observed word is spurious; emits nothing), scored
+    ``log P(insert) + n * insertion_loglik`` with ``insertion_loglik = -log V``. The COPY/SUB columns
+    match ``make_word_model`` branch importances (see test). ``next_logprobs_fn(buf, i_len) -> [P, V]``
+    is injectable so dedup / a stub LM can be swapped in.
     """
     P = intended_buf.shape[0]
     rows = jnp.arange(P)
@@ -71,7 +73,10 @@ def word_log_evidence(intended_buf, i_len, log_action_prior, span_ids, subs,
         sub_x = jnp.asarray([x for x, _ in subs], jnp.int32)
         sub_ll = jnp.asarray([NW.word_sub_loglik(d) for _, d in subs], jnp.float32)
         cols.append(log_action_prior[:, SUB][:, None] + lm0[:, sub_x] + sub_ll[None, :])
-    return jnp.concatenate(cols, axis=1)                     # [P, 1 + n_sub]
+    if insertion_loglik is not None:                         # INSERT: spurious word, emit nothing
+        insert_ev = log_action_prior[:, INSERT] + n * insertion_loglik   # [P]
+        cols.append(insert_ev[:, None])
+    return jnp.concatenate(cols, axis=1)                     # [P, 1 + n_sub (+ 1)]
 
 
 def deletion_gap(key, intended_buf, i_len, obs0, max_deletions, lookahead_k,
@@ -117,18 +122,21 @@ def deletion_gap(key, intended_buf, i_len, obs0, max_deletions, lookahead_k,
 
 
 def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
-                         max_dist=2, max_deletions=0, lookahead_k=LOOKAHEAD_K,
-                         p_delete_prior=P_DELETE_PRIOR, progress=False,
+                         max_dist=2, max_deletions=0, allow_insertion=False,
+                         lookahead_k=LOOKAHEAD_K, p_delete_prior=P_DELETE_PRIOR, progress=False,
                          next_logprobs_fn=None, next_logits_fn=None):
-    """Word-scan SMC (substitution + optional deletion gap).
+    """Word-scan SMC (substitution + optional deletion gap + optional insertion).
 
-    ``max_deletions=0`` (default) is the pure-substitution M1 filter; ``> 0`` enables the M2
-    lookahead deletion gap. Returns ``(sentences, log_marginal, min_ess)``.
+    ``max_deletions=0`` and ``allow_insertion=False`` (defaults) give the pure-substitution M1
+    filter; ``max_deletions > 0`` enables the M2 lookahead deletion gap; ``allow_insertion=True``
+    enables the M3 INSERT action (spurious observed word). Returns
+    ``(sentences, log_marginal, min_ess)``.
     """
     if next_logprobs_fn is None:
         next_logprobs_fn = L.next_token_logprobs
     if next_logits_fn is None:
         next_logits_fn = L.next_token_logits
+    insertion_loglik = -math.log(L.vocab_size()) if allow_insertion else None
 
     log_del = math.log(p_delete_prior) - math.log(P_DELETE_PROPOSAL)
     log_keep = math.log(1 - p_delete_prior) - math.log(1 - P_DELETE_PROPOSAL)
@@ -172,7 +180,7 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
                 log_del, log_keep, next_logprobs_fn, next_logits_fn)
 
         log_ev = word_log_evidence(intended_buf, i_len, log_action_prior, span_ids, subs,
-                                   next_logprobs_fn)
+                                   next_logprobs_fn, insertion_loglik)
         Cn = log_ev.shape[1]
 
         key, step_key, resample_key = jax.random.split(key, 3)
@@ -187,7 +195,9 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
         log_action_prior = log_action_prior[parents]
         option = option[parents]
 
-        # Emit the chosen branch's intended tokens (COPY = n span tokens, SUB = 1 token).
+        # Emit the chosen branch's intended tokens (COPY = n span tokens, SUB = 1 token,
+        # INSERT = 0 tokens). The optional trailing INSERT column keeps its zero-init length, so a
+        # particle that chose INSERT writes nothing.
         cand_tok = np.zeros((Cn, n), np.int32)
         cand_len = np.zeros((Cn,), np.int32)
         cand_tok[0, :n] = span_ids

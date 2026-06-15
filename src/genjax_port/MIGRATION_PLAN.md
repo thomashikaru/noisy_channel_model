@@ -221,8 +221,25 @@ ports Phase A directly (vmapped); the genjax `Mask` representation is the trace-
 M5. Note: stronger reconstruction than the unified golden (55%) because no INSERT branch competes
 yet (M3).
 
-**M3 — Insertion.** Per word, the INSERT action (observed word spurious, emit nothing), scored
-`n·(−log V)`. Gate: doubled-word removal matches hand-rolled ~0.5.
+**M3 — Insertion. ✅ DONE (2026-06-15).** The INSERT action (observed word spurious, emit nothing,
+scored `log π_ins + n·(−log V)`) is one extra column in `word_log_evidence`, behind
+`run_smc_substitution(allow_insertion=True)`; the emission loop already treats a zero-length column
+as "emit nothing" (no change). Gate met at P=64/410m: "the boy handed handed the pencil to the girl"
+→ doubled "handed" removed 64.1% (golden 46.9%; stronger because no deletion competes), minESS 48.6;
+M1/M2 cases unchanged. Doc §5 gives INSERT as an evidence column. **The forward filter (sub+del+ins)
+is now feature-complete; M4 wires it into `run.py` and M5 adds rejuvenation.**
+
+> **Latency note (measured 2026-06-15, pythia-410m, P=64):** load 3.4s (once/proc); **JIT
+> compile ~8s _per distinct tensor shape_** (the `[P,M]` forward, the `[P·K,M]` lookahead batch, and
+> a fresh compile for every new `max_intended` ⇒ every new sentence length); warm exec 0.56s/forward,
+> ~3.0s/sentence. So a cold one-sentence run ≈13.5s is **~10.5s compile + ~3s exec**. **Compilation
+> dominates, not load or exec.** JAX's persistent compilation cache does NOT help (cache-hit 9.1s ≈
+> cold-compile 8.1s — the cost is graph tracing/lowering, which the XLA cache doesn't cover; enabling
+> it made the cold run far worse). Real levers: (1) **shape stability / bucketing** — pad all
+> sentences to a common `max_intended` and run them in ONE process so they share the compiled graph
+> (first ≈13s, rest ≈3s each); (2) **keep a warm process** for the dev loop; (3) use pythia-70m for
+> the LM-independent tests (already the runner default). A corpus-scale bucketed batch layer is the
+> right home for fix (1).
 
 **M4 — Full parity.** Wire `run.py` behind a flag to the native filter; run the full suite incl.
 the medics/punctuation/EOS case. Gate: behavior parity with `particle_filter_unified.py` across

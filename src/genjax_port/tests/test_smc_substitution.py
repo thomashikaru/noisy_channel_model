@@ -64,17 +64,23 @@ def test_clean_text_stays_literal_smoke():
 
 def _behavioral_suite():
     """Substitution (+ M2 deletion) suite vs the golden idealized behaviors (P=64, 410m)."""
+    # (observed, ideal, max_deletions, allow_insertion)
     suite = [
-        ("the boy did an experimemt today", "experimemt -> experiment (dominant)", 0),
-        ("did you recieve the message", "recieve -> receive (weak at 410m)", 0),
-        ("the boy did an experiment today", "clean: stay literal", 0),
-        ("he wants go home", "deletion: reconstruct omitted 'to' (~0.5, low ESS)", 1),
+        ("the boy did an experimemt today", "experimemt -> experiment (dominant)", 0, False),
+        ("did you recieve the message", "recieve -> receive (weak at 410m)", 0, False),
+        ("the boy did an experiment today", "clean: stay literal", 0, False),
+        ("he wants go home", "deletion: reconstruct omitted 'to' (~0.5, low ESS)", 1, False),
+        ("the boy handed handed the pencil to the girl",
+         "insertion: remove the doubled 'handed' (~0.5)", 0, True),
     ]
-    for observed, ideal, max_del in suite:
+    for observed, ideal, max_del, allow_ins in suite:
         obs = jnp.asarray(encode(observed))
         sents, logm, ess = run_smc_substitution(jax.random.key(0), obs, num_particles=64,
-                                                 max_dist=2, max_deletions=max_del, progress=False)
-        tag = f" [max_deletions={max_del}]" if max_del else ""
+                                                 max_dist=2, max_deletions=max_del,
+                                                 allow_insertion=allow_ins, progress=False)
+        tags = [f"max_deletions={max_del}"] if max_del else []
+        tags += ["insertion"] if allow_ins else []
+        tag = f" [{', '.join(tags)}]" if tags else ""
         print(f"\nobserved : {observed}{tag}\nideal    : {ideal}\nlogP~={logm:.1f} minESS={ess:.1f}/64")
         total = len(sents)
         for s, c in Counter(sents).most_common(5):
