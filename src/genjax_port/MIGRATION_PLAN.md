@@ -253,11 +253,24 @@ are within MC noise + the soft-target band (native has no dedup ⇒ different ef
 Runtime: with bucketing the 6-sentence suite is one compile + warm execs (see latency note).
 
 **M5 — Rejuvenation (the payoff).** Per `REJUVENATION_PLAN.md` §11 phasing:
-- R1: **substitution-flip** `Rejuvenate` over scan `x` addresses, **unconditional**, customizable
-  `lookback`. Detailed-balance test + a reanalysis test (early word disambiguated by later context).
-- R2: **add/delete** reversible-jump rejuvenation move.
+- R1: **substitution-flip** `Rejuvenate` over a word's intended-token address, **unconditional**.
+  **✅ DONE (2026-06-15)** — `rejuvenation.py` (`make_chain_model`, `flip_request`, `rejuv_step`,
+  `rejuv_sweep`) on an unrolled per-word chain (single-token words); editing `x_k` re-scores the
+  suffix via `Update`, so later context votes. `tests/test_rejuvenation.py` (pythia-70m): reanalysis
+  flip too→to ✓; the flip's MH weight is ≈0 without the trailing words but ≈+5.5 with them (suffix
+  vote) ✓; **detailed balance** — MH histogram == brute-force exact posterior to ≤1e-3 ✓ (Thm 2
+  empirically). Gotcha (cost time): a `Rejuvenate` `argument_mapping` sees only the LOCAL sub-trace
+  at the edited address, so the position-k context must be rebuilt from the full trace + closed over.
+  Spike at `/tmp/genjax_spike4_rejuv.py`. Doc §4.4 updated.
+- R2: **add/delete** reversible-jump rejuvenation move. *(NEXT — trans-dimensional: changes word
+  count; needs the multi-token Switch flip + RJ reverse-move bookkeeping.)*
 - R3: **surprisal-conditioned trigger** + tunable lookback.
-Gate (R1): a sentence the forward filter gets wrong (early commitment) is fixed by rejuvenation.
+Gate (R1): a sentence the forward filter gets wrong (early commitment) is fixed by rejuvenation — MET.
+
+**NB — R1 lives on the unrolled chain model, separate from the forward filter (`smc_substitution.py`,
+manual buffers). Integrating per-particle rejuvenation into the forward SMC needs trace
+materialization per particle (the open M5→forward-filter bridge); R1 here proves the move is correct
+and reanalysis works.**
 
 **M6 — Cleanup.** Retire the hand-rolled filters (or keep one as the A/B baseline); update README +
 memory; decide whether to reimplement dedup at the distribution level if perf warrants.

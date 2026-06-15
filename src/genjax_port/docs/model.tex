@@ -466,9 +466,21 @@ word's candidate set, reweighted by the live LM:
 \end{equation}
 identical in form to the forward proposal \eqref{eq:proposal} but evaluated against the
 \emph{current} (possibly later-updated) context. Because $\mathcal B$ has fixed cardinality, the
-overwrite is dimension-preserving and Theorem~\ref{thm:mh}/\ref{thm:rejuv-smcp3} apply directly. The
-spike in \code{tests/test\_noisy\_channel.py} exhibits this move flipping a literal reading
-$x=\textsf{`` too''}$ to the posterior-preferred $\textsf{`` to''}$ under \eqref{eq:r1prop}.
+overwrite is dimension-preserving and Theorem~\ref{thm:mh}/\ref{thm:rejuv-smcp3} apply directly.
+
+This move is implemented in \code{rejuvenation.py} on an unrolled per-word chain model (addresses
+$x_0,\dots,x_{W-1}$, $o_0,\dots,o_{W-1}$, with the LM buffer threaded). Editing $x_k$ triggers the
+\code{Update} to re-score the \emph{suffix} $x_{k+1{:}W}$ (their $\pLM$ depends on the changed
+buffer), so the weight $w_{\mathrm{upd}}$ in \eqref{eq:wupd} carries the later-context vote --
+\S\ref{sec:extensions}'s reach/cost discussion. (Implementation note: a \code{Rejuvenate}
+\code{argument\_mapping} receives only the \emph{local} sub-trace at the edited address, not the
+full trace, so the position-$k$ context is reconstructed from the full trace and closed over.)
+Validation (\code{tests/test\_rejuvenation.py}, pythia-70m): a literal ``he wants \textsf{too} go
+home'' is corrected \textsf{too}$\to$\textsf{to} by a flip sweep; the flip's MH weight is $\approx 0$
+without the trailing words but $\approx +5.5$ with them (the suffix vote); and on a 2-word toy the MH
+stationary histogram matches the brute-force exact posterior to $\le 10^{-3}$ -- Theorem~\ref{thm:mh}
+in practice. The earlier single-address spike (\code{tests/test\_noisy\_channel.py}) flips a literal
+$x=\textsf{`` too''}$ to $\textsf{`` to''}$ under \eqref{eq:r1prop}.
 
 \paragraph{R2 — add/delete (trans-dimensional).} A reversible-jump move that inserts an omitted
 intended word ($\delact$ reversed) or deletes a posited one, changing the length of $z$. The forward
