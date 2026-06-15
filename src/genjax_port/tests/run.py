@@ -11,6 +11,7 @@ from src.genjax_port import lm_penzai as L
 from src.genjax_port.tests import test_lm_genjax as t1
 from src.genjax_port.tests import test_noisy_channel as t2
 from src.genjax_port.tests import test_word_model as t3
+from src.genjax_port.tests import test_smc_substitution as t4
 
 
 def _tests(module):
@@ -20,7 +21,7 @@ def _tests(module):
 def main():
     L.load_model()
     failures = 0
-    for module in (t1, t2, t3):
+    for module in (t1, t2, t3, t4):
         for name, fn in _tests(module):
             try:
                 fn()

@@ -195,14 +195,19 @@ clean literal) within Monte-Carlo noise — *soft* intuitive targets, NOT bit-pa
 hand-rolled filter (confirmed with the user 2026-06-15). Golden reference at this seed/P:
 `tests/golden_targets.json`.
 
-**M1 PROGRESS (2026-06-15):** (i) **representation LOCKED** — the per-word `Switch`
+**M1 ✅ DONE (2026-06-15).** (i) **representation LOCKED** — the per-word `Switch`
 (`make_word_model`, §6.3-resolved) with exact branch importances + C-way verified in
-`tests/test_word_model.py`. (ii) **REMAINING — the SMC driver:** a hand-rolled outer loop
-(§6.1(b)) vmapped over particles: per observed word, build `make_word_model(n, n_sub)`, score all
-branches via `model.importance` to form the local-posterior proposal, sample a branch index per
-particle, take the chosen branch's incremental weight, resample, thread `(buf, i_len)`. Validate on
-the substitution suite vs the golden behaviors. The per-particle `Switch` traces (branch index +
-token choices) are what M5/R1 rejuvenation edits.
+`tests/test_word_model.py`. (ii) **SMC driver built + validated** — `smc_substitution.py`
+(`run_smc_substitution`): hand-rolled outer loop (§6.1(b)) vmapped over particles, per word
+`word_log_evidence` (one LM forward + gather) → local-posterior `propose` → `logsumexp` weight →
+resample → emit. `word_log_evidence` is cross-checked == `make_word_model` branch importances
+(`tests/test_smc_substitution.py`), so the lean filter and the native model agree by construction.
+Behavioral gate met at P=64/410m vs golden: experimemt→experiment 100% (golden 93.8%),
+recieve→receive 23.4% weak (17.2%), clean literal 100% (98.4%) — all match the ideals within MC
+noise. **Note:** the forward filter computes evidence directly (scales to many candidates); the
+`@gen` `Switch` model is the trace carrier for M5/R1 rejuvenation, where per-particle traces
+(branch index + token choices) are materialized/edited. **Formal writeup:** `docs/model.tex`
+(compiles to 10pp) proves SMC proper-weighting + the Rejuvenate/SMCP3 + MH correctness.
 
 **M2 — Deletions via `Scan`+`Mask`.** Add the lookahead deletion gap (omitted single-token words).
 Use masking for the variable number of emitted intended tokens per word. Port the

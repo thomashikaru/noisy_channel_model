@@ -1,0 +1,570 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\newcommand{\Z}{\mathcal{Z}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Obs}{\mathcal{O}}
+\newcommand{\GFI}{\textsc{gfi}}
+\newcommand{\copyact}{\textsf{copy}}
+\newcommand{\subact}{\textsf{sub}}
+\newcommand{\inssact}{\textsf{ins}}
+\newcommand{\delact}{\textsf{del}}
+\newcommand{\given}{\mid}
+\newcommand{\pLM}{p_{\mathrm{LM}}}
+\newcommand{\dDL}{d_{\mathrm{DL}}}
+\newcommand{\lse}{\operatorname{logsumexp}}
+\newcommand{\Cat}{\mathrm{Cat}}
+\newcommand{\Dir}{\mathrm{Dir}}
+\newcommand{\eos}{\textsc{eos}}
+\newcommand{\Vocab}{\mathbb{V}}
+\newcommand{\Real}{\mathbb{R}}
+\newcommand{\Ind}{\mathbb{1}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+
+\title{A Token-Level Noisy-Channel Model of Language Comprehension:\\
+Generative Semantics, Sequential Monte Carlo, and Rejuvenation}
+\author{genjax noisy-channel port \\ \small \texttt{src/genjax\_port/}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We give a formal description of the genjax-native noisy-channel model implemented in
+\code{src/genjax\_port/}. A speaker draws an \emph{intended} token sequence from a language-model
+prior and a word-level noisy channel corrupts it into the \emph{observed} sentence; inference is
+the posterior over intended sequences. We state the model as a genjax generative function, define
+the inference problem in the conventions of the genjax Generative Function Interface (\GFI), and
+then prove the two correctness claims that the implementation relies on: (i) the word-scan
+sequential Monte Carlo (SMC) filter is \emph{properly weighted} for the sequence of posteriors and
+its normalizing-constant estimator is unbiased, with the per-word incremental weight collapsing to
+a $\lse$ of branch evidences; and (ii) the rejuvenation (incremental-reanalysis) moves built on
+genjax's \code{Rejuvenate} edit request are valid SMCP3 / Metropolis--Hastings moves that leave the
+target posterior invariant. Notation follows the genjax library where applicable; the appendix
+recalls the \GFI{} weight identities used in the proofs.
+\end{abstract}
+
+\tableofcontents
+
+\section{Notation and the generative function interface}
+\label{sec:gfi}
+
+We use the conventions of the genjax library. A \emph{generative function} $p$ over arguments
+$a$ defines a probability measure on a space of \emph{choice maps} $t$ (finite maps from
+\emph{addresses} to values) together with a deterministic return value. Writing $p(t; a)$ for its
+density with respect to the appropriate base measure, the \GFI{} methods used below have the
+following semantics (see Appendix~\ref{app:gfi} and \cite{genjax,gen}).
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \code{simulate}$(k, a) \to (t, \cdot)$ samples $t \sim p(\cdot; a)$ and records the
+        \emph{score} $\log p(t; a)$.
+  \item \code{generate}$(k, c, a) \to (t, w)$ (called \code{importance} for distributions) samples
+        the unconstrained addresses from an internal proposal $q$ given the constraint choice map
+        $c \subseteq t$, and returns the \emph{importance weight}
+        \begin{equation}\label{eq:gen-weight}
+          w \;=\; \log \frac{p(t; a)}{q(t_{\setminus c} \given c; a)},
+        \end{equation}
+        where $t_{\setminus c}$ are the addresses sampled by $q$. When $c$ constrains \emph{all}
+        random choices, $q$ is empty and $w = \log p(t;a) = \log p(c; a)$.
+  \item \code{assess}$(t, a) \to (\log p(t; a), \mathrm{ret})$ scores a fully-constrained $t$.
+  \item \code{edit}$(k, t, r, \delta a) \to (t', w, \delta\mathrm{ret}, r')$ applies an edit request
+        $r$ (e.g.\ \code{Update}, \code{Rejuvenate}) and argument diffs $\delta a$, returning a new
+        trace $t'$, an \emph{edit weight} $w$, and a \emph{backward request} $r'$ that reverses the
+        move. For an \code{Update} that overwrites the addresses in a constraint $u$ (with
+        $\delta a$ a no-change),
+        \begin{equation}\label{eq:update-weight}
+          w \;=\; \log \frac{p(t'; a)}{p(t; a)},
+          \qquad r' = \code{Update}(t|_{\mathrm{dom}(u)}),
+        \end{equation}
+        i.e.\ the backward request restores the overwritten addresses to their old values.
+\end{itemize}
+
+These identities are all we need; they are restated with derivations in Appendix~\ref{app:gfi}.
+
+\section{The model}
+\label{sec:model}
+
+\subsection{Observed data and deterministic segmentation}
+
+Let $\Vocab$ be the BPE vocabulary ($|\Vocab| = V$) of a fixed autoregressive language model with
+next-token distribution $\pLM(\cdot \given u)$ for a context $u \in \Vocab^{*}$. The observation is a
+token sequence which a deterministic, data-only segmenter (\code{noise\_word.segment\_words})
+splits into $W$ \emph{words}
+\begin{equation}
+  o \;=\; (w_1, \dots, w_W), \qquad w_i = (o_{i,1}, \dots, o_{i,n_i}) \in \Vocab^{n_i}.
+\end{equation}
+Because segmentation is a deterministic function of $o$, every particle consumes the same word
+boundaries; the words are \emph{indexing data}, not latent variables.
+
+\subsection{Latent variables}
+
+The latent state is the \emph{intended} token sequence together with a per-word alignment. For each
+word $i$ we introduce an \emph{action} $a_i$ and the intended tokens it emits. In the
+substitution-only model (the implemented M1 filter, \code{smc\_substitution.py}) the action set is
+\begin{equation}
+  \mathcal{A}_i \;=\; \{\copyact\} \,\cup\, \{\subact_x : x \in \mathcal{S}_i\},
+\end{equation}
+where $\mathcal{S}_i \subseteq \Vocab$ is the (data-derived, finite) set of single-token
+substitution candidates for $w_i$ returned by \code{word\_sub\_candidates}: word-initial single
+vocabulary tokens within Damerau--Levenshtein distance $\le D$ of the surface string of $w_i$.
+Section~\ref{sec:extensions} adds insertion ($\inssact$) and deletion ($\delact$).
+
+Given an action, the emitted intended tokens are deterministic:
+\begin{equation}
+  \mathrm{emit}(a_i) =
+  \begin{cases}
+    (o_{i,1}, \dots, o_{i,n_i}) & a_i = \copyact \quad (\text{the literal word, $n_i$ tokens}),\\[2pt]
+    (x) & a_i = \subact_x \quad (\text{one token}).
+  \end{cases}
+\end{equation}
+The intended sequence is the concatenation $z = \mathrm{emit}(a_1) \,\Vert\, \cdots \,\Vert\,
+\mathrm{emit}(a_W)$, with a fixed start-of-sequence seed $z_0 = \eos$. We write $z_{<i}$ for the
+prefix emitted by words $1,\dots,i-1$ (the LM context entering word $i$).
+
+\subsection{Priors and channel}
+
+\paragraph{Action prior.} A global mixing weight $\pi \in \Delta^{2}$ (over the abstract action
+\emph{kinds} $\copyact,\subact,\inssact$) is drawn $\pi \sim \Dir(\alpha)$ with
+$\alpha = \code{ACTION\_ALPHAS} = (3,1,1)$, and each action kind is scored under $\pi$. We write
+$\kappa(a_i) \in \{\copyact,\subact,\inssact\}$ for the kind of $a_i$.
+
+\paragraph{Language-model prior.} The emitted intended tokens are scored autoregressively under the
+LM. For word $i$ contributing tokens $\mathrm{emit}(a_i) = (y_1,\dots,y_m)$ after context $z_{<i}$,
+\begin{equation}\label{eq:lm-word}
+  \log \pLM\!\big(\mathrm{emit}(a_i) \given z_{<i}\big)
+  \;=\; \sum_{r=1}^{m} \log \pLM\!\big(y_r \given z_{<i} \Vert y_{1:r-1}\big).
+\end{equation}
+
+\paragraph{Channel.} The word-level channel likelihood $P(w_i \given a_i)$ is
+\begin{equation}\label{eq:channel}
+  \log P(w_i \given a_i) =
+  \begin{cases}
+    0 & a_i = \copyact \quad(\text{exact match}),\\[2pt]
+    \dDL\!\big(\mathrm{surf}(x), \mathrm{surf}(w_i)\big)\cdot \log \theta & a_i = \subact_x,
+  \end{cases}
+\end{equation}
+with substitution sharpness $\theta = \code{SUB\_PARAM} = 0.1$ and $\dDL$ the
+Damerau--Levenshtein character distance (\code{noise\_word.word\_sub\_loglik}).
+
+\subsection{Joint density}
+
+Collecting the above, the joint density of the global weight $\pi$, the actions $a_{1:W}$, and the
+data $o$ (with $z$ and the word boundaries deterministic given $a_{1:W}$ and $o$) is
+\begin{equation}\label{eq:joint}
+  p(\pi, a_{1:W}, o)
+  \;=\; \Dir(\pi; \alpha)\;
+  \prod_{i=1}^{W}
+  \underbrace{\pi_{\kappa(a_i)}\;
+  \pLM\!\big(\mathrm{emit}(a_i)\given z_{<i}\big)\;
+  P(w_i \given a_i)}_{\textstyle =:\,\exp E_i(a_i)} .
+\end{equation}
+We call $E_i(c)$ the \emph{branch evidence} of candidate $c \in \mathcal{A}_i$ at word $i$; it is the
+log-density contribution of explaining $w_i$ by $c$ given the particle's prefix:
+\begin{equation}\label{eq:branch-ev}
+  E_i(c) \;=\; \log \pi_{\kappa(c)}
+  \;+\; \log \pLM\!\big(\mathrm{emit}(c)\given z_{<i}\big)
+  \;+\; \log P(w_i \given c).
+\end{equation}
+
+\subsection{Realization as a genjax generative function}
+\label{sec:genfn}
+
+The model is the word scan whose per-step kernel is the genjax \code{Switch} combinator
+$\code{make\_word\_model}(n_i, |\mathcal{S}_i|)$ over the branches $\mathcal{A}_i$:
+branch $0$ ($\copyact$) samples $n_i$ language-model tokens at addresses
+$\code{t0},\dots,\code{t}(n_i{-}1)$; branch $k\ge 1$ ($\subact_{x_k}$) samples one token at
+$\code{t0}$; every branch closes with a deterministic factor address $\code{ch}$ carrying the
+action-prior$+$channel term. Concretely, each branch is a generative function whose \code{assess}
+score (Appendix~\ref{app:gfi}) equals \eqref{eq:branch-ev}; this is verified numerically against the
+manual right-hand side in \code{tests/test\_word\_model.py} (branch \code{importance}
+$=$ manual joint, to $10^{-2}$). The token choices use the custom \code{exact\_density} distribution
+\code{lm\_token} that wraps the in-graph LM (\code{lm\_genjax.py}). The branch index is an
+addressed categorical choice; \emph{this is the address that rejuvenation edits}
+(Section~\ref{sec:rejuv}).
+
+\begin{remark}[Single-token substitution / deletion]
+Both $\subact$ and (later) $\delact$ are $N{:}1$: the intended word is a single BPE token. This is
+the implemented scope; multi-token intended words ($M{:}N$) are future work and do not affect any
+statement below.
+\end{remark}
+
+\section{Inference target and the SMC filter}
+\label{sec:smc}
+
+\subsection{Sequence of targets}
+
+Let $\xi_{1:i} := (\pi, a_{1:i})$ denote the latents instantiated after the first $i$ words. Define
+the \emph{unnormalized} step-$i$ target as the joint density of the prefix and the first $i$ observed
+words,
+\begin{equation}\label{eq:gamma}
+  \gamma_i(\xi_{1:i}) \;=\; \Dir(\pi;\alpha)\prod_{j=1}^{i}\exp E_j(a_j),
+  \qquad
+  Z_i \;=\; \sum_{a_{1:i}}\int \gamma_i \,d\pi \;=\; p(w_{1:i}),
+\end{equation}
+with $\gamma_0 = \Dir(\pi;\alpha)$ and $Z_0 = 1$. The normalized target is
+$\bar\gamma_i = \gamma_i / Z_i = p(\xi_{1:i}\given w_{1:i})$, and the final target $\bar\gamma_W$ is the
+posterior of interest. The genjax counterpart is a \code{Target} whose generative function is the
+word scan and whose constraints fix the observed tokens; the implementation realizes the sequence
+$\bar\gamma_0,\dots,\bar\gamma_W$ by extending and reweighting particles word by word.
+
+\subsection{Proposal and incremental weight}
+
+The filter uses the \emph{locally optimal} (``data-driven'') proposal: holding $\pi$ fixed at its
+prior draw,\footnote{The implemented filter samples $\pi$ once from the prior per particle and does
+not update it during the forward pass; this is a deliberate approximation (a parameter rejuvenation
+move is the optional R4 extension). All SMC statements below hold for the model with $\pi$ treated as
+part of $\xi_1$ and proposed from the prior at step~1; subsequent steps leave $\pi$ unchanged.}
+each particle extends its alignment at word $i$ by sampling a branch $c \in \mathcal{A}_i$ from
+\begin{equation}\label{eq:proposal}
+  q_i(c \given \xi_{1:i-1}) \;=\; \frac{\exp E_i(c)}{\sum_{c'\in\mathcal{A}_i}\exp E_i(c')}
+  \;=\; \mathrm{softmax}_c\, E_i(c),
+\end{equation}
+implemented by \code{proposal.propose} on the evidence vector
+$E_i(\cdot)$ assembled by \code{smc\_substitution.word\_log\_evidence} (which equals the per-branch
+\code{Switch} \code{importance} weights, \S\ref{sec:genfn}). The corresponding incremental importance
+weight is the ratio of the target increment to the proposal:
+\begin{align}
+  w_i
+  &\;=\; \frac{\gamma_i(\xi_{1:i})}{\gamma_{i-1}(\xi_{1:i-1})\,\cdot\,q_i(a_i\given \xi_{1:i-1})}
+  \;=\; \frac{\exp E_i(a_i)}{q_i(a_i\given\xi_{1:i-1})}. \label{eq:wstep}
+\end{align}
+
+\begin{lemma}[Weight collapse]\label{lem:collapse}
+With the locally optimal proposal \eqref{eq:proposal}, the incremental weight \eqref{eq:wstep} is
+independent of the sampled branch $a_i$ and equals the per-word evidence sum:
+\begin{equation}
+  \log w_i \;=\; \lse_{c\in\mathcal{A}_i}\, E_i(c)
+  \;=\; \log\!\!\sum_{c\in\mathcal{A}_i}\exp E_i(c).
+\end{equation}
+\end{lemma}
+\begin{proof}
+Substitute \eqref{eq:proposal} into \eqref{eq:wstep}:
+$
+  w_i = \exp E_i(a_i) \big/ \big(\exp E_i(a_i)/\textstyle\sum_{c}\exp E_i(c)\big)
+      = \sum_{c}\exp E_i(c).
+$
+The $\exp E_i(a_i)$ factors cancel, leaving a quantity that does not depend on $a_i$. Taking logs
+gives the $\lse$. \qed
+\end{proof}
+
+This is exactly the line
+\code{log\_marginal += logsumexp(log\_w) - log(P)} together with
+\code{log\_w = logsumexp(log\_ev)} in \code{smc\_substitution.py} (and \code{proposal.py}); note
+$\log w_i$ is identical across particles \emph{up to the prefix dependence} of $E_i$, so different
+particles still receive different weights through their distinct contexts $z_{<i}$.
+
+\subsection{Resampling and the algorithm}
+
+After computing $\{w_i^{(p)}\}_{p=1}^{P}$ the filter resamples ancestors
+$A^{(p)} \sim \Cat\big(\mathrm{softmax}_p \log w_i^{(p)}\big)$ (multinomial; \code{jax.random.categorical}
+on normalized log-weights) and copies the corresponding particle state. Algorithm~\ref{alg:smc}
+summarizes one sweep.
+
+\begin{figure}[t]
+\hrule\vspace{2pt}
+\textbf{Algorithm 1: word-scan SMC (substitution model).}
+\begin{enumerate}[leftmargin=2em,itemsep=1pt]
+  \item Draw $\pi^{(p)}\sim\Dir(\alpha)$; set $z^{(p)}_0=\eos$, $\Ind^{(p)}=1$, $\widehat Z = 1$.
+  \item For $i = 1,\dots,W$:
+  \begin{enumerate}[leftmargin=1.4em,itemsep=0pt]
+    \item For each particle, form $E_i(\cdot)$ from \eqref{eq:branch-ev} (one LM forward $+$ gather;
+          \code{word\_log\_evidence}).
+    \item Sample $a_i^{(p)} \sim q_i(\cdot)$ \eqref{eq:proposal} and set
+          $\log w_i^{(p)} = \lse_c E_i^{(p)}(c)$ (Lemma~\ref{lem:collapse}).
+    \item Update $\widehat Z \mathrel{{*}{=}} \tfrac1P\sum_p w_i^{(p)}$; resample ancestors
+          $A^{(p)}\sim\Cat(\mathrm{softmax}\,\log w_i^{(\cdot)})$; copy state; emit
+          $\mathrm{emit}(a_i)$ into each $z^{(p)}$.
+  \end{enumerate}
+  \item Return the particles $\{z^{(p)}\}$ (posterior sample) and $\log\widehat Z$.
+\end{enumerate}
+\hrule
+\label{alg:smc}
+\end{figure}
+
+\subsection{Correctness}
+
+\begin{definition}[Proper weighting]
+A weighted particle set $\{(\xi^{(p)}, w^{(p)})\}_{p=1}^P$ is \emph{properly weighted} for an
+unnormalized target $\gamma$ with constant $Z=\int\gamma$ if for all integrable $f$,
+$\;\mathbb{E}\!\big[\tfrac1P\sum_p w^{(p)} f(\xi^{(p)})\big] = \int f\,\gamma = Z\,\mathbb{E}_{\bar\gamma}[f].$
+\end{definition}
+
+\begin{theorem}[Properly weighted filter and unbiased evidence]\label{thm:smc}
+For every $i$, the weighted particles produced after step $i$ of Algorithm~\ref{alg:smc} are properly
+weighted for $\gamma_i$ in \eqref{eq:gamma}. Consequently the after-resampling particles are
+distributed (in the proper-weighting sense) according to the posterior $\bar\gamma_i$, and
+\begin{equation}
+  \mathbb{E}\big[\widehat Z_i\big] \;=\; Z_i \;=\; p(w_{1:i}),
+  \qquad
+  \widehat Z_i \;=\; \prod_{j=1}^{i}\Big(\tfrac1P\textstyle\sum_p w_j^{(p)}\Big).
+\end{equation}
+In particular $\widehat Z_W$ is an unbiased estimator of the marginal likelihood $p(o)$, matching the
+genjax \code{ParticleCollection} estimator $\log\widehat Z = \sum_i\big(\lse_p \log w_i^{(p)} - \log P\big)$
+\textup{(\code{smc.py})}.
+\end{theorem}
+
+\begin{proof}
+Induction on $i$. \emph{Base.} At $i=0$ each particle has weight $1$ and $\pi^{(p)}\sim\Dir(\alpha)=\bar\gamma_0$, which is properly weighted for $\gamma_0$ with $Z_0=1$.
+
+\emph{Step.} Assume proper weighting for $\gamma_{i-1}$. The extension samples $a_i \sim q_i(\cdot\given\xi_{1:i-1})$ and multiplies the weight by $w_i$ of \eqref{eq:wstep}. This is one step of sequential importance sampling with proposal $q_i$ and target increment $\gamma_i/\gamma_{i-1} = \exp E_i(a_i)$; the standard SIS identity gives, for any $f$,
+\begin{align*}
+  \mathbb{E}\Big[\tfrac1P\!\sum_p w_{i-1}^{(p)} w_i^{(p)} f(\xi_{1:i}^{(p)})\Big]
+  &= \mathbb{E}\Big[\tfrac1P\!\sum_p w_{i-1}^{(p)} \,\mathbb{E}_{a_i\sim q_i}\!\Big[\tfrac{\exp E_i(a_i)}{q_i(a_i)} f\Big]\Big]\\
+  &= \mathbb{E}\Big[\tfrac1P\!\sum_p w_{i-1}^{(p)} \!\!\sum_{a_i}\!\exp E_i(a_i)\, f(\xi_{1:i}^{(p)})\Big]
+   = \textstyle\int f\,\gamma_i,
+\end{align*}
+where the last equality uses $q_i(a_i)>0$ on $\mathrm{supp}\,\exp E_i$ (every branch with positive
+evidence has positive proposal mass, since $q_i\propto \exp E_i$) and the inductive hypothesis with
+$\gamma_i = \gamma_{i-1}\exp E_i$. Hence the extended set is properly weighted for $\gamma_i$.
+
+\emph{Resampling.} Multinomial resampling with probabilities $\propto w_i^{(p)}$ replaces weights by
+the mean $\bar w_i = \tfrac1P\sum_p w_i^{(p)}$ and is unbiased: $\mathbb{E}[f \text{ after}] =
+\mathbb{E}[\tfrac1P\sum_p \tfrac{w_i^{(p)}}{\bar w_i} f]\cdot \bar w_i$ in expectation preserves
+$\int f\,\gamma_i$ (a standard SMC result, e.g.\ \cite{chopin2020}). Folding $\bar w_i$ into
+$\widehat Z_i = \widehat Z_{i-1}\,\bar w_i$ keeps the product unbiased for $Z_i$ by the tower rule.
+The telescoping product is $\widehat Z_i = \prod_{j\le i}\bar w_j$, and by Lemma~\ref{lem:collapse}
+$\log \bar w_j = \lse_p \log w_j^{(p)} - \log P$. \qed
+\end{proof}
+
+\begin{remark}[Why edits, not re-derivations]
+Theorem~\ref{thm:smc} only requires (a) $q_i\propto\exp E_i$ on the support and (b) the weight
+\eqref{eq:wstep}. The genjax realization obtains both from the \GFI: $E_i(c)$ is the \code{assess}
+score of branch $c$, and \eqref{eq:gen-weight} with the fully-constrained branch gives exactly
+$w$ for the chosen branch; the $\lse$ collapse is the proposal normalizer. Thus the hand-rolled
+outer loop and the native model agree by construction, not by coincidence.
+\end{remark}
+
+\section{Rejuvenation: incremental reanalysis}
+\label{sec:rejuv}
+
+Resampling repeatedly prunes alternatives, so an early word committed under local information can
+never be revised once later context disambiguates it. Rejuvenation interleaves, after each
+resampling step, MCMC moves that revisit earlier words within a \emph{lookback} window. Crucially,
+these moves target the \emph{same} posterior $\bar\gamma_i$; they do not change the target, they let
+the chain reach high-posterior reanalyses and re-diversify the particle set.
+
+\subsection{The \texttt{Rejuvenate} edit request (SMCP3)}
+
+genjax's \code{Rejuvenate} (\code{inference/requests/rejuvenate.py}) implements an SMCP3 move
+\cite{smcp3} from a single proposal $Q$ used for both the forward ($K$) and backward ($L$) kernels.
+Let $t$ be a particle's trace, $\mathcal{B}\subseteq\mathrm{dom}(t)$ the edited addresses (e.g.\ the
+action and token addresses aligned to a revisited word), and $\phi(\cdot)$ the
+\code{argument\_mapping} producing $Q$'s arguments from a choice map. The move is:
+\begin{enumerate}[leftmargin=1.8em,itemsep=1pt]
+  \item \textbf{Forward.} Draw $\zeta \sim Q(\cdot;\phi(t))$ with score $s_{\mathrm{fwd}} = \log Q(\zeta;\phi(t))$.
+  \item \textbf{Update.} Apply $\code{Update}(\zeta)$: $t' = t$ with $\mathcal{B}$ overwritten by
+        $\zeta$, with edit weight (cf.\ \eqref{eq:update-weight}, $\delta a$ a no-change)
+        \begin{equation}\label{eq:wupd}
+          w_{\mathrm{upd}} = \log\frac{p(t';a)}{p(t;a)},
+        \end{equation}
+        and backward request $\code{Update}(t|_{\mathcal B})$ restoring the old values.
+  \item \textbf{Backward.} Score the old values under $Q$ at the \emph{new} point:
+        $s_{\mathrm{bwd}} = \log Q\big(t|_{\mathcal B};\,\phi(t')\big)$.
+  \item \textbf{Weight.} Return the SMCP3 weight
+        \begin{equation}\label{eq:smcp3}
+          \mathcal{W} \;=\; w_{\mathrm{upd}} + s_{\mathrm{bwd}} - s_{\mathrm{fwd}}
+          \;=\; \log\frac{p(t';a)\,Q\big(t|_{\mathcal B};\phi(t')\big)}{p(t;a)\,Q\big(\zeta;\phi(t)\big)}.
+        \end{equation}
+\end{enumerate}
+
+There are two valid ways to consume $\mathcal{W}$, both implemented/available:
+
+\paragraph{(A) Metropolis--Hastings.} Accept $t'$ with probability $\min(1,e^{\mathcal W})$ (i.e.\
+accept iff $\log u < \mathcal W$, $u\sim\mathrm{Unif}(0,1)$), else keep $t$. Particle weights are
+untouched. This is the default in the spikes and tests
+(\code{tests/test\_noisy\_channel.py}: $\;\code{accept = log(uniform) < w}$).
+
+\paragraph{(B) SMCP3 reweighting.} Move deterministically to $t'$ and multiply the particle weight by
+$e^{\mathcal W}$ (no accept/reject). This keeps the collection properly weighted (Theorem~\ref{thm:rejuv-smcp3}).
+
+\subsection{Correctness of the MH consumption}
+
+\begin{theorem}[MH invariance]\label{thm:mh}
+Let $\Pi(t \to t')$ be the kernel that proposes $\zeta\sim Q(\cdot;\phi(t))$, forms $t'$ by
+overwriting $\mathcal B$ with $\zeta$, and accepts with probability $\min(1,e^{\mathcal W})$ for
+$\mathcal W$ in \eqref{eq:smcp3}. Then $\Pi$ satisfies detailed balance with respect to the posterior
+$\bar\gamma \propto p(\cdot\given o)$, hence leaves $\bar\gamma$ invariant.
+\end{theorem}
+
+\begin{proof}
+Because the move overwrites $\mathcal B$ and leaves $\mathrm{dom}(t)\setminus\mathcal B$ fixed, the
+proposal of $t'$ from $t$ has density $Q(\zeta;\phi(t))$ with $\zeta = t'|_{\mathcal B}$, and the
+reverse proposal of $t$ from $t'$ has density $Q(t|_{\mathcal B};\phi(t'))$ — exactly the $L$-kernel
+genjax scores as $s_{\mathrm{bwd}}$. The posterior density satisfies
+$\bar\gamma(t)\propto p(t;a)$ (the $o$-addresses are constrained and common to $t,t'$, so they cancel
+in any ratio). The Metropolis--Hastings acceptance for proposal $Q$ and target $\bar\gamma$ is
+\begin{equation}
+  \alpha(t\to t') = \min\!\Big(1,\;\frac{\bar\gamma(t')\,Q(t|_{\mathcal B};\phi(t'))}{\bar\gamma(t)\,Q(t'|_{\mathcal B};\phi(t))}\Big)
+  = \min\!\big(1, e^{\mathcal W}\big),
+\end{equation}
+since $\bar\gamma(t')/\bar\gamma(t) = p(t';a)/p(t;a) = e^{w_{\mathrm{upd}}}$ by \eqref{eq:wupd}, and
+the $Q$-ratio is $e^{s_{\mathrm{bwd}}-s_{\mathrm{fwd}}}$. Detailed balance
+$\bar\gamma(t)\,Q(t'|_{\mathcal B};\phi(t))\,\alpha(t\to t') = \bar\gamma(t')\,Q(t|_{\mathcal B};\phi(t'))\,\alpha(t'\to t)$
+is the standard Metropolis--Hastings identity, which holds verbatim once the proposal and target
+ratios are identified as above. Invariance follows by summing/integrating detailed balance over
+$t$. \qed
+\end{proof}
+
+\begin{remark}[Why $\mathcal W$ is exactly the MH ratio]
+The content of Theorem~\ref{thm:mh} is that genjax assembles the three \GFI{} quantities
+$w_{\mathrm{upd}}, s_{\mathrm{fwd}}, s_{\mathrm{bwd}}$ so that \eqref{eq:smcp3} \emph{is} the MH
+log-acceptance ratio. The \code{Update} weight \eqref{eq:update-weight} supplies the target ratio and
+the backward request supplies precisely the addresses $L$ must score; no separate hand-derivation of
+the ratio is needed (contrast the by-hand involutive-MH route in \code{src/gen\_inference.jl}).
+\end{remark}
+
+\subsection{Correctness of the SMCP3 (reweighting) consumption}
+
+\begin{theorem}[SMCP3 proper weighting]\label{thm:rejuv-smcp3}
+Suppose $\{(t^{(p)}, w^{(p)})\}$ is properly weighted for the posterior $\bar\gamma$ (unnormalized
+$p(\cdot;a)$ on the latent addresses, $o$ constrained). Applying the deterministic update
+$t^{(p)}\!\mapsto t'^{(p)}$ and reweighting $w^{(p)}\!\mapsto w^{(p)}e^{\mathcal W^{(p)}}$ with
+$\mathcal W$ from \eqref{eq:smcp3} yields a set properly weighted for the same $\bar\gamma$.
+\end{theorem}
+
+\begin{proof}
+This is the SMCP3 theorem of \cite{smcp3} specialized to a deterministic forward map with auxiliary
+randomness $\zeta\sim Q(\cdot;\phi(t))$ and backward auxiliary scored by $Q(\cdot;\phi(t'))$. For any
+$f$,
+\begin{align*}
+  \mathbb{E}\Big[\tfrac1P\!\sum_p w^{(p)} e^{\mathcal W^{(p)}} f(t'^{(p)})\Big]
+  &= \mathbb{E}\Big[\tfrac1P\!\sum_p w^{(p)} \,\mathbb{E}_{\zeta\sim Q(\cdot;\phi(t^{(p)}))}\!\Big[ \tfrac{p(t'^{(p)})\,Q(t^{(p)}|_{\mathcal B};\phi(t'^{(p)}))}{p(t^{(p)})\,Q(\zeta;\phi(t^{(p)}))} f(t'^{(p)})\Big]\Big].
+\end{align*}
+Using proper weighting to replace the outer $\tfrac1P\sum_p w^{(p)}(\cdot)$ by
+$\int(\cdot)\,p(t)\,dt$ and then expanding the inner expectation as an integral over $\zeta$ with
+density $Q(\zeta;\phi(t))$, the $p(t)$ and $Q(\zeta;\phi(t))$ factors cancel:
+\[
+  = \int\!\!\int p(t'(t,\zeta))\,Q(t|_{\mathcal B};\phi(t'))\, f(t'(t,\zeta))\, d\zeta\,dt
+  = \int p(t')\, f(t')\, dt' = \textstyle\int f\,\bar\gamma\,,
+\]
+where the penultimate step is the change of variables $(t,\zeta)\mapsto t'$ whose reverse map is
+scored by $Q(\cdot;\phi(t'))$ (the $L$-kernel), with unit Jacobian for the discrete overwrite. Hence
+proper weighting for $\bar\gamma$ is preserved. \qed
+\end{proof}
+
+\subsection{The move families}
+\label{sec:moves}
+
+\paragraph{R1 — substitution flip (fixed dimension).} Edit set $\mathcal B$ = the action address and
+its emitted token address for a revisited word $i$. The proposal $Q$ is the local posterior over that
+word's candidate set, reweighted by the live LM:
+\begin{equation}\label{eq:r1prop}
+  Q(c;\phi(t)) \;=\; \mathrm{softmax}_{c\in\mathcal A_i}\, E_i(c),
+\end{equation}
+identical in form to the forward proposal \eqref{eq:proposal} but evaluated against the
+\emph{current} (possibly later-updated) context. Because $\mathcal B$ has fixed cardinality, the
+overwrite is dimension-preserving and Theorem~\ref{thm:mh}/\ref{thm:rejuv-smcp3} apply directly. The
+spike in \code{tests/test\_noisy\_channel.py} exhibits this move flipping a literal reading
+$x=\textsf{`` too''}$ to the posterior-preferred $\textsf{`` to''}$ under \eqref{eq:r1prop}.
+
+\paragraph{R2 — add/delete (trans-dimensional).} A reversible-jump move that inserts an omitted
+intended word ($\delact$ reversed) or deletes a posited one, changing the length of $z$. The forward
+draws a coin (add vs.\ delete) and, on add, a new intended token from the LM-restricted proposal; the
+backward maps add$\leftrightarrow$delete so the move is its own reverse family. The validity is again
+\eqref{eq:smcp3}: \code{Update} reports $w_{\mathrm{upd}} = \log p(t')/p(t)$ across the changed
+suffix, and the add/delete symmetry makes $\phi$ produce matching $K$/$L$ arguments. As the emitted
+tokens are discrete and regenerated (not a continuous reparametrization), the Jacobian is unity and no
+extra term enters \eqref{eq:smcp3}; correctness is Theorem~\ref{thm:mh} with $\mathcal B$ the changed
+addresses plus the move-type auxiliary.
+
+\paragraph{R3 — surprisal-gated scheduling.} The \emph{choice of whether/where} to rejuvenate (a
+surprisal-conditioned trigger over a lookback window, ported from \code{gen\_inference.jl}) is part of
+the kernel \emph{schedule}, not the target. Any data-dependent but state-independent schedule of
+$\bar\gamma$-invariant moves is itself $\bar\gamma$-invariant; gating only changes mixing, not the
+stationary distribution.
+
+\subsection{The cost of reanalysis}
+
+The LM is causal: overwriting an intended token at position $k$ changes
+$\pLM(\cdot\given\text{context})$ for all later positions. The target ratio in $w_{\mathrm{upd}}$
+therefore re-scores the suffix from $k$ to the current frontier $N$; the prefix cancels. With a
+lookback window of size $\ell$ we have $k \ge N-\ell$, so each move costs $O(\ell)$ LM evaluations —
+$\ell$ is the reach/cost knob, and re-scoring the suffix is exactly what lets later context vote on
+word $k$. This is why the rejuvenation-bearing trace must keep the suffix tokens as \emph{live}
+addressed LM choices (Section~\ref{sec:genfn}), not as frozen factors.
+
+\section{Extensions present in the unified filter}
+\label{sec:extensions}
+
+The deployed reference filter (\code{particle\_filter\_unified.py}) augments $\mathcal A_i$ with two
+further actions, with identical SMC/rejuvenation theory (only $E_i$ and $\mathrm{emit}$ change):
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt]
+  \item \textbf{Insertion} ($\inssact$): $w_i$ is spurious; $\mathrm{emit}(\inssact)=()$ and
+        $\log P(w_i\given\inssact) = n_i\cdot(-\log V)$ (a flat per-token cost). It adds one column to
+        $E_i$ with branch evidence $\log\pi_{\inssact} + n_i(-\log V)$.
+  \item \textbf{Deletion} ($\delact$): an omitted intended single-token word is posited \emph{before}
+        $w_i$, proposed lookahead-guided toward $o_{i,1}$. This is a within-step pre-scan whose
+        importance contribution multiplies into $w_i$; with the lookahead proposal the same
+        weight-collapse argument (Lemma~\ref{lem:collapse}) applies to the augmented branch set.
+\end{itemize}
+In the genjax-native port these correspond to additional \code{Switch} branches (insertion: a branch
+emitting zero tokens; deletion: a masked variable-length pre-emission), handled by the \code{Mask}
+combinator; the proofs above are unchanged because they only use the branch evidences $E_i$ and the
+\GFI{} weight identities.
+
+\appendix
+\section{Generative function interface weight identities}
+\label{app:gfi}
+
+For completeness we restate the \GFI{} weights used above; these are the genjax/Gen semantics
+\cite{genjax,gen}. Let $p(t;a)$ be the density of a generative function and let a choice map split as
+$t = (c, u)$ into constrained $c$ and unconstrained $u$.
+
+\paragraph{\texttt{generate}/\texttt{importance}.} With internal (or supplied) proposal $q(u\given c;a)$,
+\[
+  (t,w)\sim\code{generate}(k,c,a),\qquad
+  w = \log p(t;a) - \log q(u\given c;a).
+\]
+If $c=t$ (fully constrained), $w=\log p(t;a)$. For a distribution wrapped by \code{exact\_density}
+(our \code{lm\_token}, \code{obs\_dist}, \code{factor}), $p$ is the supplied log-density and the
+fully-constrained weight equals \code{assess}.
+
+\paragraph{\texttt{update} edit.} For an \code{Update} request with constraint $u'$ over addresses
+$\mathcal B=\mathrm{dom}(u')$ and no-change argdiffs,
+\[
+  (t',w,\,\cdot\,,r')=\code{edit}(k,t,\code{Update}(u'),\,\delta a{=}\mathrm{nochange}),
+  \quad w=\log\frac{p(t';a)}{p(t;a)},\quad r'=\code{Update}(t|_{\mathcal B}).
+\]
+The backward request $r'$ restores the overwritten addresses; this is what supplies the $L$-kernel's
+scoring point in \code{Rejuvenate}. (When $\delta a\ne\mathrm{nochange}$, $w$ additionally accounts
+for the argument change; the spikes pass \code{Diff.no\_change(tr.get\_args())} so the simple form
+applies.)
+
+\paragraph{\texttt{Rejuvenate} edit.} As derived in Section~\ref{sec:rejuv}, with proposal $Q$ and
+\code{argument\_mapping} $\phi$,
+\[
+  \mathcal W = w_{\mathrm{upd}} + \log Q\big(t|_{\mathcal B};\phi(t')\big) - \log Q\big(\zeta;\phi(t)\big),
+\]
+returned (without accept/reject) as the SMCP3 weight; folding it into the particle weight gives (B),
+thresholding $\log u<\mathcal W$ gives (A).
+
+\paragraph{Marginal-likelihood estimator.} A genjax \code{ParticleCollection} reports
+$\log\widehat Z = \lse_p(\log w^{(p)}) - \log P$ (\code{smc.py},
+\code{get\_log\_marginal\_likelihood\_estimate}); the per-step product of these is the
+$\log\widehat Z_W$ of Theorem~\ref{thm:smc}.
+
+\begin{thebibliography}{9}
+\bibitem{genjax} MIT Probabilistic Computing Project. \emph{genjax}: probabilistic programming with
+programmable inference in JAX. \url{https://github.com/genjax-dev/genjax}.
+\bibitem{gen} M.~F.~Cusumano-Towner, F.~A.~Saad, A.~K.~Lew, V.~K.~Mansinghka. Gen: a
+general-purpose probabilistic programming system with programmable inference. \emph{PLDI}, 2019.
+\bibitem{smcp3} A.~K.~Lew, G.~Matheos, et al. SMCP3: Sequential Monte Carlo with probabilistic
+program proposals. \emph{AISTATS}, 2023.
+\bibitem{chopin2020} N.~Chopin, O.~Papaspiliopoulos. \emph{An Introduction to Sequential Monte Carlo}.
+Springer, 2020.
+\end{thebibliography}
+
+\end{document}
