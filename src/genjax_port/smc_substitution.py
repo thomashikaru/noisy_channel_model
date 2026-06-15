@@ -1,4 +1,4 @@
-"""Word-scan SMC -- the genjax-native port's forward filter (M1 substitution + M2 deletion).
+"""Word-scan SMC -- the genjax port's filtering sweep (M1 substitution + M2 deletion).
 
 Per observed word the model weighs explanations exactly as the per-word ``Switch`` in
 :mod:`genjax_model` (``make_word_model``):
@@ -9,7 +9,7 @@ Per observed word the model weighs explanations exactly as the per-word ``Switch
 
 ``word_log_evidence`` assembles the per-branch joint log-densities ``[P, 1 + n_sub]`` -- the same
 quantity ``make_word_model(...).importance`` returns per branch (cross-checked in
-``tests/test_smc_substitution.py``). The forward filter computes it directly (one LM forward,
+``tests/test_smc_substitution.py``). The filtering sweep computes it directly (one LM forward,
 gather all sub candidates) rather than enumerating ``Switch`` branches through ``importance``, so
 it scales to many candidates; the ``@gen`` word model is the trace carrier for M5 rejuvenation.
 

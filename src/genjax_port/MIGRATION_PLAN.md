@@ -204,7 +204,7 @@ resample → emit. `word_log_evidence` is cross-checked == `make_word_model` bra
 (`tests/test_smc_substitution.py`), so the lean filter and the native model agree by construction.
 Behavioral gate met at P=64/410m vs golden: experimemt→experiment 100% (golden 93.8%),
 recieve→receive 23.4% weak (17.2%), clean literal 100% (98.4%) — all match the ideals within MC
-noise. **Note:** the forward filter computes evidence directly (scales to many candidates); the
+noise. **Note:** the filtering sweep computes evidence directly (scales to many candidates); the
 `@gen` `Switch` model is the trace carrier for M5/R1 rejuvenation, where per-particle traces
 (branch index + token choices) are materialized/edited. **Formal writeup:** `docs/model.tex`
 (compiles to 10pp) proves SMC proper-weighting + the Rejuvenate/SMCP3 + MH correctness.
@@ -216,7 +216,7 @@ native filter as `smc_substitution.deletion_gap`, wired into `run_smc_substituti
 reweighted by one-step lookahead toward the word's first token; gap weight folds into the step
 weight (a properly-weighted SIS pre-extension — proof in `docs/model.tex` §5, eq. gapweight). Gate
 met at P=64/410m: "he wants go home" → "he wants **to** go home" 81% (+to come/have/love ≈97%
-reconstruct "to"), minESS 4.0 (high-variance, as expected); M1 cases unchanged. The forward filter
+reconstruct "to"), minESS 4.0 (high-variance, as expected); M1 cases unchanged. The filtering sweep
 ports Phase A directly (vmapped); the genjax `Mask` representation is the trace-carrier concern for
 M5. Note: stronger reconstruction than the unified golden (55%) because no INSERT branch competes
 yet (M3).
@@ -226,7 +226,7 @@ scored `log π_ins + n·(−log V)`) is one extra column in `word_log_evidence`,
 `run_smc_substitution(allow_insertion=True)`; the emission loop already treats a zero-length column
 as "emit nothing" (no change). Gate met at P=64/410m: "the boy handed handed the pencil to the girl"
 → doubled "handed" removed 64.1% (golden 46.9%; stronger because no deletion competes), minESS 48.6;
-M1/M2 cases unchanged. Doc §5 gives INSERT as an evidence column. **The forward filter (sub+del+ins)
+M1/M2 cases unchanged. Doc §5 gives INSERT as an evidence column. **The filtering sweep (sub+del+ins)
 is now feature-complete; M4 wires it into `run.py` and M5 adds rejuvenation.**
 
 > **Latency note (measured 2026-06-15, pythia-410m, P=64):** load 3.4s (once/proc); **JIT
@@ -265,15 +265,30 @@ Runtime: with bucketing the 6-sentence suite is one compile + warm execs (see la
 - R2: **add/delete** reversible-jump rejuvenation move. *(NEXT — trans-dimensional: changes word
   count; needs the multi-token Switch flip + RJ reverse-move bookkeeping.)*
 - R3: **surprisal-conditioned trigger** + tunable lookback.
-Gate (R1): a sentence the forward filter gets wrong (early commitment) is fixed by rejuvenation — MET.
+Gate (R1): a sentence the filtering sweep gets wrong (early commitment) is fixed by rejuvenation — MET.
 
-**NB — R1 lives on the unrolled chain model, separate from the forward filter (`smc_substitution.py`,
-manual buffers). Integrating per-particle rejuvenation into the forward SMC needs trace
-materialization per particle (the open M5→forward-filter bridge); R1 here proves the move is correct
+**NB — R1 lives on the unrolled chain model, separate from the filtering sweep (`smc_substitution.py`,
+manual buffers). Integrating per-particle rejuvenation into the filtering-sweep SMC needs trace
+materialization per particle (the open M5→filtering-sweep bridge); R1 here proves the move is correct
 and reanalysis works.**
 
 **M6 — Cleanup.** Retire the hand-rolled filters (or keep one as the A/B baseline); update README +
-memory; decide whether to reimplement dedup at the distribution level if perf warrants.
+memory; move the shared constants (`ACTION_ALPHAS`, `MAX_DELETIONS`, `P_DELETE_*`, `LOOKAHEAD_K`)
+out of `particle_filter.py`/`particle_filter_lookahead.py` into a `constants`/`config` module so the
+port doesn't import from the filter it replaces.
+
+- **TODO — re-add dedup to the port's filtering sweep (perf).** Measured 2026-06-15: the native
+  filtering sweep is ~3× slower than the reference filter on the medics sentence (168s vs 54s at
+  P=100, byte-identical output) **purely because the reference dedups redundant LM forwards
+  (`cache_dedup`) and the port dropped it.** This is *straightforward* in the current hand-rolled
+  sweep (NOT the vmapped-`@gen` path the plan's "dedup lost under vmap" note worried about): the
+  LM is called explicitly via `next_token_logits`, and `run_smc_substitution` already exposes the
+  same injection seams the reference uses — wire `cache_dedup.make_dedup_fns()` into
+  `next_logprobs_fn`/`next_logits_fn`. `word_log_evidence` and `deletion_gap` route ALL their LM
+  calls through those seams, so it should cover everything (verify it closes the gap; expect biggest
+  win on the `[P·K]` deletion-lookahead batch, which is the most redundant after resampling). NB:
+  dedup *does* get hard again if/when the filtering-sweep bridge is closed the fully-native way
+  (vmap the `@gen` model) — that's the case the original "dedup lost" concern actually applies to.
 
 ---
 

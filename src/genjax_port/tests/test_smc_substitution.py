@@ -2,7 +2,7 @@
 branch importances, plus a behavioral run over the substitution suite.
 
 The cross-check (``word_log_evidence`` vs ``make_word_model`` branch ``importance``) is the link
-that justifies the lean forward filter: it computes the same joint the native ``@gen`` model
+that justifies the lean filtering sweep: it computes the same joint the native ``@gen`` model
 scores, just directly (one forward + gather) instead of through ``Switch`` branches. It is
 LM-independent, so it holds for any NC_LM.
 

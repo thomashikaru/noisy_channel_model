@@ -1,7 +1,7 @@
 """M5/R1: substitution-flip rejuvenation (incremental reanalysis) via native genjax Rejuvenate.
 
 Rejuvenation revisits an earlier word and re-decides its intended token using the FULL context --
-including words that arrived later -- so an early commitment the forward filter got wrong can be
+including words that arrived later -- so an early commitment the filtering sweep got wrong can be
 corrected once disambiguating context is in the trace. It targets the same posterior; it does not
 change it (it lets the chain *reach* high-posterior reanalyses and re-diversifies particles).
 

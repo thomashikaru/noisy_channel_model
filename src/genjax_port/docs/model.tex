@@ -224,7 +224,7 @@ $\bar\gamma_0,\dots,\bar\gamma_W$ by extending and reweighting particles word by
 
 The filter uses the \emph{locally optimal} (``data-driven'') proposal: holding $\pi$ fixed at its
 prior draw,\footnote{The implemented filter samples $\pi$ once from the prior per particle and does
-not update it during the forward pass; this is a deliberate approximation (a parameter rejuvenation
+not update it during the filtering sweep; this is a deliberate approximation (a parameter rejuvenation
 move is the optional R4 extension). All SMC statements below hold for the model with $\pi$ treated as
 part of $\xi_1$ and proposed from the prior at step~1; subsequent steps leave $\pi$ unchanged.}
 each particle extends its alignment at word $i$ by sampling a branch $c \in \mathcal{A}_i$ from
@@ -464,7 +464,7 @@ word's candidate set, reweighted by the live LM:
 \begin{equation}\label{eq:r1prop}
   Q(c;\phi(t)) \;=\; \mathrm{softmax}_{c\in\mathcal A_i}\, E_i(c),
 \end{equation}
-identical in form to the forward proposal \eqref{eq:proposal} but evaluated against the
+identical in form to the filtering-sweep proposal \eqref{eq:proposal} but evaluated against the
 \emph{current} (possibly later-updated) context. Because $\mathcal B$ has fixed cardinality, the
 overwrite is dimension-preserving and Theorem~\ref{thm:mh}/\ref{thm:rejuv-smcp3} apply directly.
 
@@ -555,7 +555,7 @@ context of the word that follows.
 
 \paragraph{Native trace carrier.} In the \code{@gen} model these are additional \code{Switch}
 branches (insertion: a zero-token branch; deletion: a masked variable-length pre-emission via the
-\code{Mask} combinator). The forward filter computes the weights directly, as above; the proofs are
+\code{Mask} combinator). The filtering sweep computes the weights directly, as above; the proofs are
 unchanged because they use only the branch evidences $E_i$, the gap weight \eqref{eq:gapweight}, and
 the \GFI{} identities.
 
