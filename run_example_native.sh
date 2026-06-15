@@ -1,24 +1,32 @@
 #!/usr/bin/env bash
-# Run the GENJAX-NATIVE noisy-channel filter (the migration port) on one sentence and print the
-# inferred alternatives + runtime. This is `smc_substitution.run_smc_substitution` (run.py
-# --filter native): a word-scan SMC built on the genjax @gen Switch word model, handling copy /
-# substitution (incl. BPE-token-count typos like "inflection"->"infection") / deletion / insertion.
-# It is the filter the rejuvenation work (rejuvenation.py) extends; see src/genjax_port/MIGRATION_PLAN.md.
+# Run the GENJAX-NATIVE noisy-channel model WITH INTERLEAVED REJUVENATION on one sentence and print
+# the inferred alternatives + runtime. This is `run.py --filter native --conditional_rejuv`
+# (rejuv_bridge.run_smc_conditional_rejuv): the word-scan SMC filtering sweep with surprisal-gated
+# rejuvenation interleaved after every word's resample, VECTORIZED over particles (one vmapped MH
+# substitution-flip move re-decides earlier words using later context). See
+# src/genjax_port/VECTORIZED_REJUV_PLAN.md and MIGRATION_PLAN.md.
 #
-# Counterpart: ./run_example.sh runs the original hand-rolled REFERENCE filter (--filter unified),
-# which additionally dedups LM forwards. Behavior matches within Monte-Carlo noise; the native
-# filter has no dedup and recompiles per new sentence length (see the latency note in MIGRATION_PLAN).
+# Uses pythia-70m (fast iteration). For the plain sweep without rejuvenation, drop --conditional_rejuv
+# (see the elif branches in run.py) or run ./run_example.sh (the hand-rolled reference filter).
+#
+# v1 REJUVENATION SCOPE: single-token observed words, substitution-only. A sentence with a multi-token
+# word (e.g. "experimemt") raises a ValueError -- keep SENTENCE to common single-token words for now.
 #
 #   Usage:  ./run_example_native.sh [particle_count] [max_edit_distance]
-#   e.g.    ./run_example_native.sh 200        # 200 particles, default edit distance 2
-#           ./run_example_native.sh 64 3       # 64 particles, substitution candidates up to dist 3
-#   For finer control (deletion budget, disabling insertion) call run.py directly:
-#           python -m src.genjax_port.run --filter native --max_deletions 2 --no_insertion ...
+#   e.g.    ./run_example_native.sh 128
+#           ./run_example_native.sh 64 3
+#   Tune the rejuvenation trigger / lookback / sweeps via the variables below.
 
 # ---- edit these ----
-SENTENCE="The little boy licked the big round ball into the net."
-PARTICLES="${1:-32}"          # default 32
-MAX_DIST="${2:-3}"            # max char edit distance for word-substitution candidates
+SENTENCE="he wants too go home"   # v1 rejuv scope: SINGLE-TOKEN words only (multi-token -> error)
+PARTICLES="${1:-64}"              # number of SMC particles
+MAX_DIST="${2:-2}"               # max char edit distance for word-substitution candidates (SymSpell)
+
+# interleaved rejuvenation (surprisal-gated, vectorized over particles)
+LOOKBACK=4            # words of context to revisit on each rejuvenation event
+LOGPROB_THRESH=5.0    # surprisal-gate CENTER (the trigger): higher => rejuvenate less often
+LOGPROB_SPREAD=1.0    # surprisal-gate STEEPNESS (larger => sharper on/off around the center)
+REJUV_SWEEPS=2        # MH sweeps over the lookback window per rejuvenation event
 # --------------------
 
 cd "$(dirname "$0")"
@@ -27,7 +35,10 @@ conda activate ncgenjax
 export TOKENIZERS_PARALLELISM=false
 
 SECONDS=0
-PYTHONPATH=. python -m src.genjax_port.run \
-  --filter native --sentence "$SENTENCE" --particles "$PARTICLES" --max_dist "$MAX_DIST" \
+NC_LM=EleutherAI/pythia-70m PYTHONPATH=. python -m src.genjax_port.run \
+  --filter native --conditional_rejuv \
+  --sentence "$SENTENCE" --particles "$PARTICLES" --max_dist "$MAX_DIST" \
+  --lookback "$LOOKBACK" --logprob_thresh "$LOGPROB_THRESH" \
+  --logprob_spread "$LOGPROB_SPREAD" --rejuv_sweeps "$REJUV_SWEEPS" \
   2>&1 | grep -vEi "warning|tqdm|fork|tokenizers|avoid using|explicitly set|sub-SMC|word/s"
 echo "runtime: ${SECONDS}s"

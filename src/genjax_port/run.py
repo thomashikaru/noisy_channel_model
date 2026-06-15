@@ -68,11 +68,80 @@ def main():
         help="[native] disable LM-forward dedup (on by default, as in the unified "
         "filter). Dedup is numerically exact; disabling it is for A/B timing.",
     )
+    parser.add_argument(
+        "--rejuvenate",
+        action="store_true",
+        help="[native] run post-sweep rejuvenation (full-context MH substitution-flip "
+        "reanalysis) on the particles. v1: single-token words, substitution-only "
+        "(forces deletion/insertion off).",
+    )
+    parser.add_argument(
+        "--rejuv_sweeps",
+        type=int,
+        default=1,
+        help="[native] number of MH sweeps per rejuvenation event (--rejuvenate / --conditional_rejuv).",
+    )
+    parser.add_argument(
+        "--conditional_rejuv",
+        action="store_true",
+        help="[native] interleaved surprisal-gated rejuvenation during the sweep (vectorized over "
+        "particles). v1: single-token words, substitution-only. Overrides --rejuvenate.",
+    )
+    parser.add_argument(
+        "--lookback",
+        type=int,
+        default=4,
+        help="[native] lookback window (words) for --conditional_rejuv reanalysis.",
+    )
+    parser.add_argument(
+        "--logprob_thresh",
+        type=float,
+        default=5.0,
+        help="[native] surprisal gate center for --conditional_rejuv (higher => rejuvenate less).",
+    )
+    parser.add_argument(
+        "--logprob_spread",
+        type=float,
+        default=1.0,
+        help="[native] surprisal gate steepness for --conditional_rejuv.",
+    )
     args = parser.parse_args()
 
     obs = encode(args.sentence)
     key = jax.random.key(args.seed)
-    if args.filter == "native":
+    accept_rate = None
+    if args.filter == "native" and args.conditional_rejuv:
+        # genjax-native sweep with interleaved, surprisal-gated rejuvenation (vectorized over
+        # particles). v1: single-token words, substitution-only; raises on multi-token words.
+        from .rejuv_bridge import run_smc_conditional_rejuv
+
+        sentences, log_marginal, min_ess, accept_rate = run_smc_conditional_rejuv(
+            key,
+            jax.numpy.array(obs),
+            num_particles=args.particles,
+            max_dist=args.max_dist,
+            lookback=args.lookback,
+            logprob_thresh=args.logprob_thresh,
+            logprob_spread=args.logprob_spread,
+            n_sweeps=args.rejuv_sweeps,
+            dedup=not args.no_dedup,
+            progress=True,
+        )
+    elif args.filter == "native" and args.rejuvenate:
+        # genjax-native sweep + post-sweep rejuvenation (full-context reanalysis). v1: single-token
+        # words, substitution-only; raises on multi-token words.
+        from .rejuv_bridge import run_smc_rejuv
+
+        sentences, log_marginal, min_ess, accept_rate = run_smc_rejuv(
+            key,
+            jax.numpy.array(obs),
+            num_particles=args.particles,
+            max_dist=args.max_dist,
+            n_sweeps=args.rejuv_sweeps,
+            dedup=not args.no_dedup,
+            progress=True,
+        )
+    elif args.filter == "native":
         # genjax-native word-scan SMC: copy / substitution / deletion / insertion. Per-sentence
         # buffer sizing here (one sentence => one compile); use run_smc_batch for corpora.
         from .smc_substitution import run_smc_substitution
@@ -100,9 +169,10 @@ def main():
 
     norm_observed = " ".join(args.sentence.split())
     print(f"observed : {args.sentence}")
+    rejuv_note = f"   rejuv accept = {accept_rate:.1%}" if accept_rate is not None else ""
     print(
         f"particles: {args.particles}   log P(observed) ~= {log_marginal:.3f}"
-        f"   min ESS = {min_ess:.1f}/{args.particles}\n"
+        f"   min ESS = {min_ess:.1f}/{args.particles}{rejuv_note}\n"
     )
     print("inferred intended sentences (posterior over alternatives):")
     for sent, count, frac in summarize(sentences, top_k=args.top_k):

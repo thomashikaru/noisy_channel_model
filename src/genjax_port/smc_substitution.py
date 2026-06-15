@@ -125,14 +125,18 @@ def deletion_gap(key, intended_buf, i_len, obs0, max_deletions, lookahead_k,
 def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
                          max_dist=2, max_deletions=0, allow_insertion=False,
                          lookahead_k=LOOKAHEAD_K, p_delete_prior=P_DELETE_PRIOR, progress=False,
-                         dedup=True, dedup_stats=None,
+                         dedup=True, dedup_stats=None, return_state=False,
+                         post_resample_hook=None,
                          next_logprobs_fn=None, next_logits_fn=None):
     """Word-scan SMC (substitution + optional deletion gap + optional insertion).
 
     ``max_deletions=0`` and ``allow_insertion=False`` (defaults) give the pure-substitution M1
     filter; ``max_deletions > 0`` enables the M2 lookahead deletion gap; ``allow_insertion=True``
     enables the M3 INSERT action (spurious observed word). Returns
-    ``(sentences, log_marginal, min_ess)``.
+    ``(sentences, log_marginal, min_ess)``, or, with ``return_state=True``,
+    ``(sentences, log_marginal, min_ess, (intended_buf, i_len, log_action_prior))`` -- the final
+    per-particle buffers, used by the rejuvenation bridge (:mod:`rejuv_bridge`) to materialize a
+    genjax trace per particle for post-sweep reanalysis.
 
     ``dedup`` (default on, like the reference filter) routes the LM forwards through
     :func:`cache_dedup.make_dedup_fns`, which collapses identical intended-prefix rows to one LM
@@ -202,7 +206,8 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
         key, step_key, resample_key = jax.random.split(key, 3)
         option, log_w = propose(step_key, log_ev)
         log_w = log_w + log_w_gap
-        log_marginal += float(logsumexp(log_w) - jnp.log(P))
+        step_lmw = float(logsumexp(log_w) - jnp.log(P))   # log mean weight = word's log-evidence
+        log_marginal += step_lmw
         min_ess = min(min_ess, float(1.0 / jnp.sum(jax.nn.softmax(log_w) ** 2)))
 
         parents = jax.random.categorical(resample_key, log_w - logsumexp(log_w), shape=(P,))
@@ -231,7 +236,16 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
                 jnp.where(writing, chosen_tok[:, j], intended_buf[rows, i_len]))
             i_len = i_len + writing.astype(jnp.int32)
 
+        # Post-resample rejuvenation hook (vectorized over particles): given this word's surprisal
+        # (-step_lmw), the hook may run a windowed MH reanalysis and return an updated buffer. Used
+        # by rejuv_bridge for interleaved conditional rejuvenation; None = plain filtering sweep.
+        if post_resample_hook is not None:
+            key, intended_buf = post_resample_hook(
+                wi, key, intended_buf, i_len, log_action_prior, -step_lmw)
+
     sentences = [decode(intended_buf[p, 1:int(i_len[p])]).strip() for p in range(P)]
+    if return_state:
+        return sentences, float(log_marginal), min_ess, (intended_buf, i_len, log_action_prior)
     return sentences, float(log_marginal), min_ess
 
 

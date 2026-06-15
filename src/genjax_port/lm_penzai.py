@@ -70,6 +70,13 @@ def _raw_logits(token_buf):
 
 
 @functools.partial(jax.jit, static_argnums=())
+def _next_token_logits_jit(token_bufs, i_lens):
+    all_logits = _raw_logits(token_bufs)  # [P, seq, vocab]
+    P = token_bufs.shape[0]
+    pos = jnp.clip(i_lens - 1, 0, token_bufs.shape[1] - 1)
+    return all_logits[jnp.arange(P), pos]  # [P, vocab]
+
+
 def next_token_logits(token_bufs, i_lens):
     """Batched next-token logits, one GPT forward across all particles.
 
@@ -80,11 +87,14 @@ def next_token_logits(token_bufs, i_lens):
     Returns:
         logits ``[P, vocab]`` -- the next-token distribution for each particle,
         read at position ``i_len - 1``.
+
+    ``load_model()`` is forced here, EAGERLY, before the jitted forward: otherwise the first LM call
+    builds the penzai model inside the jit trace, leaking its arrays as tracers (an
+    ``UnexpectedTracerError`` once a second jit -- e.g. the rejuvenation move -- sees them). Callers
+    that ran ``load_model()`` at startup never hit it; cold callers (run.py) did.
     """
-    all_logits = _raw_logits(token_bufs)  # [P, seq, vocab]
-    P = token_bufs.shape[0]
-    pos = jnp.clip(i_lens - 1, 0, token_bufs.shape[1] - 1)
-    return all_logits[jnp.arange(P), pos]  # [P, vocab]
+    load_model()
+    return _next_token_logits_jit(token_bufs, i_lens)
 
 
 def next_token_logprobs(token_bufs, i_lens):

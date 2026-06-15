@@ -264,13 +264,27 @@ Runtime: with bucketing the 6-sentence suite is one compile + warm execs (see la
   Spike at `/tmp/genjax_spike4_rejuv.py`. Doc §4.4 updated.
 - R2: **add/delete** reversible-jump rejuvenation move. *(NEXT — trans-dimensional: changes word
   count; needs the multi-token Switch flip + RJ reverse-move bookkeeping.)*
-- R3: **surprisal-conditioned trigger** + tunable lookback.
+- R3: **surprisal-conditioned trigger** + tunable lookback. **✅ DONE for substitution (2026-06-15)**
+  — see the bridge below; R3's add/delete needs R2.
 Gate (R1): a sentence the filtering sweep gets wrong (early commitment) is fixed by rejuvenation — MET.
 
-**NB — R1 lives on the unrolled chain model, separate from the filtering sweep (`smc_substitution.py`,
-manual buffers). Integrating per-particle rejuvenation into the filtering-sweep SMC needs trace
-materialization per particle (the open M5→filtering-sweep bridge); R1 here proves the move is correct
-and reanalysis works.**
+**FILTERING-SWEEP BRIDGE ✅ DONE (2026-06-15), VECTORIZED — `rejuv_bridge.py`.** R1 ran on a
+standalone chain; the bridge integrates rejuvenation into the real filter, **vmapped over particles**
+(the point of the port — Phase 0 spike `/tmp/genjax_spike5_vmap_rejuv.py` proved `Rejuvenate.edit`
+vmaps and batches: P=64 = 4.3× P=1, bit-parity with a per-particle loop). Scope v1: single-token
+words, substitution-only (homogeneous trace shape ⇒ rectangular batched trace). One vectorized
+primitive `vmapped_window_move` (jitted, cached per window length) materializes a chain trace per
+particle from the sweep's buffers, runs the MH sub-flip, writes back — candidate tables built from the
+sweep's evidence so the move targets the sweep's posterior (keystone test). Two modes:
+`run_smc_rejuv` (post-sweep / second-pass; full-sentence window) and `run_smc_conditional_rejuv`
+(**interleaved**, R3: after each word's resample a per-particle surprisal-gated `[P]` Bernoulli mask
+drives a windowed move over the last `lookback` words — `custom_sigmoid` trigger, mirrors
+`gen_inference.jl`). Wired in `run.py` (`--rejuvenate` / `--conditional_rejuv --lookback
+--logprob_thresh --logprob_spread --rejuv_sweeps`); `run_example_native.sh` demos it on 70m. Tests in
+`tests/test_rejuv_bridge.py` (6, in the runner). **Vectorization design + remaining phases in
+`VECTORIZED_REJUV_PLAN.md`.** Resample-every-word throughout (settled). Open: Phase 2 = vectorized
+trans-dimensional moves (ragged `W` → `Mask`/padding), coupled with R2. Perf TODO: `make_chain_model`
+recompiles per window length (bucket it); surprisal gate uses an absolute threshold (no unigram yet).
 
 **M6 — Cleanup.** Retire the hand-rolled filters (or keep one as the A/B baseline); update README +
 memory; move the shared constants (`ACTION_ALPHAS`, `MAX_DELETIONS`, `P_DELETE_*`, `LOOKAHEAD_K`)
