@@ -20,15 +20,15 @@
 #   Tune the rejuvenation trigger / lookback / sweeps via the variables below.
 
 # ---- edit these ----
-SENTENCE="he wants too go home"   # v1 rejuv scope: SINGLE-TOKEN words only (multi-token -> error)
+SENTENCE="The boy licked the big round ball."   # v1 rejuv scope: SINGLE-TOKEN words only (multi-token -> error)
 PARTICLES="${1:-64}"              # number of SMC particles
 MAX_DIST="${2:-2}"               # max char edit distance for word-substitution candidates (SymSpell)
 
 # interleaved rejuvenation (surprisal-gated, vectorized over particles)
 LOOKBACK=4            # words of context to revisit on each rejuvenation event
-LOGPROB_THRESH=5.0    # surprisal-gate CENTER (the trigger): higher => rejuvenate less often
+LOGPROB_THRESH=4.0    # surprisal-gate CENTER (the trigger): higher => rejuvenate less often
 LOGPROB_SPREAD=1.0    # surprisal-gate STEEPNESS (larger => sharper on/off around the center)
-REJUV_SWEEPS=2        # MH sweeps over the lookback window per rejuvenation event
+REJUV_SWEEPS=5        # MH sweeps over the lookback window per rejuvenation event
 # --------------------
 
 cd "$(dirname "$0")"
