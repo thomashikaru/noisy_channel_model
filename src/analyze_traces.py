@@ -139,15 +139,20 @@ def rejuv_plot(output_dir: str, sent_id: str) -> None:
     fig, ax = plt.subplots(figsize=(1.5 * N, 2.5))
     df.t -= 1
     df.t_prime -= 1
-    sns.pointplot(
+    sns.lineplot(
         data=df,
         x="t_prime",
         y="accepted",
         hue="move",
         palette=pal2,
         estimator="mean",
+        marker="o",
         markersize=10,
+        linestyle="",
+        err_style="bars",
+        linewidth=0,
         alpha=0.5,
+        ax=ax,
     )
     plt.xlabel("Word", fontsize=18)
     plt.ylabel("Acceptance\nRate", fontsize=18)
@@ -227,7 +232,7 @@ def rejuv_plot(output_dir: str, sent_id: str) -> None:
     means = np.array(df_agg[("accepted", "mean")])
 
     # Normalize mean values to [0, 1]
-    norm = Normalize(vmin=means.min(), vmax=means.max())
+    norm = Normalize(vmin=0, vmax=means.max())
     palette = sns.cubehelix_palette(
         start=0.5, rot=-0.5, dark=0.3, light=0.95, reverse=False, as_cmap=True
     )

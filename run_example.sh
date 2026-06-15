@@ -8,9 +8,9 @@
 #           ./run_example.sh 64 3       # 64 particles, substitution candidates up to dist 3
 
 # ---- edit these ----
-SENTENCE="The medics treated the wound to prevent an inflection."
+SENTENCE="The little boy licked the big round ball into the net."
 PARTICLES="${1:-32}"          # default 32
-MAX_DIST="${2:-2}"            # max char edit distance for word-substitution candidates
+MAX_DIST="${2:-3}"            # max char edit distance for word-substitution candidates
 # --------------------
 
 cd "$(dirname "$0")"

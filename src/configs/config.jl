@@ -61,6 +61,18 @@ function parse_commandline(args = ARGS)
         help = "iters of second_pass rejuvenation"
         arg_type = Int
         default = 1
+        "--targeted_rejuv"
+        help = "whether to do targeted rejuvenation"
+        arg_type = Bool
+        default = false
+        "--targeted_rejuv_iters"
+        help = "iters of targeted rejuvenation"
+        arg_type = Int
+        default = 10
+        "--targeted_rejuv_t"
+        help = "targeted rejuvenation time step (single integer or comma-separated string, e.g. '3,4,5')"
+        arg_type = String
+        default = "1"
         "--num_samples"
         help = "number of posterior samples to draw"
         arg_type = Int
@@ -76,17 +88,17 @@ function parse_commandline(args = ARGS)
         "--normal_alpha"
         help = "normal alpha parameter"
         arg_type = Int
-        default = 10
+        default = 3
         "--error_alpha"
         help = "error alpha parameter"
         arg_type = Int
         default = 1
         "--vocab_file"
         arg_type = String
-        default = "../data/gibson2013/dopo_to/vocab_augmented.txt"
+        default = "../data/ryskin2021/vocab_augmented.txt"
         "--vocab_ipa_file"
         arg_type = String
-        default = "../data/gibson2013/dopo_to/vocab_ipa_augmented.txt"
+        default = "../data/ryskin2021/vocab_ipa_augmented.txt"
         "--actions"
         arg_type = String
         default = "normal,sem_sub,form_sub,insert,skip,morph_sub"

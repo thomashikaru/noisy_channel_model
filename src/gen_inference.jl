@@ -286,7 +286,16 @@ end
 # rejuvenation proposal: form-based substitution
 @gen function rejuv_proposal_form_sub(prev_trace, t::Int, sub_type::String)
     old_index = t == 1 ? 1 : prev_trace[:noisy_sent=>t-1=>:idx]
-    ps = get_form_sub_ps(prev_trace[:intended_sent=>old_index=>:w], prev_trace[:form_sub_param])
+
+    ps = top_x_mask(get_form_sub_ps(prev_trace[:intended_sent=>old_index=>:w], prev_trace[:form_sub_param]), 3)
+
+    # for each nonzero entry in ps, multiply it by the corresponding word's log probability, which is calculated using gpt_word_dist and logpdf
+    for i in findall(!iszero, ps)
+        ps[i] *= exp(Gen.logpdf(gpt_word_dist, vocab_list[i], prev_trace[:intended_sent][end].context[1:old_index-1]))
+    end
+
+    ps /= sum(ps)
+
     new_word = {:intended_sent => old_index => :w} ~ word_dist(ps)
     err_type = prev_trace[:noisy_sent=>t=>:action] == "normal" ? "form_sub" : "normal"
     new_action = {:noisy_sent => t => :action} ~ action_dist(action_onehot(err_type))
@@ -422,40 +431,48 @@ function particle_filter_with_rejuv(
                 ) && state.traces[i][:intended_sent=>index_back=>:w] != "<nonword>"
 
                     # Form Sub
-                    state.traces[i], accepted = Gen.mh(
-                        state.traces[i],
-                        rejuv_proposal_form_sub,
-                        (tt, "form_sub"),
-                        involution_sub,
-                    )
-                    log_rejuv_result!(local_results, t, i, "sub_error", accepted, tt)
+                    if "form_sub" in ACTION_LIST
+                        state.traces[i], accepted = Gen.mh(
+                            state.traces[i],
+                            rejuv_proposal_form_sub,
+                            (tt, "form_sub"),
+                            involution_sub,
+                        )
+                        log_rejuv_result!(local_results, t, i, "sub_error", accepted, tt)
+                    end
 
                     # Semantic Sub
-                    state.traces[i], accepted = Gen.mh(
-                        state.traces[i],
-                        rejuv_proposal_sem_sub,
-                        (tt, "sem_sub"),
-                        involution_sub,
-                    )
-                    log_rejuv_result!(local_results, t, i, "sub_error", accepted, tt)
+                    if "sem_sub" in ACTION_LIST
+                        state.traces[i], accepted = Gen.mh(
+                            state.traces[i],
+                            rejuv_proposal_sem_sub,
+                            (tt, "sem_sub"),
+                            involution_sub,
+                        )
+                        log_rejuv_result!(local_results, t, i, "sub_error", accepted, tt)
+                    end
 
                     # Morphological Sub
-                    state.traces[i], accepted = Gen.mh(
-                        state.traces[i],
-                        rejuv_proposal_morph_sub,
-                        (tt, "morph_sub"),
-                        involution_sub,
-                    )
-                    log_rejuv_result!(local_results, t, i, "sub_error", accepted, tt)
+                    if "morph_sub" in ACTION_LIST
+                        state.traces[i], accepted = Gen.mh(
+                            state.traces[i],
+                            rejuv_proposal_morph_sub,
+                            (tt, "morph_sub"),
+                            involution_sub,
+                        )
+                        log_rejuv_result!(local_results, t, i, "sub_error", accepted, tt)
+                    end
 
                     # Insertions & Skips
-                    state.traces[i], accepted = Gen.mh(
-                        state.traces[i],
-                        rejuv_proposal_add_delete,
-                        (tt,),
-                        involution_add_delete,
-                    )
-                    log_rejuv_result!(local_results, t, i, "insert_error", accepted, tt)
+                    if "insert" in ACTION_LIST && "skip" in ACTION_LIST
+                        state.traces[i], accepted = Gen.mh(
+                            state.traces[i],
+                            rejuv_proposal_add_delete,
+                            (tt,),
+                            involution_add_delete,
+                        )
+                        log_rejuv_result!(local_results, t, i, "insert_error", accepted, tt)
+                    end
                 end
 
                 # ACTION PRIOR and ACTION ALPHAS
@@ -494,40 +511,48 @@ function particle_filter_with_rejuv(
                    state.traces[i][:intended_sent=>index_back=>:w] != "<nonword>"
 
                     # Form Sub
-                    state.traces[i], accepted = Gen.mh(
-                        state.traces[i],
-                        rejuv_proposal_form_sub,
-                        (tt, "form_sub"),
-                        involution_sub,
-                    )
-                    log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
+                    if "form_sub" in ACTION_LIST
+                        state.traces[i], accepted = Gen.mh(
+                            state.traces[i],
+                            rejuv_proposal_form_sub,
+                            (tt, "form_sub"),
+                            involution_sub,
+                        )
+                        log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
+                    end
 
                     # Semantic Sub
-                    state.traces[i], accepted = Gen.mh(
-                        state.traces[i],
-                        rejuv_proposal_sem_sub,
-                        (tt, "sem_sub"),
-                        involution_sub,
-                    )
-                    log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
+                    if "sem_sub" in ACTION_LIST
+                        state.traces[i], accepted = Gen.mh(
+                            state.traces[i],
+                            rejuv_proposal_sem_sub,
+                            (tt, "sem_sub"),
+                            involution_sub,
+                        )
+                        log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
+                    end
 
                     # Morphological Sub
-                    state.traces[i], accepted = Gen.mh(
-                        state.traces[i],
-                        rejuv_proposal_morph_sub,
-                        (tt, "morph_sub"),
-                        involution_sub,
-                    )
-                    log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
+                    if "morph_sub" in ACTION_LIST
+                        state.traces[i], accepted = Gen.mh(
+                            state.traces[i],
+                            rejuv_proposal_morph_sub,
+                            (tt, "morph_sub"),
+                            involution_sub,
+                        )
+                        log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
+                    end
 
                     # Insertions & Skips
-                    state.traces[i], accepted = Gen.mh(
-                        state.traces[i],
-                        rejuv_proposal_add_delete,
-                        (tt,),
-                        involution_add_delete,
-                    )
-                    log_rejuv_result!(local_results, length(utt), i, "insert_error", accepted, tt)
+                    if "insert" in ACTION_LIST && "skip" in ACTION_LIST
+                        state.traces[i], accepted = Gen.mh(
+                            state.traces[i],
+                            rejuv_proposal_add_delete,
+                            (tt,),
+                            involution_add_delete,
+                        )
+                        log_rejuv_result!(local_results, length(utt), i, "insert_error", accepted, tt)
+                    end
                 end
 
                 # ACTION PRIOR and ACTION ALPHAS
@@ -538,6 +563,81 @@ function particle_filter_with_rejuv(
                 state.traces[i], accepted =
                     Gen.mh(state.traces[i], Gen.select(:form_sub_param, :sem_sub_param))
                 log_rejuv_result!(local_results, length(utt), i, "substitution_temp", accepted, tt)
+            end
+        end
+    end
+
+    # TARGETED REJUVENATION
+    # Parse targeted_rejuv_t: support both single value and comma-separated string
+    targeted_rejuv_t_str = args["targeted_rejuv_t"]
+    targeted_rejuv_t_values = [parse(Int, strip(s)) for s in split(targeted_rejuv_t_str, ",")]
+    
+    for j = 1:args["targeted_rejuv_iters"]
+        for i = 1:num_particles
+
+            args["targeted_rejuv"] || break
+
+            # Loop through all targeted t values
+            for tt in targeted_rejuv_t_values
+                index_back = tt == 1 ? 1 : state.traces[i][:noisy_sent=>tt-1=>:idx]
+
+                # SUBSTITUTIONS
+                if Gen.has_value(Gen.get_choices(state.traces[i]), :intended_sent => index_back => :w) &&
+                state.traces[i][:intended_sent=>index_back=>:w] != "<nonword>"
+
+                    # Form Sub
+                    if "form_sub" in ACTION_LIST
+                        state.traces[i], accepted = Gen.mh(
+                            state.traces[i],
+                            rejuv_proposal_form_sub,
+                            (tt, "form_sub"),
+                            involution_sub,
+                        )
+                        log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
+                    end
+
+                    # Semantic Sub
+                    if "sem_sub" in ACTION_LIST
+                        state.traces[i], accepted = Gen.mh(
+                            state.traces[i],
+                            rejuv_proposal_sem_sub,
+                            (tt, "sem_sub"),
+                            involution_sub,
+                        )
+                        log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
+                    end
+
+                    # Morphological Sub
+                    if "morph_sub" in ACTION_LIST
+                        state.traces[i], accepted = Gen.mh(
+                            state.traces[i],
+                            rejuv_proposal_morph_sub,
+                            (tt, "morph_sub"),
+                            involution_sub,
+                        )
+                        log_rejuv_result!(local_results, length(utt), i, "sub_error", accepted, tt)
+                    end
+
+                    # Insertions & Skips
+                    if "insert" in ACTION_LIST && "skip" in ACTION_LIST
+                        state.traces[i], accepted = Gen.mh(
+                            state.traces[i],
+                            rejuv_proposal_add_delete,
+                            (tt,),
+                            involution_add_delete,
+                        )
+                        log_rejuv_result!(local_results, length(utt), i, "insert_error", accepted, tt)
+                    end
+
+                    # ACTION PRIOR and ACTION ALPHAS
+                    state.traces[i], accepted = Gen.mh(state.traces[i], Gen.select(:action_prior))
+                    log_rejuv_result!(local_results, length(utt), i, "action_prior", accepted, tt)
+
+                    # SUBSTITUTION PARAMETERS
+                    state.traces[i], accepted =
+                        Gen.mh(state.traces[i], Gen.select(:form_sub_param, :sem_sub_param))
+                    log_rejuv_result!(local_results, length(utt), i, "substitution_temp", accepted, tt)
+                end
             end
         end
     end
