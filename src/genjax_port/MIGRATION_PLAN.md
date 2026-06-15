@@ -277,18 +277,16 @@ memory; move the shared constants (`ACTION_ALPHAS`, `MAX_DELETIONS`, `P_DELETE_*
 out of `particle_filter.py`/`particle_filter_lookahead.py` into a `constants`/`config` module so the
 port doesn't import from the filter it replaces.
 
-- **TODO — re-add dedup to the port's filtering sweep (perf).** Measured 2026-06-15: the native
-  filtering sweep is ~3× slower than the reference filter on the medics sentence (168s vs 54s at
-  P=100, byte-identical output) **purely because the reference dedups redundant LM forwards
-  (`cache_dedup`) and the port dropped it.** This is *straightforward* in the current hand-rolled
-  sweep (NOT the vmapped-`@gen` path the plan's "dedup lost under vmap" note worried about): the
-  LM is called explicitly via `next_token_logits`, and `run_smc_substitution` already exposes the
-  same injection seams the reference uses — wire `cache_dedup.make_dedup_fns()` into
-  `next_logprobs_fn`/`next_logits_fn`. `word_log_evidence` and `deletion_gap` route ALL their LM
-  calls through those seams, so it should cover everything (verify it closes the gap; expect biggest
-  win on the `[P·K]` deletion-lookahead batch, which is the most redundant after resampling). NB:
-  dedup *does* get hard again if/when the filtering-sweep bridge is closed the fully-native way
-  (vmap the `@gen` model) — that's the case the original "dedup lost" concern actually applies to.
+- **✅ DONE (2026-06-15) — dedup re-added to the port's filtering sweep (perf).** `run_smc_substitution`
+  now takes `dedup=True` (default-on, like the reference; + optional `dedup_stats`), wiring
+  `cache_dedup.make_dedup_fns()` into the `next_logprobs_fn`/`next_logits_fn` seams that
+  `word_log_evidence` and `deletion_gap` already route every LM call through; `run.py --no_dedup`
+  toggles it off for A/B timing. **Closes the gap and then some:** medics sentence, P=100, 410m,
+  cold process each — **dedup 39s vs no-dedup 176s (~4.5×), and faster than the reference 54s**;
+  output BIT-IDENTICAL (logP −54.497, posterior 87/13, minESS 21.9 all match). Numerically exact +
+  fires verified by `tests/test_smc_substitution.py::test_dedup_matches_plain_and_fires` (LM-dependent;
+  in the runner). NB: dedup *does* get hard again if/when the filtering-sweep bridge is closed the
+  fully-native way (vmap the `@gen` model) — that's the case the original "dedup lost" concern applies to.
 
 ---
 

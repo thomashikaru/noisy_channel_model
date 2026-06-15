@@ -81,6 +81,25 @@ def test_run_smc_batch_validates_bucket():
     assert raised, "expected ValueError for an undersized bucket"
 
 
+def test_dedup_matches_plain_and_fires():
+    """Dedup is numerically exact and actually collapses rows.
+
+    Same RNG => the deduped run reproduces the plain-forward run's discrete posterior exactly and
+    its log-marginal up to XLA float noise; ``DedupStats.saved_frac > 0`` confirms identical
+    intended-prefix rows really were collapsed to one LM call (the perf win this exists for).
+    """
+    from src.genjax_port.cache_dedup import DedupStats
+    obs = jnp.asarray(encode("did you recieve the message"))
+    plain, lm_plain, _ = run_smc_substitution(jax.random.key(0), obs, num_particles=32,
+                                              max_dist=2, dedup=False)
+    stats = DedupStats()
+    ddup, lm_ddup, _ = run_smc_substitution(jax.random.key(0), obs, num_particles=32,
+                                            max_dist=2, dedup=True, dedup_stats=stats)
+    assert ddup == plain, (ddup[:3], plain[:3])     # discrete posterior: exact match
+    assert abs(lm_plain - lm_ddup) < 0.5, (lm_plain, lm_ddup)   # log-marginal: XLA float noise
+    assert stats.saved_frac > 0.0, stats            # dedup actually fired
+
+
 def test_clean_text_stays_literal_smoke():
     """Smoke test: clean text is dominated by the literal reading (any Pythia LM)."""
     obs = jnp.asarray(encode("the boy did an experiment today"))

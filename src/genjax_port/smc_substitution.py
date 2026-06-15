@@ -33,6 +33,7 @@ from jax.scipy.special import logsumexp
 
 from . import lm_penzai as L
 from . import noise_word as NW
+from .cache_dedup import make_dedup_fns
 from .tokenizer import decode
 from .particle_filter import (
     ACTION_ALPHAS, MAX_DELETIONS, P_DELETE_PRIOR, P_DELETE_PROPOSAL,
@@ -124,6 +125,7 @@ def deletion_gap(key, intended_buf, i_len, obs0, max_deletions, lookahead_k,
 def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
                          max_dist=2, max_deletions=0, allow_insertion=False,
                          lookahead_k=LOOKAHEAD_K, p_delete_prior=P_DELETE_PRIOR, progress=False,
+                         dedup=True, dedup_stats=None,
                          next_logprobs_fn=None, next_logits_fn=None):
     """Word-scan SMC (substitution + optional deletion gap + optional insertion).
 
@@ -131,7 +133,21 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
     filter; ``max_deletions > 0`` enables the M2 lookahead deletion gap; ``allow_insertion=True``
     enables the M3 INSERT action (spurious observed word). Returns
     ``(sentences, log_marginal, min_ess)``.
+
+    ``dedup`` (default on, like the reference filter) routes the LM forwards through
+    :func:`cache_dedup.make_dedup_fns`, which collapses identical intended-prefix rows to one LM
+    call and scatters the result back -- numerically exact (same RNG => same posterior) but much
+    cheaper after a resample degenerates the particle set (biggest win on the ``[P*lookahead_k]``
+    deletion-lookahead batch). Pass a ``cache_dedup.DedupStats()`` as ``dedup_stats`` to measure the
+    saved fraction. An explicitly injected ``next_logprobs_fn`` / ``next_logits_fn`` overrides dedup
+    for that seam (a caller-supplied stub LM is used as-is).
     """
+    if dedup and (next_logprobs_fn is None or next_logits_fn is None):
+        _dd_lp, _dd_lo = make_dedup_fns(dedup_stats)
+        if next_logprobs_fn is None:
+            next_logprobs_fn = _dd_lp
+        if next_logits_fn is None:
+            next_logits_fn = _dd_lo
     if next_logprobs_fn is None:
         next_logprobs_fn = L.next_token_logprobs
     if next_logits_fn is None:

@@ -62,6 +62,12 @@ def main():
         action="store_true",
         help="[native] disable the INSERT action (spurious-word removal).",
     )
+    parser.add_argument(
+        "--no_dedup",
+        action="store_true",
+        help="[native] disable LM-forward dedup (on by default, as in the unified "
+        "filter). Dedup is numerically exact; disabling it is for A/B timing.",
+    )
     args = parser.parse_args()
 
     obs = encode(args.sentence)
@@ -78,6 +84,7 @@ def main():
             max_dist=args.max_dist,
             max_deletions=args.max_deletions,
             allow_insertion=not args.no_insertion,
+            dedup=not args.no_dedup,
             progress=True,
         )
     else:
