@@ -241,9 +241,16 @@ is now feature-complete; M4 wires it into `run.py` and M5 adds rejuvenation.**
 > the LM-independent tests (already the runner default). A corpus-scale bucketed batch layer is the
 > right home for fix (1).
 
-**M4 — Full parity.** Wire `run.py` behind a flag to the native filter; run the full suite incl.
-the medics/punctuation/EOS case. Gate: behavior parity with `particle_filter_unified.py` across
-all README test cases; record runtime delta (expect some loss from no-dedup).
+**M4 — Full parity. ✅ DONE (2026-06-15).** `run.py` takes `--filter native|unified` (+
+`--max_deletions`, `--no_insertion`); native = `run_smc_substitution` with deletion+insertion on.
+Parity harness `tests/capture_native.py` runs the full README suite through the native filter
+(all ops, one fixed bucket via `run_smc_batch`) vs `golden_targets.json`. Gate met at P=64/410m —
+all six idealized behaviors reproduced: experimemt→experiment 92% (golden 94%), recieve→receive
+44% (17% — native more willing, both "partial"), he-wants reconstructs "to" (high-var ESS~5),
+doubled-word removed 56% (47%), clean literal 100% (98%), and the **critical medics case:
+inflection→infection 89%, period kept as EOS, no spurious "who"** (golden 97%). Quantitative gaps
+are within MC noise + the soft-target band (native has no dedup ⇒ different effective sampling).
+Runtime: with bucketing the 6-sentence suite is one compile + warm execs (see latency note).
 
 **M5 — Rejuvenation (the payoff).** Per `REJUVENATION_PLAN.md` §11 phasing:
 - R1: **substitution-flip** `Rejuvenate` over scan `x` addresses, **unconditional**, customizable
