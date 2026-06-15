@@ -122,21 +122,23 @@ def test_conditional_rejuv_runs_and_fires():
     assert Counter(sents)[lit] >= Counter(base)[lit] - 3, (Counter(base)[lit], Counter(sents)[lit])
 
 
-def test_multitoken_word_rejected():
-    """v1 scope guard: a multi-token observed word raises a clear ValueError."""
+def test_multitoken_falls_back_to_plain_filter():
+    """A multi-token word is outside v1 rejuv scope but must NOT break: rejuvenation is skipped
+    (accept_rate 0) and the plain substitution filter runs -- never less capable than the filter."""
+    import warnings
     obs = jnp.asarray(encode("the boy did an experimemt today"))  # 'experimemt' is multi-token
-    raised = False
-    try:
-        _single_token_words(obs)
-    except ValueError:
-        raised = True
-    assert raised, "expected ValueError for a multi-token observed word"
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        sents, _, _, rate = run_smc_conditional_rejuv(jax.random.key(0), obs, num_particles=8,
+                                                      max_dist=2, logprob_thresh=-1e6)
+    assert rate == 0.0, rate
+    assert len(sents) == 8 and all(isinstance(s, str) and s for s in sents)
 
 
 if __name__ == "__main__":
     L.load_model()
     for name in ("test_chain_importance_matches_sweep_evidence", "test_rejuv_zero_sweeps_is_identity",
                  "test_run_smc_rejuv_roundtrip", "test_conditional_gate_off_no_moves",
-                 "test_conditional_rejuv_runs_and_fires", "test_multitoken_word_rejected"):
+                 "test_conditional_rejuv_runs_and_fires", "test_multitoken_falls_back_to_plain_filter"):
         globals()[name]()
         print(f"OK  {name}")

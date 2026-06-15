@@ -272,7 +272,10 @@ Gate (R1): a sentence the filtering sweep gets wrong (early commitment) is fixed
 standalone chain; the bridge integrates rejuvenation into the real filter, **vmapped over particles**
 (the point of the port — Phase 0 spike `/tmp/genjax_spike5_vmap_rejuv.py` proved `Rejuvenate.edit`
 vmaps and batches: P=64 = 4.3× P=1, bit-parity with a per-particle loop). Scope v1: single-token
-words, substitution-only (homogeneous trace shape ⇒ rectangular batched trace). One vectorized
+words, substitution-only (homogeneous trace shape ⇒ rectangular batched trace). Out-of-scope
+sentences (multi-token words) **degrade gracefully** to the plain substitution filter (no error,
+`accept_rate=0`) — rejuvenation is never less capable than `--filter native` (experimemt→experiment
+still corrected, it's M1 substitution not deletion). One vectorized
 primitive `vmapped_window_move` (jitted, cached per window length) materializes a chain trace per
 particle from the sweep's buffers, runs the MH sub-flip, writes back — candidate tables built from the
 sweep's evidence so the move targets the sweep's posterior (keystone test). Two modes:

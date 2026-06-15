@@ -21,6 +21,12 @@ Two entry points share one vectorized primitive (:func:`vmapped_window_move`):
 (addresses ``x0..x{W-1}``, ``o0..o{W-1}``, scalar), so the batched trace is rectangular and vmap
 applies. Trans-dimensional add/delete (R2) needs masked/padded ragged traces (Phase 2).
 
+**Graceful degradation (never less capable than the filter).** Rejuvenation is an enhancement on top
+of filtering, so an out-of-scope sentence (a multi-token word) is NOT an error: the entry points fall
+back to the plain substitution filter and skip the move (``accept_rate = 0.0``). The plain filter
+still corrects multi-token substitutions like experimemt->experiment (that is M1, not deletion). Only
+the rejuvenation *move* is unavailable for those sentences in v1.
+
 **Correctness keystone.** The move must target the *same* posterior the sweep does. For a single-token
 word the sweep's per-branch evidence is ``log_action_prior[COPY] + lm(obs0|ctx)`` (copy) and
 ``log_action_prior[SUB] + lm(sub_x|ctx) + word_sub_loglik(d)`` (sub) -- exactly the chain model's
@@ -31,6 +37,7 @@ in ``tests/test_rejuv_bridge.py::test_chain_importance_matches_sweep_evidence``.
 
 import functools
 import math
+import warnings
 
 import numpy as np
 import jax
@@ -46,18 +53,46 @@ from .rejuvenation import make_chain_model, rejuv_step
 
 
 def _single_token_words(obs_ids):
-    """Segment ``obs_ids`` and require every observed word to be a single BPE token (v1 scope).
+    """Segment ``obs_ids``, asserting every observed word is a single BPE token (v1 homogeneity).
 
-    Returns ``(words, obs)`` where ``words`` is ``noise_word.segment_words``'s output and ``obs`` the
-    list of single observed token ids. Raises ``ValueError`` on any multi-token word.
+    Returns ``(words, obs)`` (``noise_word.segment_words`` output + single observed token ids). This
+    is the *internal* contract for the homogeneous vmapped primitives; callers gate on
+    :func:`_all_single_token` first and fall back to plain filtering, so this should not raise in
+    practice. Raises ``ValueError`` if it ever does (a guard against silently producing a ragged
+    batched trace).
     """
     words = NW.segment_words([int(i) for i in obs_ids])
     multi = [w for span_ids, w in words if len(span_ids) != 1]
     if multi:
-        raise ValueError(
-            f"rejuv bridge v1 supports single-token observed words only; got multi-token {multi}. "
-            "Multi-token words need the trans-dimensional bridge (R2).")
+        raise ValueError(f"non-single-token words reached a homogeneous primitive: {multi}")
     return words, [int(span_ids[0]) for span_ids, _ in words]
+
+
+def _all_single_token(obs_ids):
+    """``(all_single_token, n_words)`` -- whether every observed word is a single BPE token.
+
+    The v1 rejuvenation move needs a homogeneous (rectangular) batched trace, which holds only when
+    every particle has the same intended-token count. A multi-token observed word breaks that (its
+    COPY reading emits n tokens, its SUB reading 1), so such sentences fall back to plain filtering.
+    """
+    words = NW.segment_words([int(i) for i in obs_ids])
+    return all(len(s) == 1 for s, _ in words), len(words)
+
+
+# Out-of-v1-scope sentences degrade to the plain substitution filter (NEVER an error): rejuvenation
+# is an enhancement, so it must never be less capable than `--filter native`. The plain filter still
+# handles multi-token substitutions like experimemt->experiment (that is M1, not deletion/insertion).
+_SKIP_MSG = ("rejuvenation skipped (outside v1 scope -- single-token words only): {why}. Running the "
+             "plain substitution filter instead (still corrects substitutions like "
+             "'experimemt'->'experiment'); multi-token rejuvenation is Phase 2 / R2.")
+
+
+def _plain_fallback(key, obs_ids, num_particles, max_dist, why, kw):
+    warnings.warn(_SKIP_MSG.format(why=why), stacklevel=3)
+    sents, lm, ess = run_smc_substitution(
+        key, obs_ids, num_particles=num_particles, max_dist=max_dist,
+        max_deletions=0, allow_insertion=False, **kw)
+    return sents, lm, ess, 0.0
 
 
 def _word_candidate_tables(words, log_action_prior, max_dist):
@@ -160,11 +195,13 @@ def run_smc_rejuv(key, obs_ids, num_particles=64, max_dist=2, n_sweeps=1, order=
 
     Returns ``(sentences, log_marginal, min_ess, accept_rate)``. ``log_marginal``/``min_ess`` are the
     sweep's (rejuvenation re-decides intended tokens at fixed evidence; it does not re-estimate the
-    marginal). ``**kw`` flows to ``run_smc_substitution``; do not pass ``max_deletions`` /
-    ``allow_insertion`` (forced off, v1 scope).
+    marginal). A sentence with multi-token words is **not** rejected -- it falls back to the plain
+    substitution filter (``accept_rate = 0.0``), never less capable than ``--filter native``. ``**kw``
+    flows to ``run_smc_substitution``; do not pass ``max_deletions`` / ``allow_insertion`` (off, v1).
     """
-    words, _ = _single_token_words(obs_ids)
-    W = len(words)
+    all_single, W = _all_single_token(obs_ids)
+    if not all_single:
+        return _plain_fallback(key, obs_ids, num_particles, max_dist, "multi-token word(s)", kw)
     key, sweep_key, rejuv_key = jax.random.split(key, 3)
     _, log_marginal, min_ess, (intended_buf, _, lap) = run_smc_substitution(
         sweep_key, obs_ids, num_particles=num_particles, max_dist=max_dist,
@@ -231,9 +268,14 @@ def run_smc_conditional_rejuv(key, obs_ids, num_particles=64, max_dist=2, lookba
     After each word's resample, particles whose Bernoulli gate fires (prob rising with the word's
     surprisal via ``custom_sigmoid(surprisal, logprob_thresh, logprob_spread)``) run a windowed MH
     reanalysis over the last ``lookback`` words, vectorized over particles. Returns
-    ``(sentences, log_marginal, min_ess, accept_rate)``. ``**kw`` flows to ``run_smc_substitution``;
-    do not pass ``max_deletions`` / ``allow_insertion`` (forced off, v1 scope).
+    ``(sentences, log_marginal, min_ess, accept_rate)``. A sentence with multi-token words is **not**
+    rejected -- it falls back to the plain substitution filter (``accept_rate = 0.0``), never less
+    capable than ``--filter native``. ``**kw`` flows to ``run_smc_substitution``; do not pass
+    ``max_deletions`` / ``allow_insertion`` (forced off, v1 scope).
     """
+    all_single, _ = _all_single_token(obs_ids)
+    if not all_single:
+        return _plain_fallback(key, obs_ids, num_particles, max_dist, "multi-token word(s)", kw)
     words, obs = _single_token_words(obs_ids)
     cand_xs, _ = _word_candidate_tables(words, jnp.zeros((1, 3), jnp.float32), max_dist)  # ids only
     stats = {"accepts": 0, "attempts": 0}

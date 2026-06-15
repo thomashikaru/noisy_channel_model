@@ -10,7 +10,9 @@
 # (see the elif branches in run.py) or run ./run_example.sh (the hand-rolled reference filter).
 #
 # v1 REJUVENATION SCOPE: single-token observed words, substitution-only. A sentence with a multi-token
-# word (e.g. "experimemt") raises a ValueError -- keep SENTENCE to common single-token words for now.
+# word (e.g. "experimemt") gracefully SKIPS rejuvenation and runs the plain substitution filter
+# (which still corrects it) -- never an error, never less capable than --filter native. Use
+# single-token words to actually exercise the rejuvenation move; multi-token rejuv is Phase 2 / R2.
 #
 #   Usage:  ./run_example_native.sh [particle_count] [max_edit_distance]
 #   e.g.    ./run_example_native.sh 128
