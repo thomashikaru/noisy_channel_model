@@ -1,6 +1,6 @@
 """Spike 1 as a regression test: penzai LM as a genjax distribution in a @gen Scan model.
 
-Proves the three facts the native port stands on (MIGRATION_PLAN.md §2, "Spike 1"):
+Proves the three facts the native port stands on (planning/MIGRATION_PLAN.md §2, "Spike 1"):
   - the @gen Scan model with ``lm_token`` simulates and the trace auto-records a "tok" choice
     per step (the addressable structure rejuvenation needs);
   - ``importance`` with constrained tokens equals the direct LM chain-rule log-density;

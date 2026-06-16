@@ -58,8 +58,7 @@ from .rejuvenation import make_chain_model, rejuv_step
 from .rejuvenation_r2 import (
     make_gap_chain, gap_chain_inputs, add_delete_step, sub_flip_step, _q_logits,
 )
-from .particle_filter import MAX_DELETIONS, P_DELETE_PRIOR
-from .particle_filter_lookahead import LOOKAHEAD_K
+from .config import MAX_DELETIONS, P_DELETE_PRIOR, LOOKAHEAD_K
 
 
 def _single_token_words(obs_ids):
@@ -231,7 +230,7 @@ def run_smc_rejuv(key, obs_ids, num_particles=64, max_dist=2, n_sweeps=1, order=
 # buffer position 1 for every particle), and the output is decoded strings -- so per-particle length
 # variation needs no flat-buffer surgery. This mirrors run_smc_rejuv (the R1 post-sweep), and is the
 # R2 analog of bridge v1. (Interleaved, mid-sentence windows -- where the start position is
-# per-particle once earlier reanalyses have added words -- are the next step; see R2_PLAN.md.)
+# per-particle once earlier reanalyses have added words -- are the next step; see planning/R2_PLAN.md.)
 
 
 # NB: do NOT fuse the whole sweep into one jit -- the add/delete step is heavy (a K-row lookahead
@@ -367,6 +366,12 @@ def _decode_gap_row(dels, gaps, xs, W):
 def run_smc_add_delete(key, obs_ids, num_particles=64, max_dist=2, n_sweeps=2, order="BACKWARD",
                        lookahead_k=LOOKAHEAD_K, sub_flip=False, **kw):
     """Substitution-only filtering sweep, then a post-sweep add/delete (R2) reanalysis pass.
+
+    REFERENCE / oracle path (``run.py --filter native --add_delete``), NOT the production rejuvenation.
+    Per the 2026-06-16 pivot, add/delete reanalysis is deprioritized (the forward filter already does
+    add/delete) and this routes the move through the ``@gen`` gap chain (``rejuvenation_r2``), which is
+    correct but heavy (W LM forwards per edit). The production rejuvenation is the manual, aligned,
+    substitution-only ``run_smc_conditional_rejuv_aligned``. Kept for validation / future revival.
 
     The forward sweep stays substitution-only; the trans-dimensional move is the *sole* mechanism for
     positing omitted words, but now with the whole sentence as context -- so a dropped word only

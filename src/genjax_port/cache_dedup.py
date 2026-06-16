@@ -98,7 +98,8 @@ def _dedup_apply(forward_fn, token_bufs, i_lens, stats):
 
 def make_dedup_fns(stats=None):
     """Return (logprobs_fn, logits_fn) drop-in replacements for L.next_token_{logprobs,logits}
-    that dedup their input rows. Pass these into run_particle_filter_lookahead."""
+    that dedup their input rows. Pass these into the filter's injectable LM-forward seams
+    (run_smc_substitution / run_particle_filter_unified). Pass a DedupStats() to collect ratios."""
 
     def logprobs(token_bufs, i_lens):
         return _dedup_apply(L.next_token_logprobs, token_bufs, i_lens, stats)
@@ -107,15 +108,3 @@ def make_dedup_fns(stats=None):
         return _dedup_apply(L.next_token_logits, token_bufs, i_lens, stats)
 
     return logprobs, logits
-
-
-def run_particle_filter_dedup(key, obs_ids, num_particles=32, stats=None, **kwargs):
-    """Thin wrapper: run the lookahead filter with the dedup LM forwards injected. Accepts the
-    same kwargs as run_particle_filter_lookahead (lookahead_k, p_delete_prior, progress, ...).
-    Pass a DedupStats() to collect dedup ratios."""
-    from .particle_filter_lookahead import run_particle_filter_lookahead
-
-    lp_fn, lo_fn = make_dedup_fns(stats)
-    return run_particle_filter_lookahead(
-        key, obs_ids, num_particles=num_particles,
-        next_logprobs_fn=lp_fn, next_logits_fn=lo_fn, **kwargs)

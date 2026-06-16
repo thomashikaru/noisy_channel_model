@@ -16,7 +16,7 @@ proved, so M1 can assemble them rather than rediscover them:
 ``o ~ obs_dist(x, cand_x, cand_l)``, candidates from :func:`noise_word.word_sub_candidates`
 passed as **scanned inputs**, plus a custom data-driven proposal ``q`` (local posterior over
 candidates). Inference runs as a hand-rolled SMC outer loop calling ``model.importance`` with
-``q``-sampled intended tokens (the lean option from ``MIGRATION_PLAN.md`` §6.1), keeping ``@gen``
+``q``-sampled intended tokens (the lean option from ``planning/MIGRATION_PLAN.md`` §6.1), keeping ``@gen``
 traces + ``Rejuvenate`` while sidestepping the GenSP ``SampleDistribution`` API surface. The M1
 gate is posterior parity with the hand-rolled unified filter on the substitution suite.
 """

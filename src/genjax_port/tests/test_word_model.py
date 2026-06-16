@@ -1,6 +1,6 @@
 """M1 representation test: the per-word Switch model (copy multi-token vs sub single-token).
 
-Locks spike 3 (MIGRATION_PLAN.md §6.3 -- the N:1 word emission risk, resolved via Switch). The
+Locks spike 3 (planning/MIGRATION_PLAN.md §6.3 -- the N:1 word emission risk, resolved via Switch). The
 importance == manual-joint assertions are LM-independent, so they hold for any NC_LM. Uses a
 real multi-candidate word ('experimemt' -> 4 tokens, 3 sub candidates) so the C-way switch (not
 just 2-way) is exercised.
@@ -11,7 +11,7 @@ import jax.numpy as jnp
 
 from src.genjax_port import lm_penzai as L
 from src.genjax_port import noise_word as NW
-from src.genjax_port.particle_filter import ACTION_ALPHAS
+from src.genjax_port.config import ACTION_ALPHAS
 from src.genjax_port.model import COPY, SUB
 from src.genjax_port.lm_genjax import lm_logp
 from src.genjax_port.genjax_model import make_word_model, word_constraints

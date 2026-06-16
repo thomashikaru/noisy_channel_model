@@ -18,7 +18,7 @@ import jax.numpy as jnp
 
 from src.genjax_port import lm_penzai as L
 from src.genjax_port import noise_word as NW
-from src.genjax_port.particle_filter import ACTION_ALPHAS
+from src.genjax_port.config import ACTION_ALPHAS
 from src.genjax_port.model import COPY, SUB
 from src.genjax_port.genjax_model import make_word_model, word_constraints
 from src.genjax_port.smc_substitution import word_log_evidence, run_smc_substitution

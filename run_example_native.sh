@@ -7,7 +7,7 @@
 # vectorized SUBSTITUTION rejuvenation pass revises recent words using later context. The add/delete
 # capability lives in the forward filter; the interleaved rejuvenation is substitution-only (shape
 # preserving) and locates each word's token via the per-particle alignment, so forward
-# deletions/insertions don't misalign it. See src/genjax_port/MIGRATION_PLAN.md, R2_PLAN.md.
+# deletions/insertions don't misalign it. See src/genjax_port/planning/MIGRATION_PLAN.md, planning/R2_PLAN.md.
 #
 # Uses pythia-70m for fast iteration (set NC_LM=EleutherAI/pythia-410m for the stronger LM). NB: 70m
 # is weak enough that it substitutes short words fairly freely.
@@ -17,16 +17,16 @@
 #           ./run_example_native.sh 64 3
 
 # ---- edit these ----
-SENTENCE="The little boy licked the big round ball into the net."      # licked->kicked (sub) + omitted 'the' x2 (deletion recovers them)
+SENTENCE="The cart showed some data and statistics."
 PARTICLES="${1:-64}"             # number of SMC particles
-MAX_DIST="${2:-2}"               # max char edit distance for word-substitution candidates (SymSpell)
+MAX_DIST="${2:-3}"               # max char edit distance for word-substitution candidates (SymSpell)
 MAX_DELETIONS=1                  # forward omitted-word reconstructions per gap (0 disables deletion)
 
 # interleaved substitution rejuvenation (surprisal-gated, vectorized over particles)
-LOOKBACK=2                       # words of context to revisit on each rejuvenation event
-LOGPROB_THRESH=3.0               # gate CENTER on (contextual - unigram) surprisal: higher => less often
+LOOKBACK=6                       # words of context to revisit on each rejuvenation event
+LOGPROB_THRESH=0.0               # gate CENTER on (contextual - unigram) surprisal: higher => less often
 LOGPROB_SPREAD=1.0               # surprisal-gate STEEPNESS
-REJUV_SWEEPS=2                   # MH sweeps over the lookback window per rejuvenation event
+REJUV_SWEEPS=5                   # MH sweeps over the lookback window per rejuvenation event
 NC_LM="${NC_LM:-EleutherAI/pythia-70m}"    # set NC_LM=EleutherAI/pythia-410m for the stronger LM
 
 # structured-output JSON for the interactive viewer (src/genjax_port/viz.py). Set OUTPUT_JSON="" to
@@ -51,7 +51,7 @@ NC_LM="$NC_LM" PYTHONPATH=. python -m src.genjax_port.run \
   --sentence "$SENTENCE" --particles "$PARTICLES" --max_dist "$MAX_DIST" \
   --max_deletions "$MAX_DELETIONS" --lookback "$LOOKBACK" \
   --logprob_thresh "$LOGPROB_THRESH" --logprob_spread "$LOGPROB_SPREAD" \
-  --rejuv_sweeps "$REJUV_SWEEPS" "${JSON_ARGS[@]}" \
+  --rejuv_sweeps "$REJUV_SWEEPS" "${JSON_ARGS[@]}" --conditional_rejuv \
   2>&1 | grep -vEi "warning|tqdm|fork|tokenizers|avoid using|explicitly set|sub-SMC|word/s"
 echo "runtime: ${SECONDS}s"
 [ -n "$OUTPUT_JSON" ] && echo "view: PYTHONPATH=. python -m src.genjax_port.viz $OUTPUT_JSON"

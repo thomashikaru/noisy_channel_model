@@ -1,6 +1,6 @@
 """The penzai LM wrapped as a genjax custom distribution (the genjax-native port's bedrock).
 
-This is the bridge proven by the de-risking spikes (see ``MIGRATION_PLAN.md`` §2/§4): the
+This is the bridge proven by the de-risking spikes (see ``planning/MIGRATION_PLAN.md`` §2/§4): the
 in-graph Pythia LM is exposed to genjax as an ``exact_density`` categorical distribution over
 the next BPE token. With it, the autoregressive intended-sentence generator becomes a plain
 ``@gen`` ``Scan`` model whose trace auto-records every token choice -- which is exactly the

@@ -1,11 +1,14 @@
 """Unified word-scan noisy-channel particle filter: copy / substitution / insertion / deletion
 in one model.
 
-This is the single filter the project runs, combining every operation:
+REFERENCE / oracle. This was the original hand-rolled filter and remains the regression oracle
+(it captured the golden targets and backs ``run.py --filter unified``). The production path is the
+genjax-native word-scan SMC in :mod:`smc_substitution` (``run.py --filter native``); see
+``planning/MIGRATION_PLAN.md``. It combines every operation:
 
 - **word-span substitution** (N:1, SymSpell candidates over the word string) -- fixes
   BPE-token-count typos ("experimemt"->"experiment") that the token-level filters can't;
-- the **lookahead deletion gap** and **insertion** (ported from ``particle_filter_lookahead``) --
+- the **lookahead deletion gap** and **insertion** (the lookahead deletion proposal, folded in here) --
   reconstructs omitted words ("he wants _ go"->"to") and drops spurious ones (doubled words).
 
 Per observed word w (a fixed span of n BPE tokens -- segmentation is deterministic data, so all
@@ -23,8 +26,8 @@ particles stay in lockstep):
 
 Then resample (every word). Scope: deletions/substitutions are N:1 (omitted/intended word is a
 single BPE token); multi-token intended words remain the deferred M:N extension. Dedup LM
-forwards are the default (exact, faster). This is intended to replace the per-filter prototypes;
-run.py points here.
+forwards are the default (exact, faster). It consolidated the earlier per-filter prototypes
+(token-level + lookahead, since removed) into this single reference oracle.
 """
 
 import math
@@ -37,10 +40,9 @@ from jax.scipy.special import logsumexp
 from . import lm_penzai as L
 from . import noise_word as NW
 from .tokenizer import decode
-from .particle_filter import (
-    ACTION_ALPHAS, MAX_DELETIONS, P_DELETE_PRIOR, P_DELETE_PROPOSAL,
+from .config import (
+    ACTION_ALPHAS, MAX_DELETIONS, P_DELETE_PRIOR, P_DELETE_PROPOSAL, LOOKAHEAD_K,
 )
-from .particle_filter_lookahead import LOOKAHEAD_K
 from .model import COPY, SUB, INSERT
 from .proposal import propose
 from .cache_dedup import make_dedup_fns

@@ -1,6 +1,6 @@
 """Spike 2 as a regression test: substitution noisy channel + native Rejuvenate reanalysis.
 
-Proves (MIGRATION_PLAN.md §2, "Spike 2"):
+Proves (planning/MIGRATION_PLAN.md §2, "Spike 2"):
   - a @gen noisy-channel model (x ~ LM, o ~ table-channel(x)) has a joint log-density that
     matches a manual computation (LM-independent identity);
   - native ``Rejuvenate`` performs the reanalysis flip -- a trace started at the LITERAL

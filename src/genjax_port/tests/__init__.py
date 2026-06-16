@@ -1,6 +1,6 @@
 """Tests for the genjax-native noisy-channel port.
 
-These are the de-risking spikes (MIGRATION_PLAN.md §2/§4) frozen as version-controlled
+These are the de-risking spikes (planning/MIGRATION_PLAN.md §2/§4) frozen as version-controlled
 regression tests, so the genjax API patterns the port depends on stay green. The repo has no
 pytest setup, so run them as scripts (fast with the small LM)::
 

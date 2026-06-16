@@ -36,10 +36,9 @@ from . import lm_penzai as L
 from . import noise_word as NW
 from .cache_dedup import make_dedup_fns
 from .tokenizer import decode
-from .particle_filter import (
-    ACTION_ALPHAS, MAX_DELETIONS, P_DELETE_PRIOR, P_DELETE_PROPOSAL,
+from .config import (
+    ACTION_ALPHAS, MAX_DELETIONS, P_DELETE_PRIOR, P_DELETE_PROPOSAL, LOOKAHEAD_K,
 )
-from .particle_filter_lookahead import LOOKAHEAD_K
 from .model import COPY, SUB, INSERT
 from .proposal import propose
 

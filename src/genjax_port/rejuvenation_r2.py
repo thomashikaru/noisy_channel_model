@@ -1,11 +1,20 @@
 """M5/R2: add/delete reversible-jump rejuvenation (trans-dimensional reanalysis).
 
+REFERENCE / oracle -- NOT on the production path. STRATEGIC PIVOT (2026-06-16): the forward filter
+already does add/delete (M2 deletion gap + M3 insertion), so add/delete *rejuvenation* adds little,
+and routing the move through the ``@gen`` trace cost W LM forwards per edit. Production rejuvenation
+is the MANUAL, flat-buffer, single-forward substitution move ``rejuv_bridge.manual_subflip_move`` /
+``run_smc_conditional_rejuv_aligned``; this ``@gen`` gap chain is kept as the correctness oracle
+(``MaskCombinator.edit`` gives the reversible-jump weight for free) that validates that math, and as
+the carrier should trans-dimensional rejuvenation ever be revived. See ``planning/R2_PLAN.md`` and the
+STRATEGIC PIVOT note in memory ``genjax-native-migration``.
+
 R1 (``rejuvenation.py``) flips a word's intended token at fixed word count. R2 changes the *length*
 of the intended sentence: ``add`` inserts an omitted intended word (reversing a deletion), ``delete``
 removes a posited one. This lets rejuvenation revise the *alignment* once later context arrives -- an
 omission the filtering sweep missed can be recovered. Ports Gen.jl's ``rejuv_proposal_add_delete`` +
 ``involution_add_delete`` (``src/gen_inference.jl``), proven correct by ``docs/model.tex`` §sec:moves
-(R2) and the keystone spike (``/tmp/genjax_spike6_maskflip.py``). See ``R2_PLAN.md``.
+(R2) and the keystone spike (``/tmp/genjax_spike6_maskflip.py``). See ``planning/R2_PLAN.md``.
 
 Representation (the crux): a **masked deletion-gap chain** that keeps the address set FIXED, so the
 trans-dimensional move is a fixed-address ``Update`` (and vmaps later). Per observed word ``t``:
@@ -39,8 +48,7 @@ from . import lm_penzai as L
 from .lm_genjax import lm_token, lm_logp
 from .genjax_model import obs_dist, token_candidates
 from .rejuvenation import cand_prop
-from .particle_filter import P_DELETE_PRIOR
-from .particle_filter_lookahead import LOOKAHEAD_K
+from .config import P_DELETE_PRIOR, LOOKAHEAD_K
 from genjax._src.generative_functions.static import StaticRequest
 from genjax.inference.requests import Rejuvenate
 

@@ -15,7 +15,7 @@ import jax.numpy as jnp
 
 from src.genjax_port import lm_penzai as L
 from src.genjax_port import noise_word as NW
-from src.genjax_port.particle_filter import ACTION_ALPHAS
+from src.genjax_port.config import ACTION_ALPHAS
 from src.genjax_port.tokenizer import encode, decode, surface
 from src.genjax_port.smc_substitution import run_smc_substitution, word_log_evidence
 from src.genjax_port.rejuvenation import make_chain_model
@@ -155,7 +155,7 @@ def test_dyn_step_matches_static():
     graph for every word instead of recompiling per position (~150s -> one ~35s compile)."""
     from src.genjax_port.rejuvenation_r2 import gap_chain_inputs, add_delete_step
     from src.genjax_port.rejuv_bridge import _dyn_step_fn, _materialize_fn, _gap_choices
-    from src.genjax_port.particle_filter import P_DELETE_PRIOR
+    from src.genjax_port.config import P_DELETE_PRIOR
     obs = encode(" he wants go home")
     W, P, k, pdel = 4, 6, 2, float(P_DELETE_PRIOR)
     _, obsl, buf0, ilen0, cxs, cls = gap_chain_inputs(obs)
@@ -182,7 +182,7 @@ def test_manual_subflip_detailed_balance():
     from jax.scipy.special import logsumexp
     from src.genjax_port.lm_genjax import lm_logp
     from src.genjax_port.rejuv_bridge import manual_subflip_move, _word_candidate_tables
-    from src.genjax_port.particle_filter import ACTION_ALPHAS
+    from src.genjax_port.config import ACTION_ALPHAS
     obs = list(encode(" he too"))
     words, _ = _single_token_words(jnp.asarray(obs))
     P, M = 48, 8

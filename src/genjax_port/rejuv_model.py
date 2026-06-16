@@ -1,5 +1,9 @@
 """Phase 2b: the masked chain model -- the fixed-shape carrier for trans-dimensional rejuvenation.
 
+REFERENCE / oracle -- NOT on the production path (see ``rejuvenation_r2`` for the full pivot note).
+This is the minimal channel-less precursor of the R2 carrier, kept for the future multi-token /
+substitution-as-slot generalization; production rejuvenation is the manual move in ``rejuv_bridge``.
+
 > RECONCILIATION NOTE (2026-06-15): this module is the **minimal, channel-less precursor** of the
 > R2 carrier. The R2 add/delete *move* (proposal, SMCP3 weight, MH, detailed balance) lives in
 > `rejuvenation_r2.py` on `make_gap_chain`, which is exactly this masked-AR pattern **augmented with
@@ -8,7 +12,7 @@
 > batches the forward -- the property this module's `_vmaps_over_particles` test foreshadowed but with
 > only a *shared* mask pattern). Keep this module as the clean uniform-`present`-slot abstraction
 > (useful for the future multi-token-word / substitution-as-slot generalization); do NOT build a
-> third masked chain. See `R2_PLAN.md`.
+> third masked chain. See `planning/R2_PLAN.md`.
 
 R2 (add/delete, multi-token sub) changes the number of intended tokens per particle, which a real
 dimension change can't `vmap`. Phase 2a proved the lever: emulate it with a FIXED-shape MASKED trace
