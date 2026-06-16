@@ -1,5 +1,15 @@
 # R2 — add/delete reversible-jump rejuvenation (design + build plan)
 
+> **STATUS / DIRECTION (2026-06-16): DEPRIORITIZED as a production feature.** Decided with the user:
+> the forward filter already does add/delete (M2 deletion gap + M3 insertion), so add/delete
+> *reanalysis* adds little, and routing moves through the `@gen` trace caused both the speed and the
+> alignment problems. The chosen production path instead is **forward sub+del+ins + interleaved MANUAL
+> surprisal-gated *substitution* rejuvenation** (`rejuv_bridge.run_smc_conditional_rejuv_aligned`,
+> commit `6d6e357`) — see the migration memory's "STRATEGIC PIVOT" section. Everything below
+> (`rejuvenation_r2.py`, the `@gen` gap-chain, `run_smc_add_delete`) still WORKS and is validated, but
+> is now **reference/oracle**, not the live path. Revive only if add/delete reanalysis proves needed —
+> and if so, score it MANUALLY (one forward), not via the `@gen` edit.
+
 > Picks up from `MIGRATION_PLAN.md` (M5/R1 done; R2 is NEXT) and `REJUVENATION_PLAN.md` §6.2/§11
 > and `docs/model.tex` §`sec:moves` (R2 paragraph). R1 (`rejuvenation.py`) is the template: a
 > standalone, non-vmapped, unrolled per-word chain validated by detailed balance, *then* a vectorized
