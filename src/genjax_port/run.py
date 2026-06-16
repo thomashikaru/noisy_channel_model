@@ -114,7 +114,35 @@ def main():
         "trans-dimensional MH pass that inserts omitted / removes spurious words using full-sentence "
         "context. v1: single-token words; multi-token sentences fall back to the native filter.",
     )
+    parser.add_argument(
+        "--output_json",
+        default=None,
+        metavar="PATH",
+        help="[native] write a structured JSON artifact of the run (per-word surprisal / unigram "
+        "surprisal / gate fire-prob / step ESS, the top-K inferred-prefix distribution per word, the "
+        "final posterior, and -- with --conditional_rejuv -- a per-(event,word) rejuvenation log) to "
+        "PATH. Off by default (zero change to the fast path). Supported for --filter native, with or "
+        "without --conditional_rejuv.",
+    )
+    parser.add_argument(
+        "--json_topk",
+        type=int,
+        default=5,
+        help="[native] K for the per-word inferred-prefix distribution and the final posterior in "
+        "--output_json.",
+    )
     args = parser.parse_args()
+
+    # Structured-output accumulator (filled in by the two supported native paths; see --output_json).
+    record = None
+    if args.output_json:
+        if args.filter == "native" and not (args.add_delete or args.rejuvenate):
+            record = {"words": [], "rejuv_events": []}
+        else:
+            print(
+                "warning: --output_json is only supported for --filter native (optionally with "
+                "--conditional_rejuv); ignoring it for this run."
+            )
 
     obs = encode(args.sentence)
     key = jax.random.key(args.seed)
@@ -138,6 +166,8 @@ def main():
             max_deletions=args.max_deletions,
             allow_insertion=not args.no_insertion,
             dedup=not args.no_dedup,
+            record=record,
+            record_topk=args.json_topk,
             progress=True,
         )
     elif args.filter == "native" and args.add_delete:
@@ -185,6 +215,8 @@ def main():
             max_deletions=args.max_deletions,
             allow_insertion=not args.no_insertion,
             dedup=not args.no_dedup,
+            record=record,
+            record_topk=args.json_topk,
             progress=True,
         )
     else:
@@ -209,6 +241,41 @@ def main():
     for sent, count, frac in summarize(sentences, top_k=args.top_k):
         marker = "  <- matches observed" if sent == norm_observed else ""
         print(f"  {frac:5.1%}  ({count:>3d})  {sent}{marker}")
+
+    if record is not None:
+        import json
+
+        from . import lm_penzai as L
+        from .unigram import unigram_surprisal
+
+        # Merge the deterministic per-word unigram surprisal (the gate's baseline) and, when the
+        # rejuvenation hook ran, each event's gate fire-probability into the per-word records.
+        for wrec in record["words"]:
+            wrec["unigram_surprisal"] = unigram_surprisal(wrec["word"])
+        for ev in record["rejuv_events"]:
+            record["words"][ev["t"]]["gate_p"] = ev["gate_p"]
+        out = {
+            "observed": args.sentence,
+            "config": {
+                "lm": L.MODEL_NAME, "particles": args.particles, "max_dist": args.max_dist,
+                "max_deletions": args.max_deletions, "allow_insertion": not args.no_insertion,
+                "conditional_rejuv": args.conditional_rejuv, "lookback": args.lookback,
+                "logprob_thresh": args.logprob_thresh, "logprob_spread": args.logprob_spread,
+                "n_sweeps": args.rejuv_sweeps, "seed": args.seed, "json_topk": args.json_topk,
+                # counts == posterior probs only because we resample every word (uniform weights).
+                "counts_are_probs": True,
+            },
+            "log_marginal": log_marginal,
+            "min_ess": min_ess,
+            "accept_rate": accept_rate,
+            "posterior": [[s, c, f] for s, c, f in summarize(sentences, top_k=args.json_topk)],
+            "words": record["words"],
+        }
+        if record["rejuv_events"]:        # omit entirely for forward-only runs (no hook fired)
+            out["rejuv_events"] = record["rejuv_events"]
+        with open(args.output_json, "w") as fh:
+            json.dump(out, fh, indent=2)
+        print(f"\nwrote {args.output_json}")
 
 
 if __name__ == "__main__":

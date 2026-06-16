@@ -17,7 +17,7 @@
 #           ./run_example_native.sh 64 3
 
 # ---- edit these ----
-SENTENCE="The little boy licked the ball into the net."      # licked->kicked (sub) + omitted 'the' x2 (deletion recovers them)
+SENTENCE="The little boy licked the big round ball into the net."      # licked->kicked (sub) + omitted 'the' x2 (deletion recovers them)
 PARTICLES="${1:-64}"             # number of SMC particles
 MAX_DIST="${2:-2}"               # max char edit distance for word-substitution candidates (SymSpell)
 MAX_DELETIONS=1                  # forward omitted-word reconstructions per gap (0 disables deletion)
@@ -28,6 +28,13 @@ LOGPROB_THRESH=3.0               # gate CENTER on (contextual - unigram) surpris
 LOGPROB_SPREAD=1.0               # surprisal-gate STEEPNESS
 REJUV_SWEEPS=2                   # MH sweeps over the lookback window per rejuvenation event
 NC_LM="${NC_LM:-EleutherAI/pythia-70m}"    # set NC_LM=EleutherAI/pythia-410m for the stronger LM
+
+# structured-output JSON for the interactive viewer (src/genjax_port/viz.py). Set OUTPUT_JSON="" to
+# skip. It records per-word surprisal, the top-K inferred-prefix distribution at each step, and (with
+# --conditional_rejuv) a per-(event,word) rejuvenation log. View with:
+#   PYTHONPATH=. python -m src.genjax_port.viz "$OUTPUT_JSON"
+OUTPUT_JSON="${OUTPUT_JSON:-run_native.json}"
+JSON_TOPK=8                       # hypotheses kept per step + in the final posterior
 # --------------------
 
 cd "$(dirname "$0")"
@@ -35,12 +42,16 @@ source /Users/thomasclark/miniforge3_arm/etc/profile.d/conda.sh
 conda activate ncgenjax
 export TOKENIZERS_PARALLELISM=false
 
+JSON_ARGS=()
+[ -n "$OUTPUT_JSON" ] && JSON_ARGS=(--output_json "$OUTPUT_JSON" --json_topk "$JSON_TOPK")
+
 SECONDS=0
 NC_LM="$NC_LM" PYTHONPATH=. python -m src.genjax_port.run \
   --filter native \
   --sentence "$SENTENCE" --particles "$PARTICLES" --max_dist "$MAX_DIST" \
   --max_deletions "$MAX_DELETIONS" --lookback "$LOOKBACK" \
   --logprob_thresh "$LOGPROB_THRESH" --logprob_spread "$LOGPROB_SPREAD" \
-  --rejuv_sweeps "$REJUV_SWEEPS" \
+  --rejuv_sweeps "$REJUV_SWEEPS" "${JSON_ARGS[@]}" \
   2>&1 | grep -vEi "warning|tqdm|fork|tokenizers|avoid using|explicitly set|sub-SMC|word/s"
 echo "runtime: ${SECONDS}s"
+[ -n "$OUTPUT_JSON" ] && echo "view: PYTHONPATH=. python -m src.genjax_port.viz $OUTPUT_JSON"

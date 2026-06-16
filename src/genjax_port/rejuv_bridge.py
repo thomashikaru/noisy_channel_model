@@ -475,7 +475,10 @@ def _aligned_window_move_fn(nwin, n_sweeps):
     :func:`vmapped_window_move`, but on the flat ``[P, M]`` buffer with per-particle positions).
 
     Returns ``fn(key, buf[P,M], i_len[P], pos_win[P,nwin], cand_x_win[nwin,K], cand_l_win[P,nwin,K],
-    gate[P]) -> (key, buf[P,M], accepts[P])`` where ``accepts`` counts accepted moves per particle.
+    gate[P]) -> (key, buf[P,M], accepts[nwin])`` where ``accepts[j]`` counts accepted moves at window
+    column ``j`` summed over gated particles and sweeps (so ``sum(accepts)`` is the total accepted
+    moves, the quantity the aggregate accept-rate uses, and the per-column breakdown feeds the
+    structured ``rejuv_events`` log; column ``j`` corresponds to the caller's ``win[j]``).
     The ``n_sweeps x nwin`` single sub-flips run as ONE compiled graph (static unrolled loop), so the
     old per-word Python loop -- whose ~2 un-fused eager forwards per move made the path exec-bound --
     is gone; XLA fuses the gathers and the suffix re-score across the window. Columns of
@@ -483,15 +486,14 @@ def _aligned_window_move_fn(nwin, n_sweeps):
     ``key`` is split per move and returned, exactly replicating the old per-word loop's RNG stream (so
     this is a pure perf change). One compile per distinct ``(nwin, n_sweeps)`` (K folded in via shapes)."""
     def body(key, buf, i_len, pos_win, cand_x_win, cand_l_win, gate):
-        P = buf.shape[0]
-        acc_tot = jnp.zeros((P,), jnp.int32)
+        accs = jnp.zeros((nwin,), jnp.int32)
         for _ in range(n_sweeps):
             for j in range(nwin):
                 key, mk = jax.random.split(key)
                 buf, acc = manual_subflip_move(
                     mk, buf, i_len, pos_win[:, j], cand_x_win[j], cand_l_win[:, j], gate)
-                acc_tot = acc_tot + acc.astype(jnp.int32)
-        return key, buf, acc_tot
+                accs = accs.at[j].add(jnp.sum(jnp.where(gate, acc, 0)))
+        return key, buf, accs
 
     return jax.jit(body)
 
@@ -588,13 +590,16 @@ def run_smc_conditional_rejuv(key, obs_ids, num_particles=64, max_dist=2, lookba
 # machinery is needed -- the add/delete capability lives entirely in the forward filter. Multi-token
 # words are simply skipped by the rejuvenation (the forward filter still handles them).
 
-def _make_aligned_subflip_hook(words, max_dist, lookback, center, spread, n_sweeps, order, stats):
+def _make_aligned_subflip_hook(words, max_dist, lookback, center, spread, n_sweeps, order, stats,
+                               record=None):
     """``post_resample_hook`` running surprisal-gated manual sub-flips over a lookback window, using
     the per-particle ``align`` to locate each (single-token) observed word's token in the buffer.
 
     The gate fires on contextual surprisal *minus* the word's unigram surprisal (Gen.jl), so a
     legitimately-rare literal is not reanalysed just for being rare -- only words more surprising in
-    context than their base rate predicts."""
+    context than their base rate predicts. When ``record`` is given, each firing event appends one
+    ``record["rejuv_events"]`` entry with the gate fire-prob, the count of gated particles, and the
+    per-target-word attempts/accepts (the structured ``--output_json`` rejuvenation log)."""
     single = [len(span) == 1 for span, _ in words]
     # Gate on contextual surprisal RELATIVE to the word's unigram surprisal (Gen.jl): fire only when
     # a word is more surprising in context than its base rate predicts. Per-word scalar, precomputed.
@@ -616,10 +621,18 @@ def _make_aligned_subflip_hook(words, max_dist, lookback, center, spread, n_swee
         cand_xs, cand_ls = _word_candidate_tables(words, lap, max_dist)    # [W,K], [P,W,K]
         win_idx = jnp.asarray(win, jnp.int32)
         fn = _aligned_window_move_fn(len(win), n_sweeps)
-        key, intended_buf, acc_tot = fn(key, intended_buf, i_len, align[:, win_idx],
-                                        cand_xs[win_idx], cand_ls[:, win_idx], gate)
-        stats["accepts"] += int(jnp.sum(jnp.where(gate, acc_tot, 0)))
-        stats["attempts"] += int(jnp.sum(gate)) * n_sweeps * len(win)
+        key, intended_buf, accs = fn(key, intended_buf, i_len, align[:, win_idx],
+                                     cand_xs[win_idx], cand_ls[:, win_idx], gate)
+        accs = np.asarray(accs)                                            # accs[j] <-> win[j]
+        n_gate = int(jnp.sum(gate))
+        stats["accepts"] += int(accs.sum())
+        stats["attempts"] += n_gate * n_sweeps * len(win)
+        if record is not None:
+            record["rejuv_events"].append({
+                "t": t, "gate_p": float(p_fire), "fired_particles": n_gate,
+                "targets": [{"word": int(win[j]), "attempts": n_gate * n_sweeps,
+                             "accepts": int(accs[j])} for j in range(len(win))],
+            })
         return key, intended_buf
 
     return hook
@@ -628,7 +641,7 @@ def _make_aligned_subflip_hook(words, max_dist, lookback, center, spread, n_swee
 def run_smc_conditional_rejuv_aligned(key, obs_ids, num_particles=64, max_dist=2, lookback=2,
                                       logprob_thresh=0.0, logprob_spread=1.0, n_sweeps=1,
                                       order="BACKWARD", max_deletions=MAX_DELETIONS,
-                                      allow_insertion=True, **kw):
+                                      allow_insertion=True, record=None, record_topk=5, **kw):
     """Forward filter with substitution + add/delete, plus interleaved surprisal-gated SUBSTITUTION
     rejuvenation (alignment-robust, vectorized over particles).
 
@@ -638,13 +651,16 @@ def run_smc_conditional_rejuv_aligned(key, obs_ids, num_particles=64, max_dist=2
     substitution-only (shape-preserving) -- add/delete reanalysis is intentionally not done here; that
     capability is the forward filter's. Works on any sentence (multi-token words are handled by the
     forward filter and skipped by the rejuvenation). Returns
-    ``(sentences, log_marginal, min_ess, accept_rate)``. ``**kw`` flows to ``run_smc_substitution``."""
+    ``(sentences, log_marginal, min_ess, accept_rate)``. ``**kw`` flows to ``run_smc_substitution``.
+    ``record`` (default ``None``): when given, fills per-word diagnostics (via ``run_smc_substitution``)
+    and one ``rejuv_events`` entry per firing event for the ``--output_json`` artifact."""
     words = NW.segment_words([int(i) for i in obs_ids])
     stats = {"accepts": 0, "attempts": 0}
     hook = _make_aligned_subflip_hook(words, max_dist, lookback, logprob_thresh, logprob_spread,
-                                      n_sweeps, order, stats)
+                                      n_sweeps, order, stats, record=record)
     sentences, log_marginal, min_ess = run_smc_substitution(
         key, obs_ids, num_particles=num_particles, max_dist=max_dist,
-        max_deletions=max_deletions, allow_insertion=allow_insertion, post_resample_hook=hook, **kw)
+        max_deletions=max_deletions, allow_insertion=allow_insertion, post_resample_hook=hook,
+        record=record, record_topk=record_topk, **kw)
     rate = stats["accepts"] / stats["attempts"] if stats["attempts"] else 0.0
     return sentences, log_marginal, min_ess, rate

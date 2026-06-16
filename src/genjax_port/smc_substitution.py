@@ -25,6 +25,7 @@ hand-rolled unified filter.
 """
 
 import math
+from collections import Counter
 
 import numpy as np
 import jax
@@ -126,7 +127,7 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
                          max_dist=2, max_deletions=0, allow_insertion=False,
                          lookahead_k=LOOKAHEAD_K, p_delete_prior=P_DELETE_PRIOR, progress=False,
                          dedup=True, dedup_stats=None, return_state=False,
-                         post_resample_hook=None,
+                         post_resample_hook=None, record=None, record_topk=5,
                          next_logprobs_fn=None, next_logits_fn=None):
     """Word-scan SMC (substitution + optional deletion gap + optional insertion).
 
@@ -145,6 +146,14 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
     deletion-lookahead batch). Pass a ``cache_dedup.DedupStats()`` as ``dedup_stats`` to measure the
     saved fraction. An explicitly injected ``next_logprobs_fn`` / ``next_logits_fn`` overrides dedup
     for that seam (a caller-supplied stub LM is used as-is).
+
+    ``record`` (default ``None`` => zero overhead, default fast path untouched): a dict to fill with
+    structured per-word diagnostics for the ``--output_json`` feature. When given, after each observed
+    word it appends to ``record["words"]`` a dict ``{index, word, surprisal, step_min_ess,
+    prefix_topk, prefix_residual_count}`` -- the word's particle-filter surprisal (``-step_lmw``), that
+    step's ESS, and the ``record_topk`` most-common decoded intended-prefixes across particles (with a
+    residual count for the dropped tail). Recorded POST-hook, so it reflects rejuvenation's effect.
+    Decoding ``P`` prefixes per word is a real device->host pull; keep it behind the flag.
     """
     if dedup and (next_logprobs_fn is None or next_logits_fn is None):
         _dd_lp, _dd_lo = make_dedup_fns(dedup_stats)
@@ -213,7 +222,8 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
         log_w = log_w + log_w_gap
         step_lmw = float(logsumexp(log_w) - jnp.log(P))   # log mean weight = word's log-evidence
         log_marginal += step_lmw
-        min_ess = min(min_ess, float(1.0 / jnp.sum(jax.nn.softmax(log_w) ** 2)))
+        step_ess = float(1.0 / jnp.sum(jax.nn.softmax(log_w) ** 2))
+        min_ess = min(min_ess, step_ess)
 
         parents = jax.random.categorical(resample_key, log_w - logsumexp(log_w), shape=(P,))
         intended_buf = intended_buf[parents]
@@ -251,6 +261,20 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
         if post_resample_hook is not None:
             key, intended_buf = post_resample_hook(
                 wi, key, intended_buf, i_len, align, log_action_prior, -step_lmw)
+
+        # Structured-output recording (POST-hook: the distribution the filter carries forward). Decodes
+        # P prefixes -- a host pull -- so it runs only when a record dict was supplied (--output_json).
+        if record is not None:
+            i_len_h = np.asarray(i_len)
+            buf_h = np.asarray(intended_buf)
+            prefixes = [decode(buf_h[p, 1:int(i_len_h[p])]).strip() for p in range(P)]
+            topk = Counter(prefixes).most_common(record_topk)
+            record["words"].append({
+                "index": wi, "word": word_str, "surprisal": -step_lmw,
+                "step_min_ess": step_ess,
+                "prefix_topk": [[s, c] for s, c in topk],
+                "prefix_residual_count": P - sum(c for _, c in topk),
+            })
 
     sentences = [decode(intended_buf[p, 1:int(i_len[p])]).strip() for p in range(P)]
     if return_state:
