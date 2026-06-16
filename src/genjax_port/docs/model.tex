@@ -492,6 +492,23 @@ tokens are discrete and regenerated (not a continuous reparametrization), the Ja
 extra term enters \eqref{eq:smcp3}; correctness is Theorem~\ref{thm:mh} with $\mathcal B$ the changed
 addresses plus the move-type auxiliary.
 
+This move is implemented in \code{rejuvenation\_r2.py} on a \emph{masked deletion-gap} chain
+(addresses $\code{del}_t,\ \code{gap}_t/\code{xd},\ x_t,\ o_t$): each gap is a
+$\code{mask}(\pLM)$ slot whose boolean $\code{del}_t$ is the trans-dimensional coordinate, so the
+move is a \emph{fixed-address} \code{Update} (the address set never changes — variable length is
+absorbed into the mask). Crucially genjax's \code{MaskCombinator} supplies the reversible-jump
+birth/death weight for free: flipping $\code{del}_k$ \textsf{false}$\to$\textsf{true} reports
+$w_{\mathrm{upd}}$ equal to the born slot's full score (Bernoulli del-prior $+\ \pLM(\text{omitted})\ +$
+the automatic suffix re-score), and \textsf{true}$\to$\textsf{false} reports its negation, round-tripping
+exactly. Unlike R1 the move does \emph{not} use a single-proposal \code{Rejuvenate} (the forward add
+draws a token, the backward delete draws none — asymmetric supports); the SMCP3 weight
+\eqref{eq:smcp3} is assembled directly, with $Q$ the LM-lookahead omitted-token proposal of
+\eqref{eq:proposal}. Validation (\code{tests/test\_rejuvenation\_r2.py}, pythia-70m): a literal
+``he wants \_\ go home'' (the word ``to'' omitted) is repaired ``to''-inserted by an add sweep;
+the add weight grows with the disambiguating suffix; and on a one-gap toy the MH stationary histogram
+matches the enumerated exact posterior over the reachable states to $\le 10^{-2}$ — Theorem~\ref{thm:mh}
+for the trans-dimensional move. (Vectorization over particles is future work, \code{R2\_PLAN.md}.)
+
 \paragraph{R3 — surprisal-gated scheduling.} The \emph{choice of whether/where} to rejuvenate (a
 surprisal-conditioned trigger over a lookback window, ported from \code{gen\_inference.jl}) is part of
 the kernel \emph{schedule}, not the target. Any data-dependent but state-independent schedule of

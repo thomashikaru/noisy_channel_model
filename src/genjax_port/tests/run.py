@@ -15,6 +15,7 @@ from src.genjax_port.tests import test_smc_substitution as t4
 from src.genjax_port.tests import test_rejuvenation as t5
 from src.genjax_port.tests import test_rejuv_bridge as t6
 from src.genjax_port.tests import test_rejuv_model as t7
+from src.genjax_port.tests import test_rejuvenation_r2 as t8
 
 
 def _tests(module):
@@ -24,7 +25,7 @@ def _tests(module):
 def main():
     L.load_model()
     failures = 0
-    for module in (t1, t2, t3, t4, t5, t6, t7):
+    for module in (t1, t2, t3, t4, t5, t6, t7, t8):
         for name, fn in _tests(module):
             try:
                 fn()

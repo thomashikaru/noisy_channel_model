@@ -262,8 +262,21 @@ Runtime: with bucketing the 6-sentence suite is one compile + warm execs (see la
   empirically). Gotcha (cost time): a `Rejuvenate` `argument_mapping` sees only the LOCAL sub-trace
   at the edited address, so the position-k context must be rebuilt from the full trace + closed over.
   Spike at `/tmp/genjax_spike4_rejuv.py`. Doc §4.4 updated.
-- R2: **add/delete** reversible-jump rejuvenation move. *(NEXT — trans-dimensional: changes word
-  count; needs the multi-token Switch flip + RJ reverse-move bookkeeping.)*
+- R2: **add/delete** reversible-jump rejuvenation move. **✅ DONE (standalone, 2026-06-15)** —
+  `rejuvenation_r2.py` (`make_gap_chain`, `add_delete_step`/`_sweep`) on a **masked deletion-gap
+  chain** (addresses `del{t}`, `gap{t}/xd`, `x{t}`, `o{t}`): each gap is a `genjax.mask(lm_token)`
+  whose `del{t}` flip is the trans-dimensional move. **Keystone (spike 6, `/tmp/genjax_spike6_maskflip.py`):**
+  `MaskCombinator.edit` supplies the reversible-jump birth/death weight for free — flipping `del{k}`
+  via `Update` gives `w_upd` == exact `log p(t')/p(t)` (Bernoulli del-prior + LM(omitted) + automatic
+  suffix re-score; Jacobian unity), and delete == −add (round-trips bit-exactly). Unlike R1 it does
+  NOT use `Rejuvenate` (forward=add draws a token, backward=delete draws none → asymmetric proposals);
+  the SMCP3 weight `W = w_upd + s_bwd − s_fwd` is assembled by hand, proposal = the LM-lookahead
+  omitted-token `q` (mirrors `smc_substitution.deletion_gap`). `tests/test_rejuvenation_r2.py`
+  (pythia-70m): reanalysis (add recovers omitted "to" → "he wants to go home"), suffix-participates,
+  **detailed balance** (add/delete MH histogram == enumerated exact posterior ≤0.07). Design +
+  remaining vectorization in `R2_PLAN.md`. **NEXT for R2:** Phase 2 — vmap the move over particles +
+  interleave into the sweep (`VECTORIZED_REJUV_PLAN.md`); the masked fixed-address rep keeps the
+  batched trace rectangular. *(Multi-token-word add/delete still future, as with R1.)*
 - R3: **surprisal-conditioned trigger** + tunable lookback. **✅ DONE for substitution (2026-06-15)**
   — see the bridge below; R3's add/delete needs R2.
 Gate (R1): a sentence the filtering sweep gets wrong (early commitment) is fixed by rejuvenation — MET.
