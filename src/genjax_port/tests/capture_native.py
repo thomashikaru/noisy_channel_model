@@ -5,6 +5,11 @@ Uses the native word-scan SMC (substitution + deletion + insertion) at a single 
 beside the golden (``golden_targets.json``, from the hand-rolled unified filter). Golden targets
 are soft idealized behaviors, not bit-parity -- the gate is matching behavior within MC noise.
 
+``golden_targets.json`` is a **410m reference** artifact (captured by ``capture_golden.py``). The
+default LM is now 70m, so run this with ``NC_LM=EleutherAI/pythia-410m`` to compare like-for-like;
+on 70m the posteriors legitimately differ (70m mangles short words) and the comparison is only
+illustrative.
+
     NC_LM=EleutherAI/pythia-410m PYTHONPATH=. python -m src.genjax_port.tests.capture_native
 """
 

@@ -6,6 +6,10 @@ binary correctness checks** -- M1's native filter should reproduce them within M
 noise, not bit-for-bit. The recorded ``ideal`` field is the human intuition for each case; the
 ``posterior`` field is what the hand-rolled filter actually produced at this seed/P.
 
+The committed ``golden_targets.json`` is a **410m reference** (the LM the migration was validated
+against), even though the default LM is now 70m -- it is kept as a fixed reference rather than
+re-baselined to the weaker default. Pass ``NC_LM=EleutherAI/pythia-410m`` to reproduce it.
+
     NC_LM=EleutherAI/pythia-410m PYTHONPATH=. python -m src.genjax_port.tests.capture_golden
 """
 

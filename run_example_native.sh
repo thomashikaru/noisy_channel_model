@@ -17,14 +17,14 @@
 #           ./run_example_native.sh 64 3
 
 # ---- edit these ----
-SENTENCE="The little boy licked ball into net."      # 'to' omitted before 'go' (forward deletion recovers it)
+SENTENCE="The little boy licked the ball into the net."      # licked->kicked (sub) + omitted 'the' x2 (deletion recovers them)
 PARTICLES="${1:-64}"             # number of SMC particles
 MAX_DIST="${2:-2}"               # max char edit distance for word-substitution candidates (SymSpell)
 MAX_DELETIONS=1                  # forward omitted-word reconstructions per gap (0 disables deletion)
 
 # interleaved substitution rejuvenation (surprisal-gated, vectorized over particles)
-LOOKBACK=4                       # words of context to revisit on each rejuvenation event
-LOGPROB_THRESH=4.0               # surprisal-gate CENTER: higher => rejuvenate less often
+LOOKBACK=2                       # words of context to revisit on each rejuvenation event
+LOGPROB_THRESH=3.0               # gate CENTER on (contextual - unigram) surprisal: higher => less often
 LOGPROB_SPREAD=1.0               # surprisal-gate STEEPNESS
 REJUV_SWEEPS=2                   # MH sweeps over the lookback window per rejuvenation event
 NC_LM="${NC_LM:-EleutherAI/pythia-70m}"    # set NC_LM=EleutherAI/pythia-410m for the stronger LM
@@ -37,7 +37,7 @@ export TOKENIZERS_PARALLELISM=false
 
 SECONDS=0
 NC_LM="$NC_LM" PYTHONPATH=. python -m src.genjax_port.run \
-  --filter native --conditional_rejuv \
+  --filter native \
   --sentence "$SENTENCE" --particles "$PARTICLES" --max_dist "$MAX_DIST" \
   --max_deletions "$MAX_DELETIONS" --lookback "$LOOKBACK" \
   --logprob_thresh "$LOGPROB_THRESH" --logprob_spread "$LOGPROB_SPREAD" \

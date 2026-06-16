@@ -22,11 +22,13 @@ import os
 import jax
 import jax.numpy as jnp
 
-# Default LM. Override with NC_LM, e.g. NC_LM=EleutherAI/pythia-70m for the smaller/faster
-# model. All Pythia sizes share the GPT-NeoX arch + tokenizer (vocab 50304, tokenizer len
-# 50277), so swapping sizes needs no other code changes. A sharper LM gives a steeper
-# plausibility gradient so edits track real corruptions (LM quality is the dominant lever).
-MODEL_NAME = os.environ.get("NC_LM", "EleutherAI/pythia-410m")
+# Default LM. pythia-70m is the default: it already shows reasonable correctness/behavior and
+# is ~6x cheaper than 410m, so it is the baseline LM for all runs. Override with NC_LM, e.g.
+# NC_LM=EleutherAI/pythia-410m for the larger/sharper model. All Pythia sizes share the GPT-NeoX
+# arch + tokenizer (vocab 50304, tokenizer len 50277), so swapping sizes needs no other code
+# changes. A sharper LM gives a steeper plausibility gradient so edits track real corruptions
+# (LM quality is the dominant lever).
+MODEL_NAME = os.environ.get("NC_LM", "EleutherAI/pythia-70m")
 EOS_ID = 0  # GPT-NeoX <|endoftext|>, used as BOS seed and padding
 
 _model = None  # cached penzai TransformerLM

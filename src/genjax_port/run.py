@@ -90,14 +90,16 @@ def main():
     parser.add_argument(
         "--lookback",
         type=int,
-        default=4,
+        default=2,
         help="[native] lookback window (words) for --conditional_rejuv reanalysis.",
     )
     parser.add_argument(
         "--logprob_thresh",
         type=float,
-        default=5.0,
-        help="[native] surprisal gate center for --conditional_rejuv (higher => rejuvenate less).",
+        default=0.0,
+        help="[native] gate center on (contextual - unigram) surprisal for --conditional_rejuv "
+        "(higher => rejuvenate less; 0 fires when a word is more surprising in context than its "
+        "base rate).",
     )
     parser.add_argument(
         "--logprob_spread",

@@ -49,6 +49,7 @@ from jax.scipy.special import logsumexp
 
 from . import lm_penzai as L
 from . import noise_word as NW
+from .unigram import unigram_surprisal
 from .tokenizer import decode
 from .lm_genjax import lm_logp
 from .model import COPY, SUB
@@ -468,6 +469,33 @@ def manual_subflip_move(key, buf, i_len, pos, cand_x, cand_l, gate):
     return buf, accept
 
 
+@functools.lru_cache(maxsize=None)
+def _aligned_window_move_fn(nwin, n_sweeps):
+    """Cached jitted fused windowed manual sub-flip move (the alignment-robust analog of
+    :func:`vmapped_window_move`, but on the flat ``[P, M]`` buffer with per-particle positions).
+
+    Returns ``fn(key, buf[P,M], i_len[P], pos_win[P,nwin], cand_x_win[nwin,K], cand_l_win[P,nwin,K],
+    gate[P]) -> (key, buf[P,M], accepts[P])`` where ``accepts`` counts accepted moves per particle.
+    The ``n_sweeps x nwin`` single sub-flips run as ONE compiled graph (static unrolled loop), so the
+    old per-word Python loop -- whose ~2 un-fused eager forwards per move made the path exec-bound --
+    is gone; XLA fuses the gathers and the suffix re-score across the window. Columns of
+    ``pos_win``/``cand_*_win`` are pre-ordered in sweep order, so the ``range(nwin)`` walk is in order.
+    ``key`` is split per move and returned, exactly replicating the old per-word loop's RNG stream (so
+    this is a pure perf change). One compile per distinct ``(nwin, n_sweeps)`` (K folded in via shapes)."""
+    def body(key, buf, i_len, pos_win, cand_x_win, cand_l_win, gate):
+        P = buf.shape[0]
+        acc_tot = jnp.zeros((P,), jnp.int32)
+        for _ in range(n_sweeps):
+            for j in range(nwin):
+                key, mk = jax.random.split(key)
+                buf, acc = manual_subflip_move(
+                    mk, buf, i_len, pos_win[:, j], cand_x_win[j], cand_l_win[:, j], gate)
+                acc_tot = acc_tot + acc.astype(jnp.int32)
+        return key, buf, acc_tot
+
+    return jax.jit(body)
+
+
 def custom_sigmoid(x, center, spread):
     """Gate probability ``sigmoid(spread * (x - center))`` (matches ``gen_inference.jl`` custom_sigmoid).
 
@@ -483,13 +511,18 @@ def custom_sigmoid(x, center, spread):
 def _make_rejuv_hook(words, obs, cand_xs, max_dist, lookback, center, spread, n_sweeps, order, stats):
     """Build the ``post_resample_hook`` for interleaved conditional rejuvenation.
 
-    Per word ``t``: a per-particle Bernoulli gate (prob ``custom_sigmoid(surprisal, ...)``) selects
-    which particles attempt a windowed move over ``[t-lookback, t]``; gated-out / MH-rejected
-    particles are unchanged. Accumulates accept stats into ``stats``.
+    Per word ``t``: a per-particle Bernoulli gate (prob
+    ``custom_sigmoid(surprisal - unigram_surp[t], ...)``) selects which particles attempt a windowed
+    move over ``[t-lookback, t]``; gated-out / MH-rejected particles are unchanged. The gate input is
+    contextual surprisal minus the word's unigram surprisal, so it fires on words that are more
+    surprising in context than out of it, not on merely rare words. Accumulates accept stats into
+    ``stats``.
     """
+    unigram_surp = [unigram_surprisal(surf) for _, surf in words]  # unigram-relative gate (Gen.jl)
+
     def hook(t, key, intended_buf, i_len, align, lap, surprisal):  # align unused (sub-only-forward v1)
         P, M = int(intended_buf.shape[0]), int(intended_buf.shape[1])
-        p_fire = custom_sigmoid(surprisal, center, spread)
+        p_fire = custom_sigmoid(surprisal - unigram_surp[t], center, spread)
         key, gk = jax.random.split(key)
         gate = jax.random.uniform(gk, (P,)) < p_fire
         n_gate = int(jnp.sum(gate))
@@ -516,13 +549,14 @@ def _make_rejuv_hook(words, obs, cand_xs, max_dist, lookback, center, spread, n_
     return hook
 
 
-def run_smc_conditional_rejuv(key, obs_ids, num_particles=64, max_dist=2, lookback=4,
-                              logprob_thresh=5.0, logprob_spread=1.0, n_sweeps=1,
+def run_smc_conditional_rejuv(key, obs_ids, num_particles=64, max_dist=2, lookback=2,
+                              logprob_thresh=0.0, logprob_spread=1.0, n_sweeps=1,
                               order="BACKWARD", **kw):
     """Filtering sweep with interleaved, surprisal-gated rejuvenation (the real SMC rejuvenation).
 
     After each word's resample, particles whose Bernoulli gate fires (prob rising with the word's
-    surprisal via ``custom_sigmoid(surprisal, logprob_thresh, logprob_spread)``) run a windowed MH
+    unigram-relative surprisal via
+    ``custom_sigmoid(surprisal - unigram_surp, logprob_thresh, logprob_spread)``) run a windowed MH
     reanalysis over the last ``lookback`` words, vectorized over particles. Returns
     ``(sentences, log_marginal, min_ess, accept_rate)``. A sentence with multi-token words is **not**
     rejected -- it falls back to the plain substitution filter (``accept_rate = 0.0``), never less
@@ -556,12 +590,19 @@ def run_smc_conditional_rejuv(key, obs_ids, num_particles=64, max_dist=2, lookba
 
 def _make_aligned_subflip_hook(words, max_dist, lookback, center, spread, n_sweeps, order, stats):
     """``post_resample_hook`` running surprisal-gated manual sub-flips over a lookback window, using
-    the per-particle ``align`` to locate each (single-token) observed word's token in the buffer."""
+    the per-particle ``align`` to locate each (single-token) observed word's token in the buffer.
+
+    The gate fires on contextual surprisal *minus* the word's unigram surprisal (Gen.jl), so a
+    legitimately-rare literal is not reanalysed just for being rare -- only words more surprising in
+    context than their base rate predicts."""
     single = [len(span) == 1 for span, _ in words]
+    # Gate on contextual surprisal RELATIVE to the word's unigram surprisal (Gen.jl): fire only when
+    # a word is more surprising in context than its base rate predicts. Per-word scalar, precomputed.
+    unigram_surp = [unigram_surprisal(surf) for _, surf in words]
 
     def hook(t, key, intended_buf, i_len, align, lap, surprisal):
         P = int(intended_buf.shape[0])
-        p_fire = custom_sigmoid(surprisal, center, spread)
+        p_fire = custom_sigmoid(surprisal - unigram_surp[t], center, spread)
         key, gk = jax.random.split(key)
         gate = jax.random.uniform(gk, (P,)) < p_fire
         if int(jnp.sum(gate)) == 0:
@@ -570,21 +611,22 @@ def _make_aligned_subflip_hook(words, max_dist, lookback, center, spread, n_swee
         win = [w for w in range(s, t + 1) if single[w]]                    # only single-token words
         if order == "BACKWARD":
             win = win[::-1]
-        cand_xs, cand_ls = _word_candidate_tables(words, lap, max_dist)
-        for _ in range(n_sweeps):
-            for wt in win:
-                key, mk = jax.random.split(key)
-                intended_buf, acc = manual_subflip_move(
-                    mk, intended_buf, i_len, align[:, wt], cand_xs[wt], cand_ls[:, wt], gate)
-                stats["accepts"] += int(jnp.sum(jnp.where(gate, acc, False)))
-                stats["attempts"] += int(jnp.sum(gate))
+        if not win:
+            return key, intended_buf
+        cand_xs, cand_ls = _word_candidate_tables(words, lap, max_dist)    # [W,K], [P,W,K]
+        win_idx = jnp.asarray(win, jnp.int32)
+        fn = _aligned_window_move_fn(len(win), n_sweeps)
+        key, intended_buf, acc_tot = fn(key, intended_buf, i_len, align[:, win_idx],
+                                        cand_xs[win_idx], cand_ls[:, win_idx], gate)
+        stats["accepts"] += int(jnp.sum(jnp.where(gate, acc_tot, 0)))
+        stats["attempts"] += int(jnp.sum(gate)) * n_sweeps * len(win)
         return key, intended_buf
 
     return hook
 
 
-def run_smc_conditional_rejuv_aligned(key, obs_ids, num_particles=64, max_dist=2, lookback=4,
-                                      logprob_thresh=5.0, logprob_spread=1.0, n_sweeps=1,
+def run_smc_conditional_rejuv_aligned(key, obs_ids, num_particles=64, max_dist=2, lookback=2,
+                                      logprob_thresh=0.0, logprob_spread=1.0, n_sweeps=1,
                                       order="BACKWARD", max_deletions=MAX_DELETIONS,
                                       allow_insertion=True, **kw):
     """Forward filter with substitution + add/delete, plus interleaved surprisal-gated SUBSTITUTION
