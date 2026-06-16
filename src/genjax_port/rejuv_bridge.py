@@ -50,7 +50,7 @@ from .tokenizer import decode
 from .model import COPY, SUB
 from .smc_substitution import run_smc_substitution
 from .rejuvenation import make_chain_model, rejuv_step
-from .rejuvenation_r2 import make_gap_chain, gap_chain_inputs, add_delete_step
+from .rejuvenation_r2 import make_gap_chain, gap_chain_inputs, add_delete_step, sub_flip_step
 from .particle_filter import MAX_DELETIONS, P_DELETE_PRIOR
 from .particle_filter_lookahead import LOOKAHEAD_K
 
@@ -248,13 +248,20 @@ def _materialize_fn(W, p_del):
 
 
 @functools.lru_cache(maxsize=None)
-def _step_fn(W, k, lookahead_k, p_del):
-    """Jitted vmapped single add/delete step at gap ``k`` (one compile per ``(W, k)``)."""
+def _step_fn(W, k, lookahead_k, p_del, do_sub):
+    """Jitted vmapped per-position move at gap/word ``k``: an add/delete step, then (if ``do_sub``) a
+    substitution-flip on ``x{k}`` -- both moves on the one gap-chain trace. One compile per ``(W, k,
+    do_sub)``. Returns ``(trs, accepts [P])`` (accepts summed over the move(s) at this position)."""
     def step(keys, trs, buf0, ilen0, cand_xs, cand_ls, obs):
-        return jax.vmap(
-            lambda key, tr: add_delete_step(
-                key, tr, k, buf0, ilen0, cand_xs, cand_ls, obs, lookahead_k),
-            in_axes=(0, 0))(keys, trs)
+        def one(key, tr):
+            ka, ks = jax.random.split(key)
+            tr, _, acc = add_delete_step(ka, tr, k, buf0, ilen0, cand_xs, cand_ls, obs, lookahead_k)
+            acc = acc.astype(jnp.int32)
+            if do_sub:
+                tr, _, accs = sub_flip_step(ks, tr, k, buf0, ilen0, cand_xs, cand_ls, obs)
+                acc = acc + accs.astype(jnp.int32)
+            return tr, acc
+        return jax.vmap(one, in_axes=(0, 0))(keys, trs)
     return jax.jit(step)
 
 
@@ -278,12 +285,14 @@ def _decode_gap_row(dels, gaps, xs, W):
 
 
 def run_smc_add_delete(key, obs_ids, num_particles=64, max_dist=2, n_sweeps=2, order="BACKWARD",
-                       lookahead_k=LOOKAHEAD_K, **kw):
+                       lookahead_k=LOOKAHEAD_K, sub_flip=False, **kw):
     """Substitution-only filtering sweep, then a post-sweep add/delete (R2) reanalysis pass.
 
     The forward sweep stays substitution-only; the trans-dimensional move is the *sole* mechanism for
     positing omitted words, but now with the whole sentence as context -- so a dropped word only
     disambiguated late (which the forward 1-step-lookahead deletion gap can miss) is recovered here.
+    With ``sub_flip=True`` the post-sweep pass ALSO runs the R1 substitution-flip on each word, so one
+    reanalysis pass revises both substitutions and add/deletes (the maximal post-sweep move).
     Returns ``(sentences, log_marginal, min_ess, accept_rate)`` (the marginal/ess are the sweep's; the
     move re-decides the alignment at fixed evidence). A multi-token-word sentence is **not** rejected
     -- it falls back to the native filter (forward deletions + insertion on), never less capable.
@@ -314,12 +323,13 @@ def run_smc_add_delete(key, obs_ids, num_particles=64, max_dist=2, n_sweeps=2, o
         for k in _positions(W, order):
             move_key, sk = jax.random.split(move_key)
             keys = jax.random.split(sk, num_particles)
-            trs, _, acc = _step_fn(W, int(k), int(lookahead_k), p_del)(
+            trs, acc = _step_fn(W, int(k), int(lookahead_k), p_del, bool(sub_flip))(
                 keys, trs, buf0, ilen0, cand_xs, cand_ls, obs_arr)
             accepts += int(jnp.sum(acc))
     dels, gaps, xs = _gap_choices(trs, W)
     sentences = [_decode_gap_row(dels[p], gaps[p], xs[p], W) for p in range(num_particles)]
-    total = num_particles * n_sweeps * W
+    moves_per_pos = 2 if sub_flip else 1                       # add/delete (+ optional sub-flip)
+    total = num_particles * n_sweeps * W * moves_per_pos
     accept_rate = accepts / total if total else 0.0
     return sentences, float(log_marginal), min_ess, accept_rate
 

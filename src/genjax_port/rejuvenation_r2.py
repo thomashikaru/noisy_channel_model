@@ -38,8 +38,11 @@ from genjax import ChoiceMap as C
 from . import lm_penzai as L
 from .lm_genjax import lm_token, lm_logp
 from .genjax_model import obs_dist, token_candidates
+from .rejuvenation import cand_prop
 from .particle_filter import P_DELETE_PRIOR
 from .particle_filter_lookahead import LOOKAHEAD_K
+from genjax._src.generative_functions.static import StaticRequest
+from genjax.inference.requests import Rejuvenate
 
 
 # --- the masked deletion-gap inner model (one possibly-omitted intended token) ---------------
@@ -178,6 +181,37 @@ def add_delete_step(key, tr, k, buf0, ilen0, cand_xs, cand_ls, obs, lookahead_k=
     accept = jnp.log(jax.random.uniform(ku)) < W
     tr = jax.tree_util.tree_map(lambda a, b: jnp.where(accept, a, b), new_tr, tr)
     return tr, W, accept
+
+
+# --- substitution-flip on the gap chain (R1's move, but aware of the deletion gaps) -----------
+# The gap chain's x{k} (the intended token for observed word k) is the same lm_token + obs_dist
+# structure R1 flips on its plain chain; the only difference is the context, which must include any
+# omitted (gap) tokens before x{k}. We reuse R1's candidate proposal (cand_prop) so a combined
+# post-sweep can revise both substitutions (here) and add/deletes on one trace.
+
+def _context_before_word(tr, k, buf0, ilen0):
+    """``(buf, il)`` just before ``x{k}`` -- the gap-``k`` context advanced by gap ``k`` if it is on."""
+    buf, il = _context_at_gap(tr, k, buf0, ilen0)
+    chm = tr.get_choices()
+    dk = chm[f"del{k}"]
+    buf = jnp.where(dk, buf.at[il].set(_gap_tok(chm, k)), buf)
+    il = il + dk.astype(jnp.int32)
+    return buf, il
+
+
+def sub_flip_step(key, tr, k, buf0, ilen0, cand_xs, cand_ls, obs):
+    """One MH substitution-flip on ``x{k}`` of the gap chain (R1 reanalysis, gap-aware context).
+
+    Returns ``(trace, weight, accepted)``. Editing ``x{k}`` re-scores the suffix via the ``Update``,
+    so later context (and any later gaps) vote on the flip -- exactly R1, on the gap-chain trace."""
+    buf, il = _context_before_word(tr, k, buf0, ilen0)
+    args = (buf, il, cand_xs[k], cand_ls[k])
+    req = StaticRequest({f"x{k}": Rejuvenate(cand_prop, lambda _chm: args)})
+    k1, k2 = jax.random.split(key)
+    new_tr, w, _, _ = req.edit(k1, tr, genjax.Diff.no_change(tr.get_args()))
+    accept = jnp.log(jax.random.uniform(k2)) < w
+    tr = jax.tree_util.tree_map(lambda a, b: jnp.where(accept, a, b), new_tr, tr)
+    return tr, w, accept
 
 
 def add_delete_sweep(key, tr, buf0, ilen0, cand_xs, cand_ls, obs,

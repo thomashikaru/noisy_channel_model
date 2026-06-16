@@ -134,26 +134,30 @@ def main():
             dedup=not args.no_dedup,
             progress=True,
         )
-    elif args.filter == "native" and args.rejuvenate:
-        # genjax-native sweep + post-sweep rejuvenation (full-context reanalysis). v1: single-token
-        # words, substitution-only; raises on multi-token words.
-        from .rejuv_bridge import run_smc_rejuv
+    elif args.filter == "native" and args.add_delete:
+        # genjax-native sweep + post-sweep add/delete (R2) reanalysis: a trans-dimensional MH pass that
+        # inserts omitted / removes spurious words with full-sentence context. With --rejuvenate also
+        # set, the same pass ALSO runs the R1 substitution-flip per word, so one post-sweep reanalysis
+        # revises both substitutions and add/deletes (the maximal post-sweep move). v1: single-token
+        # words; multi-token sentences fall back to the native filter.
+        from .rejuv_bridge import run_smc_add_delete
 
-        sentences, log_marginal, min_ess, accept_rate = run_smc_rejuv(
+        sentences, log_marginal, min_ess, accept_rate = run_smc_add_delete(
             key,
             jax.numpy.array(obs),
             num_particles=args.particles,
             max_dist=args.max_dist,
             n_sweeps=args.rejuv_sweeps,
+            sub_flip=args.rejuvenate,
             dedup=not args.no_dedup,
             progress=True,
         )
-    elif args.filter == "native" and args.add_delete:
-        # genjax-native sweep + post-sweep add/delete (R2) reanalysis: the trans-dimensional MH pass
-        # inserts omitted / removes spurious words with full-sentence context. v1: single-token words.
-        from .rejuv_bridge import run_smc_add_delete
+    elif args.filter == "native" and args.rejuvenate:
+        # genjax-native sweep + post-sweep substitution-flip rejuvenation (full-context reanalysis).
+        # v1: single-token words, substitution-only; raises on multi-token words.
+        from .rejuv_bridge import run_smc_rejuv
 
-        sentences, log_marginal, min_ess, accept_rate = run_smc_add_delete(
+        sentences, log_marginal, min_ess, accept_rate = run_smc_rejuv(
             key,
             jax.numpy.array(obs),
             num_particles=args.particles,
