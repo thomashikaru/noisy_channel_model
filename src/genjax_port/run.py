@@ -118,11 +118,13 @@ def main():
     key = jax.random.key(args.seed)
     accept_rate = None
     if args.filter == "native" and args.conditional_rejuv:
-        # genjax-native sweep with interleaved, surprisal-gated rejuvenation (vectorized over
-        # particles). v1: single-token words, substitution-only; raises on multi-token words.
-        from .rejuv_bridge import run_smc_conditional_rejuv
+        # genjax-native sweep (copy/substitution/deletion/insertion) with interleaved, surprisal-gated
+        # SUBSTITUTION rejuvenation, vectorized over particles. The forward filter does add/delete; the
+        # rejuvenation revises substitutions, locating each word's token via the per-particle alignment
+        # so forward deletions/insertions don't misalign it. Works on any sentence.
+        from .rejuv_bridge import run_smc_conditional_rejuv_aligned
 
-        sentences, log_marginal, min_ess, accept_rate = run_smc_conditional_rejuv(
+        sentences, log_marginal, min_ess, accept_rate = run_smc_conditional_rejuv_aligned(
             key,
             jax.numpy.array(obs),
             num_particles=args.particles,
@@ -131,6 +133,8 @@ def main():
             logprob_thresh=args.logprob_thresh,
             logprob_spread=args.logprob_spread,
             n_sweeps=args.rejuv_sweeps,
+            max_deletions=args.max_deletions,
+            allow_insertion=not args.no_insertion,
             dedup=not args.no_dedup,
             progress=True,
         )

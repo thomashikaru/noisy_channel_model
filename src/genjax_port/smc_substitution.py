@@ -176,6 +176,11 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
         jax.random.dirichlet(prior_key, jnp.asarray(ACTION_ALPHAS, jnp.float32), shape=(P,)))
     intended_buf = jnp.full((P, max_intended), L.EOS_ID, jnp.int32)
     i_len = jnp.ones((P,), jnp.int32)
+    # Per-observed-word alignment: align[p, t] = buffer position of word t's emitted intended token
+    # (-1 if particle p chose INSERT, i.e. the word emitted nothing). Lets the interleaved
+    # rejuvenation locate each observed word's token even when deletions/insertions have shifted the
+    # buffer per particle (the 1:1 "position == 1 + word index" assumption no longer holds).
+    align = jnp.full((P, W), -1, jnp.int32)
     log_marginal = 0.0
 
     steps = range(W)
@@ -214,7 +219,9 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
         intended_buf = intended_buf[parents]
         i_len = i_len[parents]
         log_action_prior = log_action_prior[parents]
+        align = align[parents]
         option = option[parents]
+        word_pos = i_len                                  # this word's token lands here (pre-emission)
 
         # Emit the chosen branch's intended tokens (COPY = n span tokens, SUB = 1 token,
         # INSERT = 0 tokens). The optional trailing INSERT column keeps its zero-init length, so a
@@ -235,13 +242,15 @@ def run_smc_substitution(key, obs_ids, num_particles=64, max_intended=None,
             intended_buf = intended_buf.at[rows, i_len].set(
                 jnp.where(writing, chosen_tok[:, j], intended_buf[rows, i_len]))
             i_len = i_len + writing.astype(jnp.int32)
+        align = align.at[rows, wi].set(jnp.where(chosen_len > 0, word_pos, jnp.int32(-1)))
 
         # Post-resample rejuvenation hook (vectorized over particles): given this word's surprisal
         # (-step_lmw), the hook may run a windowed MH reanalysis and return an updated buffer. Used
         # by rejuv_bridge for interleaved conditional rejuvenation; None = plain filtering sweep.
+        # ``align`` lets the hook find each observed word's token under deletion/insertion shifts.
         if post_resample_hook is not None:
             key, intended_buf = post_resample_hook(
-                wi, key, intended_buf, i_len, log_action_prior, -step_lmw)
+                wi, key, intended_buf, i_len, align, log_action_prior, -step_lmw)
 
     sentences = [decode(intended_buf[p, 1:int(i_len[p])]).strip() for p in range(P)]
     if return_state:

@@ -16,7 +16,7 @@ import jax.numpy as jnp
 from src.genjax_port import lm_penzai as L
 from src.genjax_port import noise_word as NW
 from src.genjax_port.particle_filter import ACTION_ALPHAS
-from src.genjax_port.tokenizer import encode, decode
+from src.genjax_port.tokenizer import encode, decode, surface
 from src.genjax_port.smc_substitution import run_smc_substitution, word_log_evidence
 from src.genjax_port.rejuvenation import make_chain_model
 from src.genjax_port.rejuv_bridge import (
@@ -174,6 +174,60 @@ def test_dyn_step_matches_static():
         assert bool((dd[p] == sd).all()) and bool((dacc[p] > 0) == bool(a)), p
 
 
+def test_manual_subflip_detailed_balance():
+    """The manual (buffer-based) sub-flip move samples the exact posterior of the revisited word's
+    token (MH detailed balance == Thm 2). The suffix-vote term of the weight is separately exercised
+    by test_aligned_conditional_composes_with_forward_deletions and shares the R1 move's math."""
+    import math
+    from jax.scipy.special import logsumexp
+    from src.genjax_port.lm_genjax import lm_logp
+    from src.genjax_port.rejuv_bridge import manual_subflip_move, _word_candidate_tables
+    from src.genjax_port.particle_filter import ACTION_ALPHAS
+    obs = list(encode(" he too"))
+    words, _ = _single_token_words(jnp.asarray(obs))
+    P, M = 48, 8
+    lap = jnp.log(jnp.broadcast_to(jnp.array(ACTION_ALPHAS, jnp.float32) / sum(ACTION_ALPHAS), (P, 3)))
+    cand_xs, cand_ls = _word_candidate_tables(words, lap, max_dist=2)
+    cx, cl = cand_xs[1], cand_ls[:, 1]                                  # revisit word 1 (the last word)
+    # exact posterior over word-1 candidates: lm(x1 | EOS, x0) + channel
+    base = jnp.full(M, L.EOS_ID, jnp.int32).at[1].set(obs[0])
+    lm1 = lm_logp(base, jnp.int32(2))
+    cands = [(int(cx[i]), float(cl[0, i])) for i in range(cx.shape[0]) if float(cl[0, i]) > -1e20]
+    logp = {c: float(lm1[c]) + clc for c, clc in cands}
+    Z = float(logsumexp(jnp.array(list(logp.values()))))
+    exact = {c: math.exp(v - Z) for c, v in logp.items()}
+
+    buf = jnp.full((P, M), L.EOS_ID, jnp.int32).at[:, 1].set(obs[0]).at[:, 2].set(obs[1])
+    i_len = jnp.full((P,), 3, jnp.int32)
+    pos = jnp.full((P,), 2, jnp.int32)
+    gate = jnp.ones((P,), bool)
+    key, counts = jax.random.key(0), Counter()
+    for _ in range(200):
+        key, sk = jax.random.split(key)
+        buf, _ = manual_subflip_move(sk, buf, i_len, pos, cx, cl, gate)
+        for p in range(P):
+            counts[int(buf[p, 2])] += 1
+    n = sum(counts.values())
+    err = max(abs(exact[c] - counts.get(c, 0) / n) for c in exact)
+    assert err < 0.05, (err, {surface(c): (round(exact[c], 3), round(counts.get(c, 0) / n, 3))
+                              for c in exact if exact[c] > 0.02})
+
+
+def test_aligned_conditional_composes_with_forward_deletions():
+    """Forward filter with deletions ON (so per-particle alignment shifts) + interleaved aligned
+    sub-rejuvenation: recovers the omitted 'to', stays coherent (the rejuvenation locates each word's
+    token via the alignment instead of a broken 1:1 slot), and the move fires."""
+    from src.genjax_port.rejuv_bridge import run_smc_conditional_rejuv_aligned
+    obs = encode(" he wants go home")                                  # 'to' omitted before 'go'
+    sents, _, _, rate = run_smc_conditional_rejuv_aligned(
+        jax.random.key(0), obs, num_particles=48, max_dist=2, lookback=4,
+        logprob_thresh=2.0, n_sweeps=2)
+    counts = Counter(sents)
+    assert counts["he wants to go home"] >= 16, counts.most_common(5)   # omission recovered, coherent
+    assert rate > 0.0
+    assert all(isinstance(s, str) and s for s in sents)
+
+
 def test_add_delete_multitoken_falls_back():
     """A multi-token word falls back to the native filter (deletions on), accept_rate 0, never errors."""
     import warnings
@@ -190,6 +244,8 @@ if __name__ == "__main__":
                  "test_run_smc_rejuv_roundtrip", "test_conditional_gate_off_no_moves",
                  "test_conditional_rejuv_runs_and_fires", "test_multitoken_falls_back_to_plain_filter",
                  "test_add_delete_recovers_omitted_word", "test_dyn_step_matches_static",
+                 "test_manual_subflip_detailed_balance",
+                 "test_aligned_conditional_composes_with_forward_deletions",
                  "test_add_delete_multitoken_falls_back"):
         globals()[name]()
         print(f"OK  {name}")

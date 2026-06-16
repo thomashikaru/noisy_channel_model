@@ -413,6 +413,61 @@ def run_smc_add_delete(key, obs_ids, num_particles=64, max_dist=2, n_sweeps=2, o
     return sentences, float(log_marginal), min_ess, accept_rate
 
 
+# --- manual (buffer-based) substitution-flip move: alignment-robust, no @gen trace -------------
+#
+# This is the R1 substitution-flip done directly on the [P, M] buffer (one forward gives every
+# position's logits, like the filtering sweep), addressing a word by its per-particle buffer position
+# rather than a fixed 1:1 slot. That is what lets it run AFTER the forward filter has done add/delete
+# (which shifts each particle's alignment): the word's token is at ``pos = align[p, t]``, wherever the
+# deletions/insertions put it. The MH weight is identical to the @gen move (docs/model.tex Thm 2);
+# validated by detailed balance in tests/test_rejuv_bridge.py::test_manual_subflip_detailed_balance.
+
+def manual_subflip_move(key, buf, i_len, pos, cand_x, cand_l, gate):
+    """One MH substitution-flip on the token at per-particle position ``pos`` (vectorized over P).
+
+    ``buf [P,M]``, ``i_len [P]``, ``pos [P]`` (the word's token position; ``<1`` or ``>=i_len`` ==
+    no token / out of range -> skipped), ``cand_x [K]`` candidate ids, ``cand_l [P,K]`` channel
+    logliks (incl. action prior), ``gate [P]`` which particles attempt the move. Returns
+    ``(buf, accepted [P])``. Two LM forwards (current + proposed buffer); the prefix cancels."""
+    P, M = buf.shape
+    rows = jnp.arange(P)
+    kq, ku = jax.random.split(key)
+    posc = jnp.clip(pos, 1, M - 1)
+    valid = gate & (pos >= 1) & (pos < i_len)
+    idx = jnp.arange(M)
+
+    def chain_from_pos(lp, b):
+        # token at position i is scored by the logits at i-1; sum over the suffix [pos, i_len)
+        tok_lp = lp[rows[:, None], idx[None, :] - 1, b]                 # [P, M]
+        mask = (idx[None, :] >= posc[:, None]) & (idx[None, :] < i_len[:, None])
+        return jnp.sum(jnp.where(mask, tok_lp, 0.0), axis=1)           # [P]
+
+    def chan(x):
+        m = cand_x[None, :] == x[:, None]
+        return jnp.where(jnp.any(m, 1), jnp.max(jnp.where(m, cand_l, -jnp.inf), 1), -jnp.inf)
+
+    logp_old = jax.nn.log_softmax(L._raw_logits(buf), axis=-1)         # [P, M, V]  (one forward)
+    lm_at = logp_old[rows, posc - 1]                                   # [P, V]  dist for the token at pos
+    q_logits = lm_at[rows[:, None], cand_x[None, :]] + cand_l          # [P, K]
+    logZ = logsumexp(q_logits, axis=1)
+    x_cur = buf[rows, posc]
+    x_new = cand_x[jax.random.categorical(kq, q_logits)].astype(buf.dtype)
+
+    def qlp(x):
+        m = cand_x[None, :] == x[:, None]
+        return jnp.where(jnp.any(m, 1), jnp.max(jnp.where(m, q_logits, -jnp.inf), 1) - logZ, -jnp.inf)
+
+    chain_old = chain_from_pos(logp_old, buf)
+    buf_new = buf.at[rows, posc].set(x_new)
+    logp_new = jax.nn.log_softmax(L._raw_logits(buf_new), axis=-1)     # [P, M, V]  (one forward)
+    chain_new = chain_from_pos(logp_new, buf_new)
+
+    w = (chain_new + chan(x_new)) - (chain_old + chan(x_cur)) + qlp(x_cur) - qlp(x_new)
+    accept = valid & (jnp.log(jax.random.uniform(ku, (P,))) < w)
+    buf = buf.at[rows, posc].set(jnp.where(accept, x_new, x_cur))
+    return buf, accept
+
+
 def custom_sigmoid(x, center, spread):
     """Gate probability ``sigmoid(spread * (x - center))`` (matches ``gen_inference.jl`` custom_sigmoid).
 
@@ -432,7 +487,7 @@ def _make_rejuv_hook(words, obs, cand_xs, max_dist, lookback, center, spread, n_
     which particles attempt a windowed move over ``[t-lookback, t]``; gated-out / MH-rejected
     particles are unchanged. Accumulates accept stats into ``stats``.
     """
-    def hook(t, key, intended_buf, i_len, lap, surprisal):
+    def hook(t, key, intended_buf, i_len, align, lap, surprisal):  # align unused (sub-only-forward v1)
         P, M = int(intended_buf.shape[0]), int(intended_buf.shape[1])
         p_fire = custom_sigmoid(surprisal, center, spread)
         key, gk = jax.random.split(key)
@@ -485,5 +540,69 @@ def run_smc_conditional_rejuv(key, obs_ids, num_particles=64, max_dist=2, lookba
     sentences, log_marginal, min_ess = run_smc_substitution(
         key, obs_ids, num_particles=num_particles, max_dist=max_dist,
         max_deletions=0, allow_insertion=False, post_resample_hook=hook, **kw)
+    rate = stats["accepts"] / stats["attempts"] if stats["attempts"] else 0.0
+    return sentences, log_marginal, min_ess, rate
+
+
+# --- aligned conditional rejuvenation: forward filter does sub+add/delete, interleaved SUB-flip -----
+#
+# Unlike run_smc_conditional_rejuv (which forces the forward sweep sub-only so its @gen window move
+# can assume position == 1 + word index), this version lets the forward filter do deletions AND
+# insertions, and rejuvenates substitutions via the alignment-robust manual_subflip_move: each word's
+# token is found at its per-particle align[p, t], so deletions/insertions shifting the buffer don't
+# break it. The move is shape-preserving (it only re-decides existing tokens), so no trans-dimensional
+# machinery is needed -- the add/delete capability lives entirely in the forward filter. Multi-token
+# words are simply skipped by the rejuvenation (the forward filter still handles them).
+
+def _make_aligned_subflip_hook(words, max_dist, lookback, center, spread, n_sweeps, order, stats):
+    """``post_resample_hook`` running surprisal-gated manual sub-flips over a lookback window, using
+    the per-particle ``align`` to locate each (single-token) observed word's token in the buffer."""
+    single = [len(span) == 1 for span, _ in words]
+
+    def hook(t, key, intended_buf, i_len, align, lap, surprisal):
+        P = int(intended_buf.shape[0])
+        p_fire = custom_sigmoid(surprisal, center, spread)
+        key, gk = jax.random.split(key)
+        gate = jax.random.uniform(gk, (P,)) < p_fire
+        if int(jnp.sum(gate)) == 0:
+            return key, intended_buf
+        s = max(0, t - lookback)
+        win = [w for w in range(s, t + 1) if single[w]]                    # only single-token words
+        if order == "BACKWARD":
+            win = win[::-1]
+        cand_xs, cand_ls = _word_candidate_tables(words, lap, max_dist)
+        for _ in range(n_sweeps):
+            for wt in win:
+                key, mk = jax.random.split(key)
+                intended_buf, acc = manual_subflip_move(
+                    mk, intended_buf, i_len, align[:, wt], cand_xs[wt], cand_ls[:, wt], gate)
+                stats["accepts"] += int(jnp.sum(jnp.where(gate, acc, False)))
+                stats["attempts"] += int(jnp.sum(gate))
+        return key, intended_buf
+
+    return hook
+
+
+def run_smc_conditional_rejuv_aligned(key, obs_ids, num_particles=64, max_dist=2, lookback=4,
+                                      logprob_thresh=5.0, logprob_spread=1.0, n_sweeps=1,
+                                      order="BACKWARD", max_deletions=MAX_DELETIONS,
+                                      allow_insertion=True, **kw):
+    """Forward filter with substitution + add/delete, plus interleaved surprisal-gated SUBSTITUTION
+    rejuvenation (alignment-robust, vectorized over particles).
+
+    The forward sweep does copy/substitution/deletion/insertion as usual; after each word's resample,
+    gated particles run manual sub-flip MH moves over a lookback window, locating each word's token via
+    the per-particle alignment so the deletions/insertions don't misalign the move. The rejuvenation is
+    substitution-only (shape-preserving) -- add/delete reanalysis is intentionally not done here; that
+    capability is the forward filter's. Works on any sentence (multi-token words are handled by the
+    forward filter and skipped by the rejuvenation). Returns
+    ``(sentences, log_marginal, min_ess, accept_rate)``. ``**kw`` flows to ``run_smc_substitution``."""
+    words = NW.segment_words([int(i) for i in obs_ids])
+    stats = {"accepts": 0, "attempts": 0}
+    hook = _make_aligned_subflip_hook(words, max_dist, lookback, logprob_thresh, logprob_spread,
+                                      n_sweeps, order, stats)
+    sentences, log_marginal, min_ess = run_smc_substitution(
+        key, obs_ids, num_particles=num_particles, max_dist=max_dist,
+        max_deletions=max_deletions, allow_insertion=allow_insertion, post_resample_hook=hook, **kw)
     rate = stats["accepts"] / stats["attempts"] if stats["attempts"] else 0.0
     return sentences, log_marginal, min_ess, rate
