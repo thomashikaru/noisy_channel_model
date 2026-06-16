@@ -21,7 +21,7 @@ from src.genjax_port.smc_substitution import run_smc_substitution, word_log_evid
 from src.genjax_port.rejuvenation import make_chain_model
 from src.genjax_port.rejuv_bridge import (
     _single_token_words, _word_candidate_tables, rejuvenate_particles, run_smc_rejuv,
-    run_smc_conditional_rejuv,
+    run_smc_conditional_rejuv, run_smc_add_delete,
 )
 from genjax import ChoiceMap as C
 
@@ -135,10 +135,35 @@ def test_multitoken_falls_back_to_plain_filter():
     assert len(sents) == 8 and all(isinstance(s, str) and s for s in sents)
 
 
+def test_add_delete_recovers_omitted_word():
+    """Post-sweep R2 (add/delete) recovers a word the substitution-only sweep cannot insert.
+
+    'he wants go home' has 'to' omitted. Run the sweep with max_dist=0 (no substitution candidates,
+    so the forward pass commits the literal tokens and cannot mangle them on the weak 70m LM); the
+    post-sweep add/delete pass should insert 'to' before 'go' in the majority of particles."""
+    obs = encode(" he wants go home")
+    sents, _, _, rate = run_smc_add_delete(jax.random.key(0), obs, num_particles=32,
+                                           max_dist=0, n_sweeps=3)
+    counts = Counter(sents)
+    assert counts["he wants to go home"] > 16, counts.most_common(5)   # clear majority recovered
+    assert rate > 0.0
+
+
+def test_add_delete_multitoken_falls_back():
+    """A multi-token word falls back to the native filter (deletions on), accept_rate 0, never errors."""
+    import warnings
+    obs = encode("the boy did an experimemt today")                    # 'experimemt' is multi-token
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        sents, _, _, rate = run_smc_add_delete(jax.random.key(0), obs, num_particles=8, max_dist=2)
+    assert rate == 0.0 and len(sents) == 8 and all(isinstance(s, str) and s for s in sents)
+
+
 if __name__ == "__main__":
     L.load_model()
     for name in ("test_chain_importance_matches_sweep_evidence", "test_rejuv_zero_sweeps_is_identity",
                  "test_run_smc_rejuv_roundtrip", "test_conditional_gate_off_no_moves",
-                 "test_conditional_rejuv_runs_and_fires", "test_multitoken_falls_back_to_plain_filter"):
+                 "test_conditional_rejuv_runs_and_fires", "test_multitoken_falls_back_to_plain_filter",
+                 "test_add_delete_recovers_omitted_word", "test_add_delete_multitoken_falls_back"):
         globals()[name]()
         print(f"OK  {name}")

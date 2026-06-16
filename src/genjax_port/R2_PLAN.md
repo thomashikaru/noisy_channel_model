@@ -117,9 +117,21 @@ gain a leading P axis) — the ragged-`W` problem is absorbed into the mask. Tha
   real SMC need rejuv_model's shared-pattern test never exercised), **batches the forward** (P=64 ≈
   15.6× P=1, not 64×), and is **bit-parity with the per-particle loop** to XLA float-tiling noise
   (~1e-2; accepts identical; the `-inf` pattern — a removed token outside `q`'s support — matches).
-- [ ] **NEXT — interleave into the filtering sweep (rest of Phase 2 / `VECTORIZED_REJUV_PLAN.md`).**
-  Materialize a P-batched gap-chain trace from the sweep buffers (à la `rejuv_bridge`'s
-  `vmapped_window_move`), run `vmapped_add_delete` over a lookback window after each resample (couple
-  with R3's surprisal gate), write the reconstructed tokens back, continue. Then wire `--add_delete`
-  into `run.py`. R2 currently runs as a second pass on its own chain (like R1 before `rejuv_bridge`);
-  this step unifies it with the substitution sweep.
+- [x] **Post-sweep integration into the filter (done — `rejuv_bridge.run_smc_add_delete`).** Mirrors
+  the R1 post-sweep `run_smc_rejuv`: a substitution-only sweep, then a whole-sentence add/delete pass.
+  The whole-sentence window starts at buffer position 1 for every particle, so there is **no
+  per-particle alignment bookkeeping** and the output is decoded strings (per-particle length variation
+  needs no flat-buffer surgery). Materialize a P-batched gap-chain trace from the committed tokens (all
+  gaps off), then loop the jitted per-position vmapped move (`_step_fn`, one compile per gap, reused
+  across sweeps — do NOT fuse the whole sweep into one jit: the step is heavy and unrolling OOMs).
+  Wired into `run.py` as `--add_delete`. Tests in `tests/test_rejuv_bridge.py`:
+  `test_add_delete_recovers_omitted_word` ("he wants _ go home" → "to" recovered in the majority, run
+  with `max_dist=0` to keep the weak 70m sweep from substituting the words away first) and the
+  multi-token fallback. Note: on 70m a substitution-enabled sweep mangles short words (go→to, home→come)
+  before R2 runs — that is the sweep's behaviour, not R2; `max_dist=0` (or a stronger LM) isolates it.
+- [ ] **NEXT — interleaved, surprisal-gated R2 (the harder half).** Run the move *inside* the sweep
+  after each resample over a lookback window, gated on surprisal (couple with R3, à la
+  `run_smc_conditional_rejuv`). The complication post-sweep avoided: once an earlier reanalysis has
+  added a word, the buffer↔observed-word alignment — and so the window's start position and writeback —
+  becomes per-particle. Needs the sweep to carry each particle's gap configuration (not just flat
+  tokens) so a mid-sentence window can be materialized and the variable-length result written back.

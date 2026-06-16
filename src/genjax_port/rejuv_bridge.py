@@ -50,6 +50,9 @@ from .tokenizer import decode
 from .model import COPY, SUB
 from .smc_substitution import run_smc_substitution
 from .rejuvenation import make_chain_model, rejuv_step
+from .rejuvenation_r2 import make_gap_chain, gap_chain_inputs, add_delete_step
+from .particle_filter import MAX_DELETIONS, P_DELETE_PRIOR
+from .particle_filter_lookahead import LOOKAHEAD_K
 
 
 def _single_token_words(obs_ids):
@@ -210,6 +213,115 @@ def run_smc_rejuv(key, obs_ids, num_particles=64, max_dist=2, n_sweeps=1, order=
         rejuv_key, intended_buf, lap, obs_ids, max_dist=max_dist, n_sweeps=n_sweeps, order=order)
     sentences = [decode(new_buf[p, 1:1 + W]).strip() for p in range(num_particles)]
     return sentences, log_marginal, min_ess, accept_rate
+
+
+# --- R2: post-sweep add/delete (trans-dimensional) reanalysis ---------------------------------
+#
+# The R1 bridge above edits intended tokens in place at a FIXED alignment (substitution is
+# dimension-preserving), so its window writeback is trivial. The R2 add/delete move changes each
+# particle's word count, so the buffer<->observed-word alignment becomes per-particle. The
+# *post-sweep, whole-sentence* form sidesteps that: the window is the entire sentence (it starts at
+# buffer position 1 for every particle), and the output is decoded strings -- so per-particle length
+# variation needs no flat-buffer surgery. This mirrors run_smc_rejuv (the R1 post-sweep), and is the
+# R2 analog of bridge v1. (Interleaved, mid-sentence windows -- where the start position is
+# per-particle once earlier reanalyses have added words -- are the next step; see R2_PLAN.md.)
+
+
+# NB: do NOT fuse the whole sweep into one jit -- the add/delete step is heavy (a K-row lookahead
+# forward + a full-suffix re-score), so unrolling W*n_sweeps of them in a single graph OOMs (XLA holds
+# every intermediate). Instead jit *one step per position* (compiles W times, reused across sweeps) and
+# loop in Python so memory frees between steps; materialize the batched trace once.
+
+@functools.lru_cache(maxsize=None)
+def _materialize_fn(W, p_del):
+    """Jitted vmapped materialization of a per-particle gap-chain trace (all gaps off)."""
+    model = make_gap_chain(W, p_del)
+
+    def one(key, x_row, buf0, ilen0, cand_xs, cand_ls, obs):
+        chm = C.d({**{f"del{t}": jnp.bool_(False) for t in range(W)},
+                   **{f"x{t}": x_row[t].astype(jnp.int32) for t in range(W)},
+                   **{f"o{t}": obs[t].astype(jnp.int32) for t in range(W)}})
+        tr, _ = model.importance(key, chm, (buf0, ilen0, cand_xs, cand_ls))
+        return tr
+
+    return jax.jit(jax.vmap(one, in_axes=(0, 0, None, None, None, None, None)))
+
+
+@functools.lru_cache(maxsize=None)
+def _step_fn(W, k, lookahead_k, p_del):
+    """Jitted vmapped single add/delete step at gap ``k`` (one compile per ``(W, k)``)."""
+    def step(keys, trs, buf0, ilen0, cand_xs, cand_ls, obs):
+        return jax.vmap(
+            lambda key, tr: add_delete_step(
+                key, tr, k, buf0, ilen0, cand_xs, cand_ls, obs, lookahead_k),
+            in_axes=(0, 0))(keys, trs)
+    return jax.jit(step)
+
+
+def _gap_choices(trs, W):
+    """Read final ``(dels [P,W], gaps [P,W], xs [P,W])`` from a batched gap-chain trace."""
+    chm = trs.get_choices()
+    dels = jnp.stack([chm[f"del{t}"] for t in range(W)], axis=1)
+    gaps = jnp.stack([chm[f"gap{t}", "xd"].value for t in range(W)], axis=1).astype(jnp.int32)
+    xs = jnp.stack([chm[f"x{t}"] for t in range(W)], axis=1).astype(jnp.int32)
+    return dels, gaps, xs
+
+
+def _decode_gap_row(dels, gaps, xs, W):
+    """Decode one particle's gap chain to a sentence (omitted gap tokens spliced before their word)."""
+    ids = []
+    for t in range(W):
+        if bool(dels[t]):
+            ids.append(int(gaps[t]))
+        ids.append(int(xs[t]))
+    return decode(ids).strip()
+
+
+def run_smc_add_delete(key, obs_ids, num_particles=64, max_dist=2, n_sweeps=2, order="BACKWARD",
+                       lookahead_k=LOOKAHEAD_K, **kw):
+    """Substitution-only filtering sweep, then a post-sweep add/delete (R2) reanalysis pass.
+
+    The forward sweep stays substitution-only; the trans-dimensional move is the *sole* mechanism for
+    positing omitted words, but now with the whole sentence as context -- so a dropped word only
+    disambiguated late (which the forward 1-step-lookahead deletion gap can miss) is recovered here.
+    Returns ``(sentences, log_marginal, min_ess, accept_rate)`` (the marginal/ess are the sweep's; the
+    move re-decides the alignment at fixed evidence). A multi-token-word sentence is **not** rejected
+    -- it falls back to the native filter (forward deletions + insertion on), never less capable.
+    ``**kw`` flows to ``run_smc_substitution`` (do not pass ``max_deletions``/``allow_insertion``).
+    """
+    all_single, W = _all_single_token(obs_ids)
+    if not all_single:
+        warnings.warn(_SKIP_MSG.format(why="multi-token word(s)"), stacklevel=2)
+        sents, lm, ess = run_smc_substitution(
+            key, obs_ids, num_particles=num_particles, max_dist=max_dist,
+            max_deletions=MAX_DELETIONS, allow_insertion=True, **kw)
+        return sents, lm, ess, 0.0
+    key, sweep_key, move_key = jax.random.split(key, 3)
+    _, log_marginal, min_ess, (intended_buf, _, _) = run_smc_substitution(
+        sweep_key, obs_ids, num_particles=num_particles, max_dist=max_dist,
+        max_deletions=0, allow_insertion=False, return_state=True, **kw)
+    _, obs, buf0, ilen0, cand_xs, cand_ls = gap_chain_inputs(obs_ids)
+    obs_arr = jnp.asarray(obs, jnp.int32)
+    x_rows = intended_buf[:, 1:1 + W].astype(jnp.int32)
+    p_del = float(P_DELETE_PRIOR)
+
+    move_key, mat_key = jax.random.split(move_key)
+    mat_keys = jax.random.split(mat_key, num_particles)
+    trs = _materialize_fn(W, p_del)(mat_keys, x_rows, buf0, ilen0, cand_xs, cand_ls, obs_arr)
+
+    accepts = 0
+    for _ in range(n_sweeps):                                 # Python loop: memory frees per step
+        for k in _positions(W, order):
+            move_key, sk = jax.random.split(move_key)
+            keys = jax.random.split(sk, num_particles)
+            trs, _, acc = _step_fn(W, int(k), int(lookahead_k), p_del)(
+                keys, trs, buf0, ilen0, cand_xs, cand_ls, obs_arr)
+            accepts += int(jnp.sum(acc))
+    dels, gaps, xs = _gap_choices(trs, W)
+    sentences = [_decode_gap_row(dels[p], gaps[p], xs[p], W) for p in range(num_particles)]
+    total = num_particles * n_sweeps * W
+    accept_rate = accepts / total if total else 0.0
+    return sentences, float(log_marginal), min_ess, accept_rate
 
 
 def custom_sigmoid(x, center, spread):

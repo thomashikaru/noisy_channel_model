@@ -105,6 +105,13 @@ def main():
         default=1.0,
         help="[native] surprisal gate steepness for --conditional_rejuv.",
     )
+    parser.add_argument(
+        "--add_delete",
+        action="store_true",
+        help="[native] post-sweep add/delete (R2) reanalysis: a substitution-only sweep, then a "
+        "trans-dimensional MH pass that inserts omitted / removes spurious words using full-sentence "
+        "context. v1: single-token words; multi-token sentences fall back to the native filter.",
+    )
     args = parser.parse_args()
 
     obs = encode(args.sentence)
@@ -133,6 +140,20 @@ def main():
         from .rejuv_bridge import run_smc_rejuv
 
         sentences, log_marginal, min_ess, accept_rate = run_smc_rejuv(
+            key,
+            jax.numpy.array(obs),
+            num_particles=args.particles,
+            max_dist=args.max_dist,
+            n_sweeps=args.rejuv_sweeps,
+            dedup=not args.no_dedup,
+            progress=True,
+        )
+    elif args.filter == "native" and args.add_delete:
+        # genjax-native sweep + post-sweep add/delete (R2) reanalysis: the trans-dimensional MH pass
+        # inserts omitted / removes spurious words with full-sentence context. v1: single-token words.
+        from .rejuv_bridge import run_smc_add_delete
+
+        sentences, log_marginal, min_ess, accept_rate = run_smc_add_delete(
             key,
             jax.numpy.array(obs),
             num_particles=args.particles,
