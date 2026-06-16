@@ -104,22 +104,22 @@ gain a leading P axis) — the ragged-`W` problem is absorbed into the mask. Tha
 - [x] Tests in the runner (`tests/test_rejuvenation_r2.py`, pythia-70m): reanalysis (add recovers the
   omitted "to" → "he wants to go home"), suffix-participates, and **detailed balance** (add/delete MH
   histogram matches the enumerated exact posterior to ≤0.07 — Thm 2 / R2 in practice). All green.
-- [ ] **NEXT — Vectorized bridge (Phase 2 of `VECTORIZED_REJUV_PLAN.md`):** vmap the standalone move
-  over particles and interleave it into the filtering sweep (couple with R3's surprisal gate). The
-  representation is already fixed-address + masked, so the batched trace stays rectangular (the
-  `del{t}`/`gap{t}` arrays gain a leading P axis); ragged `W` is absorbed by the mask. Then wire
-  `--add_delete` into `run.py`. Also: R2 currently runs as a second pass on its own chain (like R1's
-  `rejuvenation.py` did before `rejuv_bridge.py`); the bridge unifies it with the substitution sweep.
-
-  **RECONCILE with `rejuv_model.py` first (important — avoid two parallel masked chains).** That
-  module (Phase 2b, commit f0f086b) is a **vmappable** masked *autoregressive* carrier:
-  `present_k ~ flip(p)` gates `mask(_token_slot)`, buffer threaded over active slots only,
-  `importance == manual joint` **and** vmap-over-particles both verified (`tests/test_rejuv_model.py`).
-  It already solved the hard Phase-2 infra (masked AR + vmap + weight parity) — but has **no channel
-  (`o`), no proposal, and no move**. This module (`rejuvenation_r2.py`) is the complement: the actual
-  add/delete **move** (proposal `q`, SMCP3 weight, MH step, detailed balance) on a channel-bearing
-  gap-chain, **non-vmapped**. Two representational choices to merge: `rejuv_model`'s uniform
-  "every intended token is a toggleable `present` slot" vs this module's "a `del{t}` gap before each
-  always-present observed word". Phase 2 = port the (representation-agnostic) move math here onto a
-  channel-augmented, vmapped `rejuv_model` chain — not a third rewrite. The keystone (`MaskCombinator`
-  birth/death weight) and the move math are identical for both layouts.
+- [x] **Reconciliation with `rejuv_model.py` (done — no parallel chains).** `rejuv_model.py`
+  (Phase 2b, commit f0f086b) is the **minimal channel-less precursor** of this carrier: a vmappable
+  masked-AR chain (`present_k ~ flip` gates `mask(_token_slot)`, importance==manual + vmap verified).
+  `make_gap_chain` here is exactly that pattern **+ the observation channel + the gap/word layout**,
+  so it is the CANONICAL R2 carrier; `rejuv_model` is kept as the clean uniform-`present`-slot
+  abstraction for the future multi-token-word / substitution-as-slot generalization (its docstring now
+  cross-references this module). Do NOT build a third masked chain.
+- [x] **Vectorized move (Phase 2 keystone — done).** `vmapped_add_delete` = `jax.vmap` of
+  `add_delete_step` over a P-batched gap-chain trace. Spike 7 + `test_vmapped_move_..._per_particle_masks`
+  prove it: vmaps over **per-particle `del{t}` masks** (each particle its own deletion config — the
+  real SMC need rejuv_model's shared-pattern test never exercised), **batches the forward** (P=64 ≈
+  15.6× P=1, not 64×), and is **bit-parity with the per-particle loop** to XLA float-tiling noise
+  (~1e-2; accepts identical; the `-inf` pattern — a removed token outside `q`'s support — matches).
+- [ ] **NEXT — interleave into the filtering sweep (rest of Phase 2 / `VECTORIZED_REJUV_PLAN.md`).**
+  Materialize a P-batched gap-chain trace from the sweep buffers (à la `rejuv_bridge`'s
+  `vmapped_window_move`), run `vmapped_add_delete` over a lookback window after each resample (couple
+  with R3's surprisal gate), write the reconstructed tokens back, continue. Then wire `--add_delete`
+  into `run.py`. R2 currently runs as a second pass on its own chain (like R1 before `rejuv_bridge`);
+  this step unifies it with the substitution sweep.

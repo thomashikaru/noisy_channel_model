@@ -1,10 +1,20 @@
 """Phase 2b: the masked chain model -- the fixed-shape carrier for trans-dimensional rejuvenation.
 
+> RECONCILIATION NOTE (2026-06-15): this module is the **minimal, channel-less precursor** of the
+> R2 carrier. The R2 add/delete *move* (proposal, SMCP3 weight, MH, detailed balance) lives in
+> `rejuvenation_r2.py` on `make_gap_chain`, which is exactly this masked-AR pattern **augmented with
+> the observation channel** (`o{t} ~ obs_dist`) and the gap+word layout. That gap chain is the
+> CANONICAL R2 carrier; its move is `vmapped_add_delete` (vmaps over per-particle `del{t}` masks,
+> batches the forward -- the property this module's `_vmaps_over_particles` test foreshadowed but with
+> only a *shared* mask pattern). Keep this module as the clean uniform-`present`-slot abstraction
+> (useful for the future multi-token-word / substitution-as-slot generalization); do NOT build a
+> third masked chain. See `R2_PLAN.md`.
+
 R2 (add/delete, multi-token sub) changes the number of intended tokens per particle, which a real
 dimension change can't `vmap`. Phase 2a proved the lever: emulate it with a FIXED-shape MASKED trace
 -- each slot carries a `present` flag (a `flip` choice) gating a `mask(kernel)` sub-call, and toggling
 `present` is a dimension-preserving edit whose `MaskCombinator.edit` weight is the correct add/delete
-weight (detailed-balance verified).
+weight (detailed-balance verified -- now end-to-end with a channel + proposal in `rejuvenation_r2.py`).
 
 This module builds the **masked autoregressive chain**: `K` single-token slots, each
 `present_k ~ flip(p)` gating `lm_token(buf, il)`. The novel piece beyond 2a is the autoregression --

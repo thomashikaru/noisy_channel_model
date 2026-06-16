@@ -26,7 +26,7 @@ from src.genjax_port import lm_penzai as L
 from src.genjax_port.lm_genjax import lm_logp
 from src.genjax_port.rejuvenation_r2 import (
     gap_chain_inputs, literal_trace, add_delete_step, add_delete_sweep,
-    gap_config, decoded_gap_chain,
+    vmapped_add_delete, gap_config, decoded_gap_chain,
 )
 from src.genjax_port.tokenizer import encode, surface
 
@@ -107,6 +107,43 @@ def test_detailed_balance_add_delete():
                             (round(exact[s], 3), round(counts.get(s, 0) / n, 3)) for s in exact})
 
 
+def test_vmapped_move_matches_loop_with_per_particle_masks():
+    """The vmapped add/delete move (Phase 2) == the per-particle loop, with DIFFERENT deletion
+    configs per particle -- proving the MaskCombinator vmaps over per-particle del{t} flags and the
+    LM forward batches. Parity to XLA float-tiling noise (~1e-2), accepts identical."""
+    obs = _ids(" he", " wants", " go", " home")
+    to_id = encode(" to")[0]
+    model, obs, buf0, ilen0, cxs, cls = gap_chain_inputs(obs)
+    W = len(obs)
+    args = (buf0, ilen0, cxs, cls)
+    P = 6
+
+    def particle(i):                               # particle i: one gap on, at a per-particle slot
+        on = i % W
+        d = {}
+        for t in range(W):
+            d[f"del{t}"] = jnp.bool_(t == on)
+            d[f"gap{t}"] = C.d({"xd": jnp.int32(to_id)})
+            d[f"x{t}"] = jnp.int32(obs[t])
+            d[f"o{t}"] = jnp.int32(obs[t])
+        tr, _ = model.importance(jax.random.key(100 + i), C.d(d), args)
+        return tr
+
+    trs = [particle(i) for i in range(P)]
+    batched = jax.tree_util.tree_map(lambda *xs: jnp.stack(xs), *trs)
+    keys = jax.random.split(jax.random.key(0), P)
+    k = 1
+
+    _, vW, vacc = vmapped_add_delete(keys, batched, k, buf0, ilen0, cxs, cls, obs)
+    loop = [add_delete_step(keys[i], trs[i], k, buf0, ilen0, cxs, cls, obs) for i in range(P)]
+    lW = jnp.stack([o[1] for o in loop])
+    lacc = jnp.stack([o[2] for o in loop])
+    finite = jnp.isfinite(vW) & jnp.isfinite(lW)
+    assert jnp.all(vacc == lacc), (vacc, lacc)
+    assert jnp.all(jnp.abs(jnp.where(finite, vW - lW, 0.0)) < 1e-2), (vW, lW)
+    assert jnp.all(jnp.isfinite(vW) == jnp.isfinite(lW)), (vW, lW)   # -inf pattern matches
+
+
 if __name__ == "__main__":
     L.load_model()
     test_reanalysis_add_recovers_omitted()
@@ -115,3 +152,5 @@ if __name__ == "__main__":
     print("OK  suffix participates in the add weight")
     test_detailed_balance_add_delete()
     print("OK  detailed balance: add/delete histogram matches exact posterior")
+    test_vmapped_move_matches_loop_with_per_particle_masks()
+    print("OK  vmapped move == per-particle loop (per-particle masks, batched forward)")

@@ -192,6 +192,25 @@ def add_delete_sweep(key, tr, buf0, ilen0, cand_xs, cand_ls, obs,
     return tr
 
 
+# --- vectorized over particles (Phase 2: the move batched across the SMC particle set) ---------
+# The whole point of the genjax port: vmap the move so the LM forward batches (P=64 ~ small x P=1,
+# not 64x; spike 7). The masked-gap chain is fixed-address, so the batched trace stays rectangular
+# and -- critically -- the MaskCombinator vmaps over PER-PARTICLE ``del{t}`` flags (each particle
+# carries its own deletion config). Parity with a per-particle loop holds to XLA float-tiling noise
+# (~1e-2, as for bucketed forwards). This is the canonical R2 move for the filtering-sweep bridge.
+
+def vmapped_add_delete(keys, trs, k, buf0, ilen0, cand_xs, cand_ls, obs, lookahead_k=LOOKAHEAD_K):
+    """``jax.vmap`` of :func:`add_delete_step` over a P-batched gap-chain trace ``trs``.
+
+    ``keys`` is ``[P]`` PRNG keys; ``trs`` is the per-particle batched trace (leading P axis), with
+    per-particle deletion configs allowed. ``buf0/ilen0/cand_xs/cand_ls/obs`` are shared. Returns the
+    batched ``(trace, W [P], accepted [P])`` -- one batched LM forward, not P of them.
+    """
+    step = lambda key, tr: add_delete_step(
+        key, tr, k, buf0, ilen0, cand_xs, cand_ls, obs, lookahead_k)
+    return jax.vmap(step)(keys, trs)
+
+
 # --- readout ----------------------------------------------------------------------------------
 
 def gap_config(tr, W):
