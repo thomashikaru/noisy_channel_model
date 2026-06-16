@@ -149,6 +149,31 @@ def test_add_delete_recovers_omitted_word():
     assert rate > 0.0
 
 
+def test_dyn_step_matches_static():
+    """The position-independent dynamic step (one compile for all words) == the static add/delete
+    move, bit-for-bit on the add/delete part. This is what lets the post-sweep reuse one compiled
+    graph for every word instead of recompiling per position (~150s -> one ~35s compile)."""
+    from src.genjax_port.rejuvenation_r2 import gap_chain_inputs, add_delete_step
+    from src.genjax_port.rejuv_bridge import _dyn_step_fn, _materialize_fn, _gap_choices
+    from src.genjax_port.particle_filter import P_DELETE_PRIOR
+    obs = encode(" he wants go home")
+    W, P, k, pdel = 4, 6, 2, float(P_DELETE_PRIOR)
+    _, obsl, buf0, ilen0, cxs, cls = gap_chain_inputs(obs)
+    obsa = jnp.asarray(obsl, jnp.int32)
+    xr = jnp.tile(obsa, (P, 1))
+    trs = _materialize_fn(W, pdel)(jax.random.split(jax.random.key(1), P), xr,
+                                   buf0, ilen0, cxs, cls, obsa)
+    keys = jax.random.split(jax.random.key(7), P)
+    dtrs, dacc = _dyn_step_fn(W, 6, pdel, False)(jnp.int32(k), keys, trs,
+                                                 buf0, ilen0, cxs, cls, obsa)
+    dd, _, _ = _gap_choices(dtrs, W)
+    for p in range(P):
+        tp = jax.tree_util.tree_map(lambda a: a[p], trs)
+        t2, _, a = add_delete_step(keys[p], tp, k, buf0, ilen0, cxs, cls, obsa)
+        sd = jnp.array([t2.get_choices()[f"del{t}"] for t in range(W)])
+        assert bool((dd[p] == sd).all()) and bool((dacc[p] > 0) == bool(a)), p
+
+
 def test_add_delete_multitoken_falls_back():
     """A multi-token word falls back to the native filter (deletions on), accept_rate 0, never errors."""
     import warnings
@@ -164,6 +189,7 @@ if __name__ == "__main__":
     for name in ("test_chain_importance_matches_sweep_evidence", "test_rejuv_zero_sweeps_is_identity",
                  "test_run_smc_rejuv_roundtrip", "test_conditional_gate_off_no_moves",
                  "test_conditional_rejuv_runs_and_fires", "test_multitoken_falls_back_to_plain_filter",
-                 "test_add_delete_recovers_omitted_word", "test_add_delete_multitoken_falls_back"):
+                 "test_add_delete_recovers_omitted_word", "test_dyn_step_matches_static",
+                 "test_add_delete_multitoken_falls_back"):
         globals()[name]()
         print(f"OK  {name}")

@@ -42,15 +42,21 @@ import warnings
 import numpy as np
 import jax
 import jax.numpy as jnp
+import genjax
 from genjax import ChoiceMap as C
+
+from jax.scipy.special import logsumexp
 
 from . import lm_penzai as L
 from . import noise_word as NW
 from .tokenizer import decode
+from .lm_genjax import lm_logp
 from .model import COPY, SUB
 from .smc_substitution import run_smc_substitution
 from .rejuvenation import make_chain_model, rejuv_step
-from .rejuvenation_r2 import make_gap_chain, gap_chain_inputs, add_delete_step, sub_flip_step
+from .rejuvenation_r2 import (
+    make_gap_chain, gap_chain_inputs, add_delete_step, sub_flip_step, _q_logits,
+)
 from .particle_filter import MAX_DELETIONS, P_DELETE_PRIOR
 from .particle_filter_lookahead import LOOKAHEAD_K
 
@@ -247,22 +253,95 @@ def _materialize_fn(W, p_del):
     return jax.jit(jax.vmap(one, in_axes=(0, 0, None, None, None, None, None)))
 
 
+# The per-position step must compile ONCE and be reused for every word -- else each of the W
+# positions compiles a separate heavy graph (the chain re-score + the K-row lookahead, doubled by the
+# sub-flip), which on a 7-word sentence is ~150s of pure compile (the static-k step baked `range(k)`
+# into the graph, so the graph differed per position). The fix: pass `k` as a RUNTIME value and do the
+# context replay + the edit over a fixed `range(W)` masked/selected by `k`. The edit constrains all W
+# addresses with only position `k` changed (re-asserted addresses contribute 0 to the update weight,
+# and re-asserting the suffix is exactly what lets the trans-dimensional shift re-score it). This is
+# the manual SMCP3 of add_delete_step / sub_flip_step, made position-independent. Validated against the
+# static-k moves in tests/test_rejuv_bridge.py::test_dyn_step_matches_static.
+
 @functools.lru_cache(maxsize=None)
-def _step_fn(W, k, lookahead_k, p_del, do_sub):
-    """Jitted vmapped per-position move at gap/word ``k``: an add/delete step, then (if ``do_sub``) a
-    substitution-flip on ``x{k}`` -- both moves on the one gap-chain trace. One compile per ``(W, k,
-    do_sub)``. Returns ``(trs, accepts [P])`` (accepts summed over the move(s) at this position)."""
-    def step(keys, trs, buf0, ilen0, cand_xs, cand_ls, obs):
-        def one(key, tr):
-            ka, ks = jax.random.split(key)
-            tr, _, acc = add_delete_step(ka, tr, k, buf0, ilen0, cand_xs, cand_ls, obs, lookahead_k)
-            acc = acc.astype(jnp.int32)
-            if do_sub:
-                tr, _, accs = sub_flip_step(ks, tr, k, buf0, ilen0, cand_xs, cand_ls, obs)
-                acc = acc + accs.astype(jnp.int32)
-            return tr, acc
-        return jax.vmap(one, in_axes=(0, 0))(keys, trs)
-    return jax.jit(step)
+def _dyn_step_fn(W, lookahead_k, p_del, do_sub):
+    """Jitted vmapped per-position move with ``k`` as a runtime arg -- ONE compile for all positions.
+
+    Does an add/delete step at gap ``k`` then (if ``do_sub``) a substitution-flip on word ``k``, on the
+    one gap-chain trace. Returns a callable ``(k, keys, trs, buf0, ilen0, cand_xs, cand_ls, obs) ->
+    (trs, accepts [P])``."""
+    def per_particle(k, key, tr, buf0, ilen0, cand_xs, cand_ls, obs):
+        model, args = tr.get_gen_fn(), tr.get_args()   # the trace's OWN gen fn (make_gap_chain makes a
+                                                        # fresh closure each call; using another breaks
+                                                        # tree_map of the edited vs original trace)
+        chm = tr.get_choices()
+        dels = jnp.stack([chm[f"del{t}"] for t in range(W)])
+        gaps = jnp.stack([chm[f"gap{t}", "xd"].value for t in range(W)]).astype(jnp.int32)
+        xs = jnp.stack([chm[f"x{t}"] for t in range(W)]).astype(jnp.int32)
+
+        # context (buf, il) just before gap k: replay words t<k (masked over the fixed range)
+        buf, il = buf0, ilen0
+        for t in range(W):
+            before = t < k
+            dt = dels[t] & before
+            buf = jnp.where(dt, buf.at[il].set(gaps[t]), buf)
+            il = il + dt.astype(jnp.int32)
+            buf = jnp.where(before, buf.at[il].set(xs[t]), buf)
+            il = il + before.astype(jnp.int32)
+        obs_k = obs[k]
+
+        # ---- add/delete at gap k (toggle del{k}; full-trace update selected by t==k) ----
+        key, ka, ke, ku = jax.random.split(key, 4)
+        del_k, gap_k = dels[k], gaps[k]
+        adding = jnp.logical_not(del_k)
+        cand_ids, q_logits, logZ = _q_logits(buf, il, obs_k, lookahead_k)   # ONE forward (incl lookahead)
+        xprop = cand_ids[jax.random.categorical(ka, q_logits)].astype(jnp.int32)
+
+        def _qlp(x):
+            m = cand_ids == x
+            return jnp.where(jnp.any(m), jnp.max(jnp.where(m, q_logits, -jnp.inf)) - logZ, -jnp.inf)
+
+        new_gap_k = jnp.where(adding, xprop, gap_k)
+        eq = jnp.arange(W) == k
+        upd = C.d({**{f"del{t}": jnp.where(eq[t], jnp.logical_not(dels[t]), dels[t]) for t in range(W)},
+                   **{f"gap{t}": C.d({"xd": jnp.where(eq[t], new_gap_k, gaps[t])}) for t in range(W)}})
+        new_tr, w_upd, _, _ = model.edit(ke, tr, genjax.Update(upd), genjax.Diff.no_change(args))
+        s_fwd = jnp.where(adding, _qlp(xprop), 0.0)
+        s_bwd = jnp.where(adding, 0.0, _qlp(gap_k))
+        acc = jnp.log(jax.random.uniform(ku)) < (w_upd + s_bwd - s_fwd)
+        tr = jax.tree_util.tree_map(lambda a, b: jnp.where(acc, a, b), new_tr, tr)
+        accepts = acc.astype(jnp.int32)
+
+        if do_sub:
+            # re-read (only position k changed; the t<k context above is still valid)
+            chm = tr.get_choices()
+            dels = jnp.stack([chm[f"del{t}"] for t in range(W)])
+            gaps = jnp.stack([chm[f"gap{t}", "xd"].value for t in range(W)]).astype(jnp.int32)
+            xs = jnp.stack([chm[f"x{t}"] for t in range(W)]).astype(jnp.int32)
+            d_k = dels[k]
+            buf_w = jnp.where(d_k, buf.at[il].set(gaps[k]), buf)
+            il_w = il + d_k.astype(jnp.int32)
+            cx_k, cl_k = cand_xs[k], cand_ls[k]
+            key, kp, kse, ksu = jax.random.split(key, 4)
+            x_cur = xs[k]
+            sc = lm_logp(buf_w, il_w)[cx_k] + cl_k      # ONE forward; q(x) prop LM(x|ctx)*channel
+            lz = logsumexp(sc)
+            x_new = cx_k[jax.random.categorical(kp, sc)].astype(jnp.int32)
+
+            def _plp(x):
+                m = cx_k == x
+                return jnp.where(jnp.any(m), jnp.max(jnp.where(m, sc, -jnp.inf)) - lz, -jnp.inf)
+
+            upd_s = C.d({f"x{t}": jnp.where(eq[t], x_new, xs[t]) for t in range(W)})
+            ntr2, w_upd2, _, _ = model.edit(kse, tr, genjax.Update(upd_s), genjax.Diff.no_change(args))
+            acc2 = jnp.log(jax.random.uniform(ksu)) < (w_upd2 + _plp(x_cur) - _plp(x_new))
+            tr = jax.tree_util.tree_map(lambda a, b: jnp.where(acc2, a, b), ntr2, tr)
+            accepts = accepts + acc2.astype(jnp.int32)
+
+        return tr, accepts
+
+    vm = jax.vmap(per_particle, in_axes=(None, 0, 0, None, None, None, None, None))
+    return jax.jit(vm)
 
 
 def _gap_choices(trs, W):
@@ -318,13 +397,13 @@ def run_smc_add_delete(key, obs_ids, num_particles=64, max_dist=2, n_sweeps=2, o
     mat_keys = jax.random.split(mat_key, num_particles)
     trs = _materialize_fn(W, p_del)(mat_keys, x_rows, buf0, ilen0, cand_xs, cand_ls, obs_arr)
 
+    step = _dyn_step_fn(W, int(lookahead_k), p_del, bool(sub_flip))  # ONE compile, reused per position
     accepts = 0
     for _ in range(n_sweeps):                                 # Python loop: memory frees per step
         for k in _positions(W, order):
             move_key, sk = jax.random.split(move_key)
             keys = jax.random.split(sk, num_particles)
-            trs, acc = _step_fn(W, int(k), int(lookahead_k), p_del, bool(sub_flip))(
-                keys, trs, buf0, ilen0, cand_xs, cand_ls, obs_arr)
+            trs, acc = step(jnp.int32(k), keys, trs, buf0, ilen0, cand_xs, cand_ls, obs_arr)
             accepts += int(jnp.sum(acc))
     dels, gaps, xs = _gap_choices(trs, W)
     sentences = [_decode_gap_row(dels[p], gaps[p], xs[p], W) for p in range(num_particles)]

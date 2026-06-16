@@ -20,10 +20,13 @@
 #           ./run_example_native.sh 64 0      # max_dist 0: pure add/delete, no substitution
 
 # ---- edit these ----
-SENTENCE="he wants go home"      # 'to' omitted before 'go'; all single-token
+SENTENCE="The little boy kicked ball into net."      # 'to' omitted before 'go'; all single-token
 PARTICLES="${1:-64}"             # number of SMC particles
 MAX_DIST="${2:-2}"               # max char edit distance for word-substitution candidates (SymSpell)
-REJUV_SWEEPS=4                   # MH sweeps of the post-sweep reanalysis (each: add/delete + sub-flip per word)
+REJUV_SWEEPS=2                   # MH sweeps of the post-sweep reanalysis (each: add/delete + sub-flip per word)
+                                 # NB: the post-sweep cost ~ sweeps x words^2 LM forwards (each move
+                                 # re-scores the sentence via the @gen trace edit); long sentences /
+                                 # many sweeps are slow. max_dist 0 (no sub-flip work) is much cheaper.
 NC_LM="${NC_LM:-EleutherAI/pythia-70m}"    # set NC_LM=EleutherAI/pythia-410m for the stronger LM
 # --------------------
 
