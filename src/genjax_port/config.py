@@ -32,10 +32,24 @@ MAX_DELETIONS = 1  # max consecutive deletions per gap; D=1 (was 2) ~2x faster -
 # LM fluency to survive resampling, while a genuine omission (which sharply improves the
 # following predictive likelihood) does. (A data-aware deletion proposal / rejuvenation is
 # the more powerful fix.)
-P_DELETE_PRIOR = 0.02
+# In the pair-HMM filter this is the word-level deletion cost WDEL = log(P_DELETE_PRIOR): a posited
+# MISSING intended word (no observation) pays it. Lowered 0.02 -> 0.005 (-3.91 -> -5.30 nats) so a
+# hallucinated fluent word must earn back >5.3 nats of predictive payoff to survive -- this stops
+# inference "cheating" by filling LM-cheap boilerplate as cheap word-deletions at small P.
+P_DELETE_PRIOR = 0.005
 P_DELETE_PROPOSAL = 0.20
 
 # Candidate omitted tokens per deletion slot for the lookahead deletion proposal. Swept
 # 6-vs-12 at D=1: identical posteriors, ~1.6x faster at K=6, so 6 is the default. Cost is
 # linear in K (it drives the P*K lookahead forward).
 LOOKAHEAD_K = 6
+
+# Max single-token substitution candidates kept per word (nearest by edit distance) in
+# noise_word.word_sub_candidates. This caps the per-word candidate count K used by the filter's
+# evidence gather AND -- the dominant cost -- the suffix-aware rejuvenation move, which forwards
+# P*K buffers per revisited word. Almost every common word saturated the old cap of 128 (so K was
+# effectively pinned at 129 regardless of the sentence); 32 cuts the rejuv move's forward ~4x.
+# The dropped candidates are the FARTHEST edits, already crushed by SUB_PARAM**d, so the loss is
+# near-zero; nearest-first ordering keeps all distance-1 reanalysis targets (e.g. threats->treats).
+# Raise it if a word's genuine distance-1 neighbor set exceeds 32; sweep with eval_rejuv.py.
+MAX_SUB_CANDIDATES = 32
