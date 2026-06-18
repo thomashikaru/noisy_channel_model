@@ -282,8 +282,12 @@ per-particle sampling — duplicates must sample *different* moves to diversify)
     **Bit-identical** `ctx_buf`/`log_w`/`logZ` on vs off; sweep rows **2816→496 (82% saved)**; **single
     cold run 32→17s in-proc (1.93×), warm exec 24→7.9s (3.05×)**; cold CLI 28→21s (load+compile are fixed
     overhead dedup can't touch). Toy gate `test_rejuv_dedup_bit_parity` + 8 prior green. **Strict <2× on the
-    sweep cost: HIT.** Remaining single-sentence lever is now the ~8s **XLA compile per cold process** →
-    JAX persistent compilation cache (next, orthogonal to dedup).
+    sweep cost: HIT.** Remaining single-sentence cost is the ~8s **compile per cold process** — but that is
+    JAX **tracing/lowering**, NOT XLA backend compile, so the **persistent compilation cache does NOT help**
+    (tested 2026-06-15, `MIGRATION_PLAN.md` latency note: cache-hit 9.1s ≈ cold-compile 8.1s, enabling it
+    made the cold run worse). The only levers for that ~8s are a **warm/persistent process** (amortize
+    compile across many sentences in one process — the `_build_step` memo already makes same-length
+    repeats free) or **reducing the jitted-graph/shape count**; a true one-off can't avoid it.
 ~~(2) the per-run `make_sweep` recompile~~
 ✅ **DONE (2026-06-18)** — the jitted step is now built by a memoized factory `pairhmm_rejuv._build_step`
 keyed on the static structure (`sl,Wmax,T,M,K,mt,eos_id,Vc,band,tail_fn`); the per-run-varying data
