@@ -54,3 +54,17 @@ def unigram_surprisal(word: str) -> float:
         return -math.log(CEIL_FREQ)
     freq = wordfreq.word_frequency(w, "en")
     return -math.log(max(freq, FLOOR_FREQ))
+
+
+def custom_sigmoid(x, center, spread):
+    """Gate probability ``sigmoid(spread * (x - center))`` (matches ``gen_inference.jl`` custom_sigmoid).
+
+    The conditional-rejuvenation gate fires with this probability on input
+    ``surprisal - unigram_surp`` (see the module docstring). Overflow-safe: for large ``|z|`` the
+    naive ``1/(1+exp(-z))`` raises on ``exp`` of a huge magnitude.
+    """
+    z = spread * (x - center)
+    if z >= 0:
+        return 1.0 / (1.0 + math.exp(-z))
+    ez = math.exp(z)
+    return ez / (1.0 + ez)

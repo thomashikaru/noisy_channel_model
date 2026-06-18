@@ -9,8 +9,7 @@ so the test needs no LM.
     PYTHONPATH=. python -m src.genjax_port.tests.test_unigram
 """
 
-from src.genjax_port.unigram import unigram_surprisal, FLOOR_FREQ, CEIL_FREQ
-from src.genjax_port.rejuv_bridge import custom_sigmoid
+from src.genjax_port.unigram import unigram_surprisal, FLOOR_FREQ, CEIL_FREQ, custom_sigmoid
 
 
 def test_floors():
