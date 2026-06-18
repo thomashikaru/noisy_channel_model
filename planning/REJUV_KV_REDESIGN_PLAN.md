@@ -253,14 +253,21 @@ the rest), now matches a hand chain-rule + the uncached scorer to ~1e-3
 **Measured** (cat/mat, pythia-70m, P=128, lookback=3, 4 seeds): **full-forward balloon ×151 → ×2.67**
 (filter 9 forwards + 15 shared prefills, + 60 cheap tail-steps) with **identical** quality (4/4 MAP,
 logZ and posteriors match R2 to float — the prefix-cancel + KV is exact). All **7 toy gates pass**
-(the suffix-tail conditional == the whole-sentence one). Wall-clock ~3.6s→~17s (~4.7×) is still
-**compile-dominated** (the `make_sweep` step recompiles per run — see below).
+(the suffix-tail conditional == the whole-sentence one). Wall-clock ~3.6s→~17s (~4.7×) was still
+**compile-dominated** (the `make_sweep` step recompiled per run) — **now fixed**, see Remaining item (2).
 
-**Remaining for the strict <2× target (scoped, not done here):** (1) **dedup** — median unique/P≈0.07,
+**Remaining for the strict <2× target:** (1) **dedup** — median unique/P≈0.07,
 so the prefills should run on the ~handful of unique post-resample buffers (≈×2.67→×1.1), but dedup is
-host-side and forces un-jitting the step (GOAL1 tension); (2) the **per-run `make_sweep` recompile**
-(it rebuilds the jitted step every `run`; pass `ctx`/pool as step args or memoize so it compiles once)
-— this is what inflates wall-clock today; (3) the **surprisal gate**. Compile-time bucketing is already
+host-side and forces un-jitting the step (GOAL1 tension); ~~(2) the per-run `make_sweep` recompile~~
+✅ **DONE (2026-06-18)** — the jitted step is now built by a memoized factory `pairhmm_rejuv._build_step`
+keyed on the static structure (`sl,Wmax,T,M,K,mt,eos_id,Vc,band,tail_fn`); the per-run-varying data
+(`emit_full`/`a0`/pool spans + `wdel`/`wins`/`seed_ids`) is threaded as **traced args**, not baked into
+the closure, so two `run`s of the same shape (e.g. the bench's seeds, or same-length sentences) reuse
+the compiled step and hit JAX's jit cache — no recompile. Only a new sentence *length* recompiles.
+`tail_fn` is the cache key and is stable per model (Pythia's comes from the lru_cached `_pythia_model`).
+Measured: toy second same-structure build cache-hits (first-exec 1.60s→0.29s); pythia-70m `run` 2 of the
+same sentence drops **12.2s→2.5s** (run2/run1=0.21). Certified by the 3 rejuv gates (still green) plus a
+reused-step-vs-fresh-compile equality check. (3) the **surprisal gate**. Compile-time bucketing is already
 handled by the fixed `max_tail`/`cache_len` (one KV specialization).
 
 ### R4 — Multi-token intended words (sequenced after Phase D, NOT a redesign)

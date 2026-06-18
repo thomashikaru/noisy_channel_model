@@ -42,6 +42,7 @@ candidate here -- correctness/shape first). Certified on the toy by exact enumer
 ``tests/test_pairhmm_exact.py``.
 """
 
+import functools
 from collections import Counter
 from dataclasses import dataclass
 from typing import Optional
@@ -86,11 +87,15 @@ def make_rejuv_ctx(observed, model, wdel, wins, band=None, slack=3, t_max=1):
     return RejuvCtx(model, emit_full, a0, M, len(model.seed_ids), M + slack, wdel, wins, band, t_max)
 
 
-def _band_mask(ctx, alpha, t):
-    if ctx.band is None:
+def _band_mask_a(band, M, alpha, t):
+    if band is None:
         return alpha
-    ks = jnp.arange(ctx.M + 1)
-    return jnp.where(jnp.abs(ks - t) <= ctx.band, alpha, -jnp.inf)
+    ks = jnp.arange(M + 1)
+    return jnp.where(jnp.abs(ks - t) <= band, alpha, -jnp.inf)
+
+
+def _band_mask(ctx, alpha, t):
+    return _band_mask_a(ctx.band, ctx.M, alpha, t)
 
 
 # --------------------------------------------------------------------------------------------------
@@ -128,18 +133,23 @@ def _unpack_single_token(ctx_buf, ctx_len, sl, Wmax, t_max):
     return word_tok, word_len, n_words
 
 
-def _flat_buffer(ctx, word_tok, word_len, LCTX, n_out):
-    """Pack per-word spans (+ seed) into a flat LM buffer [N, LCTX]. Returns (bufs, total_tokens)."""
+def _flat_buffer_a(eos_id, seed_ids, sl, word_tok, word_len, LCTX, n_out):
+    """Pack per-word spans (+ seed) into a flat LM buffer [N, LCTX]. Returns (bufs, total_tokens).
+    ``seed_ids`` is the (sl,) seed-token array (empty when sl==0); ``eos_id``/``sl`` are static."""
     N = word_tok.shape[0]
-    eos = ctx.model.eos_id
     packed, total = _pack(word_tok, word_len, n_out)              # (N, n_out)
-    bufs = jnp.full((N, LCTX), eos, jnp.int32)
-    sl = ctx.seed_len
+    bufs = jnp.full((N, LCTX), eos_id, jnp.int32)
     if sl:
-        bufs = bufs.at[:, :sl].set(jnp.array(ctx.model.seed_ids, jnp.int32))
+        bufs = bufs.at[:, :sl].set(seed_ids.astype(jnp.int32))
     valid = jnp.arange(n_out)[None, :] < total[:, None]
-    bufs = bufs.at[:, sl:sl + n_out].set(jnp.where(valid, packed, eos).astype(jnp.int32))
+    bufs = bufs.at[:, sl:sl + n_out].set(jnp.where(valid, packed, eos_id).astype(jnp.int32))
     return bufs, total
+
+
+def _flat_buffer(ctx, word_tok, word_len, LCTX, n_out):
+    sl = ctx.seed_len
+    seed_ids = jnp.asarray(ctx.model.seed_ids, jnp.int32) if sl else jnp.zeros((0,), jnp.int32)
+    return _flat_buffer_a(ctx.model.eos_id, seed_ids, sl, word_tok, word_len, LCTX, n_out)
 
 
 def _lm_logprior(ctx, bufs, total_tokens, add_eos):
@@ -162,23 +172,30 @@ def _lm_logprior(ctx, bufs, total_tokens, add_eos):
     return total
 
 
-def _channel_carry(ctx, word_surf, word_len):
+def _channel_carry_a(a0, emit_full, wdel, wins, band, M, Vc, word_surf, word_len):
     """(N, M+1) forward carry after consuming all active words (band-masked at each step) -- the same
     quantity the filter carries as ``log_alpha``. Loops over WORD slots (token-count-agnostic):
     ``word_surf [N, Wmax]`` is each word's channel surface id (T_max=1: its single token; a multi-
     token word maps to its surface string's emission column). A slot is active iff it holds >= 1
     token. The terminal channel marginal is ``carry[:, M]``; the partial (mid-loop) forward mass is
-    ``logsumexp(carry)`` -- the running likelihood of the observed-prefix-so-far under the words."""
-    N = word_surf.shape[0]
-    Vc = ctx.model.emit_vocab
-    alpha = jnp.broadcast_to(ctx.a0, (N, ctx.M + 1))
-    upd = jax.vmap(lambda a, c: _word_row_update(a, c, ctx.wdel, ctx.wins))
-    for i in range(ctx.Wmax):
+    ``logsumexp(carry)`` -- the running likelihood of the observed-prefix-so-far under the words.
+
+    Pure (no ``ctx``) so it is reusable inside the jitted step with ``a0``/``emit_full`` threaded as
+    TRACED args; ``band``/``M``/``Vc`` are static. ``Wmax`` = ``word_surf.shape[1]`` (static)."""
+    N, Wmax = word_surf.shape
+    alpha = jnp.broadcast_to(a0, (N, M + 1))
+    upd = jax.vmap(lambda a, c: _word_row_update(a, c, wdel, wins))
+    for i in range(Wmax):
         surf_i = jnp.clip(word_surf[:, i], 0, Vc - 1)
-        col = ctx.emit_full[:, surf_i].T                          # (N, M)
-        new = _band_mask(ctx, upd(alpha, col), i + 1)
+        col = emit_full[:, surf_i].T                              # (N, M)
+        new = _band_mask_a(band, M, upd(alpha, col), i + 1)
         alpha = jnp.where((word_len[:, i] > 0)[:, None], new, alpha)
     return alpha
+
+
+def _channel_carry(ctx, word_surf, word_len):
+    return _channel_carry_a(ctx.a0, ctx.emit_full, ctx.wdel, ctx.wins, ctx.band,
+                            ctx.M, ctx.model.emit_vocab, word_surf, word_len)
 
 
 def _tail_chain_uncached(lm_fn, ctx_bufs, ctx_lens, tails, tail_lens):
@@ -215,6 +232,7 @@ def _tail_chain_uncached(lm_fn, ctx_bufs, ctx_lens, tails, tail_lens):
 # ``target_lp[s]``. For a full-conditional proposal the weight ``w + bwd − fwd`` is ≈ 0; genjax owns
 # the bookkeeping so we never hand-derive the ratio. Vmapped over P (per-particle ``target_lp``).
 # --------------------------------------------------------------------------------------------------
+@functools.lru_cache(maxsize=None)
 def _slot_gf(K):
     """A one-variable model + its full-conditional proposal over K candidate slots. The model's joint
     log-density at (slot=s, ev=0) is ``target_lp[s]`` up to the constant ``-log K`` -- so an Update
@@ -248,35 +266,26 @@ def _smcp3_move(slot_model, slot_proposal, keys, target_lp, s_cur):
     return jax.vmap(one)(keys, target_lp, s_cur)
 
 
-def make_sweep(ctx, pool_tok, pool_len, max_tail=None):
-    """Build a reusable ``sweep(key, ctx_buf, ctx_len, positions, done) -> (ctx_buf, log_alpha,
-    move_logw)`` whose per-word ``step`` is jitted ONCE (closure over the constant ``ctx`` + pool), so
-    interleaving it across many resample events in one run does not recompile. See ``gibbs_sweep`` for
-    semantics. ``done`` is a per-word ``step`` ARG (not closed over) so the same compiled step serves
-    every sweep call; ``positions`` only sets the Python loop length (more/fewer calls to one step).
+@functools.lru_cache(maxsize=64)
+def _build_step(sl, Wmax, T, M, K, mt, eos_id, Vc, band, tail_fn):
+    """Build (and memoize on the static structure + ``tail_fn``) the jitted per-word Gibbs/SMCP3 step.
 
-    **LM scoring (R3): only the SUFFIX is scored.** The conditional ``q(x) ∝ LM(x|prefix) +
-    LM(suffix|prefix,x) + channel(x)`` -- the prefix LM is identical for every candidate (the move
-    only touches word ``w``), so it CANCELS in the softmax / SMCP3 weight and is never computed. We
-    score the candidate-dependent tail ``[x, suffix words, EOS?]`` via ``ctx.model.tail_logprobs``
-    (Pythia: a KV-cached scorer that prefills the prefix once and shares it across candidates; toy /
-    default: a generic uncached chain-rule). This replaces R2's wasteful whole-sentence re-score (the
-    ×151 LM-forward balloon). ``max_tail`` bounds the suffix width (default ``Wmax+1`` for a full
-    sweep; the filter passes ``rejuv_lookback+1`` for a windowed sweep)."""
-    sl, Wmax, T, M = ctx.seed_len, ctx.Wmax, ctx.t_max, ctx.M
+    Memoizing on the structural signature is what makes the sweep **compile once across runs**: the
+    per-run-varying data (``emit_full``/``a0``/pool spans + ``wdel``/``wins``/``seed_ids``) is threaded
+    as TRACED ARGS rather than baked into the closure, so two ``run`` calls of the SAME shape (e.g. one
+    per seed, or per same-length sentence) get the identical ``step`` object and hit JAX's jit cache --
+    no recompile. Only a new sentence *length* (new ``M``/``Wmax`` -> new key) recompiles. ``tail_fn``
+    is part of the key and is stable per model (the Pythia KV scorer comes from the lru_cached
+    ``_pythia_model``; the toy uncached fallback is rebuilt per ctx, which is cheap)."""
     n_out = Wmax * T
-    K = pool_tok.shape[1]
     Kt = 1 + K
-    mt = (Wmax + 1) if max_tail is None else max_tail
-    eos_id = ctx.model.eos_id
-    pool_surf = pool_tok[:, :, 0]                                  # (Wmax, K) T_max=1 surface == token
     slot_model, slot_proposal = _slot_gf(Kt)
-    tail_fn = ctx.model.tail_logprobs or (
-        lambda cb, cl, t, tl: _tail_chain_uncached(ctx.model.lm_fn, cb, cl, t, tl))
 
     @jax.jit
-    def step(key, w, word_tok, word_len, word_surf, move_logw, done, n_words):
+    def step(key, w, word_tok, word_len, word_surf, move_logw, done, n_words,
+             emit_full, a0, pool_tok, pool_len, wdel, wins, seed_ids):
         P = word_tok.shape[0]
+        pool_surf = pool_tok[:, :, 0]                            # (Wmax, K) T_max=1 surface == token
         # candidates: [COPY] ++ pool[w], shapes (P, Kt, ...)
         cur_tok = word_tok[:, w, :]                               # (P, T)
         cur_len = word_len[:, w]                                  # (P,)
@@ -299,7 +308,8 @@ def make_sweep(ctx, pool_tok, pool_len, max_tail=None):
         N = P * Kt
         LCTX = sl + n_out + 1
         done_rep = jnp.repeat(done, Kt)                                             # (N,) row = p*Kt+j
-        carry = _channel_carry(ctx, ws.reshape(N, Wmax), wl.reshape(N, Wmax))       # (N, M+1)
+        carry = _channel_carry_a(a0, emit_full, wdel, wins, band, M, Vc,
+                                 ws.reshape(N, Wmax), wl.reshape(N, Wmax))           # (N, M+1)
         chan = jnp.where(done_rep, carry[:, M], logsumexp(carry, axis=1)).reshape(P, Kt)
 
         # LM: tail = [cand, suffix words w+1.., EOS?]; prefix [0, sl+w) cancels (not scored). (T_max=1)
@@ -313,7 +323,7 @@ def make_sweep(ctx, pool_tok, pool_len, max_tail=None):
         tail = jnp.broadcast_to(base[:, None, :], (P, Kt, mt)).at[:, :, 0].set(cand_surf)  # (P,Kt,mt)
         tail_len = jnp.broadcast_to(
             jnp.clip(nw_w + done.astype(jnp.int32), 0, mt)[:, None], (P, Kt))       # (P,Kt)
-        ctx_bufs, _ = _flat_buffer(ctx, word_tok, word_len, LCTX, n_out)            # (P, LCTX) current
+        ctx_bufs, _ = _flat_buffer_a(eos_id, seed_ids, sl, word_tok, word_len, LCTX, n_out)  # current
         ctx_lens = jnp.full((P,), sl, jnp.int32) + w                               # prefix end = sl+w
         chain = tail_fn(ctx_bufs, ctx_lens, tail, tail_len)                         # (P, Kt)
 
@@ -333,6 +343,42 @@ def make_sweep(ctx, pool_tok, pool_len, max_tail=None):
         move_logw = move_logw + jnp.where(active, weight, 0.0)
         return word_tok, word_len, word_surf, move_logw
 
+    return step
+
+
+def make_sweep(ctx, pool_tok, pool_len, max_tail=None):
+    """Build a reusable ``sweep(key, ctx_buf, ctx_len, positions, done) -> (ctx_buf, log_alpha,
+    move_logw)``. The per-word ``step`` is built by the memoized :func:`_build_step`, so it is jitted
+    ONCE PER STRUCTURE and reused both across the many resample events in one run AND across separate
+    ``run`` calls of the same shape (the per-run arrays are passed as args, not baked in -- that is the
+    fix for the per-run recompile that dominated R3 wall-clock). ``done`` is a per-word ``step`` ARG so
+    one compiled step serves every sweep call; ``positions`` only sets the Python loop length.
+
+    **LM scoring (R3): only the SUFFIX is scored.** The conditional ``q(x) ∝ LM(x|prefix) +
+    LM(suffix|prefix,x) + channel(x)`` -- the prefix LM is identical for every candidate (the move
+    only touches word ``w``), so it CANCELS in the softmax / SMCP3 weight and is never computed. We
+    score the candidate-dependent tail ``[x, suffix words, EOS?]`` via ``ctx.model.tail_logprobs``
+    (Pythia: a KV-cached scorer that prefills the prefix once and shares it across candidates; toy /
+    default: a generic uncached chain-rule). This replaces R2's wasteful whole-sentence re-score (the
+    ×151 LM-forward balloon). ``max_tail`` bounds the suffix width (default ``Wmax+1`` for a full
+    sweep; the filter passes ``rejuv_lookback+1`` for a windowed sweep)."""
+    sl, Wmax, T, M = ctx.seed_len, ctx.Wmax, ctx.t_max, ctx.M
+    n_out = Wmax * T
+    K = pool_tok.shape[1]
+    mt = (Wmax + 1) if max_tail is None else max_tail
+    eos_id, Vc = ctx.model.eos_id, ctx.model.emit_vocab
+    # tail_fn is the _build_step cache key -> must be stable across runs for the compile to be reused.
+    # Pythia's comes from the lru_cached _pythia_model (stable); the toy fallback is a fresh partial
+    # per ctx (a per-run recompile, but the toy has no LM load so it is cheap).
+    tail_fn = ctx.model.tail_logprobs or functools.partial(_tail_chain_uncached, ctx.model.lm_fn)
+    step = _build_step(sl, Wmax, T, M, K, mt, eos_id, Vc, ctx.band, tail_fn)
+
+    # Per-run data threaded as TRACED args (not baked into step) so same-shape runs reuse the compile.
+    emit_full, a0 = ctx.emit_full, ctx.a0
+    wdel, wins = jnp.float32(ctx.wdel), jnp.float32(ctx.wins)
+    seed_ids = jnp.asarray(ctx.model.seed_ids, jnp.int32) if sl else jnp.zeros((0,), jnp.int32)
+    pool_tok, pool_len = jnp.asarray(pool_tok), jnp.asarray(pool_len)
+
     def sweep(key, ctx_buf, ctx_len, positions=None, done=None):
         P, LCTX = ctx_buf.shape
         done = jnp.ones(P, bool) if done is None else done
@@ -342,7 +388,8 @@ def make_sweep(ctx, pool_tok, pool_len, max_tail=None):
         for w in (range(Wmax) if positions is None else positions):
             key, sub = jax.random.split(key)
             word_tok, word_len, word_surf, move_logw = step(
-                sub, jnp.int32(w), word_tok, word_len, word_surf, move_logw, done, n_words)
+                sub, jnp.int32(w), word_tok, word_len, word_surf, move_logw, done, n_words,
+                emit_full, a0, pool_tok, pool_len, wdel, wins, seed_ids)
         bufs, _ = _flat_buffer(ctx, word_tok, word_len, LCTX, n_out)
         log_alpha = _channel_carry(ctx, word_surf, word_len)                        # (P, M+1) for filter
         return bufs, log_alpha, move_logw
