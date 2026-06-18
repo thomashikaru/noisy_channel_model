@@ -269,10 +269,21 @@ per-particle sampling — duplicates must sample *different* moves to diversify)
     (cat/mat, 70m, P=128): **bit-identical** `ctx_buf`/`log_w`/`logZ` dedup on vs off (rejuv off AND
     gibbs); filter rows **1152→240 (79% saved)**; wall-clock 8.5→5.7s (off) / 17.5→15.4s (gibbs). LM-free
     gate `test_dedup_forward_exact` + 7 prior toy gates green. Default off pending (1b).
-  - **(1b) sweep-tail dedup — NEXT.** Lift `tail_fn` out of the jitted per-word `step` so its KV prefills
-    run on unique buffers (≈×2.67→×1.1). Needs the step split (`emit_inputs` → host `dedup_tail` → `move`);
-    bucket the unique count `(16,64)`; RNG-parity preserved (same per-word key split). Toy bit-parity gate
-    (dedup on==off, same RNG) + Pythia smoke. Then flip both defaults + `run_example_native.sh` together.
+  - **(1b) sweep-tail dedup ✅ DONE (2026-06-18, `997fcc5`; default-on `11dd2f2`).** Motivated by a
+    wall-clock breakdown: at production `lookback=5` the **sweep execution is ~62% of a cold run and
+    scales LINEARLY with P** (its KV prefills run once per particle) — so deduping its rows is the big
+    single-sentence lever. Lifted `tail_fn` out of the jitted per-word step: factored the body into pure
+    helpers (`_candidates`/`_chan_scores`/`_tail_inputs`/`_apply_move`) shared by the fused `step` and the
+    split `_build_dedup_steps` (`emit_inputs` jitted → host `_dedup_tail` → `move` jitted); `_dedup_tail`
+    keys each row on exactly what `tail_fn` reads (`ctx_bufs[:ctx_len]`++`tail`++`tail_len`), runs `tail_fn`
+    on the unique rows padded to the `(16,64)` ladder, scatters `[U,Kt]→[P,Kt]`. RNG parity preserved
+    (same per-word key split). Wired `rejuv_dedup` through `pairhmm_smc.run` (rejuv branch only) ← the
+    single `dedup` flag in `pythia_word_caprop` (drives 1a+1b); CLI defaults dedup-on (`--no_dedup` to A/B).
+    **Bit-identical** `ctx_buf`/`log_w`/`logZ` on vs off; sweep rows **2816→496 (82% saved)**; **single
+    cold run 32→17s in-proc (1.93×), warm exec 24→7.9s (3.05×)**; cold CLI 28→21s (load+compile are fixed
+    overhead dedup can't touch). Toy gate `test_rejuv_dedup_bit_parity` + 8 prior green. **Strict <2× on the
+    sweep cost: HIT.** Remaining single-sentence lever is now the ~8s **XLA compile per cold process** →
+    JAX persistent compilation cache (next, orthogonal to dedup).
 ~~(2) the per-run `make_sweep` recompile~~
 ✅ **DONE (2026-06-18)** — the jitted step is now built by a memoized factory `pairhmm_rejuv._build_step`
 keyed on the static structure (`sl,Wmax,T,M,K,mt,eos_id,Vc,band,tail_fn`); the per-run-varying data
