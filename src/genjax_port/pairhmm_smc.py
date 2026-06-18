@@ -30,7 +30,7 @@ explicit per-particle ``n_words`` counter (not ``ctx_len``) drives the band, sin
 word count diverge once words are multi-token. See ``planning/PAIRHMM_RBSMC_PLAN.md`` Phase D.
 """
 
-from collections import Counter, defaultdict
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import Callable, Sequence
 
@@ -566,10 +566,18 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
 
 
 def decode(state, log_w, model, skip=0, key=jax.random.PRNGKey(0), top=3):
-    """Most-probable intended sentences from the weighted particle cloud (decode by weight)."""
+    """Most-probable intended sentences from the weighted particle cloud, by EXACT posterior weight.
+
+    Sums the normalized importance weights ``softmax(log_w)`` of all particles that decode to the same
+    sentence -- the identical deterministic estimator the JSON trace reports in ``_record_step``'s
+    ``dist`` (so stdout and the JSON agree exactly). Earlier this drew ``P`` categorical resamples from
+    ``log_w`` and tallied frequencies, a 1/P-quantized Monte-Carlo estimate whose sampling noise could
+    flip near-tied hypotheses; ``key`` is now unused but kept for signature compatibility."""
+    del key                                                          # no longer resampled
     ctx_buf, ctx_len = state[0], state[1]
-    anc = jax.random.categorical(key, log_w, shape=(ctx_buf.shape[0],))
-    trajs = [tuple(int(t) for t in ctx_buf[int(a)][skip:int(ctx_len[int(a)])]) for a in anc]
-    counts = Counter(trajs)
-    n = len(trajs)
-    return [(model.decode_ids(t), c / n) for t, c in counts.most_common(top)]
+    w = np.asarray(jax.nn.softmax(log_w))
+    mass = defaultdict(float)                                        # exact weighted posterior per latent
+    for p in range(ctx_buf.shape[0]):
+        s = model.decode_ids(tuple(int(t) for t in ctx_buf[p][skip:int(ctx_len[p])]))
+        mass[s] += float(w[p])
+    return sorted(mass.items(), key=lambda kv: -kv[1])[:top]
