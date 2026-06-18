@@ -35,8 +35,9 @@ def test_kv_tail_parity():
 
 
 def test_missing_word_smoke():
+    # P=128 is the validated budget; P=4 decodes pure noise (resample-and-count on 4 particles).
     lm_penzai.load_model()
-    st, lw, _, sl = run("i want go home", jax.random.PRNGKey(0), P=4, Ke=8, J=8)
+    st, lw, _, sl = run("i want go home", jax.random.PRNGKey(0), P=128, Ke=8, J=8)
     top = decode(st, lw, skip=sl, top=1)[0][0]
     assert _norm(top) == _norm("i want to go home")
 

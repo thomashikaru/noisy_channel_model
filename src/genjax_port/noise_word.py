@@ -26,6 +26,7 @@ import math
 
 from .tokenizer import surface, str_to_id, vocab_strings
 from .noise import _split_leading_space, SUB_PARAM
+from .config import MAX_SUB_CANDIDATES
 
 
 def _is_punct(surf):
@@ -128,14 +129,17 @@ def _damerau_levenshtein(a, b, cutoff):
     return prev[lb]
 
 
-def word_sub_candidates(word_str, max_dist=2, max_candidates=128):
+def word_sub_candidates(word_str, max_dist=2, max_candidates=MAX_SUB_CANDIDATES):
     """Single-token intended words within Damerau-Levenshtein distance ``max_dist`` of
     ``word_str``, nearest first.
 
     Returns ``[(token_id, char_dist), ...]`` for word-initial single vocab tokens, distance NOT
     fixed at 1 (retrieved via the SymSpell index). Truncated to ``max_candidates`` (closest by
-    distance) for tractability -- not by a hard distance cap; far candidates are kept rare by
-    ``SUB_PARAM**d`` in the likelihood. The literal word itself is excluded (that is COPY).
+    distance; default :data:`config.MAX_SUB_CANDIDATES`) for tractability -- not by a hard distance
+    cap; far candidates are kept rare by ``SUB_PARAM**d`` in the likelihood. The candidate count
+    this sets, ``K``, is the dominant cost of the suffix-aware rejuvenation move (it forwards
+    ``P*K`` buffers per revisited word), so the cap is a real speed knob. The literal word itself is
+    excluded (that is COPY).
     """
     if not word_str or not word_str[0].isalpha():
         return []  # no substitutions for punctuation / non-word units

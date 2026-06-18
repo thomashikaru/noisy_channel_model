@@ -1,0 +1,15 @@
+obs words: ['The', 'cat', 'sat', 'on', 'mat', '.']
+step 0: ESS= 128.0  lastword={'The': 126, '': 2}
+step 1: ESS= 117.7  lastword={'cat': 81, 'at': 13, 'following': 7, 'invention': 6, 'present': 6, 'U': 3}
+step 2: ESS=   3.6  lastword={'at': 34, 'is': 18, 'sat': 7, "'s": 7, 'cat': 7, 'was': 5}  <-- RESAMPLED
+step 3: ESS=   3.6  lastword={'cat': 69, 'at': 13, 'on': 11, 'can': 6, 'one': 3, 'car': 3}  <-- RESAMPLED
+step 4: ESS=   6.4  lastword={'a': 89, 'the': 19, 'my': 4, 'top': 4, 'mat': 4, 'an': 2}  <-- RESAMPLED
+step 5: ESS=   8.9  lastword={'a': 43, 'mat': 26, '.': 23, 'the': 13, 'my': 4, 'bench': 4}  <-- RESAMPLED
+step 6: ESS=  15.4  lastword={'.': 87, 'mat': 22, 'bed': 2, '': 2, 'a': 1, 'table': 1}  <-- RESAMPLED
+step 7: ESS=   7.6  lastword={'.': 114, '': 5, 'The': 1, 'He': 1, 'a': 1, 'was': 1}  <-- RESAMPLED
+step 8: ESS= 127.0  lastword={'.': 127, 'a': 1}
+
+final decode:
+   p=0.83  'The car sat on mat.'
+   p=0.14  'The car sat on top.'
+   p=0.03  'The cat sat on the mat.'

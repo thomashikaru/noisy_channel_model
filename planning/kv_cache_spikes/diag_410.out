@@ -1,0 +1,11 @@
+loaded EleutherAI/pythia-410m in 2s
+=== EleutherAI/pythia-410m P=512 wdel=-8.0 logZ=-42.29 ===
+   p=0.64  'The cat sat on mat.'
+   p=0.22  'The cat sat on the mat.'
+   p=0.05  'The cat sat on a .'
+   p=0.04  'The cat sat on my .'
+=== EleutherAI/pythia-410m P=512 wdel=-9.0 logZ=-41.99 ===
+   p=0.60  'The cat sat on mat.'
+   p=0.16  'The cat sat on a .'
+   p=0.12  'The cat sat on man.'
+   p=0.08  'The cat sat on mat'

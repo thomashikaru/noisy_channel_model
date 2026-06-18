@@ -14,13 +14,17 @@ logsumexp(joint). We then assert the SMC reproduces both:
   * SMC MAP         == exact MAP            (substitution + spurious-word cases)
   * SMC posterior   ~= exact posterior      (small total-variation distance at large P)
 
+and (A3) that with the production band the filter recovers all four edit types behaviourally
+(``test_edit_types_recovered_with_band``) -- the evidence that insertions need no explicit INSERT
+action: the channel sweep marginalizes them and the band gives them reach.
+
 caprop's lower-variance-than-bootstrap logZ is the fully-adapted proposal's signature, but at TOY
 scale the edge is small and case/seed-sensitive (plan finding #4: it grows with LM cost), so it is
 NOT a pass/fail gate -- it is reported by ``main()`` as a diagnostic only.
 
 Enumeration is VECTORIZED (one jitted batched DP per length) and kept small (short sentence, capped
-length) so it runs in seconds. Behavioural recovery of the harder missing/spurious edits lives in
-the A3 edit-type gates, not here.
+length) so it runs in seconds. The harder missing-word case (intended length 6, too big to
+enumerate over V=12) is covered by the behavioural band gate above, not by exact enumeration.
 
 Run as a script:  python -m genjax_port.tests.test_pairhmm_exact
 Run as a test:    pytest src/genjax_port/tests/test_pairhmm_exact.py
@@ -39,6 +43,7 @@ from genjax_port.poc_word_indel import BOS, EOS, LOG_BIGRAM, _word_row_update, l
 from genjax_port.noise_word import _damerau_levenshtein
 from genjax_port import poc_word_indel_caprop as caprop
 from genjax_port import pairhmm_smc
+from genjax_port import pairhmm_rejuv as rejuv
 
 WDEL = float(jnp.log(0.1))
 WINS = float(jnp.log(0.05))
@@ -121,10 +126,10 @@ def exact_posterior(observed, log_bigram=LOG_BIGRAM, Lmax=None):
 # --------------------------------------------------------------------------------------------------
 # SMC posterior (decode the caprop / bootstrap filter into the same {sentence: prob} form).
 # --------------------------------------------------------------------------------------------------
-def smc_posterior(observed, key, P=8000, proposal="caprop", lm_fn=lm_logits):
+def smc_posterior(observed, key, P=8000, proposal="caprop", lm_fn=lm_logits, band=None):
     model = _toy_model(lm_fn)
     st, dw, logZ, sl = pairhmm_smc.run(observed, key, model, P=P, proposal=proposal,
-                                       wdel=WDEL, wins=WINS)
+                                       wdel=WDEL, wins=WINS, band=band)
     return {s: p for s, p in pairhmm_smc.decode(st, dw, model, top=50)}, logZ
 
 
@@ -194,6 +199,117 @@ def test_posterior_mass_matches_exact():
     map_s = max(exact, key=exact.get)
     assert abs(exact[map_s] - smc.get(map_s, 0.0)) < 0.12, "MAP probability mass off"
     assert tv_distance(exact, smc) < 0.15, "posterior shape too far from exact"
+
+
+# A3 edit-type recovery gates. The peaked toy LM (heavily favouring 'the cat sat on the mat') makes
+# each correction the genuine MAP, so these are behavioural MAP-recovery checks rather than exact-
+# enumeration ones (the missing case needs intended length 6 -- too big to enumerate over V=12).
+_EDIT_CASES = [
+    ("substitution",  "teh cat sat",                "the cat sat"),             # SUB corrected
+    ("spurious",      "the cat sat sat on the mat", "the cat sat on the mat"),  # INSERTION -> shorter
+    ("missing",       "the cat sat the mat",        "the cat sat on the mat"),  # DELETION  -> longer
+    ("clean",         "the cat sat on the mat",     "the cat sat on the mat"),  # KEEP      -> unchanged
+]
+
+
+def test_edit_types_recovered_with_band():
+    """A3: with the PRODUCTION band (=2, what Pythia uses) and NO explicit INSERT action, the swept
+    filter recovers every edit type -- substitution, spurious->shorter, missing->longer, clean->
+    unchanged. This is the evidence the design rests on: a spurious word needs no INSERT 'action'.
+    The channel sweep in ``_word_row_update`` marginalizes the insertion (cost WINS) and the band
+    (|k-t|<=2) gives consumption the room to run ahead of emission. Making INSERT a peer LM-action
+    instead biases logZ +0.2 nats (a channel event injected into the LM's action distribution).
+
+    Deletion case is 'the cat sat the mat' (NOT 'the cat on the mat', a valid noun phrase the model
+    has no reason to lengthen): under the peaked LM the dropped 'on' makes 'sat the' disfluent, so
+    restoring 'on' is the true MAP (plan A3). The clean case guards the opposite failure -- the
+    filter must NOT shave a real word off by calling it spurious."""
+    lm = _peaked()
+    for tag, obs, truth in _EDIT_CASES:
+        smc, _ = smc_posterior(obs, jax.random.PRNGKey(0), P=8000, lm_fn=lm, band=2)
+        got = max(smc, key=smc.get)
+        assert got == truth, f"{tag}: {obs!r} -> MAP {got!r}, expected {truth!r}"
+
+
+# --------------------------------------------------------------------------------------------------
+# R0 -- Gibbs rejuvenation correctness (plan REJUV_KV_REDESIGN_PLAN.md). The move (pairhmm_rejuv) is
+# certified on the toy by the SAME exact enumeration: a full-conditional Gibbs sweep must (1) leave
+# the exact posterior INVARIANT when applied to a cloud already at the posterior, and (2) RECOVER the
+# exact MAP from a deliberately COLLAPSED cloud (the impoverishment cure -- the toy analogue of the
+# 'cat/mat' -> 'car' collapse diagnosed in planning/kv_cache_spikes/). Toy = T_max=1, band=None to
+# match the enumeration (no band). The candidate set is the WHOLE vocab -> a true Gibbs step.
+# --------------------------------------------------------------------------------------------------
+def _rejuv_ctx_and_cands(observed, lm):
+    ctx = rejuv.make_rejuv_ctx(observed, _toy_model(lm), WDEL, WINS, band=None)
+    cand_table = jnp.broadcast_to(jnp.arange(V)[None, :], (ctx.Wmax, V))  # full-vocab Gibbs
+    pool_tok, pool_len = rejuv.pool_from_table(cand_table)
+    return ctx, pool_tok, pool_len
+
+
+def _cloud_from_dist(dist, P, key, Wmax):
+    """Equally-weighted cloud of P particles drawn from a {sentence: prob} dict."""
+    sents = list(dist)
+    LCTX = Wmax + 1
+    rows = [[WORD2IDX[w] for w in s.split()] for s in sents]
+    buf0 = jnp.array([r + [EOS] * (LCTX - len(r)) for r in rows], jnp.int32)
+    len0 = jnp.array([len(r) for r in rows], jnp.int32)
+    idx = jax.random.categorical(key, jnp.log(jnp.array([dist[s] for s in sents])), shape=(P,))
+    return buf0[idx], len0[idx]
+
+
+def _cloud_from_sentence(sentence, P, Wmax):
+    toks = [WORD2IDX[w] for w in sentence.split()]
+    LCTX = Wmax + 1
+    buf = jnp.full((P, LCTX), EOS, jnp.int32).at[:, :len(toks)].set(jnp.array(toks, jnp.int32))
+    return buf, jnp.full((P,), len(toks), jnp.int32)
+
+
+def test_rejuv_leaves_exact_posterior_invariant():
+    """A full-conditional Gibbs sweep on a cloud already at the exact posterior leaves it there
+    (invariance) -- the proof the move does not corrupt the certified posterior."""
+    lm, exact, _ = _peaked_exact()
+    ctx, pool_tok, pool_len = _rejuv_ctx_and_cands(_PEAKED_OBS, lm)
+    key = jax.random.PRNGKey(0)
+    key, sub = jax.random.split(key)
+    buf, clen = _cloud_from_dist(exact, 6000, sub, ctx.Wmax)
+    for _ in range(3):
+        key, sub = jax.random.split(key)
+        buf, _, _ = rejuv.gibbs_sweep(sub, buf, clen, ctx, pool_tok, pool_len)
+    after = rejuv.decode_counts(buf, clen, ctx.model, ctx.seed_len)
+    assert max(after, key=after.get) == _PEAKED_TRUTH, "rejuv moved the MAP off the exact MAP"
+    assert tv_distance(after, exact) < 0.08, \
+        f"rejuv perturbed the posterior: TV {tv_distance(after, exact):.3f}"
+
+
+def test_rejuv_recovers_collapsed_cloud():
+    """From a cloud COLLAPSED onto a wrong (same-length) reading, Gibbs sweeps recover the exact MAP
+    -- the impoverishment cure (word-identity Gibbs mixes within the length the cloud is stuck at)."""
+    lm, exact, _ = _peaked_exact()
+    ctx, pool_tok, pool_len = _rejuv_ctx_and_cands(_PEAKED_OBS, lm)
+    buf, clen = _cloud_from_sentence("the dog sat", 4000, ctx.Wmax)  # wrong middle word, right length
+    key = jax.random.PRNGKey(0)
+    for _ in range(6):
+        key, sub = jax.random.split(key)
+        buf, _, _ = rejuv.gibbs_sweep(sub, buf, clen, ctx, pool_tok, pool_len)
+    rec = rejuv.decode_counts(buf, clen, ctx.model, ctx.seed_len)
+    assert max(rec, key=rec.get) == _PEAKED_TRUTH, \
+        f"rejuv failed to escape the collapse: MAP {max(rec, key=rec.get)!r}"
+    assert rec[_PEAKED_TRUTH] > 0.5, f"weak recovery: p={rec.get(_PEAKED_TRUTH, 0.0):.2f}"
+
+
+def test_rejuv_smcp3_weight_zero():
+    """R1: the genjax SMCP3 reweight of a full-conditional (symmetric, full-support) Gibbs move is 0
+    -- the built-it-right check that ``Rejuvenate``'s ``w + bwd − fwd`` cancels for the exact
+    conditional (REJUV_GOAL2/3). genjax produces the weight; we never hand-derive the ratio. A
+    non-zero weight here would mean the proposal/target/model density are inconsistent."""
+    lm, exact, _ = _peaked_exact()
+    ctx, pool_tok, pool_len = _rejuv_ctx_and_cands(_PEAKED_OBS, lm)
+    key = jax.random.PRNGKey(0)
+    key, sub = jax.random.split(key)
+    buf, clen = _cloud_from_dist(exact, 2000, sub, ctx.Wmax)
+    _, _, move_logw = rejuv.gibbs_sweep(sub, buf, clen, ctx, pool_tok, pool_len)
+    assert float(jnp.max(jnp.abs(move_logw))) < 1e-3, \
+        f"full-conditional SMCP3 weight not ~0: max|w|={float(jnp.max(jnp.abs(move_logw))):.2e}"
 
 
 # NOTE: caprop's lower-variance-than-bootstrap logZ is NOT a pass/fail gate. At toy scale the edge

@@ -1,0 +1,26 @@
+
+=== A car/no-restore: The car sat on mat .
+   LM  total =  -43.22   The:-4.0 car:-8.8 sat:-8.5 on:-1.6 mat:-10.4 .:-3.3 EOS:-6.6
+   CHAN total=   -6.12   The<-the:-0.3 car<-cat:-4.9 sat<-sat:-0.3 on<-on:-0.2 mat<-mat:-0.3 .<-.:-0.1
+   JOINT     =  -49.34
+
+=== B cat/restore-the: The cat sat on the mat .
+   LM  total =  -41.61   The:-4.0 cat:-9.5 sat:-10.3 on:-1.7 the:-0.7 mat:-6.7 .:-2.4 EOS:-6.2
+   CHAN total=   -9.50   The<-the:-0.3 cat<-cat:-0.3 sat<-sat:-0.3 on<-on:-0.2 the:DEL(-8.0) mat<-mat:-0.3 .<-.:-0.1
+   JOINT     =  -51.10
+
+=== C cat/no-restore: The cat sat on mat .
+   LM  total =  -44.98   The:-4.0 cat:-9.5 sat:-10.3 on:-1.7 mat:-10.3 .:-3.2 EOS:-6.1
+   CHAN total=   -1.50   The<-the:-0.3 cat<-cat:-0.3 sat<-sat:-0.3 on<-on:-0.2 mat<-mat:-0.3 .<-.:-0.1
+   JOINT     =  -46.48
+
+=== D car/restore-the: The car sat on the mat .
+   LM  total =  -40.65   The:-4.0 car:-8.8 sat:-8.5 on:-1.6 the:-0.6 mat:-7.6 .:-2.6 EOS:-6.9
+   CHAN total=  -14.12   The<-the:-0.3 car<-cat:-4.9 sat<-sat:-0.3 on<-on:-0.2 the:DEL(-8.0) mat<-mat:-0.3 .<-.:-0.1
+   JOINT     =  -54.77
+
+--- ranking (higher = better) ---
+     -46.48  C cat/no-restore
+     -49.34  A car/no-restore
+     -51.10  B cat/restore-the
+     -54.77  D car/restore-the

@@ -1,0 +1,22 @@
+=== P=128, seeds 0..5 ===
+  seed 0: logZ=-45.31  top='The cat sat on mat.' (p=0.74)
+  seed 1: logZ=-44.90  top='The cat sat on mat.' (p=0.61)
+  seed 2: logZ=-45.90  top='The cat cat on mat.' (p=0.48)
+  seed 3: logZ=-46.03  top='The cat sat on mat.' (p=0.98)
+  seed 4: logZ=-45.21  top='The cat sat on mat.' (p=0.98)
+  seed 5: logZ=-46.17  top='The cat cat on mat.' (p=0.55)
+
+=== P=512 (seed 0, logZ=-45.62, 11s) ===
+   p=0.50  'The cat sat on mat.'
+   p=0.12  'The cat is on mat.'
+   p=0.12  'The cat was on mat.'
+
+=== P=2000 (seed 0, logZ=-45.64, 25s) ===
+   p=0.42  'The cat sat on mat.'
+   p=0.22  'The cat is on mat.'
+   p=0.13  'The cat was on mat.'
+
+=== P=8000 (seed 0, logZ=-45.71, 104s) ===
+   p=0.50  'The cat sat on mat.'
+   p=0.19  'The cat is on mat.'
+   p=0.10  'The cat cat on mat.'

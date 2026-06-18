@@ -1,0 +1,18 @@
+  P_LM('cat'   | '. The')  logp = -9.53
+  P_LM('car'   | '. The')  logp = -8.80
+  P_LM('man'   | '. The')  logp = -7.41
+  P_LM('dog'   | '. The')  logp = -9.49
+  P_LM('the'   | '. The')  logp = -7.50
+
+  -> LM bias car over cat: 0.73 nats
+
+  channel logpdf(obs 'cat' | intended 'cat') = -0.30  (copy)
+  channel logpdf(obs 'cat' | intended 'car') = -4.92  (1 sub)
+  -> channel penalty for cat->car: 4.62 nats
+
+--- restoring dropped 'the' in 'on ___ mat' ---
+  P_LM('the' | '. The cat sat on') logp = -0.70
+  P_LM('mat' | '. The cat sat on') logp = -10.27
+  P_LM('top' | '. The cat sat on') logp = -3.82
+  P_LM('a'   | '. The cat sat on') logp = -1.34
+  WDEL (missing-word penalty, run_example) = -8.0

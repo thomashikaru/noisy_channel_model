@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Noisy-Channel Inference Viewer</title>
+<title>Noisy-Channel Inference Step Explorer</title>
 <style>
   :root {
     --bg: #f6f7f9;
@@ -14,8 +14,10 @@
     --accent: #4f46e5;
     --accent-soft: #eef0fe;
     --good: #16a34a;
+    --good-soft: #dcfce7;
     --warn: #d97706;
     --bad: #dc2626;
+    --bad-soft: #fde7e7;
     --shadow: 0 1px 2px rgba(16,24,40,.06), 0 4px 16px rgba(16,24,40,.06);
     --radius: 14px;
     --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
@@ -23,196 +25,160 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
-  body {
-    font-family: var(--sans);
-    color: var(--ink);
-    background: var(--bg);
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-  }
+  body { font-family: var(--sans); color: var(--ink); background: var(--bg); line-height: 1.5; -webkit-font-smoothing: antialiased; }
   a { color: var(--accent); }
   .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 
   header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   header.top h1 { font-size: 18px; margin: 0; letter-spacing: -.01em; font-weight: 650; }
   header.top .sub { color: var(--muted); font-size: 13px; }
-  .filebtn {
-    font: inherit; font-size: 13px; cursor: pointer; border: 1px solid var(--line);
-    background: var(--panel); color: var(--ink); padding: 7px 13px; border-radius: 9px;
-    box-shadow: var(--shadow);
-  }
+  .filebtn { font: inherit; font-size: 13px; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 7px 13px; border-radius: 9px; box-shadow: var(--shadow); }
   .filebtn:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* drop / empty state */
-  #empty {
-    margin-top: 40px; border: 2px dashed var(--line); border-radius: var(--radius);
-    background: var(--panel); padding: 64px 24px; text-align: center; color: var(--muted);
-  }
+  #empty { margin-top: 40px; border: 2px dashed var(--line); border-radius: var(--radius); background: var(--panel); padding: 64px 24px; text-align: center; color: var(--muted); }
   #empty.drag { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
   #empty h2 { color: var(--ink); font-weight: 620; margin: 0 0 6px; }
   #empty code { font-family: var(--mono); background: #f0f1f5; padding: 2px 6px; border-radius: 6px; font-size: 12px; }
-
   .hidden { display: none !important; }
 
-  /* observed sentence */
-  .observed { margin: 22px 0 10px; }
-  .observed .label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 8px; }
-  .tokens { display: flex; flex-wrap: wrap; gap: 7px; }
-  .tok {
-    position: relative; cursor: pointer; border: 1px solid var(--line);
-    padding: 8px 12px 9px; border-radius: 11px; background: var(--panel);
-    font-size: 15px; transition: transform .08s ease, box-shadow .08s ease;
-    box-shadow: 0 1px 1px rgba(16,24,40,.04);
-    display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 46px;
-  }
-  .tok:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
-  .tok .w { font-weight: 560; }
-  .tok .meter { width: 100%; height: 4px; border-radius: 99px; background: #eceef3; overflow: hidden; }
-  .tok .meter > i { display: block; height: 100%; border-radius: 99px; }
-  .tok.sel { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .tok .fire {
-    position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; border-radius: 99px;
-    background: var(--accent); border: 2px solid var(--panel); box-shadow: var(--shadow);
-  }
+  .observed { margin: 22px 0 12px; }
+  .observed .label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; }
+  .observed .sent { font-size: 18px; font-weight: 560; font-family: var(--mono); }
 
-  /* metric cards */
-  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 20px 0; }
-  .metric { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; }
+  .chip { font-size: 12px; font-family: var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 3px 8px; }
+  .chip b { color: var(--ink); font-weight: 600; }
+
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 20px; }
+  .metric { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 13px 16px; box-shadow: var(--shadow); }
   .metric .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
   .metric .v { font-size: 22px; font-weight: 650; margin-top: 3px; letter-spacing: -.02em; }
   .metric .v small { font-size: 13px; color: var(--muted); font-weight: 500; }
 
-  /* config chips */
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
-  .chip { font-size: 12px; font-family: var(--mono); color: var(--muted); background: var(--panel);
-          border: 1px solid var(--line); border-radius: 7px; padding: 3px 8px; }
-  .chip b { color: var(--ink); font-weight: 600; }
-
-  /* layout grid */
-  .grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 18px; align-items: start; }
-  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 18px 20px; }
-  .card h3 { margin: 0 0 14px; font-size: 14px; font-weight: 640; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 18px 20px; margin-bottom: 18px; }
+  .card h3 { margin: 0 0 12px; font-size: 14px; font-weight: 640; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .card h3 .pill { font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 99px; }
+  .grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 18px; align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .grid .card { margin-bottom: 0; }
 
-  /* surprisal chart */
+  /* ESS chart */
   .chart { width: 100%; }
-  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-top: 8px; flex-wrap: wrap; }
   .legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
 
-  /* step detail */
-  .stephead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
-  .stephead .word { font-size: 20px; font-weight: 680; letter-spacing: -.01em; }
-  .stephead .idx { color: var(--muted); font-size: 12px; font-family: var(--mono); }
-  .navrow { display: flex; align-items: center; gap: 10px; margin: 2px 0 16px; }
+  /* step nav */
+  .navrow { display: flex; align-items: center; gap: 10px; margin: 2px 0 12px; }
   .navrow button { font: inherit; font-size: 13px; cursor: pointer; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; width: 30px; height: 30px; color: var(--ink); }
   .navrow button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
   .navrow button:disabled { opacity: .4; cursor: default; }
   .navrow input[type=range] { flex: 1; accent-color: var(--accent); }
+  .stephead { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+  .stephead .word { font-size: 20px; font-weight: 680; letter-spacing: -.01em; }
+  .badge { font-size: 11px; font-weight: 650; padding: 2px 9px; border-radius: 99px; }
+  .badge.res { color: var(--bad); background: var(--bad-soft); }
+  .badge.rej { color: var(--good); background: var(--good-soft); }
+  .badge.fin { color: var(--accent); background: var(--accent-soft); }
 
-  .statline { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 18px; margin: 6px 0 16px; }
-  .stat { }
-  .stat .k { font-size: 12px; color: var(--muted); }
-  .stat .v { font-size: 15px; font-weight: 600; }
-  .stat .v.small { font-weight: 500; font-size: 13px; color: var(--muted); }
-
-  /* gate gauge */
-  .gauge { height: 9px; border-radius: 99px; background: #eceef3; overflow: hidden; margin-top: 4px; }
-  .gauge > i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #818cf8); border-radius: 99px; }
-
-  /* distribution bars */
+  /* distribution + frontier bars */
   .bars { display: flex; flex-direction: column; gap: 7px; }
-  .bar { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; }
+  .bar { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: stretch; }
   .bar .track { position: relative; background: #f1f2f6; border-radius: 8px; overflow: hidden; min-height: 30px; }
   .bar .track > i { position: absolute; inset: 0 auto 0 0; background: var(--accent-soft); border-right: 2px solid var(--accent); border-radius: 8px 0 0 8px; }
   .bar .track .txt { position: relative; z-index: 1; display: flex; align-items: center; padding: 6px 10px; font-size: 13px; gap: 6px; min-height: 30px; }
   .bar .track .txt .frag { font-family: var(--mono); white-space: normal; word-break: break-word; overflow-wrap: anywhere; line-height: 1.35; }
   .bar.residual .track > i { background: #f0f1f5; border-right-color: #cbd0da; }
   .bar.residual .txt { color: var(--muted); font-style: italic; }
-  .bar .pct { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--muted); min-width: 76px; text-align: right; }
+  .bar .pct { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--muted); min-width: 84px; text-align: right; align-self: center; }
   .bar .pct b { color: var(--ink); }
-  .bar.match .track > i { background: #dcfce7; border-right-color: var(--good); }
+  .bar.match .track > i { background: var(--good-soft); border-right-color: var(--good); }
+  .frontier .bar .track > i { background: linear-gradient(90deg, #a5b4fc, #6366f1); border-right: 0; }
 
-  /* observed prefix callout (inferred-prefix card) */
-  .obs-prefix { margin: -2px 0 16px; padding: 10px 12px; background: #f8f9fc; border: 1px solid var(--line); border-radius: 10px; }
-  .obs-prefix .k { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-  .obs-prefix .v { font-family: var(--mono); font-size: 13px; line-height: 1.4; word-break: break-word; overflow-wrap: anywhere; }
+  /* step stats */
+  .statline { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 18px; margin: 4px 0 14px; }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat .v { font-size: 15px; font-weight: 600; }
+  .stat .v.small { font-weight: 500; font-size: 13px; color: var(--muted); }
+  .rejbox { margin-top: 6px; padding: 10px 12px; background: var(--good-soft); border: 1px solid #bbf7d0; border-radius: 10px; font-size: 13px; }
+  .rejbox.none { background: #f8f9fc; border-color: var(--line); color: var(--muted); font-style: italic; }
 
-  /* rejuv targets */
-  .targ { display: grid; grid-template-columns: 90px 1fr 64px; gap: 10px; align-items: center; margin-bottom: 8px; }
-  .targ .name { font-size: 13px; }
-  .targ .name .sub { color: var(--muted); font-family: var(--mono); font-size: 11px; }
-  .targ .track { background: #f1f2f6; border-radius: 8px; overflow: hidden; height: 22px; position: relative; }
-  .targ .track > i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #34d399, #10b981); border-radius: 8px; }
-  .targ .num { font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  /* particle table */
+  .ptoggle { font: inherit; font-size: 13px; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 6px 12px; border-radius: 8px; }
+  .ptoggle:hover { border-color: var(--accent); color: var(--accent); }
+  table.ptable { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+  table.ptable th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding: 4px 8px; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; white-space: nowrap; }
+  table.ptable th:hover { color: var(--accent); }
+  table.ptable th.sorted::after { content: " \25BE"; color: var(--accent); }
+  table.ptable th.sorted.asc::after { content: " \25B4"; }
+  table.ptable td { padding: 5px 8px; border-bottom: 1px solid #f1f2f6; font-variant-numeric: tabular-nums; }
+  table.ptable td.prefix { font-family: var(--mono); width: 60%; word-break: break-word; }
+  table.ptable td .wbar { display: inline-block; height: 7px; border-radius: 99px; background: var(--accent); vertical-align: middle; margin-left: 6px; }
+  .ptable-wrap { max-height: 460px; overflow: auto; margin-top: 4px; }
+  .done-yes { color: var(--good); font-weight: 600; }
+  .done-no { color: var(--muted); }
+
   .noevent { color: var(--muted); font-size: 13px; font-style: italic; padding: 6px 0; }
-
-  .footnote { color: var(--muted); font-size: 12px; margin-top: 22px; }
+  .footnote { color: var(--muted); font-size: 12px; margin-top: 18px; }
   .footnote code { font-family: var(--mono); }
-  .full { grid-column: 1 / -1; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
     <div>
-      <h1>Noisy-Channel Inference Viewer</h1>
-      <div class="sub">Per-step latent hypotheses, surprisal, and rejuvenation from a model run</div>
+      <h1>Noisy-Channel Inference Step Explorer</h1>
+      <div class="sub">Scrub the SMC particle cloud step by step — latent distribution, alignment, ESS</div>
     </div>
     <label class="filebtn">Load JSON…<input id="file" type="file" accept="application/json,.json" class="hidden"></label>
   </header>
 
   <section id="empty">
     <h2>Drop a structured-output JSON here</h2>
-    <div>…or use <b>Load JSON…</b>. Generate one with <code>python -m src.genjax_port.run --filter native --conditional_rejuv --output_json run.json</code></div>
+    <div>…or use <b>Load JSON…</b>. Generate one with <code>python -m genjax_port.pythia_word_caprop --sentence "…" --output_json run.json</code></div>
   </section>
 
   <main id="app" class="hidden">
     <div class="observed">
-      <div class="label">Observed sentence</div>
-      <div id="tokens" class="tokens"></div>
+      <div class="label">Observed (noisy) sentence</div>
+      <div id="observed" class="sent"></div>
     </div>
-
     <div id="chips" class="chips"></div>
     <div id="metrics" class="metrics"></div>
 
+    <div class="card">
+      <h3>ESS across inference steps <span class="pill">click a step to inspect</span></h3>
+      <div id="essChart" class="chart"></div>
+      <div id="essLegend" class="legend"></div>
+    </div>
+
+    <div class="navrow">
+      <button id="prev" title="Previous (←)">‹</button>
+      <input id="slider" type="range" min="0" max="0" value="0">
+      <button id="next" title="Next (→)">›</button>
+    </div>
+    <div class="stephead">
+      <span class="word" id="stepWord">step —</span>
+      <span id="stepBadges"></span>
+    </div>
+
     <div class="grid">
-      <div class="card full">
-        <h3>Surprisal across the sentence</h3>
-        <div id="chart" class="chart"></div>
-        <div id="legend" class="legend"></div>
-      </div>
-
       <div class="card">
-        <div class="stephead">
-          <span class="word" id="stepWord">—</span>
-          <span class="idx" id="stepIdx"></span>
-        </div>
-        <div class="navrow">
-          <button id="prev" title="Previous (←)">‹</button>
-          <input id="slider" type="range" min="0" max="0" value="0">
-          <button id="next" title="Next (→)">›</button>
-        </div>
+        <h3>Latent distribution <span class="pill">over intended-sentence prefixes (weighted)</span></h3>
+        <div id="distBars" class="bars"></div>
+      </div>
+      <div class="card">
+        <h3>Step detail</h3>
         <div class="statline" id="stepStats"></div>
-        <div id="gateWrap"></div>
+        <div class="k stat" style="font-size:12px;color:var(--muted);margin-bottom:4px">Alignment frontier — observed words consumed</div>
+        <div id="frontierBars" class="bars frontier"></div>
+        <div id="rejuvBox"></div>
       </div>
+    </div>
 
-      <div class="card full">
-        <h3>Inferred intended prefix <span class="pill">top hypotheses after this word</span></h3>
-        <div id="obsPrefix" class="obs-prefix hidden"></div>
-        <div id="prefixBars" class="bars"></div>
-      </div>
-
-      <div class="card">
-        <h3>Rejuvenation at this step</h3>
-        <div id="rejuv"></div>
-      </div>
-
-      <div class="card full">
-        <h3>Final posterior <span class="pill">over intended sentences</span></h3>
-        <div id="posterior" class="bars"></div>
-      </div>
+    <div class="card">
+      <h3>Particles at this step <span class="pill" id="pcount"></span></h3>
+      <button id="ptoggle" class="ptoggle">Show all particles ▾</button>
+      <div id="ptableWrap" class="hidden"></div>
     </div>
 
     <div class="footnote" id="foot"></div>
@@ -228,239 +194,199 @@
   const pct = (x) => (100 * x).toFixed(1) + "%";
   const fmt = (x, d = 2) => (x === null || x === undefined || Number.isNaN(x)) ? "—" : Number(x).toFixed(d);
 
-  let DATA = null, P = 1, words = [], evByT = {}, sel = 0;
-  let surMax = 1;
-
-  // sequential color for surprisal: pale -> deep accent/red
-  function heat(v, max) {
-    const t = Math.max(0, Math.min(1, max > 0 ? v / max : 0));
-    // interpolate light-yellow (250,240,200) -> red (200,40,40)
-    const a = [255, 244, 214], b = [203, 42, 42];
-    const c = a.map((ai, i) => Math.round(ai + (b[i] - ai) * Math.pow(t, 0.85)));
-    return `rgb(${c[0]},${c[1]},${c[2]})`;
-  }
+  let DATA = null, steps = [], P = 1, thresh = 0, sel = 0;
+  let pOpen = false, sortKey = "weight", sortAsc = false;
 
   function loadData(d) {
     DATA = d;
-    P = (d.config && d.config.particles) || (d.posterior ? d.posterior.reduce((s, r) => s + r[1], 0) : 1) || 1;
-    words = d.words || [];
-    evByT = {};
-    (d.rejuv_events || []).forEach((e) => { evByT[e.t] = e; });
-    surMax = Math.max(1e-6, ...words.map((w) => w.surprisal || 0));
-    sel = 0;
+    steps = d.steps || [];
+    P = (d.config && d.config.particles) || 1;
+    thresh = (d.config && d.config.resample_threshold) || (0.5 * P);
+    sel = Math.max(0, steps.length - 1);   // default to the final step (the result); scrub back to replay
+    pOpen = false;
     $("empty").classList.add("hidden");
     $("app").classList.remove("hidden");
+    $("observed").textContent = d.observed || "";
     renderHeader();
-    renderTokens();
-    renderChart();
-    renderLegend();
-    renderPosterior();
-    $("slider").max = Math.max(0, words.length - 1);
-    selectStep(0);
+    renderEss();
+    $("slider").max = Math.max(0, steps.length - 1);
+    selectStep(sel);
+    $("foot").innerHTML = `${steps.length} SMC steps · the last step (terminal-corrected) is the reported posterior · `
+      + `<code>dist</code>/<code>frontier</code> are exact over all ${P} particles, the table dump is the heaviest ${steps[0] ? steps[0].particles.length : 0}.`;
   }
 
   function renderHeader() {
+    const nRes = (DATA.resample_steps || []).length, nRej = (DATA.rejuv_steps || []).length;
     $("metrics").innerHTML = [
       ["log P(observed)", fmt(DATA.log_marginal, 2), ""],
       ["min ESS", fmt(DATA.min_ess, 1), `<small>/ ${P}</small>`],
-      ["rejuv accept rate", DATA.accept_rate == null ? "—" : pct(DATA.accept_rate), ""],
-      ["words", String(words.length), ""],
+      ["steps", String(steps.length), ""],
+      ["resamples", String(nRes), ""],
+      ["rejuv sweeps", String(nRej), ""],
     ].map(([k, v, x]) => `<div class="metric"><div class="k">${k}</div><div class="v">${v} ${x}</div></div>`).join("");
-
     const c = DATA.config || {};
-    const order = ["lm", "particles", "max_dist", "max_deletions", "allow_insertion",
-      "conditional_rejuv", "lookback", "n_sweeps", "logprob_thresh", "logprob_spread", "seed", "json_topk"];
+    const order = ["lm", "particles", "band", "max_dist", "rejuv", "lookback"];
     $("chips").innerHTML = order.filter((k) => k in c)
       .map((k) => `<span class="chip">${k} <b>${esc(c[k])}</b></span>`).join("");
   }
 
-  function renderTokens() {
-    $("tokens").innerHTML = words.map((w, i) => {
-      const col = heat(w.surprisal || 0, surMax);
-      const frac = surMax > 0 ? (w.surprisal || 0) / surMax : 0;
-      const fire = (i in evByT) ? '<span class="fire" title="rejuvenation fired"></span>' : "";
-      return `<div class="tok" data-i="${i}" title="surprisal ${fmt(w.surprisal)}">
-          ${fire}<span class="w">${esc(w.word)}</span>
-          <span class="meter"><i style="width:${(frac * 100).toFixed(0)}%;background:${col}"></i></span>
-        </div>`;
-    }).join("");
-    $("tokens").querySelectorAll(".tok").forEach((el) =>
-      el.addEventListener("click", () => selectStep(+el.dataset.i)));
-  }
-
-  function renderChart() {
-    const n = words.length;
-    if (!n) { $("chart").innerHTML = ""; return; }
-    const W = 760, H = 180, padL = 30, padB = 26, padT = 8;
-    const innerW = W - padL - 6, innerH = H - padB - padT;
-    const uniMax = Math.max(0, ...words.map((w) => w.unigram_surprisal || 0));
-    const ymax = Math.max(surMax, uniMax) * 1.08;
+  function renderEss() {
+    const n = steps.length;
+    if (!n) { $("essChart").innerHTML = ""; return; }
+    const W = 880, H = 220, padL = 34, padB = 30, padT = 12;
+    const innerW = W - padL - 8, innerH = H - padB - padT;
     const x = (i) => padL + (n === 1 ? innerW / 2 : (i * innerW) / (n - 1));
-    const bw = Math.min(34, (innerW / n) * 0.6);
-    const y = (v) => padT + innerH - (v / ymax) * innerH;
+    const bw = Math.max(6, Math.min(40, (innerW / n) * 0.62));
+    const y = (v) => padT + innerH - Math.max(0, Math.min(1, v / P)) * innerH;
     let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" font-family="var(--sans)">`;
-    // gridlines
+    // gridlines + y labels (ESS 0..P)
     for (let g = 0; g <= 4; g++) {
-      const gv = (ymax * g) / 4, gy = y(gv);
-      svg += `<line x1="${padL}" y1="${gy}" x2="${W - 6}" y2="${gy}" stroke="#eef0f4"/>`;
+      const gv = (P * g) / 4, gy = y(gv);
+      svg += `<line x1="${padL}" y1="${gy}" x2="${W - 8}" y2="${gy}" stroke="#eef0f4"/>`;
       svg += `<text x="${padL - 5}" y="${gy + 3}" font-size="9" fill="#9aa3b2" text-anchor="end">${gv.toFixed(0)}</text>`;
     }
-    // bars (contextual surprisal) + fire highlight
-    words.forEach((w, i) => {
-      const bx = x(i) - bw / 2, by = y(w.surprisal || 0);
-      const fired = i in evByT;
-      svg += `<rect x="${bx}" y="${by}" width="${bw}" height="${padT + innerH - by}" rx="3"
-        fill="${fired ? "#16a34a" : "var(--accent)"}" opacity="${fired ? 0.85 : 0.85}">
-        <title>${esc(w.word)} — surprisal ${fmt(w.surprisal)}</title></rect>`;
-    });
-    // unigram markers (orange ticks) + connecting line
-    const pts = words.map((w, i) => `${x(i)},${y(w.unigram_surprisal || 0)}`).join(" ");
-    svg += `<polyline points="${pts}" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 3" opacity=".9"/>`;
-    words.forEach((w, i) => {
-      svg += `<circle cx="${x(i)}" cy="${y(w.unigram_surprisal || 0)}" r="3" fill="#f59e0b"/>`;
-    });
-    // selection marker + labels
-    words.forEach((w, i) => {
-      svg += `<line class="selmark" data-i="${i}" x1="${x(i)}" y1="${padT}" x2="${x(i)}" y2="${padT + innerH}"
-        stroke="var(--accent)" stroke-width="${i === sel ? 22 : 0}" opacity=".08"/>`;
-      svg += `<text x="${x(i)}" y="${H - 9}" font-size="10" fill="#6b7686" text-anchor="middle">${esc(w.word)}</text>`;
+    // resample threshold
+    const ty = y(thresh);
+    svg += `<line x1="${padL}" y1="${ty}" x2="${W - 8}" y2="${ty}" stroke="${"var(--bad)"}" stroke-width="1.3" stroke-dasharray="5 4" opacity=".8"/>`;
+    svg += `<text x="${W - 8}" y="${ty - 4}" font-size="9.5" fill="var(--bad)" text-anchor="end">resample threshold ${thresh.toFixed(0)}</text>`;
+    // selection band
+    svg += `<rect x="${x(sel) - bw / 2 - 3}" y="${padT}" width="${bw + 6}" height="${innerH}" fill="var(--accent)" opacity=".07" rx="4"/>`;
+    // trend line over ESS tops
+    const pts = steps.map((s, i) => `${x(i)},${y(s.ess)}`).join(" ");
+    svg += `<polyline points="${pts}" fill="none" stroke="#c7cbe8" stroke-width="1.5"/>`;
+    // bars (ESS per step); below-threshold (resampled) in red
+    steps.forEach((s, i) => {
+      const bx = x(i) - bw / 2, by = y(s.ess);
+      const below = s.ess < thresh;
+      svg += `<rect class="essbar" data-i="${i}" x="${bx}" y="${by}" width="${bw}" height="${padT + innerH - by}" rx="3"
+        fill="${below ? "var(--bad)" : "var(--accent)"}" opacity="${i === sel ? 1 : .8}" style="cursor:pointer">
+        <title>step ${s.t} — ESS ${fmt(s.ess, 1)}${s.resampled ? " (resampled)" : ""}${s.rejuv ? " · rejuv" : ""}</title></rect>`;
+      // rejuv marker (✦ above bar)
+      if (s.rejuv) svg += `<text x="${x(i)}" y="${by - 4}" font-size="11" fill="var(--good)" text-anchor="middle" style="pointer-events:none">✦</text>`;
+      // resample marker (▼ under axis)
+      if (s.resampled) svg += `<text x="${x(i)}" y="${padT + innerH + 12}" font-size="10" fill="var(--bad)" text-anchor="middle" style="pointer-events:none">▼</text>`;
+      // step index label
+      svg += `<text class="essx" data-i="${i}" x="${x(i)}" y="${H - 4}" font-size="9.5" fill="${i === sel ? "var(--accent)" : "#9aa3b2"}" text-anchor="middle" style="cursor:pointer">${s.final ? "fin" : s.t}</text>`;
     });
     svg += `</svg>`;
-    $("chart").innerHTML = svg;
-    $("chart").querySelectorAll("rect, text, .selmark").forEach((el) => {
-      const i = el.getAttribute("data-i");
-      if (i !== null) el.style.cursor = "pointer";
-    });
-    $("chart").querySelectorAll("[data-i]").forEach((el) =>
+    $("essChart").innerHTML = svg;
+    $("essChart").querySelectorAll("[data-i]").forEach((el) =>
       el.addEventListener("click", () => selectStep(+el.getAttribute("data-i"))));
+    $("essLegend").innerHTML = [
+      ["var(--accent)", "ESS (above threshold)"],
+      ["var(--bad)", "ESS below threshold → resampled (▼)"],
+    ].map(([c, l]) => `<span><i style="background:${c}"></i>${l}</span>`).join("")
+      + `<span><i style="background:var(--good)"></i>✦ rejuvenation sweep fired</span>`
+      + `<span><i style="background:transparent;border-top:2px dashed var(--bad);height:0;border-radius:0"></i>resample threshold (0.5·P)</span>`;
   }
 
-  function renderLegend() {
-    // Legend entries must match what the chart actually draws: bars are blue when the gate stayed idle
-    // at that word and dark green when it fired (so the bar's COLOR encodes firing, its HEIGHT the
-    // surprisal); the orange dashed line is the unigram baseline. The "gate fired" entry only appears
-    // when the run had rejuvenation events (a forward-only run has no green bars).
-    const hasFire = Object.keys(evByT).length > 0;
-    const items = [
-      ["var(--accent)", "bar", hasFire ? "contextual surprisal — gate idle" : "contextual surprisal"],
-    ];
-    if (hasFire) items.push(["#16a34a", "bar", "contextual surprisal — gate fired here"]);
-    items.push(["#f59e0b", "line", "unigram (out-of-context) surprisal"]);
-    $("legend").innerHTML = items.map(([c, kind, label]) => {
-      const sw = kind === "line"
-        ? `<i style="background:transparent;border-top:2px dashed ${c};height:0;border-radius:0"></i>`
-        : `<i style="background:${c}"></i>`;
-      return `<span>${sw}${label}</span>`;
-    }).join("");
+  function barRow(frag, weight, count, opts = {}) {
+    const cls = "bar" + (opts.residual ? " residual" : "") + (opts.match ? " match" : "");
+    const label = opts.residual ? "other particles" : esc(frag);
+    const rt = (count != null) ? ` · ${count}p` : "";
+    return `<div class="${cls}">
+        <div class="track"><i style="width:${(weight * 100).toFixed(1)}%"></i>
+          <div class="txt"><span class="frag">${label || "∅"}</span></div></div>
+        <div class="pct"><b>${pct(weight)}</b>${rt}</div>
+      </div>`;
   }
 
   function selectStep(i) {
-    sel = Math.max(0, Math.min(words.length - 1, i));
+    sel = Math.max(0, Math.min(steps.length - 1, i));
     $("slider").value = sel;
     $("prev").disabled = sel === 0;
-    $("next").disabled = sel === words.length - 1;
-    $("tokens").querySelectorAll(".tok").forEach((el) =>
-      el.classList.toggle("sel", +el.dataset.i === sel));
-    renderChart(); // refresh selection marker
+    $("next").disabled = sel === steps.length - 1;
+    renderEss();           // refresh selection highlight
     renderStep();
   }
 
   function renderStep() {
-    const w = words[sel];
-    if (!w) return;
-    $("stepWord").textContent = w.word;
-    $("stepIdx").textContent = `word #${w.index}`;
-    const gateInput = (w.surprisal != null && w.unigram_surprisal != null)
-      ? (w.surprisal - w.unigram_surprisal) : null;
+    const s = steps[sel];
+    if (!s) return;
+    $("stepWord").textContent = s.final ? "final step (posterior)" : `step ${s.t}`;
+    let badges = "";
+    if (s.resampled) badges += `<span class="badge res">resampled</span>`;
+    if (s.rejuv) badges += `<span class="badge rej">rejuv ✦</span>`;
+    if (s.final) badges += `<span class="badge fin">terminal-corrected</span>`;
+    $("stepBadges").innerHTML = badges;
+
+    // distribution
+    const obs = (DATA.observed || "").trim().replace(/\s+/g, " ");
+    let html = (s.dist || []).map(([str, w, c]) => {
+      const match = str.trim().replace(/\s+/g, " ") === obs;
+      return barRow(str + (match ? "  ✓ = observed" : ""), w, c, { match });
+    }).join("");
+    const res = s.dist_residual || [0, 0];
+    if (res[1] > 0) html += barRow(null, res[0], res[1], { residual: true });
+    $("distBars").innerHTML = html || `<div class="noevent">no particles</div>`;
+
+    // step stats
     $("stepStats").innerHTML = [
-      ["contextual surprisal", fmt(w.surprisal), false],
-      ["unigram surprisal", fmt(w.unigram_surprisal), false],
-      ["gate input (ctx − unigram)", gateInput == null ? "—" : fmt(gateInput), false],
-      ["step ESS", `${fmt(w.step_min_ess, 1)} / ${P}`, true],
+      ["ESS", `${fmt(s.ess, 1)} / ${P}`, true],
+      ["distinct latents", String(s.n_unique), false],
+      ["particles done (EOS)", `${s.n_done} / ${P}`, true],
+      ["logZ so far", fmt(s.logZ, 2), true],
     ].map(([k, v, sm]) => `<div class="stat"><div class="k">${k}</div><div class="v ${sm ? "small" : ""}">${v}</div></div>`).join("");
 
-    // gate gauge
-    if (w.gate_p != null) {
-      $("gateWrap").innerHTML =
-        `<div class="stat"><div class="k">gate fire-probability</div>
-           <div class="v">${pct(w.gate_p)}</div>
-           <div class="gauge"><i style="width:${(w.gate_p * 100).toFixed(1)}%"></i></div></div>`;
+    // frontier histogram
+    const fmax = Math.max(1e-9, ...(s.frontier || []).map((f) => f[1]));
+    $("frontierBars").innerHTML = (s.frontier || []).map(([k, w]) =>
+      `<div class="bar"><div class="track"><i style="width:${(w / fmax * 100).toFixed(1)}%"></i>
+         <div class="txt"><span class="frag">k = ${k}</span></div></div>
+       <div class="pct"><b>${pct(w)}</b></div></div>`).join("") || `<div class="noevent">—</div>`;
+
+    // rejuv box
+    if (s.rejuv) {
+      const r = s.rejuv;
+      $("rejuvBox").innerHTML = `<div class="rejbox">Rejuvenation swept words <b>${r.words[0]}–${r.words[1] - 1}</b> ·
+        ESS after move <b>${fmt(r.ess_after, 1)}</b> · mean |Δlogw| <b>${fmt(r.mean_abs_w, 4)}</b></div>`;
     } else {
-      $("gateWrap").innerHTML = `<div class="noevent">no rejuvenation gate (forward-only run)</div>`;
+      $("rejuvBox").innerHTML = `<div class="rejbox none">no rejuvenation sweep at this step</div>`;
     }
 
-    renderPrefix(w, sel);
-    renderRejuv(sel);
+    renderParticles();
   }
 
-  function observedPrefixThrough(i) {
-    return words.slice(0, i + 1).map((w) => w.word).join(" ");
-  }
-
-  function barRow(frag, count, total, opts = {}) {
-    const frac = total > 0 ? count / total : 0;
-    const cls = "bar" + (opts.residual ? " residual" : "") + (opts.match ? " match" : "");
-    const label = opts.residual ? "other particles" : esc(frag);
-    return `<div class="${cls}">
-        <div class="track"><i style="width:${(frac * 100).toFixed(1)}%"></i>
-          <div class="txt"><span class="frag">${label || "∅"}</span></div></div>
-        <div class="pct"><b>${pct(frac)}</b> · ${count}</div>
-      </div>`;
-  }
-
-  function renderPrefix(w, i) {
-    const obsPrefix = observedPrefixThrough(i);
-    const obsEl = $("obsPrefix");
-    if (obsPrefix) {
-      obsEl.classList.remove("hidden");
-      obsEl.innerHTML =
-        `<div class="k">observed prefix fed to the model (words 0–${i})</div>` +
-        `<div class="v">${esc(obsPrefix)}</div>`;
-    } else {
-      obsEl.classList.add("hidden");
-      obsEl.innerHTML = "";
-    }
-    const topk = w.prefix_topk || [];
-    let html = topk.map(([s, c]) => barRow(s, c, P)).join("");
-    if (w.prefix_residual_count > 0) html += barRow(null, w.prefix_residual_count, P, { residual: true });
-    $("prefixBars").innerHTML = html || `<div class="noevent">no prefix data</div>`;
-  }
-
-  function renderRejuv(i) {
-    const ev = evByT[i];
-    if (!ev) { $("rejuv").innerHTML = `<div class="noevent">gate did not fire here (no MH moves attempted).</div>`; return; }
-    const maxAtt = Math.max(1, ...ev.targets.map((t) => t.attempts));
-    const head = `<div class="statline" style="margin-bottom:14px">
-        <div class="stat"><div class="k">gate fire-prob</div><div class="v">${pct(ev.gate_p)}</div></div>
-        <div class="stat"><div class="k">particles that fired</div><div class="v">${ev.fired_particles} <span class="v small">/ ${P}</span></div></div>
-      </div>`;
-    const rows = ev.targets.map((t) => {
-      const rate = t.attempts > 0 ? t.accepts / t.attempts : 0;
-      const wd = words[t.word];
-      return `<div class="targ">
-          <div class="name">${esc(wd ? wd.word : "w" + t.word)} <span class="sub">#${t.word}</span></div>
-          <div class="track"><i style="width:${((t.attempts / maxAtt) * 100).toFixed(0)}%;opacity:${0.35 + 0.65 * rate}"></i></div>
-          <div class="num">${pct(rate)}<br>${t.accepts}/${t.attempts}</div>
-        </div>`;
-    }).join("");
-    $("rejuv").innerHTML = head + `<div class="k stat" style="margin-bottom:6px;font-size:12px;color:var(--muted)">accept rate per revisited word (bar width = attempts)</div>` + rows;
-  }
-
-  function renderPosterior() {
-    const post = DATA.posterior || [];
-    const obs = (DATA.observed || "").trim().replace(/\s+/g, " ");
-    $("posterior").innerHTML = post.map(([s, c, f]) => {
-      const match = s.trim().replace(/\s+/g, " ") === obs;
-      return barRow(s + (match ? "  ✓ matches observed" : ""), c, P, { match });
-    }).join("") || `<div class="noevent">no posterior</div>`;
+  function renderParticles() {
+    const s = steps[sel];
+    const ps = (s && s.particles) || [];
+    $("pcount").textContent = `${ps.length} shown` + (ps.length < P ? ` (heaviest of ${P})` : ` of ${P}`);
+    $("ptoggle").textContent = pOpen ? "Hide particles ▴" : "Show all particles ▾";
+    $("ptableWrap").classList.toggle("hidden", !pOpen);
+    if (!pOpen) return;
+    const sorted = ps.slice().sort((a, b) => {
+      let av = a[sortKey], bv = b[sortKey];
+      if (sortKey === "prefix") { av = String(av); bv = String(bv); return sortAsc ? (av < bv ? -1 : av > bv ? 1 : 0) : (av > bv ? -1 : av < bv ? 1 : 0); }
+      return sortAsc ? av - bv : bv - av;
+    });
+    const wmax = Math.max(1e-9, ...ps.map((p) => p.weight));
+    const th = (key, label) => `<th data-k="${key}" class="${sortKey === key ? "sorted " + (sortAsc ? "asc" : "") : ""}">${label}</th>`;
+    let html = `<div class="ptable-wrap"><table class="ptable"><thead><tr>
+        ${th("p", "#")}${th("weight", "weight")}${th("k", "frontier k")}${th("done", "done")}${th("prefix", "intended prefix")}
+      </tr></thead><tbody>`;
+    html += sorted.map((p) =>
+      `<tr><td>${p.p}</td>
+        <td>${pct(p.weight)}<span class="wbar" style="width:${(p.weight / wmax * 40).toFixed(1)}px"></span></td>
+        <td>${p.k}</td>
+        <td class="${p.done ? "done-yes" : "done-no"}">${p.done ? "✓" : "·"}</td>
+        <td class="prefix">${esc(p.prefix) || "∅"}</td></tr>`).join("");
+    html += `</tbody></table></div>`;
+    $("ptableWrap").innerHTML = html;
+    $("ptableWrap").querySelectorAll("th").forEach((el) => el.addEventListener("click", () => {
+      const k = el.dataset.k;
+      if (sortKey === k) sortAsc = !sortAsc; else { sortKey = k; sortAsc = (k === "prefix"); }
+      renderParticles();
+    }));
   }
 
   // navigation
   $("prev").addEventListener("click", () => selectStep(sel - 1));
   $("next").addEventListener("click", () => selectStep(sel + 1));
   $("slider").addEventListener("input", (e) => selectStep(+e.target.value));
+  $("ptoggle").addEventListener("click", () => { pOpen = !pOpen; renderParticles(); });
   document.addEventListener("keydown", (e) => {
     if ($("app").classList.contains("hidden")) return;
+    if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName) && e.target.type !== "range") return;
     if (e.key === "ArrowLeft") { selectStep(sel - 1); e.preventDefault(); }
     if (e.key === "ArrowRight") { selectStep(sel + 1); e.preventDefault(); }
   });
@@ -480,8 +406,7 @@
   document.addEventListener("dragover", (e) => e.preventDefault());
 
   // embedded data (injected by viz.py) -- falls back to the drop zone if absent. The sentinel is
-  // assembled at runtime so this line does NOT contain the contiguous placeholder token: viz.py does
-  // a replace-all, and a literal copy here would get clobbered too (then this guard never matches).
+  // assembled at runtime so this line does NOT contain the contiguous placeholder token.
   try {
     const SENTINEL = "__EMBEDDED" + "_JSON__";
     const raw = $("embedded-data").textContent.trim();

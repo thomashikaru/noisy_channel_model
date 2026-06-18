@@ -36,12 +36,20 @@ captured stream comes back empty → wasteful re-runs). See the `never-pipe-expe
   bootstrap baseline + band/seed). The **toy** (test) and **Pythia** (`pythia_word_caprop.py`) are now
   two `PairHMMModel` configs of *identical* inference code — so the exact-enumeration certification
   transfers to Pythia by construction. `poc_word_indel*.py` are frozen reference PoCs (not imported).
-- 🔄 **A3 (clean INSERT action + edit-type gates) — PARTLY DONE / NEXT.** Two A3-ish items already
-  landed because they were blocking Pythia (see "Pythia working" below): the always-present-COPY
-  candidate, and the deletion-cost retune. **Still TODO in A3:** replace the heuristic
-  `allow_insert = argmax(alpha) > n_emitted` with a principled INSERT action and turn `insert_action`
-  ON for Pythia (it is currently `False` there to preserve A1 behaviour); add the toy edit-type
-  MAP-recovery gates (sub / spurious→shorter / missing→longer / clean→unchanged) per §3.A3.
+- ✅ **A3 (insertion handling + edit-type gates) — DONE, with a finding that reframes it.** An
+  explicit INSERT *action* is a category error: a spurious observed word is a CHANNEL event, not an
+  LM emission, so scoring it as a peer action inside the LM-normalized step adds un-normalized mass
+  → **+0.2-nat logZ bias vs exact enumeration** (and the heuristic `argmax(alpha) > n_emitted` gate
+  had merely been masking a worse ~0.8-nat double-count between that action and the within-word
+  insertion sweep). The principled handling is the one already living in `_word_row_update`: the
+  insertion sweep marginalizes spurious words inside the channel DP (cost `WINS`), and the **band**
+  gives them reach (`|k−t| ≤ band`). So the explicit INSERT action, the `insert_action` flag, and the
+  argmax gate were **REMOVED** — every SMC step is now a clean LM word/EOS choice. New gate
+  `test_edit_types_recovered_with_band` proves the swept filter recovers all four edit types at the
+  production `band=2` (sub / spurious→shorter / missing→longer / clean→unchanged); the toy exact
+  gates (logZ/MAP/TV) still pass. The earlier-landed always-present-COPY candidate + deletion-cost
+  retune stay. Pythia at P=128 reproduces the validated corrections unchanged (it already ran the
+  swept path), so this was a pure simplification there.
 - ⏳ **Phase B (archive the bloat) — NOT STARTED.**
 - 🔄 **Phase C (Pythia) — STARTED EARLY and is already largely working** (see below). Remaining:
   the multi-token / KV items and a wider sentence sweep.
@@ -77,9 +85,12 @@ captured stream comes back empty → wasteful re-runs). See the `never-pipe-expe
 4. caprop's **low-variance** edge is real but MODEST at toy scale (≈1.1–1.3×, P/seed-sensitive) — not
    a gate; it grows with LM cost. Bootstrap is byte-identical old-vs-unified, confirming the shared
    loop is a faithful port; only the caprop draw differs (genjax.categorical vs jax.random).
-5. The unified filter always carries an INSERT score slot pinned to −inf when `insert_action=False`
-   (Pythia, for now): a −inf logit is a no-op in both the categorical draw and the logsumexp weight,
-   so it does not change numerics — it only shifts the EOS action index, which the kernel handles.
+5. **Insertions are a CHANNEL event, not an LM action — do NOT re-add an explicit INSERT action.**
+   The swept `_word_row_update` already marginalizes spurious observed words (cost `WINS`) and the
+   band gives them reach (`|k−t| ≤ band`). An INSERT *peer-action* in the LM-normalized step injects
+   un-normalized mass → +0.2-nat logZ bias vs exact; combined with the sweep it double-counts ~0.8
+   nats. The kernel's action set is therefore just {word candidates, EOS} (A3 finding, certified by
+   `test_edit_types_recovered_with_band` + the unchanged exact gates).
 
 ---
 
@@ -126,10 +137,16 @@ This handles all three edits: **substitution** (char-level DP inside the emissio
 `pairhmm_smc.py`, `pythia_word_caprop.py`, the `poc_*` files and `tests/test_pairhmm_exact.py` are
 currently **untracked / uncommitted**. They are the asset; everything else is either support or bloat.
 
-**NEXT SESSION — start here:** A3. (1) Add the principled INSERT action and flip Pythia's
-`insert_action=True`, dropping the `argmax(alpha) > n_emitted` heuristic. (2) Add the toy edit-type
-MAP-recovery gates (§3.A3). (3) Then Phase B (archive) and the rest of Phase C (sentence sweep, KV).
-Re-run the exact gates after any kernel change — they guard the refactor.
+**NEXT SESSION — start here:** Phase A is complete (A1 / A2 / A3 all ✅). `run_example_native.sh` is
+already **repointed** at the unified filter (`pythia_word_caprop`), which now also emits the
+structured JSON the viewer consumes (`--output_json`; `config.words_are="intended"` relabels the
+viewer's heatmap to the inferred sentence — backward compatible with old rejuv JSONs). Remaining:
+**Phase B** = actually move the dead `run.py` / `rejuv_bridge` / `rejuvenation*` / `rejuv_model` /
+`particle_filter_unified` / `smc_substitution` / `pythia_rejuv` stack into `archive/` (the entry
+point is now the unified CLI). **Phase C** = wider Pythia sentence sweep; diagnose pythia-70m's
+deletion over-trigger on some clean sentences (`the dog ran` → `the dog was ran`, leading `#`
+boilerplate) — a WDEL / LM-strength question, not an inference bug. Re-run the exact gates after any
+kernel change — they guard the refactor.
 
 ---
 
@@ -166,21 +183,26 @@ Enumeration is feasible only for short intended sentences (length ≤ ~4 over V=
 case needs length 6 (12⁶ ≈ 3M) and is too big to enumerate — it became an A3 behavioural
 MAP-recovery gate**, not an exact-match gate.
 
-### A3. Clean insertion handling + edit-type gates
+### A3. Insertion handling + edit-type gates — ✅ DONE
 
-- Replace the `allow_insert = argmax(alpha) > ctx_len` heuristic with a principled INSERT action in
-  the kernel (consume one spurious observed word, emit no intended word; score via `_wins_only_row`).
-- Toy gates (use peaked-LM cases where the model genuinely prefers the correction, per
-  `noisy-channel-test-examples` memory): substitution corrected, spurious → shorter, missing →
-  longer, clean → unchanged. Report MAP hit-rate at large P.
-- **Deletion test must be genuinely disfluent when truncated.** `the cat on the mat` is a BAD
-  missing-word case: it's a valid noun phrase, so the model has no reason to insert "sat" and the
-  test rewards non-correction. Use `the cat sat the mat` → `the cat sat on the mat` instead: under a
-  peaked LM the dropped `on` makes `sat → the` low-probability, so restoration is the true MAP.
-  Verify the surprisal gain before relying on any deletion case.
+What we did (and why it differs from the original bullet): the `allow_insert = argmax(alpha) >
+ctx_len` heuristic was **not** replaced by a principled INSERT *action* — it was removed along with
+the action itself, because an explicit INSERT action is mis-factored (a channel event scored as an
+LM action; +0.2-nat logZ bias, see STATUS / finding #5). Spurious words are instead marginalized by
+`_word_row_update`'s insertion sweep (cost `WINS`) and given reach by the band. The kernel's action
+set is now {word candidates, EOS}.
 
-**Phase A done when:** `test_pairhmm_exact.py` passes (logZ + posterior match exact); the unified
-filter reproduces the PoC results on all edit types; insertion uses no heuristic gate.
+- `test_edit_types_recovered_with_band` (in `tests/test_pairhmm_exact.py`) gates all four edit types
+  on the toy at the production `band=2`, peaked LM, P=8000: substitution corrected, spurious →
+  shorter, missing → longer, clean → unchanged. All pass; toy exact gates (logZ/MAP/TV) still pass.
+- **Deletion case is `the cat sat the mat` → `the cat sat on the mat`** (NOT `the cat on the mat`, a
+  valid noun phrase): under the peaked LM the dropped `on` makes `sat → the` low-probability, so
+  restoration is the true MAP. The clean case `the cat sat on the mat` → unchanged guards the
+  opposite failure (the filter must not shave a real word off by calling it spurious).
+
+**Phase A done when:** `test_pairhmm_exact.py` passes (logZ + posterior match exact + edit-type
+recovery); the unified filter reproduces the PoC results on all edit types; insertion uses no
+heuristic gate. ✅ all satisfied.
 
 ---
 

@@ -1,0 +1,13 @@
+observed words: ['The', 'cat', 'sat', 'on', 'mat', '.']  M= 6  WINS=-10.83
+
+--- model's true target (marginal over alignments) ---
+  C cat/no-restore       LM=  -44.98  CHAN_marg=   -1.50  JOINT=  -46.48   The cat sat on mat .
+  A car/no-restore       LM=  -43.22  CHAN_marg=   -6.12  JOINT=  -49.34   The car sat on mat .
+  B cat/restore-the      LM=  -41.61  CHAN_marg=   -9.50  JOINT=  -51.10   The cat sat on the mat .
+  A' car/restore         LM=  -40.65  CHAN_marg=  -14.12  JOINT=  -54.77   The car sat on the mat .
+
+  ranking (higher=better):
+       -46.48  C cat/no-restore
+       -49.34  A car/no-restore
+       -51.10  B cat/restore-the
+       -54.77  A' car/restore

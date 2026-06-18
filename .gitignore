@@ -11,3 +11,5 @@ __pycache__/
 # Generated outputs / large data
 log/
 data/
+
+run_native.json

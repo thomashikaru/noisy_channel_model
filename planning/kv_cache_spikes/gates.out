@@ -1,0 +1,7 @@
+[ 17.5s] PASS test_caprop_logZ_matches_exact (17.5s)
+[ 35.3s] PASS test_edit_types_recovered_with_band (17.8s)
+[ 41.8s] PASS test_map_matches_exact (6.5s)
+[ 44.8s] PASS test_posterior_mass_matches_exact (2.9s)
+[ 51.6s] PASS test_rejuv_leaves_exact_posterior_invariant (6.8s)
+[ 61.4s] PASS test_rejuv_recovers_collapsed_cloud (9.8s)
+ALL GATES PASS

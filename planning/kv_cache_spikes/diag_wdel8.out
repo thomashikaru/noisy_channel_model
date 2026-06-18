@@ -1,0 +1,13 @@
+=== WDEL=-8 (script config), P=128 seeds 0..3 ===
+  seed 0: top='The car sat on mat.' p=0.83
+  seed 1: top='The cat sat on mat.' p=0.98
+  seed 2: top='The cat sat on mat.' p=0.54
+  seed 3: top='The cat is sat on mat.' p=0.41
+=== WDEL=-8, P=2000 ===
+   p=0.44  'The cat sat on mat.'
+   p=0.35  'The cat is on mat.'
+   p=0.09  'The cat cat on mat.'
+=== WDEL=-8, P=8000 ===
+   p=0.37  'The cat sat on mat.'
+   p=0.20  'The cat is on mat.'
+   p=0.14  'The cat cat on mat.'
