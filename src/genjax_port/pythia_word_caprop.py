@@ -200,8 +200,10 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
     windowed (last ``rejuv_lookback`` words) full-conditional resample over a per-slot SymSpell pool
     (``rejuv_Ke`` candidates). ``rejuv_stats`` (dict) collects the cost/degeneracy counters.
 
-    ``dedup=True`` (R3 item 1) dedups the filter's per-step LM forward over the degenerate post-resample
-    cloud (exact; bit-identical posterior given the same RNG). See :func:`_pythia_model`."""
+    ``dedup=True`` (R3 item 1) dedups the LM forwards over the degenerate post-resample cloud (exact;
+    bit-identical posterior given the same RNG): the filter's per-step forward (1a, :func:`_pythia_model`)
+    AND the rejuv sweep's tail scorer (1b, via ``rejuv_dedup``). The sweep is the dominant single-sentence
+    cost (its prefills scale ~linearly with P), so 1b is the main wall-clock win."""
     from genjax_port import pairhmm_rejuv as RJ
     if lm_logprobs_fn is None:
         lm_penzai.load_model()
@@ -221,7 +223,8 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
     return pairhmm_smc.run(observed, key, model, P=P, wdel=WDEL, wins=WINS, slack=slack,
                            band=band, max_dist=max_dist, Ke=Ke, J=J, cwin=cwin,
                            proposal="caprop", rejuv=rejuv, rejuv_pool=rejuv_pool,
-                           rejuv_lookback=rejuv_lookback, rejuv_stats=rejuv_stats, trace=trace)
+                           rejuv_lookback=rejuv_lookback, rejuv_stats=rejuv_stats, trace=trace,
+                           rejuv_dedup=dedup)
 
 
 def decode(state, log_w, skip=1, key=jax.random.PRNGKey(0), top=3):

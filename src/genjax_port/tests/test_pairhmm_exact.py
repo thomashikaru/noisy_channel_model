@@ -341,6 +341,29 @@ def test_dedup_forward_exact():
     assert stats.rows_in == 40 and stats.rows_computed < 40, f"dedup did not cut rows: {stats!r}"
 
 
+def test_rejuv_dedup_bit_parity():
+    """R3 item 1b: the sweep-tail dedup (run ``tail_fn`` on the unique buffers, scatter [P,Kt] back) is
+    EXACT -- a dedup=on sweep equals dedup=off WORD-FOR-WORD and weight-for-weight given the same RNG. It
+    dedups only the deterministic tail/channel scores; the per-particle SMCP3 sample is untouched, so
+    duplicate particles still diverge. The degenerate cloud (sampled from the peaked posterior -> many
+    duplicate buffers) is exactly where dedup fires."""
+    from genjax_port import cache_dedup
+    lm, exact, _ = _peaked_exact()
+    ctx, pool_tok, pool_len = _rejuv_ctx_and_cands(_PEAKED_OBS, lm)
+    seed, sub = jax.random.split(jax.random.PRNGKey(0))
+    buf, clen = _cloud_from_dist(exact, 256, sub, ctx.Wmax)         # degenerate cloud (duplicate buffers)
+    swp_off = rejuv.make_sweep(ctx, pool_tok, pool_len, dedup=False)
+    swp_on = rejuv.make_sweep(ctx, pool_tok, pool_len, dedup=True)
+    rk = jax.random.PRNGKey(7)
+    b0, la0, mlw0 = swp_off(rk, buf, clen)
+    stats = cache_dedup.DedupStats()
+    b1, la1, mlw1 = swp_on(rk, buf, clen, dedup_stats=stats)
+    assert jnp.array_equal(b0, b1), "dedup changed the swept buffers (not bit-exact)"
+    assert float(jnp.max(jnp.abs(mlw0 - mlw1))) < 1e-4, "dedup changed move_logw"
+    assert float(jnp.max(jnp.abs(la0 - la1))) < 1e-4, "dedup changed log_alpha"
+    assert stats.rows_in > 0 and stats.rows_computed < stats.rows_in, f"dedup did not fire: {stats!r}"
+
+
 # NOTE: caprop's lower-variance-than-bootstrap logZ is NOT a pass/fail gate. At toy scale the edge
 # is small (~1.1-1.3x) and case/seed-sensitive -- at P=3000 on the flat spurious case it even
 # inverts. It is the fully-adapted proposal's signature and grows with LM cost (plan finding #4), so

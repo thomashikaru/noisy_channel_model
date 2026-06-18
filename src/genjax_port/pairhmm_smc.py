@@ -206,7 +206,7 @@ def _record_step(model, state, log_w, seed_len, t, ess, resampled, logZ, rejuv, 
 
 def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), slack=3, band=None,
         max_dist=2, Ke=6, J=4, cwin=1, proposal="caprop", enable_indel=True,
-        rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None):
+        rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
@@ -256,14 +256,20 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     logZ = 0.0
 
     # Flag-gated rejuvenation (R2): build the sweep ONCE (jitted step reused across resample events).
-    rj_sweep = None
+    # rejuv_dedup (R3 item 1b) runs the sweep's tail_fn on the unique buffers only (host-side) -- EXACT,
+    # cuts the sweep's dominant per-particle prefill cost (~linear in P). A DedupStats tracks rows saved.
+    rj_sweep, rj_dedup_stats = None, None
     if rejuv == "gibbs":
         from genjax_port import pairhmm_rejuv as RJ
         rj_ctx = RJ.RejuvCtx(model, emit_full, a0, M, seed_len, M + slack, WDEL, WINS, band, 1)
-        rj_sweep = RJ.make_sweep(rj_ctx, *rejuv_pool, max_tail=rejuv_lookback + 1)
+        rj_sweep = RJ.make_sweep(rj_ctx, *rejuv_pool, max_tail=rejuv_lookback + 1, dedup=rejuv_dedup)
+        if rejuv_dedup:
+            from genjax_port import cache_dedup
+            rj_dedup_stats = cache_dedup.DedupStats()
         if rejuv_stats is not None:
             rejuv_stats.update(P=P, Kt=rejuv_pool[0].shape[1] + 1, max_tail=rejuv_lookback + 1,
-                               filter_lm_calls=0, sweep_prefills=0, sweep_tail_steps=0, uniq_frac=[])
+                               filter_lm_calls=0, sweep_prefills=0, sweep_tail_steps=0, uniq_frac=[],
+                               dedup_rows_in=0, dedup_rows_computed=0)
 
     word_mask = model.word_mask
     def _assemble(ctx_len, log_alpha, lmlog):
@@ -332,7 +338,8 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                 hi = min(s + 1, M + slack)                   # frontier word count (upper bound)
                 lo = max(0, hi - rejuv_lookback)
                 key, sub = jax.random.split(key)
-                cb, la, mlw = rj_sweep(sub, ctx_buf, ctx_len, positions=range(lo, hi), done=done)
+                cb, la, mlw = rj_sweep(sub, ctx_buf, ctx_len, positions=range(lo, hi), done=done,
+                                       dedup_stats=rj_dedup_stats)
                 state = (cb, ctx_len, la, done)
                 log_w = log_w + mlw
                 rejuv_info = {"words": [int(lo), int(hi)], "ess_after": float(_ess(log_w)),
@@ -342,6 +349,9 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                     rejuv_stats["sweep_prefills"] += window
                     rejuv_stats["sweep_tail_steps"] += window * rejuv_stats["max_tail"]
                     rejuv_stats["uniq_frac"].append(_uniq_frac(cb, ctx_len, seed_len))
+                    if rj_dedup_stats is not None:            # R3 1b: actual unique rows fed to tail_fn
+                        rejuv_stats["dedup_rows_in"] = rj_dedup_stats.rows_in
+                        rejuv_stats["dedup_rows_computed"] = rj_dedup_stats.rows_computed
         if trace is not None:            # per-step snapshot of the cloud (post-extend/resample/rejuv)
             trace.append(_record_step(model, state, log_w, seed_len, s, ess_pre, resampled, logZ,
                                       rejuv_info))

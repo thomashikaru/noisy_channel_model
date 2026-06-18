@@ -47,6 +47,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Optional
 
+import numpy as np
 import jax
 import jax.numpy as jnp
 from jax.scipy.special import logsumexp
@@ -266,9 +267,92 @@ def _smcp3_move(slot_model, slot_proposal, keys, target_lp, s_cur):
     return jax.vmap(one)(keys, target_lp, s_cur)
 
 
+# --------------------------------------------------------------------------------------------------
+# Per-word move, factored into pure (un-jitted) helpers so the FUSED step (tail_fn inside the jit) and
+# the SPLIT dedup steps (tail_fn lifted to the host) share IDENTICAL logic -- no drift between paths.
+# The split exists for R3 item 1b: post-resample the cloud is ~93% duplicate buffers, so the LM
+# tail_fn (KV prefill + K tails) is run on the unique buffers only and the [P,Kt] scores scattered
+# back; the per-particle SMCP3 sample still runs on all P (duplicates must DIVERGE -- that is the
+# diversification the dedup must never collapse). See planning/REJUV_KV_REDESIGN_PLAN.md R3 item (1).
+# --------------------------------------------------------------------------------------------------
+def _candidates(w, word_tok, word_len, word_surf, pool_tok, pool_len, K, T):
+    """[COPY (current word at slot w)] ++ pool[w] -> (cand_tok [P,Kt,T], cand_len [P,Kt],
+    cand_surf [P,Kt], valid [P,Kt]). Cheap (no LM); pool pads are invalid and pool entries equal to
+    COPY are de-duplicated (COPY kept at index 0)."""
+    P = word_tok.shape[0]
+    cur_tok, cur_len, cur_surf = word_tok[:, w, :], word_len[:, w], word_surf[:, w]
+    pt, pl = pool_tok[w], pool_len[w]                                      # (K,T),(K,)
+    ps = pt[:, 0]                                                          # (K,) T_max=1 surface == token
+    cand_tok = jnp.concatenate(
+        [cur_tok[:, None, :], jnp.broadcast_to(pt[None], (P, K, T))], axis=1)       # (P,Kt,T)
+    cand_len = jnp.concatenate([cur_len[:, None], jnp.broadcast_to(pl[None], (P, K))], axis=1)
+    cand_surf = jnp.concatenate([cur_surf[:, None], jnp.broadcast_to(ps[None], (P, K))], axis=1)
+    dup = ps[None, :] == cur_surf[:, None]                                          # (P,K)
+    valid = jnp.concatenate([jnp.ones((P, 1), bool), (pl[None] > 0) & ~dup], axis=1)
+    return cand_tok, cand_len, cand_surf, valid
+
+
+def _chan_scores(w, word_len, word_surf, cand_len, cand_surf, done,
+                 a0, emit_full, wdel, wins, band, M, Vc, Wmax):
+    """Done-aware channel marginal per candidate (P,Kt): splice each candidate into slot w, run the
+    word forward DP. DONE particles read the terminal ``alpha[M]``; mid-loop ones the partial forward
+    mass ``logsumexp(alpha)``."""
+    P, Kt = cand_surf.shape
+    wl = jnp.broadcast_to(word_len[:, None], (P, Kt, Wmax)).at[:, :, w].set(cand_len)
+    ws = jnp.broadcast_to(word_surf[:, None], (P, Kt, Wmax)).at[:, :, w].set(cand_surf)
+    N = P * Kt
+    carry = _channel_carry_a(a0, emit_full, wdel, wins, band, M, Vc,
+                             ws.reshape(N, Wmax), wl.reshape(N, Wmax))               # (N, M+1)
+    return jnp.where(jnp.repeat(done, Kt), carry[:, M], logsumexp(carry, axis=1)).reshape(P, Kt)
+
+
+def _tail_inputs(w, word_tok, word_len, word_surf, cand_surf, done, n_words,
+                 sl, Wmax, T, mt, eos_id, seed_ids):
+    """``tail_fn`` inputs (ctx_bufs [P,LCTX], ctx_lens [P], tail [P,Kt,mt], tail_len [P,Kt]). ``tail_fn``
+    prefills the prefix ``ctx_bufs[:sl+w]`` (cancels across candidates) and scores the candidate-dependent
+    ``tail = [candidate, suffix words w+1.., EOS?]``. (T_max=1)"""
+    P, Kt = cand_surf.shape
+    n_out = Wmax * T
+    LCTX = sl + n_out + 1
+    j = jnp.arange(mt)
+    suff = word_surf[:, jnp.clip(w + j, 0, Wmax - 1)]                               # (P, mt) word w+j
+    nw_w = n_words - w                                                              # (P,) words w..end
+    is_suffix = (j[None, :] >= 1) & (j[None, :] < nw_w[:, None])
+    is_eos = (j[None, :] == nw_w[:, None]) & done[:, None]                          # EOS after last word
+    base = jnp.where(is_suffix, suff, eos_id)
+    base = jnp.where(is_eos, eos_id, base)
+    tail = jnp.broadcast_to(base[:, None, :], (P, Kt, mt)).at[:, :, 0].set(cand_surf)  # (P,Kt,mt)
+    tail_len = jnp.broadcast_to(jnp.clip(nw_w + done.astype(jnp.int32), 0, mt)[:, None], (P, Kt))
+    ctx_bufs, _ = _flat_buffer_a(eos_id, seed_ids, sl, word_tok, word_len, LCTX, n_out)
+    ctx_lens = jnp.full((P,), sl, jnp.int32) + w                                    # prefix end = sl+w
+    return ctx_bufs, ctx_lens, tail, tail_len
+
+
+def _apply_move(key, target, w, cand_tok, cand_len, cand_surf, word_tok, word_len, word_surf,
+                move_logw, n_words, slot_model, slot_proposal):
+    """Sample the per-particle SMCP3 move from ``target`` (P,Kt) and splice the chosen candidate into
+    slot w; accumulate the SMCP3 weight. The ``split(key, P)`` makes duplicate particles DIVERGE -- the
+    diversification dedup must leave untouched (it only dedups the deterministic ``target`` upstream)."""
+    P = word_tok.shape[0]
+    cur_tok, cur_len, cur_surf = word_tok[:, w, :], word_len[:, w], word_surf[:, w]
+    keys = jax.random.split(key, P)
+    s_new, weight = _smcp3_move(slot_model, slot_proposal, keys, target, jnp.zeros(P, jnp.int32))
+    weight = jnp.where(jnp.isnan(weight), 0.0, weight)
+    gather = lambda a: jnp.take_along_axis(a, s_new[:, None], axis=1)[:, 0]
+    new_tok = jnp.take_along_axis(cand_tok, s_new[:, None, None], axis=1)[:, 0, :]      # (P,T)
+    new_len, new_surf = gather(cand_len), gather(cand_surf)
+    active = w < n_words                                                                # (P,)
+    word_tok = word_tok.at[:, w, :].set(jnp.where(active[:, None], new_tok, cur_tok))
+    word_len = word_len.at[:, w].set(jnp.where(active, new_len, cur_len))
+    word_surf = word_surf.at[:, w].set(jnp.where(active, new_surf, cur_surf))
+    move_logw = move_logw + jnp.where(active, weight, 0.0)
+    return word_tok, word_len, word_surf, move_logw
+
+
 @functools.lru_cache(maxsize=64)
 def _build_step(sl, Wmax, T, M, K, mt, eos_id, Vc, band, tail_fn):
-    """Build (and memoize on the static structure + ``tail_fn``) the jitted per-word Gibbs/SMCP3 step.
+    """Build (and memoize on the static structure + ``tail_fn``) the FUSED jitted per-word Gibbs/SMCP3
+    step (``tail_fn`` runs inside the jit, over all P). This is the non-dedup path + the toy default.
 
     Memoizing on the structural signature is what makes the sweep **compile once across runs**: the
     per-run-varying data (``emit_full``/``a0``/pool spans + ``wdel``/``wins``/``seed_ids``) is threaded
@@ -277,119 +361,151 @@ def _build_step(sl, Wmax, T, M, K, mt, eos_id, Vc, band, tail_fn):
     no recompile. Only a new sentence *length* (new ``M``/``Wmax`` -> new key) recompiles. ``tail_fn``
     is part of the key and is stable per model (the Pythia KV scorer comes from the lru_cached
     ``_pythia_model``; the toy uncached fallback is rebuilt per ctx, which is cheap)."""
-    n_out = Wmax * T
     Kt = 1 + K
     slot_model, slot_proposal = _slot_gf(Kt)
 
     @jax.jit
     def step(key, w, word_tok, word_len, word_surf, move_logw, done, n_words,
              emit_full, a0, pool_tok, pool_len, wdel, wins, seed_ids):
-        P = word_tok.shape[0]
-        pool_surf = pool_tok[:, :, 0]                            # (Wmax, K) T_max=1 surface == token
-        # candidates: [COPY] ++ pool[w], shapes (P, Kt, ...)
-        cur_tok = word_tok[:, w, :]                               # (P, T)
-        cur_len = word_len[:, w]                                  # (P,)
-        cur_surf = word_surf[:, w]                                # (P,)
-        pt, pl, ps = pool_tok[w], pool_len[w], pool_surf[w]       # (K,T),(K,),(K,)
-        cand_tok = jnp.concatenate(
-            [cur_tok[:, None, :], jnp.broadcast_to(pt[None], (P, K, T))], axis=1)   # (P,Kt,T)
-        cand_len = jnp.concatenate(
-            [cur_len[:, None], jnp.broadcast_to(pl[None], (P, K))], axis=1)         # (P,Kt)
-        cand_surf = jnp.concatenate(
-            [cur_surf[:, None], jnp.broadcast_to(ps[None], (P, K))], axis=1)        # (P,Kt)
-        # validity: pool pads invalid; pool entries equal to COPY de-duplicated (keep COPY at 0)
-        dup = ps[None, :] == cur_surf[:, None]                                      # (P,K)
-        valid = jnp.concatenate([jnp.ones((P, 1), bool),
-                                 (pl[None] > 0) & ~dup], axis=1)                    # (P,Kt)
-
-        # channel: splice slot w into the word sequence, run the forward DP -> done-aware chan (P,Kt)
-        wl = jnp.broadcast_to(word_len[:, None], (P, Kt, Wmax)).at[:, :, w].set(cand_len)
-        ws = jnp.broadcast_to(word_surf[:, None], (P, Kt, Wmax)).at[:, :, w].set(cand_surf)
-        N = P * Kt
-        LCTX = sl + n_out + 1
-        done_rep = jnp.repeat(done, Kt)                                             # (N,) row = p*Kt+j
-        carry = _channel_carry_a(a0, emit_full, wdel, wins, band, M, Vc,
-                                 ws.reshape(N, Wmax), wl.reshape(N, Wmax))           # (N, M+1)
-        chan = jnp.where(done_rep, carry[:, M], logsumexp(carry, axis=1)).reshape(P, Kt)
-
-        # LM: tail = [cand, suffix words w+1.., EOS?]; prefix [0, sl+w) cancels (not scored). (T_max=1)
-        j = jnp.arange(mt)
-        suff = word_surf[:, jnp.clip(w + j, 0, Wmax - 1)]                           # (P, mt) word w+j
-        nw_w = n_words - w                                                          # (P,) words w..end
-        is_suffix = (j[None, :] >= 1) & (j[None, :] < nw_w[:, None])                # tail pos j = word w+j
-        is_eos = (j[None, :] == nw_w[:, None]) & done[:, None]                      # EOS after last word
-        base = jnp.where(is_suffix, suff, eos_id)                                   # (P, mt) pad/eos slots
-        base = jnp.where(is_eos, eos_id, base)
-        tail = jnp.broadcast_to(base[:, None, :], (P, Kt, mt)).at[:, :, 0].set(cand_surf)  # (P,Kt,mt)
-        tail_len = jnp.broadcast_to(
-            jnp.clip(nw_w + done.astype(jnp.int32), 0, mt)[:, None], (P, Kt))       # (P,Kt)
-        ctx_bufs, _ = _flat_buffer_a(eos_id, seed_ids, sl, word_tok, word_len, LCTX, n_out)  # current
-        ctx_lens = jnp.full((P,), sl, jnp.int32) + w                               # prefix end = sl+w
-        chain = tail_fn(ctx_bufs, ctx_lens, tail, tail_len)                         # (P, Kt)
-
+        cand_tok, cand_len, cand_surf, valid = _candidates(
+            w, word_tok, word_len, word_surf, pool_tok, pool_len, K, T)
+        chan = _chan_scores(w, word_len, word_surf, cand_len, cand_surf, done,
+                            a0, emit_full, wdel, wins, band, M, Vc, Wmax)
+        ctx_bufs, ctx_lens, tail, tail_len = _tail_inputs(
+            w, word_tok, word_len, word_surf, cand_surf, done, n_words, sl, Wmax, T, mt, eos_id, seed_ids)
+        chain = tail_fn(ctx_bufs, ctx_lens, tail, tail_len)                         # (P, Kt) -- LM forward
         target = jnp.where(valid, chain + chan, -jnp.inf)
-
-        keys = jax.random.split(key, P)
-        s_new, weight = _smcp3_move(slot_model, slot_proposal, keys, target, jnp.zeros(P, jnp.int32))
-        weight = jnp.where(jnp.isnan(weight), 0.0, weight)
-
-        gather = lambda a: jnp.take_along_axis(a, s_new[:, None], axis=1)[:, 0]
-        new_tok = jnp.take_along_axis(cand_tok, s_new[:, None, None], axis=1)[:, 0, :]   # (P,T)
-        new_len, new_surf = gather(cand_len), gather(cand_surf)
-        active = w < n_words                                                            # (P,)
-        word_tok = word_tok.at[:, w, :].set(jnp.where(active[:, None], new_tok, cur_tok))
-        word_len = word_len.at[:, w].set(jnp.where(active, new_len, cur_len))
-        word_surf = word_surf.at[:, w].set(jnp.where(active, new_surf, cur_surf))
-        move_logw = move_logw + jnp.where(active, weight, 0.0)
-        return word_tok, word_len, word_surf, move_logw
+        return _apply_move(key, target, w, cand_tok, cand_len, cand_surf,
+                           word_tok, word_len, word_surf, move_logw, n_words, slot_model, slot_proposal)
 
     return step
 
 
-def make_sweep(ctx, pool_tok, pool_len, max_tail=None):
-    """Build a reusable ``sweep(key, ctx_buf, ctx_len, positions, done) -> (ctx_buf, log_alpha,
-    move_logw)``. The per-word ``step`` is built by the memoized :func:`_build_step`, so it is jitted
-    ONCE PER STRUCTURE and reused both across the many resample events in one run AND across separate
-    ``run`` calls of the same shape (the per-run arrays are passed as args, not baked in -- that is the
-    fix for the per-run recompile that dominated R3 wall-clock). ``done`` is a per-word ``step`` ARG so
-    one compiled step serves every sweep call; ``positions`` only sets the Python loop length.
+@functools.lru_cache(maxsize=64)
+def _build_dedup_steps(sl, Wmax, T, M, K, mt, eos_id, Vc, band):
+    """R3 item 1b: the per-word step SPLIT at the LM-forward seam so ``tail_fn`` can run on the HOST over
+    UNIQUE buffers (:func:`_dedup_tail`) instead of inside the jit over all P. ``emit_inputs`` (jitted,
+    no LM) builds the ``tail_fn`` inputs; ``move`` (jitted) recomputes the cheap candidates + channel and
+    finishes the SMCP3 sample from the passed-in ``chain``. Memoized on the structure -- and crucially
+    with NO ``tail_fn`` in the key (it is host-side now, not traced)."""
+    Kt = 1 + K
+    slot_model, slot_proposal = _slot_gf(Kt)
+
+    @jax.jit
+    def emit_inputs(w, word_tok, word_len, word_surf, done, n_words, pool_tok, pool_len, seed_ids):
+        _, _, cand_surf, _ = _candidates(w, word_tok, word_len, word_surf, pool_tok, pool_len, K, T)
+        return _tail_inputs(w, word_tok, word_len, word_surf, cand_surf, done, n_words,
+                            sl, Wmax, T, mt, eos_id, seed_ids)
+
+    @jax.jit
+    def move(key, chain, w, word_tok, word_len, word_surf, move_logw, done, n_words,
+             emit_full, a0, pool_tok, pool_len, wdel, wins):
+        cand_tok, cand_len, cand_surf, valid = _candidates(
+            w, word_tok, word_len, word_surf, pool_tok, pool_len, K, T)
+        chan = _chan_scores(w, word_len, word_surf, cand_len, cand_surf, done,
+                            a0, emit_full, wdel, wins, band, M, Vc, Wmax)
+        target = jnp.where(valid, chain + chan, -jnp.inf)
+        return _apply_move(key, target, w, cand_tok, cand_len, cand_surf,
+                           word_tok, word_len, word_surf, move_logw, n_words, slot_model, slot_proposal)
+
+    return emit_inputs, move
+
+
+def _dedup_tail(tail_fn, ctx_bufs, ctx_lens, tail, tail_len, stats=None):
+    """Score only the UNIQUE ``tail_fn``-input rows and scatter the [P,Kt] chain back (R3 item 1b). Key
+    per row = exactly the bytes ``tail_fn`` reads -- ``ctx_bufs[:ctx_len]`` (the prefix it prefills) ++
+    ``tail`` ++ ``tail_len`` -- so duplicate post-resample buffers (uniq/P ~ 0.07) share ONE prefill.
+    EXACT: the per-particle SMCP3 sample (in ``move``) is unchanged, so the sweep is bit-identical given
+    the same RNG; only redundant LM forwards are removed. Host-side (un-jitted dict over bytes); unique
+    rows padded to a fixed bucket ladder so the jitted ``tail_fn`` recompiles at only a few batch sizes."""
+    from genjax_port import cache_dedup
+    cb = np.asarray(ctx_bufs)
+    cl = np.asarray(ctx_lens).astype(np.int64)
+    tl = np.asarray(tail)
+    tll = np.asarray(tail_len)
+    P = cb.shape[0]
+    slot_of, reps, inverse = {}, [], np.empty(P, np.int64)
+    for r in range(P):
+        key = cb[r, :cl[r]].tobytes() + b"|" + tl[r].tobytes() + b"|" + tll[r].tobytes()
+        slot = slot_of.get(key)
+        if slot is None:
+            slot = len(reps)
+            slot_of[key] = slot
+            reps.append(r)
+        inverse[r] = slot
+    U = len(reps)
+    Ub = cache_dedup._bucket_size(U, P)                                  # pad to a fixed rung (compiles)
+    rep_idx = np.array(reps + [reps[0]] * (Ub - U), np.int64)            # pad with a valid row (no NaNs)
+    chain = tail_fn(jnp.asarray(cb[rep_idx]), jnp.asarray(cl[rep_idx]),
+                    jnp.asarray(tl[rep_idx]), jnp.asarray(tll[rep_idx]))  # [Ub, Kt]
+    if stats is not None:
+        stats.calls += 1
+        stats.rows_in += P
+        stats.rows_computed += Ub
+    return chain[jnp.asarray(inverse)]                                   # [P, Kt]
+
+
+def make_sweep(ctx, pool_tok, pool_len, max_tail=None, dedup=False):
+    """Build a reusable ``sweep(key, ctx_buf, ctx_len, positions, done, dedup_stats) -> (ctx_buf,
+    log_alpha, move_logw)``. The per-word step is built by a memoized factory (:func:`_build_step` /
+    :func:`_build_dedup_steps`) so it is jitted ONCE PER STRUCTURE and reused across the many resample
+    events in one run AND across separate ``run`` calls of the same shape (per-run arrays are passed as
+    args, not baked in -- the fix for the per-run recompile that dominated R3 wall-clock). ``done`` is a
+    per-word step ARG so one compiled step serves every call; ``positions`` only sets the loop length.
 
     **LM scoring (R3): only the SUFFIX is scored.** The conditional ``q(x) ∝ LM(x|prefix) +
     LM(suffix|prefix,x) + channel(x)`` -- the prefix LM is identical for every candidate (the move
     only touches word ``w``), so it CANCELS in the softmax / SMCP3 weight and is never computed. We
     score the candidate-dependent tail ``[x, suffix words, EOS?]`` via ``ctx.model.tail_logprobs``
     (Pythia: a KV-cached scorer that prefills the prefix once and shares it across candidates; toy /
-    default: a generic uncached chain-rule). This replaces R2's wasteful whole-sentence re-score (the
-    ×151 LM-forward balloon). ``max_tail`` bounds the suffix width (default ``Wmax+1`` for a full
-    sweep; the filter passes ``rejuv_lookback+1`` for a windowed sweep)."""
+    default: a generic uncached chain-rule). ``max_tail`` bounds the suffix width (default ``Wmax+1``;
+    the filter passes ``rejuv_lookback+1`` for a windowed sweep).
+
+    **``dedup=True`` (R3 item 1b)** runs ``tail_fn`` on the HOST over the unique post-resample buffers
+    (:func:`_dedup_tail`) instead of inside the jit over all P -- the sweep's dominant cost (its KV
+    prefills scale ~linearly with P) drops to scale with the unique count. EXACT (bit-identical given the
+    same RNG): the per-word key split and per-particle sample are unchanged; only the deterministic tail
+    scores are deduped. ``sweep(..., dedup_stats=DedupStats())`` collects the rows-saved ratio."""
     sl, Wmax, T, M = ctx.seed_len, ctx.Wmax, ctx.t_max, ctx.M
     n_out = Wmax * T
     K = pool_tok.shape[1]
     mt = (Wmax + 1) if max_tail is None else max_tail
     eos_id, Vc = ctx.model.eos_id, ctx.model.emit_vocab
-    # tail_fn is the _build_step cache key -> must be stable across runs for the compile to be reused.
-    # Pythia's comes from the lru_cached _pythia_model (stable); the toy fallback is a fresh partial
-    # per ctx (a per-run recompile, but the toy has no LM load so it is cheap).
+    # tail_fn: Pythia's KV scorer (stable, from the lru_cached _pythia_model) or the toy uncached
+    # fallback. In the dedup path it is called HOST-SIDE (not a _build_* cache key); in the fused path
+    # it is the _build_step key and must be stable across runs for the compile to be reused.
     tail_fn = ctx.model.tail_logprobs or functools.partial(_tail_chain_uncached, ctx.model.lm_fn)
-    step = _build_step(sl, Wmax, T, M, K, mt, eos_id, Vc, ctx.band, tail_fn)
+    if dedup:
+        emit_inputs, move = _build_dedup_steps(sl, Wmax, T, M, K, mt, eos_id, Vc, ctx.band)
+    else:
+        step = _build_step(sl, Wmax, T, M, K, mt, eos_id, Vc, ctx.band, tail_fn)
 
-    # Per-run data threaded as TRACED args (not baked into step) so same-shape runs reuse the compile.
+    # Per-run data threaded as TRACED args (not baked into the step) so same-shape runs reuse the compile.
     emit_full, a0 = ctx.emit_full, ctx.a0
     wdel, wins = jnp.float32(ctx.wdel), jnp.float32(ctx.wins)
     seed_ids = jnp.asarray(ctx.model.seed_ids, jnp.int32) if sl else jnp.zeros((0,), jnp.int32)
     pool_tok, pool_len = jnp.asarray(pool_tok), jnp.asarray(pool_len)
 
-    def sweep(key, ctx_buf, ctx_len, positions=None, done=None):
+    def sweep(key, ctx_buf, ctx_len, positions=None, done=None, dedup_stats=None):
         P, LCTX = ctx_buf.shape
         done = jnp.ones(P, bool) if done is None else done
         word_tok, word_len, n_words = _unpack_single_token(ctx_buf, ctx_len, sl, Wmax, T)
         word_surf = word_tok[:, :, 0]
         move_logw = jnp.zeros(P)
         for w in (range(Wmax) if positions is None else positions):
-            key, sub = jax.random.split(key)
-            word_tok, word_len, word_surf, move_logw = step(
-                sub, jnp.int32(w), word_tok, word_len, word_surf, move_logw, done, n_words,
-                emit_full, a0, pool_tok, pool_len, wdel, wins, seed_ids)
+            key, sub = jax.random.split(key)                            # same split order both paths
+            wi = jnp.int32(w)
+            if dedup:
+                ci = emit_inputs(wi, word_tok, word_len, word_surf, done, n_words,
+                                 pool_tok, pool_len, seed_ids)          # (ctx_bufs, ctx_lens, tail, tail_len)
+                chain = _dedup_tail(tail_fn, *ci, stats=dedup_stats)    # host: unique tail_fn -> [P,Kt]
+                word_tok, word_len, word_surf, move_logw = move(
+                    sub, chain, wi, word_tok, word_len, word_surf, move_logw, done, n_words,
+                    emit_full, a0, pool_tok, pool_len, wdel, wins)
+            else:
+                word_tok, word_len, word_surf, move_logw = step(
+                    sub, wi, word_tok, word_len, word_surf, move_logw, done, n_words,
+                    emit_full, a0, pool_tok, pool_len, wdel, wins, seed_ids)
         bufs, _ = _flat_buffer(ctx, word_tok, word_len, LCTX, n_out)
         log_alpha = _channel_carry(ctx, word_surf, word_len)                        # (P, M+1) for filter
         return bufs, log_alpha, move_logw
