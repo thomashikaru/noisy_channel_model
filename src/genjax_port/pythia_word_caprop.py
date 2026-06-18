@@ -299,6 +299,10 @@ def cli():
                          "(KV-cached suffix scorer). 'off' is the certified forward-only filter.")
     ap.add_argument("--rejuv_lookback", type=int, default=3,
                     help="rejuvenation window: how many recent words each sweep revisits (default 3)")
+    ap.add_argument("--no_dedup", action="store_true",
+                    help="disable the EXACT post-resample LM-forward dedup (R3 item 1; on by default). "
+                         "Dedup is bit-identical and ~2x faster on rejuv runs (the sweep prefills run on "
+                         "the unique buffers only); turn off only to A/B the cost.")
     ap.add_argument("--output_json", default=None,
                     help="write the structured-output JSON here (view with genjax_port.viz)")
     ap.add_argument("--json_topk", type=int, default=8, help="hypotheses kept per step + in posterior")
@@ -317,7 +321,7 @@ def cli():
     st, lw, logZ, sl = run(args.sentence, jax.random.PRNGKey(args.seed), P=args.particles,
                            band=args.band, max_dist=args.max_dist, wdel=args.wdel, wins=args.wins,
                            use_word_mask=args.word_mask, rejuv=args.rejuv,
-                           rejuv_lookback=args.rejuv_lookback, trace=trace)
+                           rejuv_lookback=args.rejuv_lookback, trace=trace, dedup=not args.no_dedup)
     top = decode(st, lw, skip=sl, top=args.top)
     print(f"observed : {args.sentence!r}")
     print(f"inferred intended (P={args.particles}, band={args.band}, rejuv={args.rejuv}, "
