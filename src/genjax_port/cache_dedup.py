@@ -108,3 +108,22 @@ def make_dedup_fns(stats=None):
         return _dedup_apply(L.next_token_logits, token_bufs, i_lens, stats)
 
     return logprobs, logits
+
+
+def make_forward_dedup(forward_fn, stats=None):
+    """Wrap an arbitrary batched forward ``(token_bufs [P, M], i_lens [P]) -> [P, ...]`` so it runs
+    only on the unique filled-prefix rows (keyed on ``buf[:i_len]``) and scatters the result back.
+
+    EXACT under causal attention: a next-token output depends only on the filled prefix, so byte-equal
+    prefixes give byte-equal rows. This is the live-filter drop-in for the dead-stack
+    :func:`make_dedup_fns` -- inject it as ``pairhmm_smc.PairHMMModel.lm_fn`` to dedup the SMC forward
+    over a post-resample degenerate cloud. The downstream per-particle sampling is untouched (the same
+    logits are scattered to duplicate rows, each then sampled with its own RNG key), so the posterior
+    is bit-identical given the same RNG -- only redundant LM forwards are removed. Works for any
+    forward whose rows are independent (``next_token_logprobs``/``logits``). Pass a ``DedupStats`` to
+    quantify the rows-saved ratio."""
+
+    def deduped(token_bufs, i_lens):
+        return _dedup_apply(forward_fn, token_bufs, i_lens, stats)
+
+    return deduped

@@ -312,6 +312,35 @@ def test_rejuv_smcp3_weight_zero():
         f"full-conditional SMCP3 weight not ~0: max|w|={float(jnp.max(jnp.abs(move_logw))):.2e}"
 
 
+def test_dedup_forward_exact():
+    """R3 item 1: ``cache_dedup.make_forward_dedup`` runs a batched forward on only the unique filled
+    prefixes (keyed on ``buf[:i_len]``) and scatters back. EXACT -- the deduped output equals the raw
+    per-row forward -- and on a degenerate batch the rows actually computed drop below rows-in. This is
+    the bit-parity guardrail for the filter-forward dedup (R3 item 1): because the same logits are
+    scattered to duplicate rows and each is sampled with its own RNG key downstream, the SMC posterior
+    is bit-identical given the same RNG; only redundant LM forwards are removed. LM-free (toy forward)."""
+    from genjax_port import cache_dedup
+
+    def fwd(bufs, ilens):                        # deterministic in the FILLED PREFIX only (causal)
+        M = bufs.shape[1]
+        idx = jnp.arange(M)[None, :]
+        pre = jnp.where(idx < ilens[:, None], bufs, 0)
+        return jnp.stack([jnp.sum(pre, 1), jnp.sum(pre * idx, 1),
+                          ilens, jnp.sum(pre * pre, 1)], axis=1).astype(jnp.float32)
+
+    uniq = jnp.array([[5, 3, 7, 0, 0], [2, 9, 0, 0, 0], [2, 9, 4, 1, 0],
+                      [8, 0, 0, 0, 0], [5, 3, 1, 0, 0]], jnp.int32)
+    ulen = jnp.array([3, 2, 4, 1, 3], jnp.int32)
+    sel = jnp.array([0, 1, 2, 3, 4] * 8)         # 40 rows, 5 unique (a post-resample degenerate cloud)
+    bufs, ilens = uniq[sel], ulen[sel]
+
+    stats = cache_dedup.DedupStats()
+    out_dedup = cache_dedup.make_forward_dedup(fwd, stats)(bufs, ilens)
+    out_raw = fwd(bufs, ilens)
+    assert jnp.array_equal(out_dedup, out_raw), "deduped forward != raw forward (scatter is wrong)"
+    assert stats.rows_in == 40 and stats.rows_computed < 40, f"dedup did not cut rows: {stats!r}"
+
+
 # NOTE: caprop's lower-variance-than-bootstrap logZ is NOT a pass/fail gate. At toy scale the edge
 # is small (~1.1-1.3x) and case/seed-sensitive -- at P=3000 on the flat spurious case it even
 # inverts. It is the fully-adapted proposal's signature and grows with LM cost (plan finding #4), so

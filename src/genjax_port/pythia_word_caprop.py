@@ -19,7 +19,7 @@ import jax
 import jax.numpy as jnp
 from jax.scipy.special import logsumexp
 
-from genjax_port import lm_penzai, tokenizer, pairhmm_smc
+from genjax_port import lm_penzai, tokenizer, pairhmm_smc, cache_dedup
 from genjax_port.noise_word import word_sub_candidates, segment_words
 from genjax_port.noise import insertion_loglik
 
@@ -156,16 +156,24 @@ def _candidate_ids(word, max_dist, Ke):
 
 
 @functools.lru_cache(maxsize=8)
-def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False):
+def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False):
     """Build the Pythia :class:`pairhmm_smc.PairHMMModel`. Cached per prime so the vocab char table
     + seed are reused across runs. ``lm_logprobs_fn`` defaults to the loaded penzai model.
 
     ``use_word_mask`` (default OFF) restricts the proposal's top-J LM pool to whole-word tokens
     (:func:`_word_token_mask`). It was added to stop sentence-initial non-word tokens ('#'), but the
     real cause of those was the double-space prime (fixed: PRIME has no trailing space), and the mask
-    in fact worsens mid-sentence over-editing -- so it is off by default. Kept as an opt-in knob."""
+    in fact worsens mid-sentence over-editing -- so it is off by default. Kept as an opt-in knob.
+
+    ``dedup`` (R3 item 1) wraps the filter's per-step forward in :func:`cache_dedup.make_forward_dedup`
+    so it runs only on the unique post-resample prefixes (the cloud is ~93% duplicates after resample-
+    every-word) and scatters back -- EXACT (bit-identical posterior given the same RNG), removes
+    redundant LM forwards. It wraps only ``lm_fn``; the KV ``tail_fn`` (rejuv sweep scorer) is left
+    intact and deduped separately (sweep phase)."""
     vocab_char, vocab_clen = _vocab_char_table()
     lm_fn = lm_logprobs_fn or lm_penzai.next_token_logprobs
+    if dedup:
+        lm_fn = cache_dedup.make_forward_dedup(lm_fn)
     seed_ids = [EOS_ID] + (tokenizer.encode(prime) if prime else [])
     # R3: the rejuvenation sweep scores only the candidate-dependent suffix tail via the KV-cached
     # scorer (prefills the prefix once, shares it across candidates). Default penzai LM only (a custom
@@ -182,7 +190,7 @@ def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False):
 
 def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         max_dist=2, Ke=8, J=8, cwin=1, prime=PRIME, lm_logprobs_fn=None, use_word_mask=False,
-        rejuv="off", rejuv_lookback=3, rejuv_Ke=8, rejuv_stats=None, trace=None):
+        rejuv="off", rejuv_lookback=3, rejuv_Ke=8, rejuv_stats=None, trace=None, dedup=False):
     """Channel-aware RB-SMC on Pythia via the shared filter. Returns (state, log_w, logZ, seed_len).
 
     ``wdel`` is the missing-word (over-editing) log-penalty (default ``WDEL_DEFAULT``); ``wins`` the
@@ -190,11 +198,14 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
 
     ``rejuv="gibbs"`` enables the flag-gated post-resample Gibbs/SMCP3 rejuvenation sweep (R2): a
     windowed (last ``rejuv_lookback`` words) full-conditional resample over a per-slot SymSpell pool
-    (``rejuv_Ke`` candidates). ``rejuv_stats`` (dict) collects the cost/degeneracy counters."""
+    (``rejuv_Ke`` candidates). ``rejuv_stats`` (dict) collects the cost/degeneracy counters.
+
+    ``dedup=True`` (R3 item 1) dedups the filter's per-step LM forward over the degenerate post-resample
+    cloud (exact; bit-identical posterior given the same RNG). See :func:`_pythia_model`."""
     from genjax_port import pairhmm_rejuv as RJ
     if lm_logprobs_fn is None:
         lm_penzai.load_model()
-    model = _pythia_model(prime, lm_logprobs_fn, use_word_mask)
+    model = _pythia_model(prime, lm_logprobs_fn, use_word_mask, dedup)
     ntok = model.emit_vocab
     WDEL = WDEL_DEFAULT if wdel is None else wdel
     WINS = insertion_loglik(ntok) if wins is None else wins
