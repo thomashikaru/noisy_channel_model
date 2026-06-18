@@ -53,7 +53,7 @@ WINS = float(jnp.log(0.05))
 def _toy_model(lm_fn):
     """A :class:`pairhmm_smc.PairHMMModel` over the toy vocab, LM injected. The toy bigram is the
     same filter as Pythia with a different LM, so certifying it here certifies the shared code."""
-    def candidate_words(word, max_dist, Ke):
+    def candidate_words(word, obs_span, max_dist, Ke):   # obs_span unused (toy COPY is faithful already)
         cands = sorted((_damerau_levenshtein(word, w, max_dist), WORD2IDX[w]) for w in VOCAB)
         return [((i,), VOCAB[i]) for d, i in cands if d <= max_dist][:Ke]  # single-token toy words
 
@@ -422,7 +422,7 @@ def _mt_decode(ids):
 
 
 def _mt_model(sub_log_bigram):
-    def candidate_words(word, max_dist, Ke):       # MT_VOCAB words within edit distance; COPY = d=0
+    def candidate_words(word, obs_span, max_dist, Ke):   # MT_VOCAB words within edit distance; COPY = d=0
         cands = sorted((_damerau_levenshtein(word, w, max_dist), w) for w in MT_VOCAB)
         return [(MT_SPAN[w], w) for d, w in cands if d <= max_dist][:Ke]
 
@@ -532,11 +532,12 @@ def _mt_rejuv_ctx_pool(observed, sub_log_bigram, slack=3, Ke=8):
     (model, ctx, (pool_tok, pool_len, pool_surf), T_max, Wmax)."""
     model = _mt_model(sub_log_bigram)
     obs_words = observed.split(); M = len(obs_words)
+    obs_spans = [None] * M                                 # toy: no obs_spans -> candidate_words re-encodes
     obs_char = jnp.stack([encode(w)[0] for w in obs_words])
     emit_full = jax.vmap(jax.vmap(channel_logpdf, in_axes=(None, 0, 0)),
                          in_axes=(0, None, None))(obs_char, model.vocab_char, model.vocab_clen)
     ef, es, em, mt_span, mt_len, emit_aug, T_max, _n_mt = pairhmm_smc._build_candidates(
-        model, obs_words, obs_char, emit_full, max_dist=2, Ke=Ke)
+        model, obs_words, obs_spans, obs_char, emit_full, max_dist=2, Ke=Ke)
     Wmax = M + slack
     pool = pairhmm_smc._rejuv_pool_from_inventory(ef, es, em, mt_span, mt_len, M, Wmax, T_max)
     a0 = jnp.where(jnp.arange(M + 1) == 0, 0.0, jnp.arange(M + 1) * WINS)

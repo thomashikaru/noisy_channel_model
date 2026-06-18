@@ -595,10 +595,13 @@ def build_pool(observed, model, max_dist, Ke, Wmax, t_max=1):
     observed length -- those slots are inactive for an M-word parse anyway). Returns
     (pool_tok [Wmax, Ke, T_max], pool_len [Wmax, Ke])."""
     obs_words = model.obs_words(observed)
+    obs_spans = (model.obs_spans(observed) if getattr(model, "obs_spans", None) is not None
+                 else [None] * len(obs_words))
     M = len(obs_words)
     rows = []
     for i in range(Wmax):
-        cands = list(model.candidate_words(obs_words[min(i, M - 1)], max_dist, Ke))[:Ke]
+        oi = min(i, M - 1)
+        cands = list(model.candidate_words(obs_words[oi], obs_spans[oi], max_dist, Ke))[:Ke]
         ids = [int(span[0]) for span, _surf in cands]   # single-token pool (R4: full multi-token spans)
         rows.append(ids + [-1] * (Ke - len(ids)))
     return pool_from_table(jnp.array(rows, jnp.int32), t_max=t_max)

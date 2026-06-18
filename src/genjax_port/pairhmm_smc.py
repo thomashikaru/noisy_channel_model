@@ -61,9 +61,10 @@ class PairHMMModel:
     vocab_clen: jnp.ndarray    # (Vc,) char lengths
     channel_logpdf: Callable   # (obs_char_ids, intended_char_ids, n_x) -> channel logpdf
     char_ids: Callable         # word_str -> (list[int] padded char ids, n)
-    candidate_words: Callable   # (word_str, max_dist, Ke) -> list[(token-span tuple, surface_str)].
-    #                             The COPY (the observed word's own span, ANY token count) first, then
-    #                             substitution neighbours. A single-token candidate is ``((tok,), surf)``;
+    candidate_words: Callable   # (word_str, obs_span, max_dist, Ke) -> list[(token-span tuple, surf_str)].
+    #                             The COPY (FIRST) is the unit's actual observed token span ``obs_span``
+    #                             (verbatim, so punctuation/case are faithful; ``obs_span=None`` re-encodes),
+    #                             then substitution neighbours. A single-token candidate is ``((tok,), surf)``;
     #                             a multi-token one ``((t0, t1, ...), surf)``. Surfaces drive the channel
     #                             column; spans drive the LM chain-rule + buffer splice.
     obs_words: Callable        # observed_str -> list[word_str]
@@ -78,9 +79,12 @@ class PairHMMModel:
     #                                top-J LM candidate pool is restricted to it so the prior cannot
     #                                emit non-word tokens (\n, '#', '****') as intended words. None =
     #                                no restriction (the toy, whose vocab is already all words).
+    obs_spans: Callable = None  # observed_str -> list[token-span tuple], parallel to obs_words: each
+    #                             unit's actual observed token ids, threaded into candidate_words for a
+    #                             faithful COPY. None => candidate_words re-encodes (the toy / generic).
 
 
-def _build_candidates(model, obs_words, obs_char, emit_full, max_dist, Ke):
+def _build_candidates(model, obs_words, obs_spans, obs_char, emit_full, max_dist, Ke):
     """Assemble the per-observed-word candidate inventory (Phase D), generalizing the old
     single-token ``_emit_table``. Each candidate is a (token span, surface) from
     ``model.candidate_words``. Returns:
@@ -100,7 +104,8 @@ def _build_candidates(model, obs_words, obs_char, emit_full, max_dist, Ke):
     """
     Vc = emit_full.shape[1]
     M = len(obs_words)
-    word_cands = [list(model.candidate_words(w, max_dist, Ke))[:Ke] for w in obs_words]
+    word_cands = [list(model.candidate_words(w, sp, max_dist, Ke))[:Ke]
+                  for w, sp in zip(obs_words, obs_spans)]
     T_max = max([1] + [len(span) for cands in word_cands for span, _surf in cands])
 
     surf_col, extra_surfaces = {}, []          # multi-token surface -> appended column index
@@ -383,11 +388,12 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     seed_len = len(seed_ids)
     obs_words = model.obs_words(observed)
     M = len(obs_words)
+    obs_spans = model.obs_spans(observed) if model.obs_spans is not None else [None] * M
     obs_char = jnp.stack([jnp.asarray(model.char_ids(w)[0], jnp.int32) for w in obs_words])  # (M,Lc)
     emit_full = jax.vmap(jax.vmap(model.channel_logpdf, in_axes=(None, 0, 0)),
                          in_axes=(0, None, None))(obs_char, model.vocab_char, model.vocab_clen)
     (emit_first, emit_surf, emit_mtidx, mt_span, mt_len, emit_full, T_max, n_mt) = _build_candidates(
-        model, obs_words, obs_char, emit_full, max_dist, Ke)
+        model, obs_words, obs_spans, obs_char, emit_full, max_dist, Ke)
     WDEL = wdel if enable_indel else -jnp.inf
     WINS = wins if enable_indel else -jnp.inf
     offs = jnp.arange(-cwin, cwin + 1)

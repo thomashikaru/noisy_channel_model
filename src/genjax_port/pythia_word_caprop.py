@@ -136,23 +136,46 @@ def _obs_word_units(observed):
     return [unit_str for _ids, unit_str in segment_words(obs_ids)]
 
 
-def _candidate_words(word, max_dist, Ke):
+def _obs_word_spans(observed):
+    """The ACTUAL observed token span of each unit (parallel to :func:`_obs_word_units`). These are
+    what ``_candidate_words`` uses to build a faithful COPY, so a unit is reconstructed byte-for-byte
+    as observed -- a terminal '.' stays the attached token 15 (not the spaced ' .'=964), an opening
+    quote / '$' keeps the leading space it actually had, and case is preserved."""
+    obs_ids = tokenizer.encode(observed.strip())
+    return [tuple(int(t) for t in ids) for ids, _unit_str in segment_words(obs_ids)]
+
+
+def _candidate_words(word, obs_span, max_dist, Ke):
     """Candidate intended words for an observed word, each a ``(token-span tuple, surface str)``.
 
-    The COPY -- the observed word's OWN token span, of ANY token count -- comes FIRST, so a correctly-
-    spelled word can always be emitted verbatim. **Phase D / D1:** dropping the old ``len(lit)==1``
-    guard fixes the hole where a >=2-token correct word (rarer words, names, morphology) had NO COPY
-    candidate and was forced to substitute a single-token neighbour or be dropped. Then single-token
-    SymSpell substitution neighbours; ``word_sub_candidates`` excludes the literal (it is the COPY).
-    (D2 appends multi-token substitution neighbours from the wordfreq dictionary.) Deduped by span,
-    copy-first, capped to Ke. A single-token candidate is ``((tid,), surf)`` and keeps ``surface_id ==
-    tid`` downstream (the certified single-token path); a multi-token COPY is ``((t0,t1,...), surf)``."""
-    body = word.strip().lower()
-    lit = tuple(tokenizer.encode(" " + body))                    # the observed word's own span (COPY)
+    The COPY comes FIRST so a correctly-spelled word can always be emitted verbatim, and it is now the
+    word's **actually observed token span** (``obs_span``) -- NOT a re-encode of ``" " + body``. The
+    old re-encode forced a leading space onto every unit, which is right for a mid-sentence word but
+    wrong for punctuation: a terminal '.' was observed as the attached token 15 but copied as the
+    spaced ' .' (964), so the "faithful" copy detached the period (and lowercased the first word).
+    Whether a unit carries a leading space is context-dependent (an opening quote / '$' that followed
+    a space does, a sentence-final '.' does not), and only the observed span records it -- hence using
+    it verbatim. The one exception: a sentence-initial WORD has no leading space in the observed stream,
+    but the "." prime severs it from one, so we restore the word-initial space for the LM (the decoder
+    strips it anyway). ``obs_span=None`` (non-Pythia callers, e.g. the toy) falls back to the re-encode.
+
+    Then single-token SymSpell substitution neighbours (case-folded query; ``word_sub_candidates``
+    excludes the literal -- it is the COPY) and multi-token neighbours from the wordfreq dictionary
+    (D2). Deduped by span, copy-first, capped to Ke. A single-token candidate is ``((tid,), surf)`` and
+    keeps ``surface_id == tid`` downstream (the certified single-token path); a multi-token COPY is
+    ``((t0,t1,...), surf)`` (e.g. a >=2-token correct word -- rarer words, names, morphology)."""
+    body = word.strip()
+    sub_body = body.lower()                                       # SymSpell matching stays case-folded
+    if obs_span is None:                                          # toy / non-Pythia: re-encode fallback
+        lit = tuple(tokenizer.encode(" " + sub_body))
+    else:
+        lit = tuple(int(t) for t in obs_span)                    # faithful COPY: the observed span itself
+        if body and body[0].isalpha() and not tokenizer.surface(lit[0]).startswith(" "):
+            lit = tuple(tokenizer.encode(" " + body))            # sentence-initial word: restore the space
     cands = [(lit, body, 0)]                                      # COPY, distance 0 (kept first)
-    for tid, d in word_sub_candidates(body, max_dist=max_dist):
+    for tid, d in word_sub_candidates(sub_body, max_dist=max_dist):
         cands.append(((tid,), tokenizer.surface(tid).strip(), d))   # single-token neighbours
-    for span, surf, d in word_sub_candidates_multitoken(body, max_dist=max_dist):
+    for span, surf, d in word_sub_candidates_multitoken(sub_body, max_dist=max_dist):
         cands.append((span, surf, d))                            # multi-token neighbours (D2)
     cands.sort(key=lambda t: t[2])                               # COPY first, then nearest by distance
     seen, dedup = set(), []
@@ -194,6 +217,7 @@ def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False):
         lm_fn=lm_fn, eos_id=EOS_ID, emit_vocab=vocab_char.shape[0],
         vocab_char=vocab_char, vocab_clen=vocab_clen, channel_logpdf=channel_logpdf,
         char_ids=_char_ids, candidate_words=_candidate_words, obs_words=_obs_word_units,
+        obs_spans=_obs_word_spans,
         decode_ids=lambda t: tokenizer.decode(t).strip(), tail_logprobs=tail_fn,
         seed_ids=tuple(seed_ids), word_mask=_word_token_mask() if use_word_mask else None)
 
