@@ -256,9 +256,24 @@ logZ and posteriors match R2 to float — the prefix-cancel + KV is exact). All 
 (the suffix-tail conditional == the whole-sentence one). Wall-clock ~3.6s→~17s (~4.7×) was still
 **compile-dominated** (the `make_sweep` step recompiled per run) — **now fixed**, see Remaining item (2).
 
-**Remaining for the strict <2× target:** (1) **dedup** — median unique/P≈0.07,
-so the prefills should run on the ~handful of unique post-resample buffers (≈×2.67→×1.1), but dedup is
-host-side and forces un-jitting the step (GOAL1 tension); ~~(2) the per-run `make_sweep` recompile~~
+**Remaining for the strict <2× target:** (1) **dedup** — median unique/P≈0.07, so the LM forwards
+should run on the ~handful of unique post-resample buffers, but dedup is host-side and forces un-jitting
+the seam (GOAL1 tension). Split into two seams (both: dedup only the *deterministic* forward, never the
+per-particle sampling — duplicates must sample *different* moves to diversify):
+  - **(1a) filter-forward dedup ✅ DONE (2026-06-18, `3d1cde3`).** The filter's own per-step forward
+    (`pairhmm_smc.run`: `lmlog = model.lm_fn(ctx_buf, ctx_len)`) runs on all P over the degenerate cloud
+    too — and `cache_dedup.py` (built for exactly it) was **orphaned** on the archived
+    `smc_substitution`/`particle_filter_unified` stack. Added `cache_dedup.make_forward_dedup` (live-filter
+    sibling of `make_dedup_fns`); wired behind a `dedup` flag in `pythia_word_caprop` (wraps `lm_fn` only,
+    KV `tail_fn` left intact). No certified-path edit (pure injection on an already-eager loop). Measured
+    (cat/mat, 70m, P=128): **bit-identical** `ctx_buf`/`log_w`/`logZ` dedup on vs off (rejuv off AND
+    gibbs); filter rows **1152→240 (79% saved)**; wall-clock 8.5→5.7s (off) / 17.5→15.4s (gibbs). LM-free
+    gate `test_dedup_forward_exact` + 7 prior toy gates green. Default off pending (1b).
+  - **(1b) sweep-tail dedup — NEXT.** Lift `tail_fn` out of the jitted per-word `step` so its KV prefills
+    run on unique buffers (≈×2.67→×1.1). Needs the step split (`emit_inputs` → host `dedup_tail` → `move`);
+    bucket the unique count `(16,64)`; RNG-parity preserved (same per-word key split). Toy bit-parity gate
+    (dedup on==off, same RNG) + Pythia smoke. Then flip both defaults + `run_example_native.sh` together.
+~~(2) the per-run `make_sweep` recompile~~
 ✅ **DONE (2026-06-18)** — the jitted step is now built by a memoized factory `pairhmm_rejuv._build_step`
 keyed on the static structure (`sl,Wmax,T,M,K,mt,eos_id,Vc,band,tail_fn`); the per-run-varying data
 (`emit_full`/`a0`/pool spans + `wdel`/`wins`/`seed_ids`) is threaded as **traced args**, not baked into
