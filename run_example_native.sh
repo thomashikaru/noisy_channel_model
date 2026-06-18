@@ -13,8 +13,17 @@
 #   synchronized with observed consumption (and gives insertions/deletions their reach); there is NO
 #   explicit INSERT action -- a spurious word is a channel event marginalized inside the DP.
 #
+# MULTI-TOKEN WORDS (Phase D): an intended word may span any number of BPE tokens. A correctly-spelled
+# word that tokenizes to >=2 tokens (rarer words / names: "kitten" = k+itten) is kept verbatim (COPY),
+# and a misspelling can be corrected to a multi-token word ("stawberry" -> "strawberry") -- substitution
+# candidates come from a wordfreq dictionary (first run builds it, ~a few s, cached). The channel scores
+# whole-word surfaces (BPE-agnostic); a multi-token candidate's LM score is the chain-rule over its
+# tokens; rejuvenation handles multi-token words too. (Only DELETION of a wholly-dropped word is still
+# single-token.)
+#
 # Correctness is certified on a toy bigram by exact enumeration (src/genjax_port/tests/
-# test_pairhmm_exact.py); Pythia is the same filter with the LM swapped in.
+# test_pairhmm_exact.py), including multi-token COPY / substitution / rejuvenation; Pythia is the same
+# filter with the LM swapped in.
 #
 # Uses pythia-70m for fast iteration (set NC_LM=EleutherAI/pythia-410m for the stronger LM). NB: 70m
 # is weak enough that it substitutes/inserts short words fairly freely on some clean sentences.
@@ -38,13 +47,27 @@ MAX_DIST="${3:-2}"               # max char edit distance for word-substitution 
 REJUV="${REJUV:-gibbs}"          # "gibbs" = post-resample rejuvenation sweep; "off" = forward-only
 REJUV_LOOKBACK="${REJUV_LOOKBACK:-5}"   # rejuvenation window: recent words each sweep revisits
 BAND=2                           # |consumed - emitted| tolerance; also the insertion/deletion reach
-WDEL=-6                          # missing-word (over-editing) log-penalty in nats. The model "adds"
+WDEL=-8                          # missing-word (over-editing) log-penalty in nats. The model "adds"
                                  # words to its reconstruction by positing MISSING words; this is how
                                  # costly that is. More negative => fewer inferred extra words (less
                                  # over-editing) but also less willing to restore genuinely-dropped
                                  # words. -9 curbs over-editing while still restoring e.g. a dropped
                                  # "to"; try -7 (looser) or -11 (stricter, may drop real restorations).
-NC_LM="${NC_LM:-EleutherAI/pythia-410m}"    # set NC_LM=EleutherAI/pythia-410m for the stronger LM
+LM_TEMP="${LM_TEMP:-1.0}"        # LM-prior temperature lambda: posterior is P_LM^LM_TEMP * P_channel.
+                                 # 1.0 = untempered (full Bayesian posterior under the raw LM prior).
+                                 # <1 (e.g. 0.5) flattens pythia's over-confident word preferences so
+                                 # plausible/grammatical inputs are interpreted more literally (curbs
+                                 # over-editing); it scales the LM gap an edit must clear by 1/LM_TEMP.
+                                 # >1 sharpens the prior (more aggressive correction). Tune on a gold set.
+INS_RATE="${INS_RATE:-0.02}"     # per-position spurious-insertion RATE rho_ins. Cost of explaining an
+                                 # observed word as a spurious insertion = log(INS_RATE) -
+                                 # unigram_surprisal(word), so RARE words are expensive to drop and common
+                                 # words cheap -- replaces the old flat -log(vocab) floor that let any
+                                 # below-uniform-frequency word be laundered away as an insertion. Smaller
+                                 # => less word-dropping. (Multi-token content words like "lollipop" are now
+                                 # copied/corrected verbatim -- Phase D -- so INS_RATE governs them like any
+                                 # other word; the old single-token M:N limitation is gone.)
+NC_LM="${NC_LM:-EleutherAI/pythia-70m}"    # set NC_LM=EleutherAI/pythia-410m for the stronger LM
 
 # structured-output JSON for the interactive viewer (src/genjax_port/viz.py). Set OUTPUT_JSON="" to
 # skip. It records the inferred intended sentence (per-word surprisal heat-map), the top-K intended-
@@ -65,7 +88,8 @@ JSON_ARGS=()
 SECONDS=0
 NC_LM="$NC_LM" PYTHONPATH=src python -m genjax_port.pythia_word_caprop \
   --sentence "$SENTENCE" --particles "$PARTICLES" --max_dist "$MAX_DIST" --band "$BAND" \
-  --wdel "$WDEL" --rejuv "$REJUV" --rejuv_lookback "$REJUV_LOOKBACK" "${JSON_ARGS[@]}" \
+  --wdel "$WDEL" --lm_temp "$LM_TEMP" --ins_rate "$INS_RATE" \
+  --rejuv "$REJUV" --rejuv_lookback "$REJUV_LOOKBACK" "${JSON_ARGS[@]}" \
   2>&1 | grep -vEi "warning|tqdm|fork|tokenizers|avoid using|explicitly set|word/s"
 echo "runtime: ${SECONDS}s"
 [ -n "$OUTPUT_JSON" ] && echo "view: PYTHONPATH=src python -m genjax_port.viz $OUTPUT_JSON"

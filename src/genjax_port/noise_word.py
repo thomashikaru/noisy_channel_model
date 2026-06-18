@@ -24,9 +24,17 @@ distance limit -- decides how far a substitution is worth positing.
 import functools
 import math
 
-from .tokenizer import surface, str_to_id, vocab_strings
+from .tokenizer import surface, str_to_id, vocab_strings, encode
 from .noise import _split_leading_space, SUB_PARAM
 from .config import MAX_SUB_CANDIDATES
+
+# Frequency-ranked dictionary size for MULTI-TOKEN substitution candidates (Phase D / D2). The
+# single-token candidate pool is the ~27k word-initial vocab; multi-token intended words (which the
+# vocab pool can't express) come from the top-N wordfreq English list, re-tokenized. N trades
+# coverage (rarer correct words) against the SymSpell index build cost. 30k covers common multi-token
+# words; raise for more proper-noun/rare coverage.
+MULTITOKEN_DICT_N = 30000
+MAX_MULTITOKEN_CANDIDATES = 8   # per observed word; multi-token tail-scoring is the cost knob
 
 
 def _is_punct(surf):
@@ -156,6 +164,57 @@ def word_sub_candidates(word_str, max_dist=2, max_candidates=MAX_SUB_CANDIDATES)
         if 1 <= d <= max_dist:
             out.append((pool[body], d))
     out.sort(key=lambda t: (t[1], t[0]))  # nearest first, deterministic
+    return out[:max_candidates]
+
+
+@functools.lru_cache(maxsize=1)
+def _multitoken_dict(n=MULTITOKEN_DICT_N):
+    """``body -> BPE token span`` for the top-``n`` wordfreq English words that tokenize to >= 2 BPE
+    tokens. This is the M:N substitution pool (Phase D / D2): intended words whose surface spans >= 2
+    tokens, which the single-token ``_word_initial_vocab`` cannot express. Single-token words are
+    excluded (already covered by :func:`word_sub_candidates`). Built once (re-tokenizes ``n`` words)."""
+    import wordfreq
+    out = {}
+    for w in wordfreq.top_n_list("en", n):
+        if not w.isalpha():
+            continue
+        span = tuple(encode(" " + w))
+        if len(span) >= 2:
+            out[w] = span
+    return out
+
+
+@functools.lru_cache(maxsize=4)
+def _multitoken_symspell(max_edit):
+    """delete-variant -> candidate multi-token bodies (SymSpell index over :func:`_multitoken_dict`)."""
+    index = {}
+    for body in _multitoken_dict():
+        for dv in _deletes(body, max_edit):
+            index.setdefault(dv, []).append(body)
+    return {k: tuple(v) for k, v in index.items()}
+
+
+def word_sub_candidates_multitoken(word_str, max_dist=2, max_candidates=MAX_MULTITOKEN_CANDIDATES):
+    """MULTI-TOKEN intended words within Damerau-Levenshtein ``max_dist`` of ``word_str`` (Phase D /
+    D2). Returns ``[(token-span tuple, surface str, char_dist), ...]`` nearest first, for dictionary
+    words that tokenize to >= 2 BPE tokens -- the substitution targets the single-token pool misses
+    (e.g. a misspelling of 'kitten' = ' k'+'itten'). Same SymSpell retrieval + ``SUB_PARAM**d``
+    down-weighting as :func:`word_sub_candidates`; the literal is excluded (that is COPY)."""
+    if not word_str or not word_str[0].isalpha():
+        return []
+    pool = _multitoken_dict()
+    index = _multitoken_symspell(max_dist)
+    cand_bodies = set()
+    for qv in _deletes(word_str, max_dist):
+        cand_bodies.update(index.get(qv, ()))
+    out = []
+    for body in cand_bodies:
+        if body == word_str:
+            continue
+        d = _damerau_levenshtein(word_str, body, max_dist)
+        if 1 <= d <= max_dist:
+            out.append((pool[body], body, d))
+    out.sort(key=lambda t: (t[2], t[1]))  # nearest first, deterministic
     return out[:max_candidates]
 
 

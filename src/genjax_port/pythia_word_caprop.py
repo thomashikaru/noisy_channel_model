@@ -14,14 +14,17 @@ Run:  NC_LM=EleutherAI/pythia-70m python -m genjax_port.pythia_word_caprop --sel
 """
 
 import functools
+import math
 
 import jax
 import jax.numpy as jnp
 from jax.scipy.special import logsumexp
 
 from genjax_port import lm_penzai, tokenizer, pairhmm_smc, cache_dedup
-from genjax_port.noise_word import word_sub_candidates, segment_words
+from genjax_port.noise_word import (word_sub_candidates, word_sub_candidates_multitoken,
+                                     segment_words)
 from genjax_port.noise import insertion_loglik
+from genjax_port.unigram import unigram_surprisal
 
 EOS_ID = lm_penzai.EOS_ID
 
@@ -133,26 +136,33 @@ def _obs_word_units(observed):
     return [unit_str for _ids, unit_str in segment_words(obs_ids)]
 
 
-def _candidate_ids(word, max_dist, Ke):
-    """Candidate intended word ids for an observed word: the COPY (the observed word's own single
-    token, if it is one) FIRST, then SymSpell substitution neighbours. word_sub_candidates excludes
-    the literal (it is the copy branch), so without prepending it the filter could never emit a
-    correctly-spelled observed word -- it would only enter via the top-J LM and drift to boilerplate.
-    Mirrors the toy candidate scan, which keeps distance-0; deduped, copy-first, capped to Ke."""
+def _candidate_words(word, max_dist, Ke):
+    """Candidate intended words for an observed word, each a ``(token-span tuple, surface str)``.
+
+    The COPY -- the observed word's OWN token span, of ANY token count -- comes FIRST, so a correctly-
+    spelled word can always be emitted verbatim. **Phase D / D1:** dropping the old ``len(lit)==1``
+    guard fixes the hole where a >=2-token correct word (rarer words, names, morphology) had NO COPY
+    candidate and was forced to substitute a single-token neighbour or be dropped. Then single-token
+    SymSpell substitution neighbours; ``word_sub_candidates`` excludes the literal (it is the COPY).
+    (D2 appends multi-token substitution neighbours from the wordfreq dictionary.) Deduped by span,
+    copy-first, capped to Ke. A single-token candidate is ``((tid,), surf)`` and keeps ``surface_id ==
+    tid`` downstream (the certified single-token path); a multi-token COPY is ``((t0,t1,...), surf)``."""
     body = word.strip().lower()
-    ids = []
-    lit = tokenizer.encode(" " + body)
-    if len(lit) == 1:                       # observed word IS a single word-initial token -> COPY
-        ids.append(lit[0])
-    ids += [tid for tid, _d in word_sub_candidates(body, max_dist=max_dist)]
-    seen, out = set(), []
-    for i in ids:
-        if i not in seen:
-            seen.add(i)
-            out.append(i)
-        if len(out) >= Ke:
+    lit = tuple(tokenizer.encode(" " + body))                    # the observed word's own span (COPY)
+    cands = [(lit, body, 0)]                                      # COPY, distance 0 (kept first)
+    for tid, d in word_sub_candidates(body, max_dist=max_dist):
+        cands.append(((tid,), tokenizer.surface(tid).strip(), d))   # single-token neighbours
+    for span, surf, d in word_sub_candidates_multitoken(body, max_dist=max_dist):
+        cands.append((span, surf, d))                            # multi-token neighbours (D2)
+    cands.sort(key=lambda t: t[2])                               # COPY first, then nearest by distance
+    seen, dedup = set(), []
+    for span, surf, _d in cands:
+        if span and span not in seen:
+            seen.add(span)
+            dedup.append((span, surf))
+        if len(dedup) >= Ke:
             break
-    return out
+    return dedup
 
 
 @functools.lru_cache(maxsize=8)
@@ -183,18 +193,33 @@ def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False):
     return pairhmm_smc.PairHMMModel(
         lm_fn=lm_fn, eos_id=EOS_ID, emit_vocab=vocab_char.shape[0],
         vocab_char=vocab_char, vocab_clen=vocab_clen, channel_logpdf=channel_logpdf,
-        char_ids=_char_ids, candidate_ids=_candidate_ids, obs_words=_obs_word_units,
+        char_ids=_char_ids, candidate_words=_candidate_words, obs_words=_obs_word_units,
         decode_ids=lambda t: tokenizer.decode(t).strip(), tail_logprobs=tail_fn,
         seed_ids=tuple(seed_ids), word_mask=_word_token_mask() if use_word_mask else None)
 
 
 def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
-        max_dist=2, Ke=8, J=8, cwin=1, prime=PRIME, lm_logprobs_fn=None, use_word_mask=False,
-        rejuv="off", rejuv_lookback=3, rejuv_Ke=8, rejuv_stats=None, trace=None, dedup=False):
+        max_dist=2, Ke=12, J=8, cwin=1, prime=PRIME, lm_logprobs_fn=None, use_word_mask=False,
+        rejuv="off", rejuv_lookback=3, rejuv_Ke=8, rejuv_stats=None, trace=None, dedup=False,
+        lm_temp=1.0, ins_rate=0.02, uniform_ins=False):
     """Channel-aware RB-SMC on Pythia via the shared filter. Returns (state, log_w, logZ, seed_len).
 
-    ``wdel`` is the missing-word (over-editing) log-penalty (default ``WDEL_DEFAULT``); ``wins`` the
-    spurious-word penalty (default ``insertion_loglik``). ``use_word_mask`` opt-in (see _pythia_model).
+    ``wdel`` is the missing-word (over-editing) log-penalty (default ``WDEL_DEFAULT``).
+
+    **Spurious-word (insertion) cost.** By default it is FREQUENCY-AWARE: the cost of explaining an
+    observed word as a spurious insertion is ``log(ins_rate) - unigram_surprisal(word)`` -- a per-word
+    decomposition into an insertion RATE ``ins_rate`` (how often any spurious word occurs) times the
+    out-of-context unigram content distribution (what word it is). This replaces the old flat
+    ``-log(vocab)`` floor, under which any below-uniform-frequency word (e.g. "lollipop") was CHEAPER to
+    drop as an insertion than to keep as a genuine -- but improbable -- LM sample, so rare correct words
+    were laundered away. Out-of-context unigram is the principled content model (a slip is not predicted
+    by the discourse). Escape hatches: ``uniform_ins=True`` restores the flat ``-log(vocab)``; an explicit
+    scalar ``wins=`` overrides with a uniform value. ``use_word_mask`` opt-in (see _pythia_model).
+
+    ``lm_temp`` (lambda) tempers the LM PRIOR: the posterior is ``P_LM^lm_temp * P_channel`` (applied in
+    both the caprop step and the rejuvenation move). ``1.0`` = untempered; ``< 1`` (e.g. 0.5) flattens
+    pythia's over-confident word preferences so plausible/grammatical inputs are read more literally,
+    curbing the over-editing of clean sentences (it scales up the LM gap an edit must clear by 1/lm_temp).
 
     ``rejuv="gibbs"`` enables the flag-gated post-resample Gibbs/SMCP3 rejuvenation sweep (R2): a
     windowed (last ``rejuv_lookback`` words) full-conditional resample over a per-slot SymSpell pool
@@ -209,22 +234,31 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         lm_penzai.load_model()
     model = _pythia_model(prime, lm_logprobs_fn, use_word_mask, dedup)
     ntok = model.emit_vocab
+    obs_words = model.obs_words(observed)
     WDEL = WDEL_DEFAULT if wdel is None else wdel
-    WINS = insertion_loglik(ntok) if wins is None else wins
-    rejuv_pool = None
+    if wins is not None:                                 # explicit uniform scalar override
+        WINS = wins
+    elif uniform_ins:                                    # legacy flat -log(vocab) over the whole vocab
+        WINS = insertion_loglik(ntok)
+    else:                                                # frequency-aware: log(rate) - unigram_surprisal,
+        WINS = jnp.array([math.log(ins_rate) - unigram_surprisal(w)  # so rare words are dear to drop
+                          for w in obs_words], jnp.float32)
     if rejuv == "gibbs":
-        Wmax = len(model.obs_words(observed)) + slack
-        rejuv_pool = RJ.build_pool(observed, model, max_dist, rejuv_Ke, Wmax)
-        # Pre-build the KV-caching LM EAGERLY (outside the jitted sweep step) so its setup never runs
-        # under trace -- an in-trace build leaks a tracer into the cached vars (UnexpectedTracerError).
+        Wmax = len(obs_words) + slack
+        # The rejuvenation pool is now built INSIDE pairhmm_smc.run from the shared candidate inventory
+        # (so its surface ids match the augmented emit_full; R4 multi-token). Here we only pre-build the
+        # KV-caching LM EAGERLY (outside the jitted sweep step) so its setup never runs under trace -- an
+        # in-trace build leaks a tracer (UnexpectedTracerError). Size it for the multi-token worst case
+        # (T_max <= T_UB tokens/word): the sweep's suffix tail can hold (lookback+1) words plus EOS.
         if model.tail_logprobs is not None:
-            LCTX = len(model.seed_ids) + Wmax + 1
-            lm_penzai._kv_setup(LCTX + (rejuv_lookback + 1))
+            T_UB = 8
+            LCTX = len(model.seed_ids) + Wmax * T_UB + 1
+            lm_penzai._kv_setup(LCTX + (rejuv_lookback + 1) * T_UB + 1)
     return pairhmm_smc.run(observed, key, model, P=P, wdel=WDEL, wins=WINS, slack=slack,
                            band=band, max_dist=max_dist, Ke=Ke, J=J, cwin=cwin,
-                           proposal="caprop", rejuv=rejuv, rejuv_pool=rejuv_pool,
+                           proposal="caprop", rejuv=rejuv, rejuv_pool=None,
                            rejuv_lookback=rejuv_lookback, rejuv_stats=rejuv_stats, trace=trace,
-                           rejuv_dedup=dedup)
+                           rejuv_dedup=dedup, lm_temp=lm_temp)
 
 
 def decode(state, log_w, skip=1, key=jax.random.PRNGKey(0), top=3):
@@ -290,7 +324,21 @@ def cli():
                     help=f"missing-word (over-editing) log-penalty in nats; more negative => fewer "
                          f"inferred extra words (default {WDEL_DEFAULT})")
     ap.add_argument("--wins", type=float, default=None,
-                    help="spurious-word log-penalty in nats (default -log(vocab))")
+                    help="override the spurious-word cost with a flat scalar in nats (default: the "
+                         "frequency-aware per-word cost; see --ins_rate / --uniform_ins)")
+    ap.add_argument("--ins_rate", type=float, default=0.02,
+                    help="per-position spurious-insertion RATE rho_ins. The cost of explaining an "
+                         "observed word as a spurious insertion is log(ins_rate) - unigram_surprisal(word), "
+                         "so rare words are dear to drop and common words cheap. Smaller => fewer inferred "
+                         "insertions (less word-dropping). Tune on a gold set alongside --wdel / --lm_temp.")
+    ap.add_argument("--uniform_ins", action="store_true",
+                    help="legacy: use the flat -log(vocab) spurious-word cost (uniform over the vocab) "
+                         "instead of the frequency-aware default.")
+    ap.add_argument("--lm_temp", type=float, default=1.0,
+                    help="LM-prior temperature lambda: posterior is P_LM^lm_temp * P_channel. 1.0 = "
+                         "untempered; <1 (e.g. 0.5) flattens pythia's over-confident preferences so "
+                         "plausible inputs are read more literally (curbs over-editing of clean text); "
+                         ">1 sharpens the prior (more aggressive correction).")
     ap.add_argument("--word_mask", action="store_true",
                     help="restrict the LM bridge pool to whole-word tokens (off by default)")
     ap.add_argument("--rejuv", choices=("off", "gibbs"), default="off",
@@ -321,11 +369,13 @@ def cli():
     st, lw, logZ, sl = run(args.sentence, jax.random.PRNGKey(args.seed), P=args.particles,
                            band=args.band, max_dist=args.max_dist, wdel=args.wdel, wins=args.wins,
                            use_word_mask=args.word_mask, rejuv=args.rejuv,
-                           rejuv_lookback=args.rejuv_lookback, trace=trace, dedup=not args.no_dedup)
+                           rejuv_lookback=args.rejuv_lookback, trace=trace, dedup=not args.no_dedup,
+                           lm_temp=args.lm_temp, ins_rate=args.ins_rate, uniform_ins=args.uniform_ins)
     top = decode(st, lw, skip=sl, top=args.top)
+    ins_desc = "uniform" if (args.uniform_ins or args.wins is not None) else f"rate={args.ins_rate}"
     print(f"observed : {args.sentence!r}")
     print(f"inferred intended (P={args.particles}, band={args.band}, rejuv={args.rejuv}, "
-          f"logZ={logZ:.2f}):")
+          f"lm_temp={args.lm_temp}, ins={ins_desc}, logZ={logZ:.2f}):")
     for s, p in top:
         print(f"   p={p:.2f}  {s!r}")
     print(f"runtime: {time.time() - t0:.0f}s")

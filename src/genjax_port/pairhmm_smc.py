@@ -16,6 +16,18 @@ The proposal kernel is GenJAX ``@gen`` (``genjax.categorical @ "action"`` +
 ``factor(logsumexp_C) @ "ev"``, driven by ``kernel.importance``); ``proposal="bootstrap"`` selects
 the LM-prior baseline (used only for the variance contrast in the exact test). ``poc_word_indel*``
 stay as frozen reference PoCs; this module is what everything imports.
+
+**Multi-token intended words (Phase D).** A candidate intended word is a **(token span, surface
+id)** pair, not a single token: its LM score is the chain-rule product over the span's tokens and
+its channel column is indexed by a ``surface_id`` (decoupled from the token id). Single-token
+candidates keep ``surface_id == token_id`` and the cheap one-forward LM score, so **with no
+multi-token candidates (``n_mt == 0``, ``T_max == 1``) every code path and value is bit-identical to
+the certified single-token filter** (the exact-enumeration gates guard this). Multi-token candidates
+(COPY of a >=2-token observed word, M:N substitution neighbours) get their chain-rule from the
+injected ``tail_logprobs`` scorer and their channel column from the per-sentence-augmented emission
+table. The kernel appends the chosen candidate's whole token span and advances by its length; an
+explicit per-particle ``n_words`` counter (not ``ctx_len``) drives the band, since token count and
+word count diverge once words are multi-token. See ``planning/PAIRHMM_RBSMC_PLAN.md`` Phase D.
 """
 
 from collections import Counter, defaultdict
@@ -44,19 +56,23 @@ class PairHMMModel:
 
     lm_fn: Callable            # BATCHED (ctx_buf [P,LCTX], ctx_len [P]) -> logprobs [P, vocab]
     eos_id: int                # index of EOS in the lm_fn output row
-    emit_vocab: int            # number of candidate-word columns (Vc) in the emission table
-    vocab_char: jnp.ndarray    # (Vc, Lchar) char ids of every candidate word
+    emit_vocab: int            # number of single-token candidate columns (Vc) in the emission table
+    vocab_char: jnp.ndarray    # (Vc, Lchar) char ids of every single-token candidate word
     vocab_clen: jnp.ndarray    # (Vc,) char lengths
     channel_logpdf: Callable   # (obs_char_ids, intended_char_ids, n_x) -> channel logpdf
     char_ids: Callable         # word_str -> (list[int] padded char ids, n)
-    candidate_ids: Callable    # (word_str, max_dist, Ke) -> list[int] candidate word ids
+    candidate_words: Callable   # (word_str, max_dist, Ke) -> list[(token-span tuple, surface_str)].
+    #                             The COPY (the observed word's own span, ANY token count) first, then
+    #                             substitution neighbours. A single-token candidate is ``((tok,), surf)``;
+    #                             a multi-token one ``((t0, t1, ...), surf)``. Surfaces drive the channel
+    #                             column; spans drive the LM chain-rule + buffer splice.
     obs_words: Callable        # observed_str -> list[word_str]
     decode_ids: Callable       # tuple[int] -> str (intended ids back to a sentence)
     tail_logprobs: Callable = None  # (ctx_bufs, ctx_lens, tails [B,K,w], tail_lens) -> [B,K] chain-rule
-    #                                 log P(tail | ctx). Used by the rejuvenation sweep (R3) to score
-    #                                 only the candidate-dependent SUFFIX (the prefix LM cancels in the
-    #                                 conditional). Pythia injects the KV scorer; None => a generic
-    #                                 uncached fallback built from lm_fn (pairhmm_rejuv._tail_chain_uncached).
+    #                                 log P(tail | ctx). Scores multi-token candidate spans in the FORWARD
+    #                                 step (Phase D) and the candidate SUFFIX in the rejuvenation sweep
+    #                                 (R3). Pythia injects the KV scorer; None => a generic uncached
+    #                                 fallback built from lm_fn (pairhmm_rejuv._tail_chain_uncached).
     seed_ids: Sequence[int] = ()  # context seed (toy: (); Pythia: [EOS] + prime tokens)
     word_mask: jnp.ndarray = None  # (emit_vocab,) bool: True where the token is a lexical word; the
     #                                top-J LM candidate pool is restricted to it so the prior cannot
@@ -64,69 +80,178 @@ class PairHMMModel:
     #                                no restriction (the toy, whose vocab is already all words).
 
 
-def _emit_table(model, obs_words, max_dist, Ke):
-    """(M, Ke) padded candidate word ids per observed word; -1 = pad."""
-    rows = []
-    for w in obs_words:
-        ids = list(model.candidate_ids(w, max_dist, Ke))[:Ke]
-        rows.append(ids + [-1] * (Ke - len(ids)))
-    return jnp.array(rows, jnp.int32)
+def _build_candidates(model, obs_words, obs_char, emit_full, max_dist, Ke):
+    """Assemble the per-observed-word candidate inventory (Phase D), generalizing the old
+    single-token ``_emit_table``. Each candidate is a (token span, surface) from
+    ``model.candidate_words``. Returns:
+
+      * ``emit_first`` (M, Ke): the candidate's FIRST token id (-1 pad) -- its single-token LM logprob
+        is ``lmlog[emit_first]``.
+      * ``emit_surf`` (M, Ke): the candidate's surface id, indexing the (augmented) emission table.
+        Single-token candidates keep ``surf == token id`` (an existing column); multi-token surfaces
+        get appended columns ``>= Vc``.
+      * ``emit_mtidx`` (M, Ke): index into the multi-token inventory, or -1 for single-token.
+      * ``mt_span`` (n_mt_pad, T_max) / ``mt_len`` (n_mt_pad): the distinct multi-token candidate
+        spans (padded to >= 1 row so the gather is always well-shaped; the dummy row is never selected
+        because all ``emit_mtidx`` are -1 when n_mt == 0).
+      * ``emit_full_aug`` (M, Vc + n_app): ``emit_full`` with appended channel columns for the
+        multi-token surfaces. When there are none it IS ``emit_full`` (bit-identical single-token path).
+      * ``T_max`` (>=1), ``n_mt`` (>=0).
+    """
+    Vc = emit_full.shape[1]
+    M = len(obs_words)
+    word_cands = [list(model.candidate_words(w, max_dist, Ke))[:Ke] for w in obs_words]
+    T_max = max([1] + [len(span) for cands in word_cands for span, _surf in cands])
+
+    surf_col, extra_surfaces = {}, []          # multi-token surface -> appended column index
+    mt_index, mt_list = {}, []                 # span tuple -> mt-inventory index; (span, surf_id)
+
+    def surf_id_for(span, surf):
+        if len(span) == 1:
+            return int(span[0])                # existing single-token column (bit-identical path)
+        if surf not in surf_col:
+            surf_col[surf] = Vc + len(extra_surfaces)
+            extra_surfaces.append(surf)
+        return surf_col[surf]
+
+    first = np.full((M, Ke), -1, np.int32)
+    surf = np.full((M, Ke), -1, np.int32)
+    mtidx = np.full((M, Ke), -1, np.int32)
+    for i, cands in enumerate(word_cands):
+        for j, (span, sstr) in enumerate(cands):
+            sid = surf_id_for(span, sstr)
+            first[i, j] = int(span[0])
+            surf[i, j] = sid
+            if len(span) > 1:
+                key = tuple(int(t) for t in span)
+                if key not in mt_index:
+                    mt_index[key] = len(mt_list)
+                    mt_list.append((key, sid))
+                mtidx[i, j] = mt_index[key]
+    n_mt = len(mt_list)
+
+    if extra_surfaces:
+        extra_char = jnp.stack([jnp.asarray(model.char_ids(s)[0], jnp.int32) for s in extra_surfaces])
+        extra_clen = jnp.asarray([model.char_ids(s)[1] for s in extra_surfaces], jnp.int32)
+        extra_cols = jax.vmap(jax.vmap(model.channel_logpdf, in_axes=(None, 0, 0)),
+                              in_axes=(0, None, None))(obs_char, extra_char, extra_clen)  # (M, n_app)
+        emit_full_aug = jnp.concatenate([emit_full, extra_cols], axis=1)
+    else:
+        emit_full_aug = emit_full
+
+    n_pad = max(n_mt, 1)
+    mt_span = np.zeros((n_pad, T_max), np.int32)
+    mt_len = np.ones((n_pad,), np.int32)
+    for k, (span, _sid) in enumerate(mt_list):
+        mt_span[k, :len(span)] = span
+        mt_len[k] = len(span)
+    return (jnp.asarray(first), jnp.asarray(surf), jnp.asarray(mtidx),
+            jnp.asarray(mt_span), jnp.asarray(mt_len), emit_full_aug, T_max, n_mt)
 
 
-def _caprop_scores(log_alpha, lmlog, emit_tab, emit_full, offs, J, M, band_mask,
-                   t_new, eos_id, emit_vocab, WDEL, WINS, word_mask):
-    """Channel-aware (fully-adapted) candidate scores: [word(Kw), EOS(1)].
+def _rejuv_pool_from_inventory(emit_first, emit_surf, emit_mtidx, mt_span, mt_len, M, Wmax, T_max):
+    """Per-intended-slot candidate pool for the rejuvenation move (R4), built from the SAME inventory
+    the forward filter uses (so the pool's surface ids index the SAME augmented ``emit_full``). Slot
+    ``i`` reuses observed word ``min(i, M-1)``'s candidates (1:1 alignment, clipped past the observed
+    length). Returns (pool_tok [Wmax, Ke, T_max], pool_len [Wmax, Ke], pool_surf [Wmax, Ke]); -1 / 0 =
+    pad. Multi-token candidates carry their full span + augmented surface id (the R4 generalization of
+    the old single-token ``build_pool``)."""
+    ef, es, em = np.asarray(emit_first), np.asarray(emit_surf), np.asarray(emit_mtidx)
+    msp, mln = np.asarray(mt_span), np.asarray(mt_len)
+    Ke = ef.shape[1]
+    pool_tok = np.full((Wmax, Ke, T_max), -1, np.int32)
+    pool_len = np.zeros((Wmax, Ke), np.int32)
+    pool_surf = np.full((Wmax, Ke), -1, np.int32)
+    for i in range(Wmax):
+        oi = min(i, M - 1)
+        for j in range(Ke):
+            if em[oi, j] >= 0:                                  # multi-token candidate
+                k = em[oi, j]
+                pool_tok[i, j, :mln[k]] = msp[k, :mln[k]]
+                pool_len[i, j] = mln[k]
+                pool_surf[i, j] = es[oi, j]
+            elif ef[oi, j] >= 0:                                # single-token candidate
+                pool_tok[i, j, 0] = ef[oi, j]
+                pool_len[i, j] = 1
+                pool_surf[i, j] = es[oi, j]
+    return jnp.asarray(pool_tok), jnp.asarray(pool_len), jnp.asarray(pool_surf)
+
+
+def _caprop_scores(log_alpha, lmlog, mt_chain, emit_first, emit_surf, emit_mtidx, mt_span, mt_len,
+                   emit_full, offs, J, M, band_mask, t_new, eos_id, emit_vocab, WDEL, WINS,
+                   word_mask, lm_temp, T_max, n_mt):
+    """Channel-aware (fully-adapted) candidate scores: [word(Kw), EOS(1)], plus the chosen word's
+    token span for the kernel to splice.
 
     Candidate set C = emission candidates in a window around the alignment frontier (channel-
-    compatible) + top-J LM words (fluency/deletion bridges), deduped. Each word's score is
-    ``lm logprob + dZ`` where ``dZ`` is the forward-mass increment of one ``_word_row_update`` row;
-    the incremental importance weight is ``logsumexp(scores)`` (independent of the draw). EOS reads
-    the terminal full-consumption mass ``alpha[M]``.
+    compatible) + top-J LM words (fluency/deletion bridges), deduped by SURFACE id. Each word's score
+    is ``lm_temp * lm_logprob + dZ`` where ``dZ`` is the forward-mass increment of one
+    ``_word_row_update`` row (using the candidate's surface channel column ``emit_full[:, surf]``).
+    The LM log-prob is ``lmlog[first_token]`` for a single-token candidate (the cheap one-forward
+    path) or the precomputed chain-rule ``mt_chain[mt]`` for a multi-token one. The incremental
+    importance weight is ``logsumexp(scores)`` (independent of the draw). EOS reads the terminal
+    full-consumption mass ``alpha[M]``.
 
-    There is no explicit INSERT action. A spurious observed word is a *channel* event, not an LM
-    one, and is marginalized exactly inside ``_word_row_update``'s insertion sweep (cost ``WINS``);
-    the band gives it reach (consumption may run up to ``band`` ahead of emission). Making INSERT a
-    peer action in this LM-normalized step instead injects a channel event into the LM's action
-    distribution -- empirically a +0.2-nat logZ bias against exact enumeration (it adds mass with no
-    LM factor). Every step here is therefore a clean LM word/EOS choice; the sweep handles the rest.
+    Returns ``(cand_span [Kw, T_max], cand_len [Kw], emit_cols [M, Kw], scores [Kw+1])``. With
+    ``n_mt == 0`` and ``T_max == 1`` this reduces exactly to the certified single-token scoring (the
+    span is just ``[first_token]``, len 1, ``surf == token``), so the exact-enumeration gates hold.
 
-    ``word_mask`` (when given) restricts the top-J LM pool to lexical word tokens, so the prior
-    cannot propose non-word tokens (newlines, '#'/'****', tabs) as intended/missing words -- the
-    document-start boilerplate the LM otherwise emits as spurious sentence-initial tokens. Emission
-    candidates are unaffected (they are tied to observed words, so a copied punctuation token is
-    fine); only the fluency/deletion bridge pool is constrained.
+    ``lm_temp`` (lambda) tempers the LM PRIOR (target ``P_LM^lm_temp * P_channel``); ``word_mask``
+    restricts the top-J LM bridge pool to lexical words. There is no explicit INSERT action -- a
+    spurious observed word is a channel event marginalized inside ``_word_row_update``'s insertion
+    sweep (cost ``WINS``) with the band for reach (see ``planning/PAIRHMM_RBSMC_PLAN.md`` A3).
     """
     Z = logsumexp(log_alpha)
     fpos = jnp.clip(jnp.argmax(log_alpha), 0, M - 1)                       # alignment frontier
-    emit_ids = emit_tab[jnp.clip(fpos + offs, 0, M - 1)].reshape(-1)       # window of emission cands
+    widx = jnp.clip(fpos + offs, 0, M - 1)                                # window observed positions
+    win_first = emit_first[widx].reshape(-1)
+    win_surf = emit_surf[widx].reshape(-1)
+    win_mt = emit_mtidx[widx].reshape(-1)
     lm_word = jnp.where(jnp.arange(lmlog.shape[0]) < emit_vocab, lmlog, -jnp.inf)
     lm_word = lm_word.at[eos_id].set(-jnp.inf)                             # EOS handled separately
     if word_mask is not None:                                             # restrict bridges to words
         lm_word = lm_word.at[:emit_vocab].set(
             jnp.where(word_mask, lm_word[:emit_vocab], -jnp.inf))
     top_j = jax.lax.top_k(lm_word, J)[1]
-    cand = jnp.concatenate([emit_ids, top_j])
-    kw = cand.shape[0]
-    valid = cand >= 0
-    cand_c = jnp.clip(cand, 0, emit_vocab - 1)
-    earlier_eq = (cand[:, None] == cand[None, :]) & valid[None, :] & jnp.tril(
+    cand_first = jnp.concatenate([win_first, top_j])                      # (Kw,) first token of each cand
+    cand_surf = jnp.concatenate([win_surf, top_j])                       # top-J: surface == token id
+    cand_mt = jnp.concatenate([win_mt, jnp.full((J,), -1, win_mt.dtype)])
+    kw = cand_first.shape[0]
+    valid = cand_first >= 0
+    cand_surf_c = jnp.clip(cand_surf, 0, emit_full.shape[1] - 1)
+    earlier_eq = (cand_surf[:, None] == cand_surf[None, :]) & valid[None, :] & jnp.tril(
         jnp.ones((kw, kw), bool), -1)
     valid = valid & ~jnp.any(earlier_eq, axis=1)                          # keep first occurrence
 
-    emit_cols = emit_full[:, cand_c]                                      # (M, Kw)
+    emit_cols = emit_full[:, cand_surf_c]                                 # (M, Kw)
 
     def cand_dZ(col):
         return logsumexp(band_mask(_word_row_update(log_alpha, col, WDEL, WINS), t_new)) - Z
 
     dZ = jax.vmap(cand_dZ, in_axes=1)(emit_cols)
-    score_word = jnp.where(valid, lmlog[cand_c] + dZ, -jnp.inf)
-
-    score_eos = lmlog[eos_id] + (log_alpha[M] - Z)
+    cand_first_c = jnp.clip(cand_first, 0, emit_vocab - 1)
+    if n_mt > 0:
+        lm_part = jnp.where(cand_mt >= 0, mt_chain[jnp.clip(cand_mt, 0, n_mt - 1)],
+                            lmlog[cand_first_c])
+    else:
+        lm_part = lmlog[cand_first_c]
+    score_word = jnp.where(valid, lm_temp * lm_part + dZ, -jnp.inf)
+    score_eos = lm_temp * lmlog[eos_id] + (log_alpha[M] - Z)
     scores = jnp.concatenate([score_word, score_eos[None]])
-    return cand, emit_cols, scores
+
+    single_span = jnp.zeros((kw, T_max), jnp.int32).at[:, 0].set(cand_first_c.astype(jnp.int32))
+    single_len = jnp.ones((kw,), jnp.int32)
+    if n_mt > 0:
+        mt_sel = jnp.clip(cand_mt, 0, n_mt - 1)
+        cand_span = jnp.where((cand_mt >= 0)[:, None], mt_span[mt_sel], single_span)
+        cand_len = jnp.where(cand_mt >= 0, mt_len[mt_sel], single_len)
+    else:
+        cand_span, cand_len = single_span, single_len
+    cand_surf_out = cand_surf_c.astype(jnp.int32)        # surface id of each candidate (for word_surf)
+    return cand_span, cand_len, cand_surf_out, emit_cols, scores
 
 
-def _make_kernel(seed_len, M, band, WDEL, WINS):
+def _make_kernel(seed_len, M, band, WDEL, WINS, T_max, LCTX, Wmax):
     ks = jnp.arange(M + 1)
 
     def band_mask(log_alpha, t):
@@ -135,26 +260,37 @@ def _make_kernel(seed_len, M, band, WDEL, WINS):
         return jnp.where(jnp.abs(ks - t) <= band, log_alpha, -jnp.inf)
 
     @genjax.gen
-    def kernel(state, cand, emit_cols, scores):
-        ctx_buf, ctx_len, log_alpha, done = state
+    def kernel(state, cand_span, cand_len, cand_surf, emit_cols, scores):
+        ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done = state
         action = genjax.categorical(scores) @ "action"
         incr = logsumexp(scores)
         incr = jnp.where(done, 0.0, incr)
         incr = jnp.where(jnp.isnan(incr), -jnp.inf, incr)                # -inf - -inf (dead) -> -inf
         _ = factor(incr) @ "ev"
 
-        kw = cand.shape[0]
+        kw = scores.shape[0] - 1
         chose_eos = action == kw
         ci = jnp.clip(action, 0, kw - 1)
-        w_id = jnp.where(chose_eos, jnp.int32(0), cand[ci])
+        span = cand_span[ci]                                             # (T_max,) chosen token span
+        span_len = cand_len[ci]
+        surf = cand_surf[ci]                                            # chosen word's channel surface id
         col = emit_cols[:, ci]
 
         advance = (~done) & (~chose_eos)
-        t_after = ctx_len + 1 - seed_len
+        t_after = n_words + 1                                            # band uses WORD count, not tokens
         new_alpha = band_mask(_word_row_update(log_alpha, col, WDEL, WINS), t_after)
-        ctx_buf2 = jnp.where(advance, ctx_buf.at[ctx_len].set(w_id.astype(jnp.int32)), ctx_buf)
+        pos = jnp.clip(ctx_len + jnp.arange(T_max), 0, LCTX - 1)         # splice the span's tokens
+        write = advance & (jnp.arange(T_max) < span_len)
+        ctx_buf2 = ctx_buf.at[pos].set(jnp.where(write, span.astype(jnp.int32), ctx_buf[pos]))
+        wpos = jnp.clip(n_words, 0, Wmax - 1)
+        word_len2 = word_len.at[wpos].set(jnp.where(advance, span_len.astype(jnp.int32),
+                                                    word_len[wpos]))
+        word_surf2 = word_surf.at[wpos].set(jnp.where(advance, surf.astype(jnp.int32),
+                                                      word_surf[wpos]))   # for the rejuv move (R4)
         return (ctx_buf2,
-                jnp.where(advance, ctx_len + 1, ctx_len),
+                jnp.where(advance, ctx_len + span_len, ctx_len),
+                jnp.where(advance, n_words + 1, n_words),
+                word_len2, word_surf2,
                 jnp.where(advance, new_alpha, log_alpha),
                 done | chose_eos)
 
@@ -175,7 +311,7 @@ def _record_step(model, state, log_w, seed_len, t, ess, resampled, logZ, rejuv, 
     ``trace`` list is passed to :func:`run` -- it reads state, never alters the certified math). See
     ``planning/TRACE_SCHEMA.md`` for the field contract. ``dist``/``frontier`` are EXACT over all P;
     ``particles`` is the heaviest ``max_particles`` (the long tail is the residual)."""
-    ctx_buf, ctx_len, log_alpha, done = state
+    ctx_buf, ctx_len, _n_words, _word_len, _word_surf, log_alpha, done = state
     P = ctx_buf.shape[0]
     w = np.asarray(jax.nn.softmax(log_w))                            # filtering weights (post-step)
     cl = np.asarray(ctx_len)
@@ -206,13 +342,20 @@ def _record_step(model, state, log_w, seed_len, t, ess, resampled, logZ, rejuv, 
 
 def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), slack=3, band=None,
         max_dist=2, Ke=6, J=4, cwin=1, proposal="caprop", enable_indel=True,
-        rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False):
+        rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False,
+        lm_temp=1.0):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
     ``"bootstrap"`` proposes from the LM prior (baseline). ``band=None`` disables the band mask
     (the toy); Pythia passes an integer band, which also gives insertions/deletions their reach
     (consumption ``k`` may run up to ``band`` ahead of / behind the emission count).
+
+    Intended words may span multiple BPE tokens (Phase D): ``_build_candidates`` builds the
+    candidate inventory (a candidate = a token span + a surface id) and ``T_max`` = the max span
+    length; the per-step ``mt_chain`` scores multi-token candidate spans by chain-rule via the
+    injected ``tail_logprobs``. With no multi-token candidates (``n_mt == 0``, ``T_max == 1``) the
+    run is bit-identical to the certified single-token filter.
 
     All three edit types are handled without any explicit edit "action": substitution and deletion
     by ``_word_row_update``'s diag/up terms, and *insertion* (a spurious observed word) by that same
@@ -227,7 +370,14 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     (REJUV_GOAL3). ``rejuv_pool`` is ``(pool_tok, pool_len)`` (model-specific candidate spans, e.g.
     ``pairhmm_rejuv.build_pool``). ``rejuv_stats`` (optional dict) accumulates LM-forward + degeneracy
     counters for the R2 cost measurement. The forward filter itself is untouched -- rejuvenation is
-    additive and only runs inside the ``rejuv == "gibbs"`` branch.
+    additive and only runs inside the ``rejuv == "gibbs"`` branch. (Multi-token rejuvenation is R4 --
+    not yet wired -- so ``rejuv != "off"`` with multi-token candidates raises.)
+
+    ``lm_temp`` (lambda) tempers the LM PRIOR in BOTH the caprop step and the rejuvenation move: the
+    target posterior is ``P_LM^lm_temp * P_channel`` (see :func:`_caprop_scores`). ``1.0`` = untempered
+    (the certified path); ``< 1`` flattens the LM's over-confident preferences so plausible inputs are
+    read more literally (curbs over-editing). Applies to ``proposal="caprop"`` (production); the
+    ``"bootstrap"`` baseline samples from the raw LM and is meaningful only at ``lm_temp=1.0``.
     """
     seed_ids = list(model.seed_ids)
     seed_len = len(seed_ids)
@@ -236,24 +386,41 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     obs_char = jnp.stack([jnp.asarray(model.char_ids(w)[0], jnp.int32) for w in obs_words])  # (M,Lc)
     emit_full = jax.vmap(jax.vmap(model.channel_logpdf, in_axes=(None, 0, 0)),
                          in_axes=(0, None, None))(obs_char, model.vocab_char, model.vocab_clen)
-    emit_tab = _emit_table(model, obs_words, max_dist, Ke)
+    (emit_first, emit_surf, emit_mtidx, mt_span, mt_len, emit_full, T_max, n_mt) = _build_candidates(
+        model, obs_words, obs_char, emit_full, max_dist, Ke)
     WDEL = wdel if enable_indel else -jnp.inf
     WINS = wins if enable_indel else -jnp.inf
     offs = jnp.arange(-cwin, cwin + 1)
     eos_id, Vc = model.eos_id, model.emit_vocab
-    LCTX = seed_len + M + slack + 1
+    Wmax = M + slack
+    LCTX = seed_len + Wmax * T_max + 1
 
-    kernel, band_mask = _make_kernel(seed_len, M, band, WDEL, WINS)
+    kernel, band_mask = _make_kernel(seed_len, M, band, WDEL, WINS, T_max, LCTX, Wmax)
     constraint = ChoiceMap.d({"ev": jnp.float32(0.0)})
     ks = jnp.arange(M + 1)
-    a0 = band_mask(jnp.where(ks == 0, 0.0, ks * WINS), 0)                 # leading spurious words
+    wins_arr = jnp.asarray(WINS)                                         # scalar (uniform) or (M,) per-word
+    if wins_arr.ndim == 0:                                              # uniform: keep the exact original
+        a0 = band_mask(jnp.where(ks == 0, 0.0, ks * WINS), 0)           # leading spurious words
+    else:                                                              # per-word: a0[k] = sum of the first
+        a0 = band_mask(jnp.concatenate(                                 # k observed words' insertion costs
+            [jnp.zeros((1,), wins_arr.dtype), jnp.cumsum(wins_arr)]), 0)
     ctx0 = jnp.full((P, LCTX), eos_id, jnp.int32)
     if seed_len:
         ctx0 = ctx0.at[:, :seed_len].set(jnp.array(seed_ids, jnp.int32))
-    state = (ctx0, jnp.full(P, seed_len, jnp.int32),
-             jnp.broadcast_to(a0, (P, M + 1)), jnp.zeros(P, bool))
+    state = (ctx0, jnp.full(P, seed_len, jnp.int32), jnp.zeros(P, jnp.int32),
+             jnp.zeros((P, Wmax), jnp.int32), jnp.zeros((P, Wmax), jnp.int32),
+             jnp.broadcast_to(a0, (P, M + 1)), jnp.zeros(P, bool))   # +word_len, +word_surf (R4)
     log_w = jnp.zeros(P)
     logZ = 0.0
+
+    # Multi-token LM scorer (Phase D): the injected KV/uncached chain-rule over a candidate's tokens.
+    tail_fn = None
+    if n_mt > 0:
+        from genjax_port import pairhmm_rejuv as RJ
+        tail_fn = model.tail_logprobs or (
+            lambda cb, cl, t, tl: RJ._tail_chain_uncached(model.lm_fn, cb, cl, t, tl))
+        mt_span_b = jnp.broadcast_to(mt_span[None], (P, n_mt, T_max))
+        mt_len_b = jnp.broadcast_to(mt_len[None], (P, n_mt))
 
     # Flag-gated rejuvenation (R2): build the sweep ONCE (jitted step reused across resample events).
     # rejuv_dedup (R3 item 1b) runs the sweep's tail_fn on the unique buffers only (host-side) -- EXACT,
@@ -261,68 +428,88 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     rj_sweep, rj_dedup_stats = None, None
     if rejuv == "gibbs":
         from genjax_port import pairhmm_rejuv as RJ
-        rj_ctx = RJ.RejuvCtx(model, emit_full, a0, M, seed_len, M + slack, WDEL, WINS, band, 1)
-        rj_sweep = RJ.make_sweep(rj_ctx, *rejuv_pool, max_tail=rejuv_lookback + 1, dedup=rejuv_dedup)
+        # R4: t_max = the forward's T_max; the pool carries multi-token spans + surface ids, built from
+        # the SAME candidate inventory (so its surfaces index the SAME augmented emit_full).
+        rj_pool = _rejuv_pool_from_inventory(emit_first, emit_surf, emit_mtidx, mt_span, mt_len,
+                                             M, Wmax, T_max)
+        rj_ctx = RJ.RejuvCtx(model, emit_full, a0, M, seed_len, Wmax, WDEL, WINS, band, T_max, lm_temp)
+        mt_tokens = (rejuv_lookback + 1) * T_max + 1                     # suffix-tail budget in TOKENS
+        rj_sweep = RJ.make_sweep(rj_ctx, *rj_pool, max_tail=mt_tokens, dedup=rejuv_dedup)
         if rejuv_dedup:
             from genjax_port import cache_dedup
             rj_dedup_stats = cache_dedup.DedupStats()
         if rejuv_stats is not None:
-            rejuv_stats.update(P=P, Kt=rejuv_pool[0].shape[1] + 1, max_tail=rejuv_lookback + 1,
+            rejuv_stats.update(P=P, Kt=rj_pool[0].shape[1] + 1, max_tail=mt_tokens,
                                filter_lm_calls=0, sweep_prefills=0, sweep_tail_steps=0, uniq_frac=[],
                                dedup_rows_in=0, dedup_rows_computed=0)
 
     word_mask = model.word_mask
-    def _assemble(ctx_len, log_alpha, lmlog):
-        n_emitted = ctx_len - seed_len
+    def _assemble(n_words, log_alpha, lmlog, mt_chain):
         return jax.vmap(
-            lambda la, lm, ne: _caprop_scores(la, lm, emit_tab, emit_full, offs, J, M,
-                                              band_mask, ne + 1, eos_id, Vc, WDEL, WINS, word_mask),
-            in_axes=(0, 0, 0))(log_alpha, lmlog, n_emitted)
+            lambda la, lm, mtc, nw: _caprop_scores(la, lm, mtc, emit_first, emit_surf, emit_mtidx,
+                                                   mt_span, mt_len, emit_full, offs, J, M, band_mask,
+                                                   nw + 1, eos_id, Vc, WDEL, WINS, word_mask,
+                                                   lm_temp, T_max, n_mt),
+            in_axes=(0, 0, 0, 0))(log_alpha, lmlog, mt_chain, n_words)
 
     @jax.jit
-    def extend_caprop(keys, ctx_buf, ctx_len, log_alpha, done, cand, emit_cols, scores):
-        def one(k, cb, cl, la, dn, c, ec, sc):
-            tr, w = kernel.importance(k, constraint, ((cb, cl, la, dn), c, ec, sc))
+    def extend_caprop(keys, ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done,
+                      cand_span, cand_len, cand_surf, emit_cols, scores):
+        def one(k, cb, cl, nw, wl, ws_, la, dn, csp, cln, csf, ec, sc):
+            tr, w = kernel.importance(k, constraint,
+                                      ((cb, cl, nw, wl, ws_, la, dn), csp, cln, csf, ec, sc))
             rv = tr.get_retval()
-            return rv[0], rv[1], rv[2], rv[3], w
+            return rv[0], rv[1], rv[2], rv[3], rv[4], rv[5], rv[6], w
 
-        cb, cl, la, dn, ws = jax.vmap(one)(keys, ctx_buf, ctx_len, log_alpha, done,
-                                           cand, emit_cols, scores)
-        return (cb, cl, la, dn), ws
+        cb, cl, nw, wl, ws2, la, dn, ws = jax.vmap(one)(
+            keys, ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done,
+            cand_span, cand_len, cand_surf, emit_cols, scores)
+        return (cb, cl, nw, wl, ws2, la, dn), ws
 
     @jax.jit
-    def extend_bootstrap(keys, ctx_buf, ctx_len, log_alpha, done, lmlog):
-        def one(k, cb, cl, la, dn, lm):
+    def extend_bootstrap(keys, ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done, lmlog):
+        def one(k, cb, cl, nw, wl, wsf, la, dn, lm):
             Z = logsumexp(la)
             s = jax.random.categorical(k, lm)
             chose_eos = s == eos_id
             w_id = jnp.where(chose_eos, 0, s)
             col = emit_full[:, jnp.clip(w_id, 0, Vc - 1)]
-            new_alpha = band_mask(_word_row_update(la, col, WDEL, WINS), cl + 1 - seed_len)
+            new_alpha = band_mask(_word_row_update(la, col, WDEL, WINS), nw + 1)
             incr = jnp.where(chose_eos, 0.0, logsumexp(new_alpha) - Z)
             advance = (~dn) & (~chose_eos)
             incr = jnp.where(dn, 0.0, incr)
             incr = jnp.where(jnp.isnan(incr), -jnp.inf, incr)
             cb2 = jnp.where(advance, cb.at[cl].set(w_id.astype(jnp.int32)), cb)
-            return (cb2, jnp.where(advance, cl + 1, cl),
+            wpos = jnp.clip(nw, 0, Wmax - 1)
+            wl2 = wl.at[wpos].set(jnp.where(advance, jnp.int32(1), wl[wpos]))
+            wsf2 = wsf.at[wpos].set(jnp.where(advance, w_id.astype(jnp.int32), wsf[wpos]))
+            return (cb2, jnp.where(advance, cl + 1, cl), jnp.where(advance, nw + 1, nw), wl2, wsf2,
                     jnp.where(advance, new_alpha, la), dn | chose_eos), incr
 
-        states, ws = jax.vmap(one)(keys, ctx_buf, ctx_len, log_alpha, done, lmlog)
+        states, ws = jax.vmap(one)(keys, ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha,
+                                   done, lmlog)
         return states, ws
 
     for s in range(M + slack):
-        ctx_buf, ctx_len, log_alpha, done = state
+        ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done = state
         lmlog = model.lm_fn(ctx_buf, ctx_len)                            # batched LM call (P, vocab)
         if rejuv_stats is not None:
             rejuv_stats["filter_lm_calls"] += 1
         key, sub = jax.random.split(key)
         keys = jax.random.split(sub, P)
         if proposal == "caprop":
-            cand, emit_cols, scores = _assemble(ctx_len, log_alpha, lmlog)
-            state, incr = extend_caprop(keys, ctx_buf, ctx_len, log_alpha, done,
-                                        cand, emit_cols, scores)
+            if n_mt > 0:                                                 # chain-rule scores for MT cands
+                mt_chain = tail_fn(ctx_buf, ctx_len, mt_span_b, mt_len_b)
+            else:
+                mt_chain = jnp.zeros((P, 1))
+            cand_span, cand_len, cand_surf, emit_cols, scores = _assemble(n_words, log_alpha, lmlog,
+                                                                          mt_chain)
+            state, incr = extend_caprop(keys, ctx_buf, ctx_len, n_words, word_len, word_surf,
+                                        log_alpha, done, cand_span, cand_len, cand_surf, emit_cols,
+                                        scores)
         else:
-            state, incr = extend_bootstrap(keys, ctx_buf, ctx_len, log_alpha, done, lmlog)
+            state, incr = extend_bootstrap(keys, ctx_buf, ctx_len, n_words, word_len, word_surf,
+                                           log_alpha, done, lmlog)
         log_w = log_w + incr
         ess_pre = float(_ess(log_w))     # the ESS that triggers/avoids resampling (recorded for the viz)
         resampled, rejuv_info = False, None
@@ -334,13 +521,14 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
             state = jax.tree_util.tree_map(lambda a: a[anc], state)
             log_w = jnp.zeros(P)
             if rj_sweep is not None:     # post-resample windowed Gibbs/SMCP3 sweep; fold its weight
-                ctx_buf, ctx_len, _, done = state            # pre-next-resample (REJUV_GOAL3 (b))
+                ctx_buf, ctx_len, n_words, word_len, word_surf, _, done = state  # pre-resample (GOAL3 b)
                 hi = min(s + 1, M + slack)                   # frontier word count (upper bound)
                 lo = max(0, hi - rejuv_lookback)
                 key, sub = jax.random.split(key)
-                cb, la, mlw = rj_sweep(sub, ctx_buf, ctx_len, positions=range(lo, hi), done=done,
-                                       dedup_stats=rj_dedup_stats)
-                state = (cb, ctx_len, la, done)
+                cb, cl2, wl2, ws2, la, mlw = rj_sweep(sub, ctx_buf, ctx_len, word_len, word_surf,
+                                                      positions=range(lo, hi), done=done,
+                                                      dedup_stats=rj_dedup_stats)
+                state = (cb, cl2, n_words, wl2, ws2, la, done)   # word count fixed; spans/lengths may move
                 log_w = log_w + mlw
                 rejuv_info = {"words": [int(lo), int(hi)], "ess_after": float(_ess(log_w)),
                               "mean_abs_w": float(jnp.mean(jnp.abs(mlw)))}
@@ -359,7 +547,7 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     # Terminal full-consumption correction: caprop folds alpha[M] into the EOS candidate, so EOS'd
     # particles already paid it; both proposals still need it for particles live at the budget (else
     # raw forward mass over-rewards long junk parses). bootstrap never folds it -> applies to all.
-    _, _, log_alpha, done = state
+    _, _, _, _, _, log_alpha, done = state
     need_term = jnp.ones_like(done) if proposal == "bootstrap" else ~done
     term = jnp.where(need_term, log_alpha[:, M] - logsumexp(log_alpha, axis=1), 0.0)
     term = jnp.where(jnp.isnan(term), -jnp.inf, term)
@@ -373,7 +561,7 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
 
 def decode(state, log_w, model, skip=0, key=jax.random.PRNGKey(0), top=3):
     """Most-probable intended sentences from the weighted particle cloud (decode by weight)."""
-    ctx_buf, ctx_len, _, _ = state
+    ctx_buf, ctx_len = state[0], state[1]
     anc = jax.random.categorical(key, log_w, shape=(ctx_buf.shape[0],))
     trajs = [tuple(int(t) for t in ctx_buf[int(a)][skip:int(ctx_len[int(a)])]) for a in anc]
     counts = Counter(trajs)

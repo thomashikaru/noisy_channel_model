@@ -35,6 +35,7 @@ import itertools
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 from jax.scipy.special import logsumexp
 
 from genjax_port.poc_pairhmm_channel import channel_logpdf, encode
@@ -52,15 +53,15 @@ WINS = float(jnp.log(0.05))
 def _toy_model(lm_fn):
     """A :class:`pairhmm_smc.PairHMMModel` over the toy vocab, LM injected. The toy bigram is the
     same filter as Pythia with a different LM, so certifying it here certifies the shared code."""
-    def candidate_ids(word, max_dist, Ke):
+    def candidate_words(word, max_dist, Ke):
         cands = sorted((_damerau_levenshtein(word, w, max_dist), WORD2IDX[w]) for w in VOCAB)
-        return [i for d, i in cands if d <= max_dist][:Ke]
+        return [((i,), VOCAB[i]) for d, i in cands if d <= max_dist][:Ke]  # single-token toy words
 
     return pairhmm_smc.PairHMMModel(
         lm_fn=jax.vmap(lm_fn),                 # batch the single-particle toy LM over the cloud
         eos_id=EOS, emit_vocab=V,
         vocab_char=VOCAB_IDS, vocab_clen=VOCAB_LEN, channel_logpdf=channel_logpdf,
-        char_ids=encode, candidate_ids=candidate_ids, obs_words=str.split,
+        char_ids=encode, candidate_words=candidate_words, obs_words=str.split,
         decode_ids=lambda t: " ".join(VOCAB[i] for i in t), seed_ids=())
 
 
@@ -355,13 +356,264 @@ def test_rejuv_dedup_bit_parity():
     swp_off = rejuv.make_sweep(ctx, pool_tok, pool_len, dedup=False)
     swp_on = rejuv.make_sweep(ctx, pool_tok, pool_len, dedup=True)
     rk = jax.random.PRNGKey(7)
-    b0, la0, mlw0 = swp_off(rk, buf, clen)
+    b0, _cl0, _wl0, _ws0, la0, mlw0 = swp_off(rk, buf, clen)
     stats = cache_dedup.DedupStats()
-    b1, la1, mlw1 = swp_on(rk, buf, clen, dedup_stats=stats)
+    b1, _cl1, _wl1, _ws1, la1, mlw1 = swp_on(rk, buf, clen, dedup_stats=stats)
     assert jnp.array_equal(b0, b1), "dedup changed the swept buffers (not bit-exact)"
     assert float(jnp.max(jnp.abs(mlw0 - mlw1))) < 1e-4, "dedup changed move_logw"
     assert float(jnp.max(jnp.abs(la0 - la1))) < 1e-4, "dedup changed log_alpha"
     assert stats.rows_in > 0 and stats.rows_computed < stats.rows_in, f"dedup did not fire: {stats!r}"
+
+
+# --------------------------------------------------------------------------------------------------
+# Phase D (D0) -- MULTI-TOKEN intended words. The single-token gates above can't exercise multi-token
+# words (every toy word is one LM token). This block is a minimal toy where some intended WORDS span
+# >= 2 LM "sub-tokens" (kitten = kit+ten, kitchen = kit+chen), while the CHANNEL still scores the whole
+# -word SURFACE. It exercises exactly the Phase-D machinery the single-token path can't: the chain-rule
+# LM over a candidate's token span, the surface_id-indexed channel column, and the span splice. The
+# same exact-enumeration method certifies it: the sub-token bigram collapses into an effective WORD
+# bigram (the bigram only sees the previous word's LAST sub-token), so a word's internal sub-token
+# chain-rule folds into one word->word transition and enumeration over WORD sequences is exact.
+# --------------------------------------------------------------------------------------------------
+# Sub-token surfaces (GPT-NeoX leading-space convention: word-initial pieces carry a leading space,
+# continuations do not -- so decode by concatenation recovers the spacing, as Pythia's tokenizer does).
+_MT_WORD_PIECES = {"the": [" the"], "cat": [" cat"], "sat": [" sat"], "mat": [" mat"], "dog": [" dog"],
+                   "kitten": [" kit", "ten"], "kitchen": [" kit", "chen"]}
+MT_VOCAB = list(_MT_WORD_PIECES)
+MT_SUBTOK = []                                    # distinct sub-token surfaces, order = id
+for _w, _ps in _MT_WORD_PIECES.items():
+    for _p in _ps:
+        if _p not in MT_SUBTOK:
+            MT_SUBTOK.append(_p)
+MT_NSUB = len(MT_SUBTOK)
+MT_EOS = MT_NSUB                                  # EOS / BOS row id in the sub-token bigram
+_MT_SUB2IDX = {s: i for i, s in enumerate(MT_SUBTOK)}
+MT_SPAN = {w: tuple(_MT_SUB2IDX[p] for p in ps) for w, ps in _MT_WORD_PIECES.items()}  # word->subtok ids
+# A sub-token is a "whole word" (eligible as a top-J LM bridge) iff it is some SINGLE-token word's piece.
+_MT_WORD_SET = {ps[0] for w, ps in _MT_WORD_PIECES.items() if len(ps) == 1}
+MT_WORD_MASK = jnp.array([s in _MT_WORD_SET for s in MT_SUBTOK], bool)
+MT_SUB_IDS = jnp.stack([jnp.asarray(encode(s.strip())[0]) for s in MT_SUBTOK])   # (NSUB, Lchar)
+MT_SUB_LEN = jnp.asarray([encode(s.strip())[1] for s in MT_SUBTOK])
+
+
+def _mt_sub_log_bigram(weighted_sents):
+    """Peaked sub-token bigram (rows: prev sub-token, BOS=MT_NSUB; cols: next, EOS=MT_NSUB), built
+    from weighted word-sentences expanded to their sub-token spans -- so P(kitten|the) is the product
+    P(kit|the)*P(ten|kit), the genuine multi-token chain-rule."""
+    counts = jnp.ones((MT_NSUB + 1, MT_NSUB + 1))
+    for sent, wt in weighted_sents:
+        prev = MT_EOS                              # BOS uses the same row id
+        for word in sent.split():
+            for sub in MT_SPAN[word]:
+                counts = counts.at[prev, sub].add(float(wt)); prev = sub
+        counts = counts.at[prev, MT_EOS].add(float(wt))
+    return jnp.log(counts / counts.sum(axis=1, keepdims=True))
+
+
+def _mt_lm_fn(sub_log_bigram):
+    def lm(ctx_buf, ctx_len):                      # ctx_buf holds SUB-TOKEN ids; bigram on the last one
+        prev = jnp.where(ctx_len > 0, ctx_buf[jnp.maximum(ctx_len - 1, 0)], MT_EOS)
+        return sub_log_bigram[prev]
+    return lm
+
+
+def _mt_decode(ids):
+    return "".join(MT_SUBTOK[int(i)] for i in ids).strip()
+
+
+def _mt_model(sub_log_bigram):
+    def candidate_words(word, max_dist, Ke):       # MT_VOCAB words within edit distance; COPY = d=0
+        cands = sorted((_damerau_levenshtein(word, w, max_dist), w) for w in MT_VOCAB)
+        return [(MT_SPAN[w], w) for d, w in cands if d <= max_dist][:Ke]
+
+    return pairhmm_smc.PairHMMModel(
+        lm_fn=jax.vmap(_mt_lm_fn(sub_log_bigram)), eos_id=MT_EOS, emit_vocab=MT_NSUB,
+        vocab_char=MT_SUB_IDS, vocab_clen=MT_SUB_LEN, channel_logpdf=channel_logpdf,
+        char_ids=encode, candidate_words=candidate_words, obs_words=str.split,
+        decode_ids=_mt_decode, seed_ids=(), word_mask=MT_WORD_MASK)
+    # tail_logprobs=None -> run() uses the uncached chain-rule fallback over lm_fn (correct, slow-but-toy).
+
+
+def _mt_word_bigram(sub_log_bigram):
+    """Collapse the sub-token bigram into an effective WORD bigram over MT_VOCAB (rows/cols, BOS=EOS=nW):
+    a word's internal transitions fold in because the bigram only sees the previous word's last piece."""
+    nW = len(MT_VOCAB)
+    wlog = np.full((nW + 1, nW + 1), -np.inf)
+    intern = {w: sum(float(sub_log_bigram[MT_SPAN[w][i - 1], MT_SPAN[w][i]])
+                     for i in range(1, len(MT_SPAN[w]))) for w in MT_VOCAB}
+    for j, w2 in enumerate(MT_VOCAB):
+        first2 = MT_SPAN[w2][0]
+        wlog[nW, j] = float(sub_log_bigram[MT_EOS, first2]) + intern[w2]      # from BOS
+        for i, w1 in enumerate(MT_VOCAB):
+            wlog[i, j] = float(sub_log_bigram[MT_SPAN[w1][-1], first2]) + intern[w2]
+    for i, w1 in enumerate(MT_VOCAB):
+        wlog[i, nW] = float(sub_log_bigram[MT_SPAN[w1][-1], MT_EOS])          # to EOS
+    wlog[nW, nW] = float(sub_log_bigram[MT_EOS, MT_EOS])                       # empty sentence
+    return jnp.asarray(wlog)
+
+
+def _mt_exact(observed, sub_log_bigram, Lmax):
+    """Exact posterior over MT_VOCAB word sequences (up to Lmax words), scored by the effective word
+    bigram + the surface channel DP -- the same brute force as exact_posterior, for the multi-token toy."""
+    obs_words = observed.split(); M = len(obs_words)
+    obs_char = jnp.stack([encode(w)[0] for w in obs_words])
+    wsurf = jnp.stack([encode(w)[0] for w in MT_VOCAB]); wlen = jnp.asarray([encode(w)[1] for w in MT_VOCAB])
+    emit = jax.vmap(jax.vmap(channel_logpdf, in_axes=(None, 0, 0)),
+                    in_axes=(0, None, None))(obs_char, wsurf, wlen)            # (M, nW)
+    a0 = jnp.where(jnp.arange(M + 1) == 0, 0.0, jnp.arange(M + 1) * WINS)
+    wlog, nW = _mt_word_bigram(sub_log_bigram), len(MT_VOCAB)
+    sents, joints = [], []
+    for n in range(Lmax + 1):
+        seqs = (jnp.array(list(itertools.product(range(nW), repeat=n)), jnp.int32).reshape(-1, n)
+                if n else jnp.zeros((1, 0), jnp.int32))
+        if n == 0:
+            lm = jnp.array([wlog[nW, nW]]); chan = jnp.array([a0[M]])
+        else:
+            frm = jnp.concatenate([jnp.full((seqs.shape[0], 1), nW), seqs], axis=1)
+            to = jnp.concatenate([seqs, jnp.full((seqs.shape[0], 1), nW)], axis=1)
+            lm = jnp.sum(wlog[frm, to], axis=1)
+
+            def chan_one(seq):
+                alpha = a0
+                for i in range(n):
+                    alpha = _word_row_update(alpha, emit[:, seq[i]], WDEL, WINS)
+                return alpha[M]
+
+            chan = jax.vmap(chan_one)(seqs)
+        sents.extend(" ".join(MT_VOCAB[int(i)] for i in s) for s in seqs)
+        joints.append(lm + chan)
+    joints = jnp.concatenate(joints); post = jax.nn.softmax(joints)
+    words = {}
+    for s, p in zip(sents, post):
+        words[s] = words.get(s, 0.0) + float(p)
+    return words, float(logsumexp(joints))
+
+
+def _mt_smc(observed, key, sub_log_bigram, P=8000, band=None):
+    model = _mt_model(sub_log_bigram)
+    st, dw, logZ, _ = pairhmm_smc.run(observed, key, model, P=P, proposal="caprop",
+                                      wdel=WDEL, wins=WINS, band=band)
+    return {s: p for s, p in pairhmm_smc.decode(st, dw, model, top=50)}, logZ
+
+
+_MT_PEAKED = [("the kitten sat", 50), ("the cat sat", 1), ("the dog sat", 1),
+              ("the kitchen mat", 1), ("the cat mat", 1)]
+
+
+def test_multitoken_copy_matches_exact():
+    """D0 (Phase D): a correctly-spelled MULTI-TOKEN word ('kitten' = kit+ten) is reconstructed
+    VERBATIM, and the SMC posterior matches exact enumeration -- the COPY of a multi-token word, the
+    case the single-token filter could not even represent. Certifies the (token span, surface_id)
+    candidate + chain-rule LM + span splice on the toy by brute force (band=None to match enumeration)."""
+    lm = _mt_sub_log_bigram(_MT_PEAKED)
+    exact, _ = _mt_exact("the kitten sat", lm, Lmax=4)
+    smc, _ = _mt_smc("the kitten sat", jax.random.PRNGKey(0), lm, P=8000)
+    assert max(smc, key=smc.get) == max(exact, key=exact.get) == "the kitten sat", \
+        f"multi-token COPY: SMC MAP {max(smc, key=smc.get)!r} vs exact {max(exact, key=exact.get)!r}"
+    map_s = max(exact, key=exact.get)
+    assert abs(exact[map_s] - smc.get(map_s, 0.0)) < 0.15, "multi-token MAP mass off vs exact"
+    assert tv_distance(exact, smc) < 0.2, f"multi-token posterior too far from exact: TV {tv_distance(exact, smc):.3f}"
+
+
+def test_multitoken_substitution_recovered():
+    """D0 (Phase D): a typo whose correction is a MULTI-TOKEN word is recovered -- observed 'kiten'
+    (not a word) is substituted to 'kitten' (= kit+ten), i.e. an N:1->1:N substitution to a word the
+    single-token candidate set never contained. The dropped 't' is a char-channel edit-distance-1 to
+    'kitten'; the peaked LM makes the restoration the MAP."""
+    lm = _mt_sub_log_bigram(_MT_PEAKED)
+    smc, _ = _mt_smc("the kiten sat", jax.random.PRNGKey(0), lm, P=8000)
+    assert max(smc, key=smc.get) == "the kitten sat", \
+        f"multi-token substitution: SMC MAP {max(smc, key=smc.get)!r}, expected 'the kitten sat'"
+
+
+def _mt_rejuv_ctx_pool(observed, sub_log_bigram, slack=3, Ke=8):
+    """Build the rejuvenation ctx + multi-token candidate pool the SAME way pairhmm_smc.run does
+    (augmented emit_full + pool-from-inventory), for the multi-token toy. Returns
+    (model, ctx, (pool_tok, pool_len, pool_surf), T_max, Wmax)."""
+    model = _mt_model(sub_log_bigram)
+    obs_words = observed.split(); M = len(obs_words)
+    obs_char = jnp.stack([encode(w)[0] for w in obs_words])
+    emit_full = jax.vmap(jax.vmap(channel_logpdf, in_axes=(None, 0, 0)),
+                         in_axes=(0, None, None))(obs_char, model.vocab_char, model.vocab_clen)
+    ef, es, em, mt_span, mt_len, emit_aug, T_max, _n_mt = pairhmm_smc._build_candidates(
+        model, obs_words, obs_char, emit_full, max_dist=2, Ke=Ke)
+    Wmax = M + slack
+    pool = pairhmm_smc._rejuv_pool_from_inventory(ef, es, em, mt_span, mt_len, M, Wmax, T_max)
+    a0 = jnp.where(jnp.arange(M + 1) == 0, 0.0, jnp.arange(M + 1) * WINS)
+    ctx = rejuv.RejuvCtx(model, emit_aug, a0, M, 0, Wmax, WDEL, WINS, 2, T_max, 1.0)
+    return model, ctx, pool, T_max, Wmax
+
+
+def test_multitoken_rejuv_invariance():
+    """R4: the rejuvenation sweep operates over MULTI-TOKEN words. Applied to a cloud already at the
+    multi-token posterior (the forward filter on 'the kitten sat', rejuv off), one full sweep leaves the
+    MAP on the truth and barely perturbs the posterior -- the invariance that proves the move does not
+    corrupt a good multi-token cloud. Exercises the whole R4 path end-to-end: the boundary-aware unpack,
+    the span+surface-id candidate pool, the multi-token suffix-tail scorer, and the cumsum-scatter splice
+    (none of which the single-token rejuv gates touch). Mirrors test_rejuv_leaves_exact_posterior_invariant
+    for T_max>1 (band=2, restricted SymSpell pool, so a slightly looser TV than the full-vocab toy)."""
+    lm = _mt_sub_log_bigram(_MT_PEAKED)
+    model, ctx, pool, T_max, Wmax = _mt_rejuv_ctx_pool("the kitten sat", lm)
+    st, dw, _, sl = pairhmm_smc.run("the kitten sat", jax.random.PRNGKey(0), model, P=3000,
+                                    proposal="caprop", wdel=WDEL, wins=WINS, band=2)
+    cb0, cl0, _nw, wl0, ws0, _la, dn0 = st
+    anc = jax.random.categorical(jax.random.PRNGKey(1), dw, shape=(3000,))   # resample to equal weights
+    g = lambda a: a[anc]
+    cb0, cl0, wl0, ws0, dn0 = g(cb0), g(cl0), g(wl0), g(ws0), g(dn0)
+    before = rejuv.decode_counts(cb0, cl0, model, sl)
+    assert max(before, key=before.get) == "the kitten sat", "forward cloud not at the multi-token truth"
+    swp = rejuv.make_sweep(ctx, *pool, max_tail=(3 + 1) * T_max + 1)
+    cb, cl, _wl, _ws, _la2, _mlw = swp(jax.random.PRNGKey(2), cb0, cl0, wl0, ws0,
+                                       positions=range(0, Wmax), done=dn0)
+    after = rejuv.decode_counts(cb, cl, model, sl)
+    assert max(after, key=after.get) == "the kitten sat", \
+        f"multi-token rejuv moved the MAP off the truth: {max(after, key=after.get)!r}"
+    assert tv_distance(before, after) < 0.2, \
+        f"multi-token rejuv perturbed the posterior: TV {tv_distance(before, after):.3f}"
+
+
+def _mt_find_in_pool(pool, slot, word):
+    """(span, surf_id) of ``word`` among slot ``slot``'s rejuv pool candidates (matched by surface)."""
+    pool_tok, pool_len, pool_surf = (np.asarray(a[slot]) for a in pool)
+    for k in range(pool_tok.shape[0]):
+        if pool_len[k] == 0:
+            continue
+        span = tuple(int(x) for x in pool_tok[k, :pool_len[k]])
+        if _mt_decode(span) == word:
+            return span, int(pool_surf[k])
+    raise AssertionError(f"{word!r} not in slot {slot} pool")
+
+
+def test_multitoken_rejuv_recovers_collapsed():
+    """R4 + channel guard: a cloud COLLAPSED onto a wrong MULTI-TOKEN reading ('the kitchen sat') is
+    pulled back to the truth 'the kitten sat' by the sweep, because the channel must favour the
+    multi-token candidate ('kitten' is a perfect match to the observed 'kitten'; 'kitchen' is distance
+    2). This is the gate that catches the channel-column bug invariance missed: if an augmented
+    multi-token surface id is read at the wrong (clipped) column, the sweep cannot tell kitten from
+    kitchen and the recovery fails."""
+    lm = _mt_sub_log_bigram(_MT_PEAKED)
+    model, ctx, pool, T_max, Wmax = _mt_rejuv_ctx_pool("the kitten sat", lm)
+    words = [((0,), 0),                                   # 'the' (single-token; surf == token)
+             _mt_find_in_pool(pool, 1, "kitchen"),         # wrong multi-token reading at the kitten slot
+             ((2,), 2)]                                    # 'sat'
+    P, LCTX = 4000, ctx.seed_len + Wmax * T_max + 1
+    toks = [t for span, _s in words for t in span]
+    buf = jnp.full((P, LCTX), 0, jnp.int32).at[:, :len(toks)].set(jnp.array(toks, jnp.int32))
+    clen = jnp.full((P,), len(toks), jnp.int32)
+    word_len = jnp.zeros((P, Wmax), jnp.int32).at[:, :3].set(
+        jnp.array([len(span) for span, _s in words], jnp.int32))
+    word_surf = jnp.zeros((P, Wmax), jnp.int32).at[:, :3].set(
+        jnp.array([s for _span, s in words], jnp.int32))
+    assert _mt_decode(toks) == "the kitchen sat", f"collapsed cloud decodes to {_mt_decode(toks)!r}"
+    swp = rejuv.make_sweep(ctx, *pool, max_tail=(3 + 1) * T_max + 1)
+    key = jax.random.PRNGKey(0)
+    for _ in range(6):
+        key, sub = jax.random.split(key)
+        buf, clen, word_len, word_surf, _la, _mlw = swp(sub, buf, clen, word_len, word_surf,
+                                                        positions=range(0, 3))
+    rec = rejuv.decode_counts(buf, clen, model, ctx.seed_len)
+    assert max(rec, key=rec.get) == "the kitten sat", \
+        f"multi-token rejuv failed to recover the collapse: MAP {max(rec, key=rec.get)!r}"
 
 
 # NOTE: caprop's lower-variance-than-bootstrap logZ is NOT a pass/fail gate. At toy scale the edge

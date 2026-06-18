@@ -70,22 +70,31 @@ class RejuvCtx:
     seed_len: int            # context-seed length (toy 0; Pythia [EOS]+prime)
     Wmax: int                # max intended words = M + slack
     wdel: float
-    wins: float
+    wins: object             # spurious-word log-cost: scalar (uniform) OR (M,) per-observed-word vector
     band: Optional[int]      # |k - t| <= band; None = no band (matches exact enumeration)
     t_max: int = 1           # capacity: max tokens per intended word (run at 1 until Phase D)
+    lm_temp: float = 1.0     # LM-prior temperature lambda: the move targets P_LM^lm_temp * P_channel
+    #                          (multiplies the LM suffix `chain` only, not the channel marginal `chan`).
+    #                          1.0 = untempered (certified); < 1 flattens the LM's over-confident
+    #                          preferences so plausible inputs are read more literally (less over-editing).
 
 
-def make_rejuv_ctx(observed, model, wdel, wins, band=None, slack=3, t_max=1):
+def make_rejuv_ctx(observed, model, wdel, wins, band=None, slack=3, t_max=1, lm_temp=1.0):
     obs_words = model.obs_words(observed)
     M = len(obs_words)
     obs_char = jnp.stack([jnp.asarray(model.char_ids(w)[0], jnp.int32) for w in obs_words])
     emit_full = jax.vmap(jax.vmap(model.channel_logpdf, in_axes=(None, 0, 0)),
                          in_axes=(0, None, None))(obs_char, model.vocab_char, model.vocab_clen)
     ks = jnp.arange(M + 1)
-    a0 = jnp.where(ks == 0, 0.0, ks * wins)
+    wins_arr = jnp.asarray(wins)                                    # scalar (uniform) or (M,) per-word
+    if wins_arr.ndim == 0:
+        a0 = jnp.where(ks == 0, 0.0, ks * wins)
+    else:                                                          # a0[k] = first-k insertion-cost sum
+        a0 = jnp.concatenate([jnp.zeros((1,), wins_arr.dtype), jnp.cumsum(wins_arr)])
     if band is not None:                                            # match the filter's band_mask(.,0)
         a0 = jnp.where(jnp.abs(ks) <= band, a0, -jnp.inf)
-    return RejuvCtx(model, emit_full, a0, M, len(model.seed_ids), M + slack, wdel, wins, band, t_max)
+    return RejuvCtx(model, emit_full, a0, M, len(model.seed_ids), M + slack, wdel, wins, band, t_max,
+                    lm_temp)
 
 
 def _band_mask_a(band, M, alpha, t):
@@ -121,17 +130,22 @@ def _pack(word_tok, word_len, n_out):
     return tok, total
 
 
-def _unpack_single_token(ctx_buf, ctx_len, sl, Wmax, t_max):
-    """Unpack the filter's flat single-token buffer into per-word slots. The forward filter is
-    single-token (T_max=1: word w == token ctx_buf[:, sl+w]); Phase D will hand us per-word token
-    boundaries and this becomes the general unpack. Returns (word_tok [P,Wmax,T_max], word_len
-    [P,Wmax], n_words [P]). word_len is 1 for active words (w < n_words), 0 past them."""
-    P = ctx_buf.shape[0]
-    n_words = ctx_len - sl                                         # (P,)
-    toks = ctx_buf[:, sl:sl + Wmax]                                # (P, Wmax) one token per word slot
-    word_tok = jnp.zeros((P, Wmax, t_max), ctx_buf.dtype).at[:, :, 0].set(toks)
-    word_len = (jnp.arange(Wmax)[None, :] < n_words[:, None]).astype(jnp.int32)
-    return word_tok, word_len, n_words
+def _unpack(ctx_buf, word_len, sl, Wmax, t_max):
+    """Gather per-word token spans from the flat buffer using the forward filter's ``word_len``
+    boundaries (R4). A multi-token buffer has no recoverable word boundaries on its own, so the
+    forward state carries ``word_len`` (token count per word) and ``word_surf`` (channel surface id
+    per word); this reconstructs ``word_tok [P, Wmax, t_max]`` (pad 0) by cumsum boundaries and
+    ``n_words [P]`` (count of non-empty words). At ``t_max == 1`` with all lengths 1 it reduces to the
+    old single-token unpack (word ``w`` == token ``ctx_buf[:, sl+w]``)."""
+    P, LCTX = ctx_buf.shape
+    cum = jnp.cumsum(word_len, axis=1)                            # (P, Wmax) inclusive token counts
+    start = cum - word_len                                        # (P, Wmax) exclusive start (rel to sl)
+    j = jnp.arange(t_max)
+    pos = jnp.clip(sl + start[:, :, None] + j[None, None, :], 0, LCTX - 1)   # (P, Wmax, t_max)
+    tok = jnp.take_along_axis(ctx_buf, pos.reshape(P, Wmax * t_max), axis=1).reshape(P, Wmax, t_max)
+    word_tok = jnp.where(j[None, None, :] < word_len[:, :, None], tok, 0)
+    n_words = jnp.sum(word_len > 0, axis=1)
+    return word_tok, n_words
 
 
 def _flat_buffer_a(eos_id, seed_ids, sl, word_tok, word_len, LCTX, n_out):
@@ -187,7 +201,9 @@ def _channel_carry_a(a0, emit_full, wdel, wins, band, M, Vc, word_surf, word_len
     alpha = jnp.broadcast_to(a0, (N, M + 1))
     upd = jax.vmap(lambda a, c: _word_row_update(a, c, wdel, wins))
     for i in range(Wmax):
-        surf_i = jnp.clip(word_surf[:, i], 0, Vc - 1)
+        # clip to the AUGMENTED table width, not the original Vc -- multi-token surface ids live in the
+        # appended columns (>= Vc); clipping to Vc-1 would read the wrong channel column for them (R4 bug).
+        surf_i = jnp.clip(word_surf[:, i], 0, emit_full.shape[1] - 1)
         col = emit_full[:, surf_i].T                              # (N, M)
         new = _band_mask_a(band, M, upd(alpha, col), i + 1)
         alpha = jnp.where((word_len[:, i] > 0)[:, None], new, alpha)
@@ -275,14 +291,15 @@ def _smcp3_move(slot_model, slot_proposal, keys, target_lp, s_cur):
 # back; the per-particle SMCP3 sample still runs on all P (duplicates must DIVERGE -- that is the
 # diversification the dedup must never collapse). See planning/REJUV_KV_REDESIGN_PLAN.md R3 item (1).
 # --------------------------------------------------------------------------------------------------
-def _candidates(w, word_tok, word_len, word_surf, pool_tok, pool_len, K, T):
+def _candidates(w, word_tok, word_len, word_surf, pool_tok, pool_len, pool_surf, K, T):
     """[COPY (current word at slot w)] ++ pool[w] -> (cand_tok [P,Kt,T], cand_len [P,Kt],
     cand_surf [P,Kt], valid [P,Kt]). Cheap (no LM); pool pads are invalid and pool entries equal to
-    COPY are de-duplicated (COPY kept at index 0)."""
+    COPY are de-duplicated (COPY kept at index 0). The pool carries each candidate's real channel
+    surface id (``pool_surf``, R4) -- NOT the first token -- so a multi-token candidate's channel
+    column is the surface of its whole word, and the COPY uses the current word's stored surface id."""
     P = word_tok.shape[0]
     cur_tok, cur_len, cur_surf = word_tok[:, w, :], word_len[:, w], word_surf[:, w]
-    pt, pl = pool_tok[w], pool_len[w]                                      # (K,T),(K,)
-    ps = pt[:, 0]                                                          # (K,) T_max=1 surface == token
+    pt, pl, ps = pool_tok[w], pool_len[w], pool_surf[w]                    # (K,T),(K,),(K,)
     cand_tok = jnp.concatenate(
         [cur_tok[:, None, :], jnp.broadcast_to(pt[None], (P, K, T))], axis=1)       # (P,Kt,T)
     cand_len = jnp.concatenate([cur_len[:, None], jnp.broadcast_to(pl[None], (P, K))], axis=1)
@@ -306,25 +323,36 @@ def _chan_scores(w, word_len, word_surf, cand_len, cand_surf, done,
     return jnp.where(jnp.repeat(done, Kt), carry[:, M], logsumexp(carry, axis=1)).reshape(P, Kt)
 
 
-def _tail_inputs(w, word_tok, word_len, word_surf, cand_surf, done, n_words,
+def _tail_inputs(w, word_tok, word_len, cand_tok, cand_len, done, n_words,
                  sl, Wmax, T, mt, eos_id, seed_ids):
     """``tail_fn`` inputs (ctx_bufs [P,LCTX], ctx_lens [P], tail [P,Kt,mt], tail_len [P,Kt]). ``tail_fn``
-    prefills the prefix ``ctx_bufs[:sl+w]`` (cancels across candidates) and scores the candidate-dependent
-    ``tail = [candidate, suffix words w+1.., EOS?]``. (T_max=1)"""
-    P, Kt = cand_surf.shape
+    prefills the prefix (words < w; cancels across candidates) and scores the candidate-dependent
+    ``tail = [candidate span, suffix word spans w+1.., EOS?]`` in TOKENS (R4 multi-token). Built by
+    splicing each candidate's span into slot w, packing the whole buffer (``_pack``), and slicing the
+    suffix tokens starting at the prefix length; an EOS is appended for DONE particles. At ``T == 1``
+    with unit lengths this reduces to the old one-token-per-word tail."""
+    P, Kt = cand_len.shape
     n_out = Wmax * T
     LCTX = sl + n_out + 1
-    j = jnp.arange(mt)
-    suff = word_surf[:, jnp.clip(w + j, 0, Wmax - 1)]                               # (P, mt) word w+j
-    nw_w = n_words - w                                                              # (P,) words w..end
-    is_suffix = (j[None, :] >= 1) & (j[None, :] < nw_w[:, None])
-    is_eos = (j[None, :] == nw_w[:, None]) & done[:, None]                          # EOS after last word
-    base = jnp.where(is_suffix, suff, eos_id)
-    base = jnp.where(is_eos, eos_id, base)
-    tail = jnp.broadcast_to(base[:, None, :], (P, Kt, mt)).at[:, :, 0].set(cand_surf)  # (P,Kt,mt)
-    tail_len = jnp.broadcast_to(jnp.clip(nw_w + done.astype(jnp.int32), 0, mt)[:, None], (P, Kt))
+    cum = jnp.cumsum(word_len, axis=1)                                              # (P,Wmax) inclusive
+    prefix_tok = jnp.where(w > 0, cum[:, jnp.clip(w - 1, 0, Wmax - 1)], 0)          # tokens of words < w
     ctx_bufs, _ = _flat_buffer_a(eos_id, seed_ids, sl, word_tok, word_len, LCTX, n_out)
-    ctx_lens = jnp.full((P,), sl, jnp.int32) + w                                    # prefix end = sl+w
+    ctx_lens = jnp.full((P,), sl, jnp.int32) + prefix_tok.astype(jnp.int32)          # prefix end
+
+    wt = jnp.broadcast_to(word_tok[:, None], (P, Kt, Wmax, T)).at[:, :, w, :].set(cand_tok)
+    wl = jnp.broadcast_to(word_len[:, None], (P, Kt, Wmax)).at[:, :, w].set(cand_len)
+    packed, total = _pack(wt.reshape(P * Kt, Wmax, T), wl.reshape(P * Kt, Wmax), n_out)
+    packed = packed.reshape(P, Kt, n_out)
+    total = total.reshape(P, Kt)
+    rel = jnp.arange(mt)
+    gpos = jnp.clip(prefix_tok[:, None, None] + rel[None, None, :], 0, n_out - 1)    # (P,1,mt)
+    tail = jnp.take_along_axis(packed, jnp.broadcast_to(gpos, (P, Kt, mt)), axis=2)  # (P,Kt,mt)
+    tail_tok = (total - prefix_tok[:, None]).astype(jnp.int32)                       # [cand+suffix] tokens
+    eos_at = jnp.clip(tail_tok, 0, mt - 1)
+    p_idx, k_idx = jnp.arange(P)[:, None], jnp.arange(Kt)[None, :]
+    tail = tail.at[p_idx, k_idx, eos_at].set(                                        # EOS for done particles
+        jnp.where(done[:, None], jnp.int32(eos_id), tail[p_idx, k_idx, eos_at]))
+    tail_len = jnp.clip(tail_tok + done[:, None].astype(jnp.int32), 0, mt)
     return ctx_bufs, ctx_lens, tail, tail_len
 
 
@@ -366,15 +394,15 @@ def _build_step(sl, Wmax, T, M, K, mt, eos_id, Vc, band, tail_fn):
 
     @jax.jit
     def step(key, w, word_tok, word_len, word_surf, move_logw, done, n_words,
-             emit_full, a0, pool_tok, pool_len, wdel, wins, seed_ids):
+             emit_full, a0, pool_tok, pool_len, pool_surf, wdel, wins, seed_ids, lm_temp):
         cand_tok, cand_len, cand_surf, valid = _candidates(
-            w, word_tok, word_len, word_surf, pool_tok, pool_len, K, T)
+            w, word_tok, word_len, word_surf, pool_tok, pool_len, pool_surf, K, T)
         chan = _chan_scores(w, word_len, word_surf, cand_len, cand_surf, done,
                             a0, emit_full, wdel, wins, band, M, Vc, Wmax)
         ctx_bufs, ctx_lens, tail, tail_len = _tail_inputs(
-            w, word_tok, word_len, word_surf, cand_surf, done, n_words, sl, Wmax, T, mt, eos_id, seed_ids)
+            w, word_tok, word_len, cand_tok, cand_len, done, n_words, sl, Wmax, T, mt, eos_id, seed_ids)
         chain = tail_fn(ctx_bufs, ctx_lens, tail, tail_len)                         # (P, Kt) -- LM forward
-        target = jnp.where(valid, chain + chan, -jnp.inf)
+        target = jnp.where(valid, lm_temp * chain + chan, -jnp.inf)
         return _apply_move(key, target, w, cand_tok, cand_len, cand_surf,
                            word_tok, word_len, word_surf, move_logw, n_words, slot_model, slot_proposal)
 
@@ -392,19 +420,21 @@ def _build_dedup_steps(sl, Wmax, T, M, K, mt, eos_id, Vc, band):
     slot_model, slot_proposal = _slot_gf(Kt)
 
     @jax.jit
-    def emit_inputs(w, word_tok, word_len, word_surf, done, n_words, pool_tok, pool_len, seed_ids):
-        _, _, cand_surf, _ = _candidates(w, word_tok, word_len, word_surf, pool_tok, pool_len, K, T)
-        return _tail_inputs(w, word_tok, word_len, word_surf, cand_surf, done, n_words,
+    def emit_inputs(w, word_tok, word_len, word_surf, done, n_words, pool_tok, pool_len, pool_surf,
+                    seed_ids):
+        cand_tok, cand_len, _cs, _v = _candidates(w, word_tok, word_len, word_surf, pool_tok,
+                                                  pool_len, pool_surf, K, T)
+        return _tail_inputs(w, word_tok, word_len, cand_tok, cand_len, done, n_words,
                             sl, Wmax, T, mt, eos_id, seed_ids)
 
     @jax.jit
     def move(key, chain, w, word_tok, word_len, word_surf, move_logw, done, n_words,
-             emit_full, a0, pool_tok, pool_len, wdel, wins):
+             emit_full, a0, pool_tok, pool_len, pool_surf, wdel, wins, lm_temp):
         cand_tok, cand_len, cand_surf, valid = _candidates(
-            w, word_tok, word_len, word_surf, pool_tok, pool_len, K, T)
+            w, word_tok, word_len, word_surf, pool_tok, pool_len, pool_surf, K, T)
         chan = _chan_scores(w, word_len, word_surf, cand_len, cand_surf, done,
                             a0, emit_full, wdel, wins, band, M, Vc, Wmax)
-        target = jnp.where(valid, chain + chan, -jnp.inf)
+        target = jnp.where(valid, lm_temp * chain + chan, -jnp.inf)
         return _apply_move(key, target, w, cand_tok, cand_len, cand_surf,
                            word_tok, word_len, word_surf, move_logw, n_words, slot_model, slot_proposal)
 
@@ -445,9 +475,13 @@ def _dedup_tail(tail_fn, ctx_bufs, ctx_lens, tail, tail_len, stats=None):
     return chain[jnp.asarray(inverse)]                                   # [P, Kt]
 
 
-def make_sweep(ctx, pool_tok, pool_len, max_tail=None, dedup=False):
-    """Build a reusable ``sweep(key, ctx_buf, ctx_len, positions, done, dedup_stats) -> (ctx_buf,
-    log_alpha, move_logw)``. The per-word step is built by a memoized factory (:func:`_build_step` /
+def make_sweep(ctx, pool_tok, pool_len, pool_surf=None, max_tail=None, dedup=False):
+    """Build a reusable ``sweep(key, ctx_buf, ctx_len, word_len, word_surf, positions, done,
+    dedup_stats) -> (ctx_buf, ctx_len, word_len, word_surf, log_alpha, move_logw)``. ``word_len`` /
+    ``word_surf`` (per-word token counts + channel surface ids) come from the forward filter state
+    (R4 multi-token); when omitted they default to the single-token reading of ``ctx_buf`` (toy /
+    ``gibbs_sweep``). ``pool_surf`` is each pool candidate's surface id (defaults to the first token --
+    the single-token case). The per-word step is built by a memoized factory (:func:`_build_step` /
     :func:`_build_dedup_steps`) so it is jitted ONCE PER STRUCTURE and reused across the many resample
     events in one run AND across separate ``run`` calls of the same shape (per-run arrays are passed as
     args, not baked in -- the fix for the per-run recompile that dominated R3 wall-clock). ``done`` is a
@@ -469,7 +503,7 @@ def make_sweep(ctx, pool_tok, pool_len, max_tail=None, dedup=False):
     sl, Wmax, T, M = ctx.seed_len, ctx.Wmax, ctx.t_max, ctx.M
     n_out = Wmax * T
     K = pool_tok.shape[1]
-    mt = (Wmax + 1) if max_tail is None else max_tail
+    mt = (n_out + 1) if max_tail is None else max_tail   # suffix-tail budget in TOKENS
     eos_id, Vc = ctx.model.eos_id, ctx.model.emit_vocab
     # tail_fn: Pythia's KV scorer (stable, from the lru_cached _pythia_model) or the toy uncached
     # fallback. In the dedup path it is called HOST-SIDE (not a _build_* cache key); in the fused path
@@ -482,33 +516,43 @@ def make_sweep(ctx, pool_tok, pool_len, max_tail=None, dedup=False):
 
     # Per-run data threaded as TRACED args (not baked into the step) so same-shape runs reuse the compile.
     emit_full, a0 = ctx.emit_full, ctx.a0
-    wdel, wins = jnp.float32(ctx.wdel), jnp.float32(ctx.wins)
+    wdel = jnp.float32(ctx.wdel)
+    wins = jnp.asarray(ctx.wins, jnp.float32)                 # scalar or (M,) per-word insertion cost (traced)
+    lm_temp = jnp.float32(ctx.lm_temp)                        # LM-prior temperature (traced; see RejuvCtx)
     seed_ids = jnp.asarray(ctx.model.seed_ids, jnp.int32) if sl else jnp.zeros((0,), jnp.int32)
-    pool_tok, pool_len = jnp.asarray(pool_tok), jnp.asarray(pool_len)
+    if pool_surf is None:
+        pool_surf = jnp.asarray(pool_tok)[:, :, 0]                # single-token default: surface == token
+    pool_tok, pool_len, pool_surf = jnp.asarray(pool_tok), jnp.asarray(pool_len), jnp.asarray(pool_surf)
 
-    def sweep(key, ctx_buf, ctx_len, positions=None, done=None, dedup_stats=None):
+    def sweep(key, ctx_buf, ctx_len, word_len=None, word_surf=None, positions=None, done=None,
+              dedup_stats=None):
         P, LCTX = ctx_buf.shape
         done = jnp.ones(P, bool) if done is None else done
-        word_tok, word_len, n_words = _unpack_single_token(ctx_buf, ctx_len, sl, Wmax, T)
-        word_surf = word_tok[:, :, 0]
+        if word_len is None:                                     # single-token default (toy / gibbs_sweep)
+            n0 = ctx_len - sl
+            word_len = (jnp.arange(Wmax)[None, :] < n0[:, None]).astype(jnp.int32)
+        if word_surf is None:
+            word_surf = ctx_buf[:, sl:sl + Wmax]
+        word_tok, n_words = _unpack(ctx_buf, word_len, sl, Wmax, T)
         move_logw = jnp.zeros(P)
         for w in (range(Wmax) if positions is None else positions):
             key, sub = jax.random.split(key)                            # same split order both paths
             wi = jnp.int32(w)
             if dedup:
                 ci = emit_inputs(wi, word_tok, word_len, word_surf, done, n_words,
-                                 pool_tok, pool_len, seed_ids)          # (ctx_bufs, ctx_lens, tail, tail_len)
+                                 pool_tok, pool_len, pool_surf, seed_ids)  # (ctx_bufs,ctx_lens,tail,tail_len)
                 chain = _dedup_tail(tail_fn, *ci, stats=dedup_stats)    # host: unique tail_fn -> [P,Kt]
                 word_tok, word_len, word_surf, move_logw = move(
                     sub, chain, wi, word_tok, word_len, word_surf, move_logw, done, n_words,
-                    emit_full, a0, pool_tok, pool_len, wdel, wins)
+                    emit_full, a0, pool_tok, pool_len, pool_surf, wdel, wins, lm_temp)
             else:
                 word_tok, word_len, word_surf, move_logw = step(
                     sub, wi, word_tok, word_len, word_surf, move_logw, done, n_words,
-                    emit_full, a0, pool_tok, pool_len, wdel, wins, seed_ids)
-        bufs, _ = _flat_buffer(ctx, word_tok, word_len, LCTX, n_out)
+                    emit_full, a0, pool_tok, pool_len, pool_surf, wdel, wins, seed_ids, lm_temp)
+        bufs, total = _flat_buffer(ctx, word_tok, word_len, LCTX, n_out)
+        ctx_len2 = sl + total.astype(jnp.int32)                  # word lengths may have changed (multi-token)
         log_alpha = _channel_carry(ctx, word_surf, word_len)                        # (P, M+1) for filter
-        return bufs, log_alpha, move_logw
+        return bufs, ctx_len2, word_len, word_surf, log_alpha, move_logw
 
     return sweep
 
@@ -529,8 +573,11 @@ def gibbs_sweep(key, ctx_buf, ctx_len, ctx, pool_tok, pool_len, positions=None, 
     ``done [P]`` selects each particle's target: DONE (complete hypothesis) scores the terminal channel
     marginal ``alpha[M]`` + an EOS LM term; not-done (mid-loop) scores the partial forward mass
     ``logsumexp(alpha)`` with no EOS. ``done=None`` => all terminal (end-of-sequence sweep; the R1/toy
-    default, which reproduces the certified terminal scoring exactly)."""
-    return make_sweep(ctx, pool_tok, pool_len)(key, ctx_buf, ctx_len, positions, done)
+    default, which reproduces the certified terminal scoring exactly). Returns the toy's 3-tuple
+    ``(ctx_buf, log_alpha, move_logw)`` (word_len/word_surf default to the single-token reading)."""
+    cb, _cl, _wl, _ws, la, mlw = make_sweep(ctx, pool_tok, pool_len)(
+        key, ctx_buf, ctx_len, positions=positions, done=done)
+    return cb, la, mlw
 
 
 def pool_from_table(cand_table, t_max=1):
@@ -543,7 +590,7 @@ def pool_from_table(cand_table, t_max=1):
 
 
 def build_pool(observed, model, max_dist, Ke, Wmax, t_max=1):
-    """Per-intended-slot candidate pool from the model's ``candidate_ids`` (COPY + SymSpell). Slot
+    """Per-intended-slot candidate pool from the model's ``candidate_words`` (COPY + SymSpell). Slot
     ``i`` uses the candidates of observed word ``min(i, M-1)`` (1:1 alignment, clipped past the
     observed length -- those slots are inactive for an M-word parse anyway). Returns
     (pool_tok [Wmax, Ke, T_max], pool_len [Wmax, Ke])."""
@@ -551,7 +598,8 @@ def build_pool(observed, model, max_dist, Ke, Wmax, t_max=1):
     M = len(obs_words)
     rows = []
     for i in range(Wmax):
-        ids = list(model.candidate_ids(obs_words[min(i, M - 1)], max_dist, Ke))[:Ke]
+        cands = list(model.candidate_words(obs_words[min(i, M - 1)], max_dist, Ke))[:Ke]
+        ids = [int(span[0]) for span, _surf in cands]   # single-token pool (R4: full multi-token spans)
         rows.append(ids + [-1] * (Ke - len(ids)))
     return pool_from_table(jnp.array(rows, jnp.int32), t_max=t_max)
 

@@ -5,7 +5,7 @@ impoverishment collapse diagnosed in ``planning/kv_cache_spikes/``.
 This is NOT the production interleave (that is R2 -- a windowed sweep inside the SMC loop behind a
 flag). Here we run the certified filter to completion, RESAMPLE the cloud to equal weights, then run
 the post-resample Gibbs sweep and decode -- the cleanest place to show the sweep recovers diversity
-that resampling collapsed. The candidate pool per intended slot ``i`` is ``_candidate_ids`` (COPY +
+that resampling collapsed. The candidate pool per intended slot ``i`` is ``_candidate_words`` (COPY +
 SymSpell) of the observed word ``i`` (1:1 alignment -- the dominant, substitution-aligned particles;
 the per-particle COPY in ``gibbs_sweep`` keeps misaligned particles unchanged).
 
@@ -37,7 +37,7 @@ def recover(observed, key, P=128, n_sweeps=2, max_dist=2, Ke=8, band=2, wdel=Non
 
     st, lw, logZ, sl = PW.run(observed, key, P=P, max_dist=max_dist, Ke=Ke, band=band,
                               wdel=WDEL, wins=WINS)
-    ctx_buf, ctx_len, _, _ = st
+    ctx_buf, ctx_len = st[0], st[1]   # state tuple grew (Phase D); take the buffer + token length
 
     # resample to an equally-weighted cloud (the sweep is a Gibbs move on equal weights). "before" is
     # this resampled cloud -- post-collapse, so before/after differ only by the sweep (honest contrast).
