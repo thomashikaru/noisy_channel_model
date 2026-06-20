@@ -1,0 +1,3 @@
+/Users/thomasclark/mit/openrouter/.conda/envs/ncgenjax/bin/python: Error while finding module specification for 'genjax_port.calibration_word_action_preview' (ModuleNotFoundError: No module named 'genjax_port')
+
+ERROR conda.cli.main_run:execute(125): `conda run python -u -m genjax_port.calibration_word_action_preview` failed. (See above for error)

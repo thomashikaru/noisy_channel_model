@@ -1,0 +1,14 @@
+LM=EleutherAI/pythia-70m  P=128  seed=0  alpha=(27.0, 1.0, 1.0, 1.0)  rejuv=off  dedup=True
+
+item         exp   metric  q_ref     L    E junk  obs -> intended
+SUBW-01a     edit     nan   0.89  0.00 0.00 1.00  'the storyteller told an amusing antidote' -> 'the storyteller told an amusing anecdote'  (q_smc; 18s)
+             p=0.42  "It's the storyteller told an amusing anecdote"
+             p=0.41  'She was the storyteller told an amusing antidote'
+             p=0.16  "It's the storyteller told an amusing antidote"
+DEL-to-05a   edit    1.00   0.96  0.00 1.00 0.00  'I want go home' -> 'I want to go home'  (q_smc; 6s)
+             p=0.94  'I want to go home'
+             p=0.06  'I want to go home.'
+INS-to-01b   keep    1.00   0.00  1.00 1.00 0.00  'The mother gave the candle to the daughter' -> 'The mother gave the candle to the daughter'  (kept; 13s)
+             p=0.98  'The mother gave the candle to the daughter'
+             p=0.02  'The Mother gave the candle to the daughter'
+

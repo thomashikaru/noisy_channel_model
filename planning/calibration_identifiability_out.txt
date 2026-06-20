@@ -1,0 +1,31 @@
+================ P4 IDENTIFIABILITY DRY RUN ================
+items: 53  (N=40/item, 400 synthetic datasets)
+items informing each dial: lambda=53, WDEL=18, log_rho_ins=18, kappa_sub=17
+design rank: 4/4  (4 = all dials separately identified)
+
+-- asymptotic 1-sigma width of each dial (smaller = better pinned) --
+   lambda       true= +1.000   sd=0.047
+   WDEL         true= -3.000   sd=0.160
+   log_rho_ins  true= -3.000   sd=0.443
+   kappa_sub    true= -5.450   sd=0.310
+
+-- dial-to-dial correlation (trade-offs; |r|->1 means confounded) --
+                   lambda       WDEL  log_rho_i  kappa_sub
+   lambda             1.00      -0.80      -0.94      -0.89
+   WDEL              -0.80       1.00       0.76       0.71
+   log_rho_ins       -0.94       0.76       1.00       0.84
+   kappa_sub         -0.89       0.71       0.84       1.00
+
+-- recovery over 400 synthetic datasets --
+   dial             true  mean_hat     bias    rmse  1sig_cov
+   lambda          1.000     1.002   +0.002   0.044      0.70
+   WDEL           -3.000    -3.010   -0.010   0.150      0.74
+   log_rho_ins    -3.000    -3.020   -0.020   0.412      0.73
+   kappa_sub      -5.450    -5.442   +0.008   0.294      0.71
+
+-- read --
+   well-recovered (bias~0, tight): ['lambda', 'WDEL', 'log_rho_ins', 'kappa_sub']
+   under-powered (few items, wide): none
+   notable trade-offs (|r|>0.7): [('lambda', 'WDEL'), ('lambda', 'log_rho_ins'), ('lambda', 'kappa_sub'), ('WDEL', 'log_rho_ins'), ('WDEL', 'kappa_sub'), ('log_rho_ins', 'kappa_sub')]
+===========================================================
+

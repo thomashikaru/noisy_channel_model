@@ -1,0 +1,29 @@
+LM=EleutherAI/pythia-70m  P=128  seed=0  alpha=(9.0, 1.0, 1.0, 1.0)  rejuv=off  dedup=True  global_indel=True
+
+item         exp   metric  q_ref     L    E junk  obs -> intended
+SUBW-01a     edit     nan   0.89  0.00 0.00 1.00  'the storyteller told an amusing antidote' -> 'the storyteller told an amusing anecdote'  (q_smc; 19s)
+             p=0.17  'In the past storyteller told an amusing anecdote'
+             p=0.16  'In the first storyteller told an amusing anecdote'
+             p=0.15  'In the old storyteller told an amusing anecdote'
+SUBW-01b     keep    1.00   0.00  1.00 1.00 0.00  'the doctor prepared a fast-acting antidote' -> 'the doctor prepared a fast-acting antidote'  (kept; 16s)
+             p=0.52  'The doctor prepared a fast-acting antidote'
+             p=0.48  'The Doctor prepared a fast-acting antidote'
+SUBN-01a     edit    0.97   0.87  0.02 0.73 0.24  'did you recieve the message' -> 'did you receive the message'  (q_smc; 12s)
+             p=0.73  'did you receive the message'
+             p=0.16  'I did you receive the message'
+             p=0.09  'It did you receive the message'
+SUBN-02a     edit    1.00   1.00  0.00 1.00 0.00  'the boy did an experimemt today' -> 'the boy did an experiment today'  (q_smc; 15s)
+             p=1.00  'The boy did an experiment today'
+DEL-to-05a   edit    0.04   0.96  0.90 0.04 0.06  'I want go home' -> 'I want to go home'  (q_smc; 6s)
+             p=0.90  'I want go home'
+             p=0.06  'I want to home'
+             p=0.04  'I want to go home'
+INS-to-04a   edit    0.00   0.90  1.00 0.00 0.00  'The judge awarded the winner to the trophy' -> 'The judge awarded the winner the trophy'  (q_smc; 21s)
+             p=0.89  'The judge awarded the winner to the trophy'
+             p=0.10  'The Judge awarded the winner to the trophy'
+             p=0.01  'The judge awarded the winner to the Trophy'
+INS-to-01b   keep    1.00   0.00  1.00 1.00 0.00  'The mother gave the candle to the daughter' -> 'The mother gave the candle to the daughter'  (kept; 10s)
+             p=1.00  'The mother gave the candle to the daughter'
+             p=0.00  'The mother gave the candle to the daughter.'
+             p=0.00  'The mother gave the candle to the daughter of'
+

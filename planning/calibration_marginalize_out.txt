@@ -1,0 +1,48 @@
+================ HIERARCHICAL (MARGINALIZED) CHANNEL -- NO lambda ================
+LM=410m  items=43  S=20000 prior draws
+priors: copy~Beta(8.0,2.0) mean 0.80 | p_del~Beta(1.5,18.0) mean 0.077 | rho_ins~Beta(1.5,18.0) mean 0.077
+
+-- marginal edit-probability by family (mean; graded = strictly between 0 and 1) --
+   SUBN             mean q = 0.82   [0.23, 1.00]   n=5
+   SUBW             mean q = 0.84   [0.42, 1.00]   n=6
+   DEL_TO           mean q = 0.76   [0.45, 0.98]   n=5
+   DEL_FOR          mean q = 0.66   [0.57, 0.83]   n=3
+   DEL_FROM         mean q = 0.94   [0.93, 0.94]   n=2
+   DEL_OF           mean q = 0.83   [0.83, 0.83]   n=1
+   DEL_A            mean q = 0.63   [0.38, 0.88]   n=2
+   DEL_THE          mean q = 0.54   [0.54, 0.54]   n=1
+   INS_TO           mean q = 0.47   [0.07, 0.79]   n=4
+   LADDER           mean q = 0.74   [0.17, 0.97]   n=4
+   SUBW (keep)      mean q = 0.00   [0.00, 0.01]   n=6
+   INS_TO (keep)    mean q = 0.00   [0.00, 0.00]   n=4
+
+-- named cases: marginal vs point-at-prior-mean (marginal should hedge toward 0.5) --
+   SUBN-01a       [edit] marginal 0.88   point 0.92   'did you recieve the message'
+   SUBW-01a       [edit] marginal 0.67   point 0.80   'the storyteller told an amusing antidote'
+   SUBW-03a       [edit] marginal 0.42   point 0.46   'the judge cited an important president'
+   DELTO-01a      [edit] marginal 0.45   point 0.52   'The mother gave the candle a daughter'
+   DEL-to-05a     [edit] marginal 0.91   point 0.95   'I want go home'
+   INS-to-02a     [edit] marginal 0.47   point 0.54   'The waiter served the customers to the soup'
+   INS-to-04a     [edit] marginal 0.79   point 0.87   'The judge awarded the winner to the trophy'
+   LADDER-give-1  [edit] marginal 0.97   point 0.99   'The volunteer gave the blanket the children'
+   LADDER-give-2  [edit] marginal 0.17   point 0.18   'The volunteer gave the shelter the children'
+   SUBW-01b       [KEEP] marginal 0.00   point 0.00   'the doctor prepared a fast-acting antidote'
+   INS-to-01b     [KEEP] marginal 0.00   point 0.00   'The mother gave the candle to the daughter'
+
+-- typos by operation type (transpositions now discounted ~log26 vs substitutions) --
+   SUBN-01a   sub=0 trans=1 indel=0      marginal q = 0.88   'did you recieve the message'
+   SUBN-04a   sub=0 trans=1 indel=0      marginal q = 1.00   'the mountian was covered in snow'
+   SUBN-06a   sub=0 trans=1 indel=0      marginal q = 1.00   'the chef seasoned the suop'
+   SUBW-05a   sub=0 trans=1 indel=0      marginal q = 1.00   'he wore a very causal shirt to the wedding'
+   SUBN-02a   sub=1 trans=0 indel=0      marginal q = 1.00   'the boy did an experimemt today'
+   SUBN-03a   sub=1 trans=0 indel=0      marginal q = 0.23   'she definately agreed with the plan'
+   SUBW-01a   sub=2 trans=0 indel=0      marginal q = 0.67   'the storyteller told an amusing antidote'
+   SUBW-03a   sub=2 trans=0 indel=0      marginal q = 0.42   'the judge cited an important president'
+
+-- health --
+   edits lean to EDIT:   26/33  (mean 0.74)
+   keeps lean to KEEP:   10/10  (mean 0.00)
+   over-editing guard:   max keep q = 0.01  (want < ~0.5)
+   graded (not 0/1):     23/43 predictions strictly in (0.05,0.95)
+=================================================================================
+

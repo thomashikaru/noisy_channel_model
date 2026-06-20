@@ -6,7 +6,7 @@ import jax, jax.numpy as jnp
 from jax.scipy.special import logsumexp
 from genjax_port import lm_penzai, tokenizer
 from genjax_port import pythia_word_caprop as PW
-from genjax_port.poc_word_indel import _word_row_update
+from genjax_port.word_dp import _word_row_update
 from genjax_port.noise import insertion_loglik
 
 def log(*a): print(*a); sys.stdout.flush()

@@ -7,7 +7,7 @@ import jax.numpy as jnp
 
 import genjax
 from genjax import ChoiceMap, Update, Diff, StaticRequest
-from genjax_port.genjax_model import factor
+from genjax_port.genjax_factor import factor
 
 from genjax._src.inference.requests.rejuvenate import Rejuvenate
 

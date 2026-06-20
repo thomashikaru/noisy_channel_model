@@ -1,0 +1,73 @@
+seed = '<|endoftext|>.'  (ids [0, 15])
+
+top-20 next tokens after the prime:
+  rank  0  '\n'            logprob   -0.50
+  rank  1  ' This'         logprob   -3.92
+  rank  2  ' The'          logprob   -3.97
+  rank  3  ' It'           logprob   -4.31
+  rank  4  ' A'            logprob   -4.45
+  rank  5  ' In'           logprob   -4.69
+  rank  6  ' For'          logprob   -4.84
+  rank  7  ' I'            logprob   -5.15
+  rank  8  ' To'           logprob   -5.26
+  rank  9  ' There'        logprob   -5.31
+  rank 10  '<|endoftext|>'  logprob   -5.31
+  rank 11  ' We'           logprob   -5.31
+  rank 12  ' Let'          logprob   -5.40
+  rank 13  ' How'          logprob   -5.42
+  rank 14  ' What'         logprob   -5.48
+  rank 15  ' When'         logprob   -5.51
+  rank 16  ' You'          logprob   -5.57
+  rank 17  ' "'            logprob   -5.69
+  rank 18  'com'           logprob   -5.69
+  rank 19  ' Some'         logprob   -5.71
+
+key tokens (where do the first-word options rank?):
+  ' the'     id=   253 surface=' the'       logprob  -14.50  rank 15336  ntok=1
+  ' The'     id=   380 surface=' The'       logprob   -3.97  rank     2  ntok=1  <-- in top-J=8
+  ' she'     id=   703 surface=' she'       logprob  -14.67  rank 16256  ntok=1
+  ' She'     id=  1500 surface=' She'       logprob   -7.24  rank    77  ntok=1
+  ' he'      id=   344 surface=' he'        logprob  -13.80  rank 11557  ntok=1
+  ' He'      id=   754 surface=' He'        logprob   -7.14  rank    67  ntok=1
+  ' they'    id=   597 surface=' they'      logprob  -15.85  rank 22624  ntok=1
+  ' They'    id=  1583 surface=' They'      logprob   -7.19  rank    73  ntok=1
+  ' we'      id=   359 surface=' we'        logprob  -12.88  rank  7005  ntok=1
+  ' We'      id=   844 surface=' We'        logprob   -5.31  rank    11  ntok=1
+  ' In'      id=   496 surface=' In'        logprob   -4.69  rank     5  ntok=1  <-- in top-J=8
+  ' I'       id=   309 surface=' I'         logprob   -5.15  rank     7  ntok=1  <-- in top-J=8
+  ' It'      id=   733 surface=' It'        logprob   -4.31  rank     3  ntok=1  <-- in top-J=8
+  ' This'    id=   831 surface=' This'      logprob   -3.92  rank     1  ntok=1  <-- in top-J=8
+  ' A'       id=   329 surface=' A'         logprob   -4.45  rank     4  ntok=1  <-- in top-J=8
+
+
+=== A/B: lowercase- vs capitalized-initial, word-action gibbs alpha=(27,1,1,1) ===
+
+  'she went to the store'
+     p=0.52  'In this she went to the store'
+     p=0.29  'The went to the store'
+     p=0.17  'In this he went to the store'
+
+  'She went to the store'
+     p=0.69  'The went to the store'
+     p=0.30  'In this he went to the store'
+     p=0.02  'It’s went to the store'
+
+  'he is good man'
+     p=0.88  'In this he is good man'
+     p=0.11  'This is good man'
+     p=0.01  'The is good man'
+
+  'He is good man'
+     p=0.96  'He is a good man'
+     p=0.04  'He is a good man.'
+
+  'they studied the causal link between the variables'
+     p=0.82  'In this they studied the causal link between the variables'
+     p=0.11  'They studied the causal link between the variables'
+     p=0.04  'I studied the causal link between the variables'
+
+  'They studied the causal link between the variables'
+     p=0.58  'I studied the causal link between the variables'
+     p=0.24  'The studied the causal link between the variables'
+     p=0.07  'This studied the causal link between the variables'
+

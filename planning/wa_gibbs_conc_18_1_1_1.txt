@@ -1,0 +1,28 @@
+LM=EleutherAI/pythia-70m  P=128  seed=0  alpha=(18.0, 1.0, 1.0, 1.0)  rejuv=gibbs  dedup=True  global_indel=False
+
+item         exp   metric  q_ref     L    E junk  obs -> intended
+SUBW-01a     edit    0.92   0.89  0.05 0.60 0.35  'the storyteller told an amusing antidote' -> 'the storyteller told an amusing anecdote'  (q_smc; 22s)  theta(c,s,i,d)=[0.66, 0.246, 0.028, 0.066]
+             p=0.60  'The storyteller told an amusing anecdote'
+             p=0.09  "It's a storyteller told an amusing anecdote"
+             p=0.08  'She was the storyteller told an amusing anecdote'
+SUBW-01b     keep    0.78   0.00  0.78 0.78 0.00  'the doctor prepared a fast-acting antidote' -> 'the doctor prepared a fast-acting antidote'  (kept; 19s)  theta(c,s,i,d)=[0.617, 0.214, 0.134, 0.035]
+             p=0.65  'The doctor prepared a fast-acting antidote'
+             p=0.12  'The Doctor prepared a fast-acting antidote'
+             p=0.11  'The doctor prepares a fast-acting antidote'
+SUBN-01a     edit    1.00   0.87  0.00 1.00 0.00  'did you recieve the message' -> 'did you receive the message'  (q_smc; 13s)  theta(c,s,i,d)=[0.693, 0.191, 0.08, 0.037]
+             p=0.99  'did you receive the message'
+             p=0.01  'did you receive the Message'
+             p=0.00  'In this post you receive the message'
+SUBN-02a     edit    1.00   1.00  0.00 0.74 0.26  'the boy did an experimemt today' -> 'the boy did an experiment today'  (q_smc; 17s)  theta(c,s,i,d)=[0.636, 0.258, 0.031, 0.075]
+             p=0.62  'The boy did an experiment today'
+             p=0.21  'She was the Boy did an experiment today'
+             p=0.12  'The Boy did an experiment today'
+DEL-to-05a   edit    1.00   0.96  0.00 0.93 0.07  'I want go home' -> 'I want to go home'  (q_smc; 7s)  theta(c,s,i,d)=[0.732, 0.119, 0.032, 0.117]
+             p=0.91  'I want to go home.'
+             p=0.02  'I want to go home to'
+             p=0.02  'I want to go home and'
+INS-to-01b   keep    0.88   0.00  0.88 0.88 0.00  'The mother gave the candle to the daughter' -> 'The mother gave the candle to the daughter'  (kept; 11s)  theta(c,s,i,d)=[0.612, 0.246, 0.108, 0.034]
+             p=0.86  'The mother gave the candle to the daughter'
+             p=0.07  '1 The mother gave the candle to the daughter'
+             p=0.02  'The mother gave the name to the daughter'
+

@@ -1,0 +1,43 @@
+================ FIT TO INTUITIVE CALIBRATION SET (v3) ================
+items fit: 43  (INS_DUP excluded; 8 function-word insertion items in)
+
+-- dial settings that best reproduce our intuitions --
+   lambda       =  +0.150  +/- 0.01
+   WDEL         =  -0.200  +/- 0.08
+   log_rho_ins  =  -1.204  +/- 0.61   (rho_ins = 0.300)
+   kappa_sub    =  -0.609  +/- 0.08
+   [compare current operating point: lambda=1.0, WDEL=-9.0, rho_ins=0.02]
+   AT A PHYSICAL BOUND (intuition wants further): ['WDEL', 'log_rho_ins']
+
+-- reproduction: 34/43 items on the intended side of 0.5 --
+   SUBW      11/12
+   SUBN      5/5
+   DEL_TO    4/5
+   DEL_FOR   3/3
+   DEL_FROM  2/2
+   DEL_OF    1/1
+   DEL_A     1/2
+   DEL_THE   0/1
+   INS_TO    4/8
+   LADDER    3/4
+
+-- named cases (incl. the new spurious-'to' insertions) --
+   SUBW-01a       target 0.68  model 0.64   'the storyteller told an amusing antidote'
+   DELTO-01a      target 0.68  model 0.48   'The mother gave the candle a daughter'
+   INS-to-01a     target 0.68  model 0.01   'The mother gave the daughter to the candle'
+   INS-to-02a     target 0.68  model 0.01   'The waiter served the customers to the soup'
+   DEL-to-05a     target 0.68  model 0.70   'I want go home'
+   LADDER-give-1  target 0.72  model 0.53   'The volunteer gave the blanket the children'
+
+-- items NOT reproduced (9) --
+   SUBW-03a       [edit] target 0.68  model 0.44   'the judge cited an important president'
+   DELTO-01a      [edit] target 0.68  model 0.48   'The mother gave the candle a daughter'
+   LADDER-give-2  [edit] target 0.52  model 0.46   'The volunteer gave the shelter the children'
+   DEL-a-02a      [edit] target 0.75  model 0.47   'she lives in big house'
+   DEL-the-01a    [edit] target 0.75  model 0.50   'we went to store'
+   INS-to-01a     [edit] target 0.68  model 0.01   'The mother gave the daughter to the candle'
+   INS-to-02a     [edit] target 0.68  model 0.01   'The waiter served the customers to the soup'
+   INS-to-03a     [edit] target 0.68  model 0.01   'The teacher read the children to the story'
+   INS-to-04a     [edit] target 0.68  model 0.01   'The judge awarded the winner to the trophy'
+======================================================================
+

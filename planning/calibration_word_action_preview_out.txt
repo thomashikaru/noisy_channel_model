@@ -1,0 +1,41 @@
+=========== WORD-ACTION offline preview: point (no certification) vs hierarchical (marginalized) ===========
+LM=410m  items=43   Dirichlet alpha (copy,sub,ins,del) = [3.0, 1.0, 1.0, 1.0]  (UNCALIBRATED)
+prior-mean action probs: copy 0.50  sub 0.17  ins 0.17  del 0.17
+q_point = action probs at prior mean (NO certification);  q_hier = action probs marginalized (word-level certification)
+contrast: the CHARACTER-copy hierarchical model collapsed SUBW 0.84->0.68 (antidote 0.67->0.19).
+
+-- by family --    q_point  q_hier     gap   n
+   SUBN                 0.85    0.80   -0.04   5
+   SUBW                 0.96    0.91   -0.05   6
+   DEL_TO               0.89    0.82   -0.08   5
+   DEL_FOR              0.86    0.74   -0.11   3
+   DEL_FROM             0.99    0.97   -0.01   2
+   DEL_OF               0.95    0.91   -0.04   1
+   DEL_A                0.80    0.72   -0.07   2
+   DEL_THE              0.78    0.68   -0.10   1
+   INS_TO               0.73    0.57   -0.16   4
+   LADDER               0.82    0.77   -0.05   4
+   SUBW (keep)          0.00    0.00   -0.00   6
+   INS_TO (keep)        0.00    0.00   -0.00   4
+
+-- named cases (the cases the char-copy model broke) --
+   item           q_point  q_hier   M  observed
+   SUBW-01a          0.96    0.89   6  [EDIT] 'the storyteller told an amusing antidote'
+   SUBW-03a          0.82    0.63   6  [EDIT] 'the judge cited an important president'
+   SUBN-01a          0.94    0.87   5  [EDIT] 'did you recieve the message'
+   SUBN-02a          1.00    1.00   6  [EDIT] 'the boy did an experimemt today'
+   SUBN-03a          0.29    0.13   6  [EDIT] 'she definately agreed with the plan'
+   DEL-to-05a        0.98    0.96   4  [EDIT] 'I want go home'
+   DELTO-01a         0.70    0.52   7  [EDIT] 'The mother gave the candle a daughter'
+   INS-to-04a        0.97    0.90   8  [EDIT] 'The judge awarded the winner to the trophy'
+   LADDER-give-1     0.99    0.99   7  [EDIT] 'The volunteer gave the blanket the children'
+   SUBW-01b          0.00    0.00   6  [keep] 'the doctor prepared a fast-acting antidote'
+   INS-to-01b        0.00    0.00   8  [keep] 'The mother gave the candle to the daughter'
+
+-- targets (implausible edit>0.5 ; plausible keep i.e. edit<0.1) [alpha UNCALIBRATED] --
+   q_point: implausible>0.5: 30/33   plausible<0.1: 10/10   (edit mean 0.86, keep max 0.01)
+   q_hier : implausible>0.5: 29/33   plausible<0.1: 10/10   (edit mean 0.79, keep max 0.00)
+
+   SUBSTITUTION certification gap (q_point - q_hier), mean over edits: +0.047   <- char-copy model's gap was ~ -0.16 (and -0.48 on antidote)
+===========================================================================================================
+

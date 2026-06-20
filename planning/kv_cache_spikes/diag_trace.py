@@ -6,7 +6,7 @@ import jax, jax.numpy as jnp
 from jax.scipy.special import logsumexp
 from genjax_port import lm_penzai, tokenizer, pairhmm_smc
 from genjax_port import pythia_word_caprop as PW
-from genjax_port.poc_word_indel import _ess
+from genjax_port.word_dp import _ess
 
 def log(*a): print(*a); sys.stdout.flush()
 lm_penzai.load_model()

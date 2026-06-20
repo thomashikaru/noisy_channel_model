@@ -1,0 +1,91 @@
+
+=== prime '.'   seed='<|endoftext|>.'  (len 2) ===
+  top-6 next: '\n'(-0.5)  ' This'(-3.9)  ' The'(-4.0)  ' It'(-4.3)  ' A'(-4.4)  ' In'(-4.7)
+    ' the'   surf=' the'     lp  -14.50  rank 15334
+    ' The'   surf=' The'     lp   -3.97  rank     2 <top8
+    'the'    surf='the'      lp  -13.02  rank  7586
+    'The'    surf='The'      lp   -6.83  rank    53
+    ' she'   surf=' she'     lp  -14.67  rank 16260
+    ' She'   surf=' She'     lp   -7.24  rank    77
+    'she'    surf='she'      lp  -15.58  rank 21073
+    'She'    surf='She'      lp  -10.63  rank  1254
+    ' he'    surf=' he'      lp  -13.80  rank 11557
+    ' He'    surf=' He'      lp   -7.14  rank    67
+    'he'     surf='he'       lp  -11.65  rank  2895
+    'He'     surf='He'       lp   -9.72  rank   602
+
+=== prime '.\n'   seed='<|endoftext|>.\n'  (len 3) ===
+  top-6 next: '\n'(-1.0)  '  '(-3.1)  '-'(-4.0)  '    '(-4.4)  '['(-4.5)  '1'(-4.5)
+    ' the'   surf=' the'     lp  -10.87  rank  2739
+    ' The'   surf=' The'     lp   -8.84  rank   456
+    'the'    surf='the'      lp   -8.73  rank   416
+    'The'    surf='The'      lp   -5.03  rank    12
+    ' she'   surf=' she'     lp  -14.63  rank 15714
+    ' She'   surf=' She'     lp  -12.95  rank  8174
+    'she'    surf='she'      lp  -13.37  rank  9708
+    'She'    surf='She'      lp   -9.51  rank   899
+    ' he'    surf=' he'      lp  -12.14  rank  5628
+    ' He'    surf=' He'      lp  -11.08  rank  3147
+    'he'     surf='he'       lp  -10.65  rank  2379
+    'He'     surf='He'       lp   -7.79  rank   210
+
+=== prime '\n'   seed='<|endoftext|>\n'  (len 2) ===
+  top-6 next: '\n'(-1.3)  '#'(-2.7)  'How'(-4.0)  'package'(-4.1)  '9'(-4.5)  '//'(-4.6)
+    ' the'   surf=' the'     lp  -12.02  rank  4977
+    ' The'   surf=' The'     lp  -10.70  rank  2776
+    'the'    surf='the'      lp   -7.95  rank   312
+    'The'    surf='The'      lp   -4.91  rank     7 <top8
+    ' she'   surf=' she'     lp  -16.33  rank 23694
+    ' She'   surf=' She'     lp  -13.95  rank 10061
+    'she'    surf='she'      lp  -14.56  rank 12625
+    'She'    surf='She'      lp   -9.75  rank  1724
+    ' he'    surf=' he'      lp  -13.94  rank 10034
+    ' He'    surf=' He'      lp  -12.52  rank  5975
+    'he'     surf='he'       lp  -11.06  rank  3343
+    'He'     surf='He'       lp   -8.31  rank   522
+
+=== prime ''   seed='<|endoftext|>'  (len 1) ===
+  top-6 next: 'Q'(-2.2)  'The'(-3.0)  '\n'(-3.7)  'A'(-3.7)  '1'(-4.0)  '#'(-4.1)
+    ' the'   surf=' the'     lp  -10.19  rank  2175
+    ' The'   surf=' The'     lp   -8.63  rank   641
+    'the'    surf='the'      lp   -8.27  rank   436
+    'The'    surf='The'      lp   -3.03  rank     1 <top8
+    ' she'   surf=' she'     lp  -15.80  rank 23368
+    ' She'   surf=' She'     lp  -13.45  rank  9082
+    'she'    surf='she'      lp  -13.63  rank  9805
+    'She'    surf='She'      lp   -8.34  rank   472
+    ' he'    surf=' he'      lp  -13.24  rank  8350
+    ' He'    surf=' He'      lp  -11.23  rank  3541
+    'he'     surf='he'       lp   -9.07  rank   981
+    'He'     surf='He'       lp   -6.82  rank   102
+
+=== prime 'The cat sat on the mat.\n'   seed='<|endoftext|>The cat sat on the mat.\n'  (len 9) ===
+  top-6 next: '\n'(-0.4)  'The'(-2.6)  'This'(-3.9)  'A'(-4.2)  'In'(-4.5)  'It'(-4.5)
+    ' the'   surf=' the'     lp  -11.22  rank  1184
+    ' The'   surf=' The'     lp   -7.24  rank    60
+    'the'    surf='the'      lp   -9.70  rank   380
+    'The'    surf='The'      lp   -2.62  rank     1 <top8
+    ' she'   surf=' she'     lp  -14.87  rank  6676
+    ' She'   surf=' She'     lp  -11.14  rank  1124
+    'she'    surf='she'      lp  -13.66  rank  3847
+    'She'    surf='She'      lp   -7.23  rank    58
+    ' he'    surf=' he'      lp  -13.62  rank  3784
+    ' He'    surf=' He'      lp  -10.26  rank   616
+    'he'     surf='he'       lp  -11.85  rank  1711
+    'He'     surf='He'       lp   -5.89  rank    14
+
+=== prime 'I saw a bird in the tree.\n'   seed='<|endoftext|>I saw a bird in the tree.\n'  (len 10) ===
+  top-6 next: '\n'(-0.6)  'I'(-2.3)  'The'(-2.7)  'This'(-3.5)  'It'(-3.8)  'A'(-4.1)
+    ' the'   surf=' the'     lp  -11.21  rank   994
+    ' The'   surf=' The'     lp   -7.62  rank    87
+    'the'    surf='the'      lp   -9.28  rank   268
+    'The'    surf='The'      lp   -2.68  rank     2 <top8
+    ' she'   surf=' she'     lp  -15.42  rank  7478
+    ' She'   surf=' She'     lp  -11.54  rank  1191
+    'she'    surf='she'      lp  -13.82  rank  3614
+    'She'    surf='She'      lp   -7.40  rank    70
+    ' he'    surf=' he'      lp  -14.26  rank  4385
+    ' He'    surf=' He'      lp  -10.60  rank   666
+    'he'     surf='he'       lp  -12.13  rank  1664
+    'He'     surf='He'       lp   -6.13  rank    20
+

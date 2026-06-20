@@ -1,0 +1,33 @@
+[   0.0s] loaded 87 items from planning/calibration_battery_v0.csv
+[   0.0s] LM = EleutherAI/pythia-410m; loading model (one-time compile, ~30-60s on 70m)...
+[   0.0s] scoring 119 distinct sentences...
+[  17.0s] scoring done; applying gates
+[  18.5s] wrote planning/calibration_battery_v0_gated_410m.csv
+
+================ CALIBRATION GATE REPORT ================
+LM=EleutherAI/pythia-410m  prime='.'  max_dist=2
+EDIT items: 42/43 fit-ready
+KEEP items: 44/44 fluent controls
+
+by family (edit items):
+  SUBW            6/6 pass
+  SUBN            5/6 pass
+  DEL_TO          5/5 pass
+  DEL_FOR         3/3 pass
+  DEL_FROM        2/2 pass
+  DEL_OF          1/1 pass
+  DEL_A           2/2 pass
+  DEL_THE         1/1 pass
+  INS_DUP         9/9 pass
+  INS_TO          4/4 pass
+  LADDER          4/4 pass
+
+FAILED edit items:
+  SUBN-05a         gain= +36.76  unreachable (dist>max_dist)
+
+weak KEEP controls (LM prefers the tempting edit):
+  INS-03b          contrast=+2.968
+  INS-07b          contrast=+2.687
+  INS-09b          contrast=+5.862
+========================================================
+

@@ -1,0 +1,32 @@
+LM=EleutherAI/pythia-410m  P=256  seed=0  alpha=(3.0, 1.0, 1.0, 1.0)
+
+item         exp    q_smc  q_ref    lit   cor  observed -> intended
+SUBW-01a     edit    0.99   0.89   0.01  0.93  'the storyteller told an amusing antidote' -> 'the storyteller told an amusing anecdote'  (156s, logZ=-58.5)
+             p=0.93  'The storyteller told an amusing anecdote'
+             p=0.05  '1 the storyteller told an amusing anecdote'
+             p=0.01  'The storyteller told an amusing antidote'
+SUBW-01b     keep    0.50   0.00   0.90  0.90  'the doctor prepared a fast-acting antidote' -> 'the doctor prepared a fast-acting antidote'  (159s, logZ=-66.3)
+             p=0.49  'The doctor prepared a fast-acting antidote'
+             p=0.41  'The Doctor prepared a fast-acting antidote'
+             p=0.03  'The doctor prepares a fast-acting antidote'
+SUBN-01a     edit     nan   0.87   0.00  0.00  'did you recieve the message' -> 'did you receive the message'  (95s, logZ=-44.5)
+             p=0.59  '1? did you recieve the message'
+             p=0.18  '1? did you receive the message'
+             p=0.13  '3, did you receive the message'
+SUBN-02a     edit    1.00   1.00   0.00  0.15  'the boy did an experimemt today' -> 'the boy did an experiment today'  (198s, logZ=-56.0)
+             p=0.83  'I did a little experiment today'
+             p=0.15  'The boy did an experiment today'
+             p=0.01  'I did a few experiments today'
+DEL-to-05a   edit    0.00   0.96   0.93  0.00  'I want go home' -> 'I want to go home'  (27s, logZ=-36.9)
+             p=0.91  'I want go home'
+             p=0.04  'I want to home'
+             p=0.03  '1? I want go home'
+INS-to-04a   edit    0.00   0.90   0.43  0.00  'The judge awarded the winner to the trophy' -> 'The judge awarded the winner the trophy'  (303s, logZ=-62.7)
+             p=0.21  'The judge awarded the winner to the trophy'
+             p=0.19  '- The judge awarded the winner to the trophy'
+             p=0.17  '1. The judge awarded the winner to the trophy'
+INS-to-01b   keep    0.50   0.00   0.83  0.83  'The mother gave the candle to the daughter' -> 'The mother gave the candle to the daughter'  (135s, logZ=-57.2)
+             p=0.70  '- The mother gave the candle to the daughter'
+             p=0.13  'The mother gave the candle to the daughter'
+             p=0.08  '1. The mother gave the candle to the daughter'
+

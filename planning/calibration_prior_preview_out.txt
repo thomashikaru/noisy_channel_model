@@ -1,0 +1,41 @@
+======= q_full PREVIEW: offline prior-average  vs  hierarchical (GLOBAL copy)  vs  (PER-WORD copy) =======
+LM=410m  items=43  S=20000 draws   prior copy~Beta(8.0,2.0) mean 0.80
+q_off    = average under the PRIOR (current offline model)
+q_glob   = hierarchical posterior, ONE global copy latent  (edit certified by the whole sentence)
+q_local  = hierarchical posterior, PER-WORD copy latent     (edit certified by the suspect word only)
+post_copy = implied posterior copy under the GLOBAL model (the certified noise level)
+
+-- by family --     q_off  q_glob  q_local  post_copy
+   SUBN                0.82    0.77     0.80       0.92
+   SUBW                0.84    0.68     0.81       0.94
+   DEL_TO              0.76    0.78     0.78       0.94
+   DEL_FOR             0.66    0.69     0.69       0.95
+   DEL_FROM            0.94    0.96     0.96       0.96
+   DEL_OF              0.83    0.87     0.87       0.92
+   DEL_A               0.63    0.65     0.65       0.92
+   DEL_THE             0.54    0.58     0.58       0.91
+   INS_TO              0.47    0.47     0.47       0.96
+   LADDER              0.74    0.75     0.75       0.96
+   SUBW (keep)         0.00    0.00     0.00       0.96
+   INS_TO (keep)       0.00    0.00     0.00       0.96
+
+-- named cases (real-word-substitution casualties + anchors) --
+   item            q_off  q_glob  q_local  observed
+   SUBW-01a         0.67    0.19     0.66  [EDIT N=35] 'the storyteller told an amusing antidote'
+   SUBW-03a         0.42    0.05     0.25  [EDIT N=33] 'the judge cited an important president'
+   SUBN-01a         0.88    0.76     0.87  [EDIT N=23] 'did you recieve the message'
+   SUBN-02a         1.00    1.00     1.00  [EDIT N=26] 'the boy did an experimemt today'
+   SUBN-03a         0.23    0.06     0.13  [EDIT N=30] 'she definately agreed with the plan'
+   DEL-to-05a       0.91    0.95     0.95  [EDIT N=11] 'I want go home'
+   DELTO-01a        0.45    0.45     0.45  [EDIT N=31] 'The mother gave the candle a daughter'
+   INS-to-04a       0.79    0.83     0.83  [EDIT N=35] 'The judge awarded the winner to the trophy'
+   LADDER-give-1    0.97    0.98     0.98  [EDIT N=37] 'The volunteer gave the blanket the children'
+   SUBW-01b         0.00    0.00     0.00  [keep N=37] 'the doctor prepared a fast-acting antidote'
+   INS-to-01b       0.00    0.00     0.00  [keep N=35] 'The mother gave the candle to the daughter'
+
+-- targets (implausible edit>0.5 ; plausible keep i.e. edit-prob<0.1) --
+   q_off : implausible>0.5: 26/33   plausible<0.1: 10/10   (edit mean 0.74)
+   q_glob: implausible>0.5: 25/33   plausible<0.1: 10/10   (edit mean 0.71)
+   q_local: implausible>0.5: 26/33   plausible<0.1: 10/10   (edit mean 0.74)
+=========================================================================================================
+
