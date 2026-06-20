@@ -488,6 +488,41 @@ def test_wa_run_gibbs_end_to_end():
         f"WA run+gibbs MAP {max(smc, key=smc.get)!r}, expected {_PEAKED_TRUTH!r}"
 
 
+def test_channel_selector_pure_rename():
+    """Phase 3 (WORD_ACTION_REJUV_PLAN): the named ``channel`` selector that replaced the ``ON =
+    action_alpha is not None`` boolean is a PURE RENAME. Explicit ``channel='char_copy'`` is logZ-identical
+    to the inferred default (``channel=None``, ``action_alpha=None``) -- the retired boolean's OFF branch --
+    and the contradictory selector/concentration combos raise instead of silently mis-scoring."""
+    model = _toy_model(lm_logits)
+    obs, key = "teh cat sat", jax.random.PRNGKey(0)
+    _, _, z_default, _ = pairhmm_smc.run(obs, key, model, P=2000, proposal="caprop",
+                                         wdel=WDEL, wins=WINS, band=2)
+    _, _, z_named, _ = pairhmm_smc.run(obs, key, model, P=2000, proposal="caprop",
+                                       wdel=WDEL, wins=WINS, band=2, channel="char_copy")
+    assert z_default == z_named, f"char_copy rename not bit-identical: {z_default} vs {z_named}"
+
+
+def _assert_raises(fn, needle):
+    try:
+        fn()
+    except ValueError as e:
+        assert needle in str(e), f"wrong error {e!r} (wanted {needle!r})"
+        return
+    raise AssertionError(f"expected ValueError containing {needle!r}, none raised")
+
+
+def test_channel_selector_validation():
+    """Phase 3: the channel/action_alpha contract is enforced -- word_action needs a concentration,
+    char_copy must not carry one, and an unknown channel name is rejected (catching caller mistakes the
+    inferred boolean used to swallow silently)."""
+    model = _toy_model(lm_logits)
+    obs, key = "teh cat sat", jax.random.PRNGKey(0)
+    run = lambda **kw: pairhmm_smc.run(obs, key, model, P=64, wdel=WDEL, wins=WINS, band=2, **kw)
+    _assert_raises(lambda: run(channel="word_action"), "requires action_alpha")
+    _assert_raises(lambda: run(channel="char_copy", action_alpha=[8.5, 0.5, 0.5, 0.5]), "do not pass")
+    _assert_raises(lambda: run(channel="bogus"), "word_action")
+
+
 def test_dedup_forward_exact():
     """R3 item 1: ``cache_dedup.make_forward_dedup`` runs a batched forward on only the unique filled
     prefixes (keyed on ``buf[:i_len]``) and scatters back. EXACT -- the deduped output equals the raw

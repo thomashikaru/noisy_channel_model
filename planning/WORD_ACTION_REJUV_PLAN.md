@@ -1,8 +1,10 @@
 # Restore word-substitution rejuvenation to the word-action path
 
-**Status:** Phase 0 + Phase 1 + Phase 2 DONE (Phase 2 on 2026-06-20, branch `word-action-rejuv`). **Resume at
-Phase 3** (retire the `ON`/`OFF` boolean → named `channel` selector) — see the Progress log below. Goal (now
-ACHIEVED for the inference path): the post-resample SMCP3 **word-substitution** rejuvenation move
+**Status:** Phase 0 + Phase 1 + Phase 2 + Phase 3 DONE (Phase 3 on 2026-06-20, branch `word-action-rejuv`).
+The boolean fork is gone; channel scoring has one source of truth selected by a named `channel`. **Only the
+word-action battery spot-check remains** (Phase 2/4 owed; needs Pythia) before the branch is ready to compose
+with the α re-tune + the §1b production default-flip. Goal (ACHIEVED for the inference path): the
+post-resample SMCP3 **word-substitution** rejuvenation move
 (R2/R3/R4 — the impoverishment cure that fixes "P=128 flips a correct word to a wrong neighbour") runs on the
 **word-action channel**, which is now THE model. It used to not: when the word-action channel was active the
 filter ran a θ-refresh **instead of** the word sweep — Phase 2 made the sweep θ-aware and switched the filter to
@@ -59,16 +61,31 @@ again — then delete the boolean.
      collapse-recovery, SMCP3 weight ≈0) against an exact word-action enumerator at the concentrated-α
      limit, plus `test_wa_run_gibbs_end_to_end` (the full `run` path with `action_alpha` + `rejuv="gibbs"`).
   - **Guards GREEN:** full toy suite **17/17** (13 OFF unchanged + 4 new). Live suite: see commit.
+- **Phase 3 (retire the `ON`/`OFF` boolean → named `channel` selector) DONE (2026-06-20).**
+  1. `pairhmm_smc.run` gained `channel="word_action"|"char_copy"` (default `None`). `ON = action_alpha is
+     not None` is retired → `ON = channel == "word_action"`. `channel=None` infers the channel from
+     `action_alpha` (set → word_action, None → char_copy) — a back-compat shim that makes the rename
+     bit-identical for every existing caller with no edit. Contradictory combos now RAISE (word_action with
+     no `action_alpha`; char_copy with one; unknown name) instead of silently mis-scoring.
+  2. `pythia_word_caprop.run` gained the same `channel` param (defaults `action_alpha` →
+     `ACTION_ALPHA_DEFAULT` when word_action is selected without one) and threads it down. The CLI boolean
+     `--word_action` is REPLACED by `--channel {word_action,char_copy}` (default `char_copy`; an explicit
+     `--action_alpha` still implies word_action). Both `run()` docstrings now state char_copy's
+     exact-enumeration certification-anchor role.
+  3. **DECISION — no default-flip in this phase.** The §1b production default-flip (make word_action the
+     deployed default) is gated on the unfinished α re-tune (CODE_CONSOLIDATION_PLAN §1b /
+     WORD_ACTION_ALPHA_SWEEP_PLAN — `(3,1,1,1)` is edit-happy), so the *effective* default is unchanged
+     (char_copy when nothing is specified). Phase 3 is purely the named-selector rename.
+  4. **Guards GREEN:** full toy suite **19/19** (17 unchanged, all bit-identical + 2 new `test_channel_*`
+     gates pinning the pure-rename equivalence and the validation contract). CLI `--help` smoke clean.
+  - **`run_example_native.sh` (skip-worktree, NOT committed):** its `WA_ARGS` line uses the now-removed
+     `--word_action`; the user must update it — change `WA_ARGS=(--word_action)` →
+     `WA_ARGS=(--channel word_action)` (flagged to the user, per [[keep-run-example-script-current]]).
 
-**Phase 3 is NEXT** (retire `ON`/`OFF` boolean → named `channel` selector) per §2/§3 below. Concrete steps:
-1. Replace `ON = action_alpha is not None` with an explicit `channel="word_action"|"char_copy"` selector on
-   `run()` (default TBD per the §1b default-flip; char-copy = the exact-enumeration anchor + opt-out).
-2. Update the CLI flags + `run_example_native.sh` (skip-worktree — flag to the user, don't commit) to the
-   named selector; document char-copy's anchor role in the `run()` docstring.
-3. Guard: `test_pairhmm_exact` stays bit-identical; the named selector is a pure rename of the boolean.
-4. Still owed from Phase 2's done-criteria: a **word-action battery spot-check** (a couple of calibration
-   items) showing the restored sweep recovers an early dropped word that θ-refresh-alone left uncorrected —
-   the live behaviour this buys. Run once Pythia is loaded (heavier than the toy gates).
+**Only owed item (Phase 2/4 done-criteria):** a **word-action battery spot-check** (a couple of calibration
+items) showing the restored sweep recovers an early dropped word that θ-refresh-alone left uncorrected — the
+live behaviour this buys. Run once Pythia is loaded (heavier than the toy gates). Then this branch composes
+with the α re-tune + the §1b default-flip.
 
 ## 2. Phased plan
 

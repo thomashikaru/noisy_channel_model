@@ -419,7 +419,7 @@ def _action_counts(word_surf, word_len, copy_mask, M):
 def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), slack=3, band=None,
         max_dist=2, Ke=6, J=4, cwin=1, proposal="caprop", enable_indel=True,
         rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False,
-        lm_temp=1.0, action_alpha=None):
+        lm_temp=1.0, action_alpha=None, channel=None):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
@@ -427,8 +427,15 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     (the toy); Pythia passes an integer band, which also gives insertions/deletions their reach
     (consumption ``k`` may run up to ``band`` ahead of / behind the emission count).
 
-    ``action_alpha`` (default ``None`` -- the OFF / certified path) turns on the **word-action channel**
-    (plan WORD_ACTION_CHANNEL_PLAN): a length-4 Dirichlet concentration over the per-word action
+    ``channel`` names the noise model: ``"word_action"`` is THE model (the per-word Dirichlet action
+    channel below); ``"char_copy"`` is the deprecated bundled char channel, kept ONLY as the
+    exact-enumeration **certification anchor** -- ``test_pairhmm_exact`` proves the SMC/DP machinery is
+    bit-identical to brute-force enumeration through it, and it is the concentrated-alpha limit, not a
+    deployment option. ``channel=None`` (default) infers the channel from ``action_alpha`` (set ->
+    ``"word_action"``, ``None`` -> ``"char_copy"``), a back-compat shim for the retired ``ON`` boolean.
+
+    ``action_alpha`` (default ``None`` -- the OFF / char-copy anchor path) carries the **word-action
+    channel**'s (plan WORD_ACTION_CHANNEL_PLAN) length-4 Dirichlet concentration over the per-word action
     ``(copy, sub, insert, delete)``. When set, a latent ``theta ~ Dirichlet(action_alpha)`` is drawn per
     particle and the channel score factors into a word-level action cost + a form cost: the emission
     table is built from the base-rate-DECOUPLED FORM channel (``model.channel_form``, COPY_LP=0) and
@@ -470,7 +477,20 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     read more literally (curbs over-editing). Applies to ``proposal="caprop"`` (production); the
     ``"bootstrap"`` baseline samples from the raw LM and is meaningful only at ``lm_temp=1.0``.
     """
-    ON = action_alpha is not None                                       # word-action channel?
+    # Channel selector (plan WORD_ACTION_REJUV_PLAN Phase 3): ``"word_action"`` is THE model -- the
+    # per-word Dirichlet action channel; ``"char_copy"`` is the deprecated bundled char channel, kept
+    # ONLY as the exact-enumeration certification anchor (``test_pairhmm_exact``). ``channel=None`` infers
+    # it from ``action_alpha`` -- a pure rename of the retired ``ON = action_alpha is not None`` boolean,
+    # so every existing caller is bit-identical with no edit.
+    if channel is None:
+        channel = "word_action" if action_alpha is not None else "char_copy"
+    if channel not in ("word_action", "char_copy"):
+        raise ValueError(f"channel must be 'word_action' or 'char_copy', got {channel!r}")
+    if channel == "word_action" and action_alpha is None:
+        raise ValueError("channel='word_action' requires action_alpha (the Dirichlet action concentration)")
+    if channel == "char_copy" and action_alpha is not None:
+        raise ValueError("channel='char_copy' is the zero-action anchor; do not pass action_alpha")
+    ON = channel == "word_action"                                       # word-action channel?
     rj_theta = ON and rejuv != "off"                                    # Dirichlet-conjugate theta refresh (5.4)
     seed_ids = list(model.seed_ids)
     seed_len = len(seed_ids)

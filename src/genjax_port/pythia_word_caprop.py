@@ -73,9 +73,9 @@ WDEL_DEFAULT = -9.0
 
 # Word-action channel (planning/WORD_ACTION_CHANNEL_PLAN.md): the settled Dirichlet action prior over
 # (copy, sub, insert, delete), from calibration_word_action_prior_search.py -- the widest copy-favoured
-# prior hitting the battery targets (the faithful 4-way extension of Gen.jl's [3,1,1]). Pass
-# action_alpha=ACTION_ALPHA_DEFAULT (or --word_action) to enable the word-action channel; None keeps the
-# original bundled char-copy channel (bit-identical certified path).
+# prior hitting the battery targets (the faithful 4-way extension of Gen.jl's [3,1,1]). Selected by
+# channel="word_action" (or --channel word_action / an explicit --action_alpha); channel="char_copy"
+# keeps the original bundled char channel (the bit-identical exact-enumeration certification anchor).
 ACTION_ALPHA_DEFAULT = (3.0, 1.0, 1.0, 1.0)
 
 
@@ -264,8 +264,14 @@ def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False):
 def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         max_dist=2, Ke=12, J=8, cwin=1, prime=PRIME, lm_logprobs_fn=None, use_word_mask=False,
         rejuv="off", rejuv_lookback=3, rejuv_Ke=8, rejuv_stats=None, trace=None, dedup=False,
-        lm_temp=1.0, ins_rate=0.02, uniform_ins=False, action_alpha=None):
+        lm_temp=1.0, ins_rate=0.02, uniform_ins=False, action_alpha=None, channel=None):
     """Channel-aware RB-SMC on Pythia via the shared filter. Returns (state, log_w, logZ, seed_len).
+
+    ``channel`` picks the noise model: ``"word_action"`` (the deployment model -- per-word Dirichlet
+    action latents, concentration ``action_alpha`` defaulting to ``ACTION_ALPHA_DEFAULT``) or
+    ``"char_copy"`` (the deprecated bundled char channel, kept as the exact-enumeration certification
+    anchor + opt-out). ``channel=None`` infers it from ``action_alpha`` (back-compat for the retired
+    ON/OFF boolean).
 
     ``wdel`` is the missing-word (over-editing) log-penalty (default ``WDEL_DEFAULT``).
 
@@ -293,6 +299,17 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
     AND the rejuv sweep's tail scorer (1b, via ``rejuv_dedup``). The sweep is the dominant single-sentence
     cost (its prefills scale ~linearly with P), so 1b is the main wall-clock win."""
     from genjax_port import pairhmm_rejuv as RJ
+    # Channel selector (plan WORD_ACTION_REJUV_PLAN Phase 3): ``"word_action"`` is the model;
+    # ``"char_copy"`` is the deprecated bundled char channel, kept as the exact-enumeration certification
+    # anchor (``test_pairhmm_exact``) + opt-out. ``channel=None`` infers it from ``action_alpha``
+    # (back-compat); word_action needs a concentration, so default it to ``ACTION_ALPHA_DEFAULT`` (NB the
+    # deployed alpha is pending the calibration re-tune, planning/WORD_ACTION_ALPHA_SWEEP_PLAN.md).
+    if channel is None:
+        channel = "word_action" if action_alpha is not None else "char_copy"
+    if channel == "word_action" and action_alpha is None:
+        action_alpha = ACTION_ALPHA_DEFAULT
+    elif channel == "char_copy":
+        action_alpha = None
     if lm_logprobs_fn is None:
         lm_penzai.load_model()
     model = _pythia_model(prime, lm_logprobs_fn, use_word_mask, dedup)
@@ -324,7 +341,7 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
                            band=band, max_dist=max_dist, Ke=Ke, J=J, cwin=cwin,
                            proposal="caprop", rejuv=rejuv, rejuv_pool=None,
                            rejuv_lookback=rejuv_lookback, rejuv_stats=rejuv_stats, trace=trace,
-                           rejuv_dedup=dedup, lm_temp=lm_temp, action_alpha=action_alpha)
+                           rejuv_dedup=dedup, lm_temp=lm_temp, action_alpha=action_alpha, channel=channel)
 
 
 def decode(state, log_w, skip=1, key=jax.random.PRNGKey(0), top=3):
@@ -407,14 +424,15 @@ def cli():
                          ">1 sharpens the prior (more aggressive correction).")
     ap.add_argument("--word_mask", action="store_true",
                     help="restrict the LM bridge pool to whole-word tokens (off by default)")
-    ap.add_argument("--word_action", action="store_true",
-                    help="enable the WORD-ACTION channel (planning/WORD_ACTION_CHANNEL_PLAN.md): the noise "
-                         "rate is a per-word Dirichlet action distribution (copy,sub,insert,delete) latent "
-                         "per particle, with the pair-HMM scoring only substitution FORM. Off => the "
-                         "original bundled char-copy channel (certified path).")
+    ap.add_argument("--channel", choices=("word_action", "char_copy"), default="char_copy",
+                    help="noise model (planning/WORD_ACTION_CHANNEL_PLAN.md): 'word_action' = the per-word "
+                         "Dirichlet action channel (copy,sub,insert,delete latent per particle; pair-HMM "
+                         "scores substitution FORM only) -- the deployment model; 'char_copy' (default) = "
+                         "the deprecated bundled char channel, kept as the exact-enumeration certification "
+                         "anchor + opt-out. (Default flip to word_action is gated on the alpha re-tune.)")
     ap.add_argument("--action_alpha", default=None,
                     help="override the word-action Dirichlet prior, 'copy,sub,ins,del' (default "
-                         f"{','.join(str(x) for x in ACTION_ALPHA_DEFAULT)}); implies --word_action.")
+                         f"{','.join(str(x) for x in ACTION_ALPHA_DEFAULT)}); implies --channel word_action.")
     ap.add_argument("--rejuv", choices=("off", "gibbs"), default="off",
                     help="post-resample Gibbs/SMCP3 rejuvenation sweep (R3): 'gibbs' re-diversifies "
                          "the cloud and cures impoverishment collapses, at ~a few x the runtime "
@@ -437,11 +455,11 @@ def cli():
         ap.error("--sentence is required unless --selftest is set")
 
     import time
+    channel = args.channel
     action_alpha = None
-    if args.action_alpha is not None:
+    if args.action_alpha is not None:                # an explicit prior wins and implies word_action
         action_alpha = tuple(float(x) for x in args.action_alpha.split(","))
-    elif args.word_action:
-        action_alpha = ACTION_ALPHA_DEFAULT
+        channel = "word_action"
     lm_penzai.load_model()
     t0 = time.time()
     trace = [] if args.output_json else None     # record the per-step cloud trace only when writing JSON
@@ -450,7 +468,7 @@ def cli():
                            use_word_mask=args.word_mask, rejuv=args.rejuv,
                            rejuv_lookback=args.rejuv_lookback, trace=trace, dedup=not args.no_dedup,
                            lm_temp=args.lm_temp, ins_rate=args.ins_rate, uniform_ins=args.uniform_ins,
-                           action_alpha=action_alpha)
+                           action_alpha=action_alpha, channel=channel)
     top = decode(st, lw, skip=sl, top=args.top)
     ins_desc = "uniform" if (args.uniform_ins or args.wins is not None) else f"rate={args.ins_rate}"
     print(f"observed : {args.sentence!r}")
