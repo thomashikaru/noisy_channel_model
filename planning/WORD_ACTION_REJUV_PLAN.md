@@ -1,6 +1,7 @@
 # Restore word-substitution rejuvenation to the word-action path
 
-**Status:** drafted 2026-06-19, not started. Goal: the post-resample SMCP3 **word-substitution** rejuvenation move
+**Status:** Phase 0 + Phase 1 DONE (2026-06-19, branch `word-action-rejuv`). **Resume at Phase 2** — see the
+Progress log below. Goal: the post-resample SMCP3 **word-substitution** rejuvenation move
 (R2/R3/R4 — the impoverishment cure that fixes "P=128 flips a correct word to a wrong neighbour") must run on the
 **word-action channel**, which is now THE model. Today it does not: when the word-action channel is active the
 filter runs a θ-refresh **instead of** the word sweep ([pairhmm_smc.py:555](../src/genjax_port/pairhmm_smc.py#L555)
@@ -31,6 +32,40 @@ again — then delete the boolean.
   (`test_pairhmm_exact`), and a new toy word-action gate proves the θ-aware sweep is correct, before the gate flips.
 - **Keep char-copy's good features.** The case-insensitive char DP and the exact-enumeration anchor are genuinely
   good; they survive behind the unified interface — we deprecate the *path forking*, not the capability.
+
+## Progress log (RESUME HERE)
+
+**Branch:** `word-action-rejuv`, off the `genjax-port-unified` baseline. Commits so far:
+- `dc16bd5` — Phase 0 baseline: consolidate genjax_port (all model code).
+- `6bde1b5` — Phase 0 baseline: calibration substrate + planning docs.
+- `4fbff44` — **Phase 1 (de-fork) DONE.** Unified the two duplicated channel carries into one
+  `word_dp.channel_carry`, called by both the filter's theta-refresh and the sweep. Char-copy = the
+  zero-action degenerate (`lp_copy=lp_sub=0`). Verified **bit-identical**: `test_pairhmm_exact` caprop logZ
+  −7.955/−7.995/−9.230, TV 0.261/0.259/0.118; full live suite 18/18. (`sweep`'s `_channel_carry_a` is now a
+  thin zero-action adapter into `channel_carry`.)
+
+**Phase 2 is NEXT — concrete resume steps** (ordering DECIDED: sweep-then-refresh):
+1. Add per-particle θ-cost args to `pairhmm_rejuv.make_sweep`/`sweep` and the jitted `step`/`move`:
+   `lp_copy (P,)`, `lp_sub (P,)`, `wdel_p (P,)`, `wins_p (P,M)`, `a0p (P,M+1)`, `copy_mask (M,Vc)` — threaded
+   as TRACED args (like `emit_full`/`a0`/`wins` already are, so the compile is reused). In `_chan_scores`,
+   call `word_dp.channel_carry` with these (each `jnp.repeat(…, Kt)` to align with the P·Kt spliced rows)
+   instead of the zero-action `_channel_carry_a`; same for the sweep's final `log_alpha` recompute. When the
+   θ args are absent → fall back to zero-action (OFF stays bit-identical).
+2. These per-particle costs ALREADY EXIST in `pairhmm_smc.run` — `lp_copy/lp_sub/wdel_p/wins_p` at
+   [pairhmm_smc.py:515–524], `a0p` at :530, recomputed on θ-refresh at :678–685, `copy_mask` unpacked at
+   :501. Pass them into the `rj_sweep(...)` call.
+3. In `run()`, drop `and not ON` at the sweep-build guard (~:555) and replace the resample-branch `if
+   rj_sweep / elif rj_theta` with **sweep-then-refresh**: run the θ-aware word sweep under the current θ,
+   THEN the existing θ-refresh on the post-move parse.
+4. **Add the toy word-action gates FIRST** (before flipping behaviour) in `tests/test_pairhmm_exact.py`: ON
+   analogs of `test_rejuv_leaves_exact_posterior_invariant` (seed a cloud at the toy word-action posterior
+   with `action_alpha` set → sweep leaves MAP/posterior invariant, SMCP3 weight ≈0) and
+   `test_rejuv_recovers_collapsed_cloud` (wrong-neighbour cloud pulled back), at the concentrated-α limit.
+   The toy already has the FORM-channel mirror (`toy_channel`) needed for word-action scoring.
+5. Guards: `test_pairhmm_exact` stays bit-identical (OFF); new ON gates green; then a word-action battery
+   spot-check that the restored sweep restores an early dropped word the θ-refresh-alone left uncorrected.
+
+**Then Phase 3** (retire `ON`/`OFF` boolean → named `channel` selector) per §2 below.
 
 ## 2. Phased plan
 
