@@ -1,11 +1,12 @@
 # Restore word-substitution rejuvenation to the word-action path
 
-**Status:** Phase 0 + Phase 1 DONE (2026-06-19, branch `word-action-rejuv`). **Resume at Phase 2** — see the
-Progress log below. Goal: the post-resample SMCP3 **word-substitution** rejuvenation move
-(R2/R3/R4 — the impoverishment cure that fixes "P=128 flips a correct word to a wrong neighbour") must run on the
-**word-action channel**, which is now THE model. Today it does not: when the word-action channel is active the
-filter runs a θ-refresh **instead of** the word sweep ([pairhmm_smc.py:555](../src/genjax_port/pairhmm_smc.py#L555)
-`if rejuv == "gibbs" and not ON`; [676](../src/genjax_port/pairhmm_smc.py#L676) `elif rj_theta`).
+**Status:** Phase 0 + Phase 1 + Phase 2 DONE (Phase 2 on 2026-06-20, branch `word-action-rejuv`). **Resume at
+Phase 3** (retire the `ON`/`OFF` boolean → named `channel` selector) — see the Progress log below. Goal (now
+ACHIEVED for the inference path): the post-resample SMCP3 **word-substitution** rejuvenation move
+(R2/R3/R4 — the impoverishment cure that fixes "P=128 flips a correct word to a wrong neighbour") runs on the
+**word-action channel**, which is now THE model. It used to not: when the word-action channel was active the
+filter ran a θ-refresh **instead of** the word sweep — Phase 2 made the sweep θ-aware and switched the filter to
+**sweep-then-refresh**.
 
 ## 0. Root cause — duplication + a boolean fork (the thing to fix, not work around)
 The channel forward-carry exists in **two** copies that drifted:
@@ -43,29 +44,31 @@ again — then delete the boolean.
   zero-action degenerate (`lp_copy=lp_sub=0`). Verified **bit-identical**: `test_pairhmm_exact` caprop logZ
   −7.955/−7.995/−9.230, TV 0.261/0.259/0.118; full live suite 18/18. (`sweep`'s `_channel_carry_a` is now a
   thin zero-action adapter into `channel_carry`.)
+- **Phase 2 (θ-aware sweep + restore the move) DONE (2026-06-20).** Three changes, OFF bit-identical at each:
+  1. `pairhmm_rejuv`: `sweep` gained an optional `theta_costs=(lp_copy, lp_sub, wdel_p, wins_p, a0p,
+     copy_mask)` tuple, threaded as TRACED args into the jitted `step`/`move`; `_chan_scores` and the final
+     `log_alpha` recompute now call `word_dp.channel_carry` directly (each per-particle cost `jnp.repeat(…,
+     Kt)`-aligned to the P·Kt spliced rows). `theta_costs=None` builds the zero-action char-copy
+     parameterization from `ctx` → bit-identical. The Phase-1 `_channel_carry_a`/`_channel_carry` thin
+     adapters are now DELETED (their job is the zero-action default inside `sweep`).
+  2. `pairhmm_smc.run`: dropped `and not ON` at the sweep-build guard, and replaced the resample-branch
+     `if rj_sweep / elif rj_theta` with **sweep-then-refresh** — the θ-aware word sweep under the current θ
+     (passing `theta_costs` assembled from the gathered per-particle costs + a fresh `a0p`), THEN the
+     Dirichlet-conjugate θ-refresh on the corrected post-move parse.
+  3. `tests/test_pairhmm_exact.py`: added the toy word-action ON gates — `test_wa_rejuv_*` (invariance,
+     collapse-recovery, SMCP3 weight ≈0) against an exact word-action enumerator at the concentrated-α
+     limit, plus `test_wa_run_gibbs_end_to_end` (the full `run` path with `action_alpha` + `rejuv="gibbs"`).
+  - **Guards GREEN:** full toy suite **17/17** (13 OFF unchanged + 4 new). Live suite: see commit.
 
-**Phase 2 is NEXT — concrete resume steps** (ordering DECIDED: sweep-then-refresh):
-1. Add per-particle θ-cost args to `pairhmm_rejuv.make_sweep`/`sweep` and the jitted `step`/`move`:
-   `lp_copy (P,)`, `lp_sub (P,)`, `wdel_p (P,)`, `wins_p (P,M)`, `a0p (P,M+1)`, `copy_mask (M,Vc)` — threaded
-   as TRACED args (like `emit_full`/`a0`/`wins` already are, so the compile is reused). In `_chan_scores`,
-   call `word_dp.channel_carry` with these (each `jnp.repeat(…, Kt)` to align with the P·Kt spliced rows)
-   instead of the zero-action `_channel_carry_a`; same for the sweep's final `log_alpha` recompute. When the
-   θ args are absent → fall back to zero-action (OFF stays bit-identical).
-2. These per-particle costs ALREADY EXIST in `pairhmm_smc.run` — `lp_copy/lp_sub/wdel_p/wins_p` at
-   [pairhmm_smc.py:515–524], `a0p` at :530, recomputed on θ-refresh at :678–685, `copy_mask` unpacked at
-   :501. Pass them into the `rj_sweep(...)` call.
-3. In `run()`, drop `and not ON` at the sweep-build guard (~:555) and replace the resample-branch `if
-   rj_sweep / elif rj_theta` with **sweep-then-refresh**: run the θ-aware word sweep under the current θ,
-   THEN the existing θ-refresh on the post-move parse.
-4. **Add the toy word-action gates FIRST** (before flipping behaviour) in `tests/test_pairhmm_exact.py`: ON
-   analogs of `test_rejuv_leaves_exact_posterior_invariant` (seed a cloud at the toy word-action posterior
-   with `action_alpha` set → sweep leaves MAP/posterior invariant, SMCP3 weight ≈0) and
-   `test_rejuv_recovers_collapsed_cloud` (wrong-neighbour cloud pulled back), at the concentrated-α limit.
-   The toy already has the FORM-channel mirror (`toy_channel`) needed for word-action scoring.
-5. Guards: `test_pairhmm_exact` stays bit-identical (OFF); new ON gates green; then a word-action battery
-   spot-check that the restored sweep restores an early dropped word the θ-refresh-alone left uncorrected.
-
-**Then Phase 3** (retire `ON`/`OFF` boolean → named `channel` selector) per §2 below.
+**Phase 3 is NEXT** (retire `ON`/`OFF` boolean → named `channel` selector) per §2/§3 below. Concrete steps:
+1. Replace `ON = action_alpha is not None` with an explicit `channel="word_action"|"char_copy"` selector on
+   `run()` (default TBD per the §1b default-flip; char-copy = the exact-enumeration anchor + opt-out).
+2. Update the CLI flags + `run_example_native.sh` (skip-worktree — flag to the user, don't commit) to the
+   named selector; document char-copy's anchor role in the `run()` docstring.
+3. Guard: `test_pairhmm_exact` stays bit-identical; the named selector is a pure rename of the boolean.
+4. Still owed from Phase 2's done-criteria: a **word-action battery spot-check** (a couple of calibration
+   items) showing the restored sweep recovers an early dropped word that θ-refresh-alone left uncorrected —
+   the live behaviour this buys. Run once Pythia is loaded (heavier than the toy gates).
 
 ## 2. Phased plan
 
