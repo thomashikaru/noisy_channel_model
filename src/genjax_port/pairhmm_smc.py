@@ -43,7 +43,7 @@ import genjax
 from genjax import ChoiceMap
 
 from genjax_port.genjax_factor import factor
-from genjax_port.word_dp import _word_row_update, _ess
+from genjax_port.word_dp import _word_row_update, _ess, channel_carry
 
 
 @dataclass
@@ -412,26 +412,8 @@ def _action_counts(word_surf, word_len, copy_mask, M):
     return jnp.stack([n_copy, n_sub, n_ins, n_del], axis=1).astype(jnp.float32)
 
 
-def _channel_carry_action(a0p, emit_form, copy_mask, band_mask, M, Wmax,
-                          word_surf, word_len, lp_copy, lp_sub, wdel_p, wins_p):
-    """Per-particle channel forward carry ``log_alpha`` (P, M+1) for the word-action model: re-run the
-    word DP over each particle's intended words with ITS theta's action costs (emission offset
-    ``lp_sub + (lp_copy-lp_sub)*copy_mask[m, surf]`` + per-particle ``wdel_p/wins_p``). Used to make
-    ``log_alpha`` consistent with a refreshed theta (sec 5.4), mirroring the forward filter's band
-    schedule (``t = word index + 1``). Copy vs sub is CASE-INSENSITIVE via ``copy_mask``."""
-    Vc = emit_form.shape[1]
-
-    def one(ws, wl, a0, lpc, lps, wd, wn):
-        def step(alpha, i):
-            s = jnp.clip(ws[i], 0, Vc - 1)
-            col = emit_form[:, s] + lps + (lpc - lps) * copy_mask[:, s]           # (M,) offset form column
-            new = band_mask(_word_row_update(alpha, col, wd, wn), i + 1)
-            return jnp.where(wl[i] > 0, new, alpha), None
-
-        alpha, _ = jax.lax.scan(step, a0, jnp.arange(Wmax))
-        return alpha
-
-    return jax.vmap(one)(word_surf, word_len, a0p, lp_copy, lp_sub, wdel_p, wins_p)
+# The per-particle channel forward carry now lives in word_dp.channel_carry (one source of truth shared
+# with the rejuvenation sweep); the filter's theta-refresh calls it directly below.
 
 
 def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), slack=3, band=None,
@@ -681,8 +663,8 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                 lp_copy, lp_sub, wdel_p, wins_p = _theta_to_costs(theta, enable_indel, wins_vec)
                 a0p = jax.vmap(lambda wn: band_mask(                          # new leading-spurious init per theta
                     jnp.concatenate([jnp.zeros((1,), wn.dtype), jnp.cumsum(wn)]), 0))(wins_p)
-                la = _channel_carry_action(a0p, emit_full, copy_mask, band_mask, M, Wmax,  # log_alpha consistent
-                                           word_surf, word_len, lp_copy, lp_sub, wdel_p, wins_p)  # with new theta
+                la = channel_carry(a0p, emit_full, band, M, word_surf, word_len,   # log_alpha consistent
+                                   lp_copy, lp_sub, wdel_p, wins_p, copy_mask)      # with the new theta
                 state = (ctx_buf, ctx_len, n_words, word_len, word_surf, la, done)
                 # weight 0: a conjugate Gibbs step under the deterministic-alignment likelihood (exact for the
                 # near-deterministic battery alignments; the positional-count approximation is the general-text

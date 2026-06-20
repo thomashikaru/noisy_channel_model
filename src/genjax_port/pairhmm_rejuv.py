@@ -56,7 +56,7 @@ import genjax
 from genjax import ChoiceMap, Update, Diff
 
 from genjax_port.genjax_factor import factor
-from genjax_port.word_dp import _word_row_update
+from genjax_port.word_dp import _word_row_update, channel_carry
 
 
 @dataclass
@@ -188,26 +188,21 @@ def _lm_logprior(ctx, bufs, total_tokens, add_eos):
 
 
 def _channel_carry_a(a0, emit_full, wdel, wins, band, M, Vc, word_surf, word_len):
-    """(N, M+1) forward carry after consuming all active words (band-masked at each step) -- the same
-    quantity the filter carries as ``log_alpha``. Loops over WORD slots (token-count-agnostic):
-    ``word_surf [N, Wmax]`` is each word's channel surface id (T_max=1: its single token; a multi-
-    token word maps to its surface string's emission column). A slot is active iff it holds >= 1
-    token. The terminal channel marginal is ``carry[:, M]``; the partial (mid-loop) forward mass is
-    ``logsumexp(carry)`` -- the running likelihood of the observed-prefix-so-far under the words.
+    """(N, M+1) forward carry after consuming all active words -- the channel marginal the filter
+    carries as ``log_alpha`` (terminal ``carry[:, M]``; partial mid-loop ``logsumexp(carry)``).
 
-    Pure (no ``ctx``) so it is reusable inside the jitted step with ``a0``/``emit_full`` threaded as
-    TRACED args; ``band``/``M``/``Vc`` are static. ``Wmax`` = ``word_surf.shape[1]`` (static)."""
-    N, Wmax = word_surf.shape
-    alpha = jnp.broadcast_to(a0, (N, M + 1))
-    upd = jax.vmap(lambda a, c: _word_row_update(a, c, wdel, wins))
-    for i in range(Wmax):
-        # clip to the AUGMENTED table width, not the original Vc -- multi-token surface ids live in the
-        # appended columns (>= Vc); clipping to Vc-1 would read the wrong channel column for them (R4 bug).
-        surf_i = jnp.clip(word_surf[:, i], 0, emit_full.shape[1] - 1)
-        col = emit_full[:, surf_i].T                              # (N, M)
-        new = _band_mask_a(band, M, upd(alpha, col), i + 1)
-        alpha = jnp.where((word_len[:, i] > 0)[:, None], new, alpha)
-    return alpha
+    This is the **char-copy / certified** sweep call: it delegates to the shared
+    ``word_dp.channel_carry`` with ZERO action offset (``lp_copy = lp_sub = 0`` -> bare ``emit_full``
+    columns) and the global ``wdel``/``wins`` broadcast over rows -- bit-identical to the pre-unification
+    carry. The word-action sweep threads real per-particle theta costs into ``channel_carry`` directly."""
+    N = word_surf.shape[0]
+    zeros = jnp.zeros((N,), jnp.float32)
+    a0b = jnp.broadcast_to(a0, (N, M + 1))
+    wdel_b = jnp.broadcast_to(jnp.asarray(wdel, jnp.float32), (N,))
+    wins_b = jnp.broadcast_to(jnp.asarray(wins, jnp.float32), (N, M))
+    copy_mask0 = jnp.zeros((M, emit_full.shape[1]), jnp.float32)   # unused (offset is x0 when zero-action)
+    return channel_carry(a0b, emit_full, band, M, word_surf, word_len,
+                         zeros, zeros, wdel_b, wins_b, copy_mask0)
 
 
 def _channel_carry(ctx, word_surf, word_len):

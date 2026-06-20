@@ -53,3 +53,41 @@ def _wins_only_row(log_alpha, wins):
 def _ess(log_w):
     w = jax.nn.softmax(log_w)
     return 1.0 / jnp.sum(w * w)
+
+
+def channel_carry(a0, emit, band, M, word_surf, word_len, lp_copy, lp_sub, wdel, wins, copy_mask):
+    """Per-particle channel forward carry ``log_alpha`` (N, M+1): re-run the word DP over each row's
+    intended words with ITS per-particle action costs. The SINGLE source of truth for the word-level
+    channel marginal, shared by the forward filter (theta refresh) AND the rejuvenation sweep -- so the
+    two can never drift (the bug that disabled word-action rejuvenation).
+
+    Per intended word at channel surface ``s`` the emission column is the substitution-FORM cost
+    ``emit[:, s]`` offset by the action prob ``lp_sub + (lp_copy - lp_sub) * copy_mask[:, s]`` -- a
+    (case-insensitive) COPY pays ``lp_copy``, a substitution pays ``lp_sub`` -- with per-particle
+    delete/insert costs ``wdel``/``wins``. The CHAR-COPY / certified path is the zero-action degenerate:
+    ``lp_copy = lp_sub = 0`` (offset vanishes -> bare ``emit[:, s]``) with global ``wdel``/``wins``
+    broadcast over rows, which is bit-identical to the pre-unification carry.
+
+    Shapes: ``a0`` (N, M+1); ``emit`` (M, Vc); ``word_surf``/``word_len`` (N, Wmax); ``lp_copy``/
+    ``lp_sub``/``wdel`` (N,); ``wins`` (N, M); ``copy_mask`` (M, Vc). ``band``: int (|k - t| <= band) or
+    ``None``. Surfaces are clipped to ``emit``'s width (multi-token ids live in the appended columns)."""
+    Vc = emit.shape[1]
+    Wmax = word_surf.shape[1]
+    ks = jnp.arange(M + 1)
+
+    def mask(alpha, t):
+        if band is None:
+            return alpha
+        return jnp.where(jnp.abs(ks - t) <= band, alpha, -jnp.inf)
+
+    def one(ws, wl, a0r, lpc, lps, wd, wn):
+        def step(alpha, i):
+            s = jnp.clip(ws[i], 0, Vc - 1)
+            col = emit[:, s] + lps + (lpc - lps) * copy_mask[:, s]      # (M,) action-offset form column
+            new = mask(_word_row_update(alpha, col, wd, wn), i + 1)
+            return jnp.where(wl[i] > 0, new, alpha), None
+
+        alpha, _ = jax.lax.scan(step, a0r, jnp.arange(Wmax))
+        return alpha
+
+    return jax.vmap(one)(word_surf, word_len, a0, lp_copy, lp_sub, wdel, wins)
