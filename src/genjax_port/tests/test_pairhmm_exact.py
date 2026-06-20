@@ -38,10 +38,10 @@ import jax.numpy as jnp
 import numpy as np
 from jax.scipy.special import logsumexp
 
-from genjax_port.tests.toy_channel import channel_logpdf, encode
+from genjax_port.tests.toy_channel import channel_logpdf, channel_form_logpdf, encode
 from genjax_port.tests.toy_vocab import V, VOCAB, VOCAB_IDS, VOCAB_LEN, WORD2IDX
 from genjax_port.tests.toy_bigram import BOS, EOS, LOG_BIGRAM, lm_logits
-from genjax_port.word_dp import _word_row_update
+from genjax_port.word_dp import _word_row_update, channel_carry
 from genjax_port.noise_word import _damerau_levenshtein
 from genjax_port.tests import toy_caprop as caprop
 from genjax_port import pairhmm_smc
@@ -63,7 +63,8 @@ def _toy_model(lm_fn):
         eos_id=EOS, emit_vocab=V,
         vocab_char=VOCAB_IDS, vocab_clen=VOCAB_LEN, channel_logpdf=channel_logpdf,
         char_ids=encode, candidate_words=candidate_words, obs_words=str.split,
-        decode_ids=lambda t: " ".join(VOCAB[i] for i in t), seed_ids=())
+        decode_ids=lambda t: " ".join(VOCAB[i] for i in t), seed_ids=(),
+        channel_form=channel_form_logpdf)      # base-rate-decoupled FORM channel (word-action / ON path)
 
 
 # --------------------------------------------------------------------------------------------------
@@ -312,6 +313,179 @@ def test_rejuv_smcp3_weight_zero():
     _, _, move_logw = rejuv.gibbs_sweep(sub, buf, clen, ctx, pool_tok, pool_len)
     assert float(jnp.max(jnp.abs(move_logw))) < 1e-3, \
         f"full-conditional SMCP3 weight not ~0: max|w|={float(jnp.max(jnp.abs(move_logw))):.2e}"
+
+
+# ==================================================================================================
+# Phase 2 (WORD_ACTION_REJUV_PLAN) -- word-action ON rejuvenation gates. The single-token rejuv gates
+# above run the CHAR-COPY channel (``action_alpha=None``); these certify the SAME sweep on the
+# WORD-ACTION channel, where each emission column pays a per-word action cost -- ``log p_copy`` for a
+# (case-insensitive) verbatim copy, ``log p_sub`` for a substitution -- on top of the base-rate-
+# DECOUPLED FORM channel, with insertion/deletion costs from ``theta``. At the CONCENTRATED-alpha limit
+# a ``Dirichlet(c*theta)`` collapses to a deterministic ``theta``, so the per-particle costs are a fixed
+# operating point and the exact word-action posterior is enumerable -- the same brute force as
+# ``exact_posterior`` with the FORM emission + action offset, scored by the SHARED ``channel_carry`` DP
+# the filter and sweep both use. The theta-aware sweep (``rejuv.sweep(theta_costs=...)``) must (1) leave
+# that posterior invariant, (2) recover it from a collapsed cloud, and (3) carry a ~0 SMCP3 weight for
+# the full-conditional move -- the word-action mirrors of the three char-copy rejuv gates above. This is
+# the behaviour the boolean fork disabled (the sweep was gated off whenever the word-action channel was
+# active because its scorer could not see ``theta``); these gates pin the theta-aware sweep before the
+# filter is switched to call it.
+# ==================================================================================================
+
+# A copy-dominated operating point = the concentrated-alpha limit (theta == mean of Dirichlet(c*theta),
+# c -> inf): copies cheap, substitution/insertion/deletion expensive -- the regime a clean channel sits
+# in, where a typo's single substitution still beats dropping or duplicating a word.
+_WA_THETA = jnp.array([0.85, 0.05, 0.05, 0.05], jnp.float32)   # (copy, sub, insert, delete)
+
+
+def _wa_emit_copymask_costs(observed, theta, lm):
+    """The word-action channel pieces for ``observed`` at a FIXED ``theta``, built EXACTLY as
+    ``pairhmm_smc.run`` does when ``action_alpha`` is set (and at its concentrated limit): the FORM
+    emission table ``emit_aug`` (M, Vc), the case-insensitive ``copy_mask`` (M, Vc), and the scalar
+    per-particle action costs ``(lp_copy, lp_sub, wdel, wins)`` from ``_theta_to_costs``. Returns
+    ``(model, emit_aug, copy_mask, costs)``."""
+    model = _toy_model(lm)
+    obs_words = observed.split(); M = len(obs_words)
+    obs_char = jnp.stack([encode(w)[0] for w in obs_words])           # (M, Lc)
+    emit_form = jax.vmap(jax.vmap(channel_form_logpdf, in_axes=(None, 0, 0)),
+                         in_axes=(0, None, None))(obs_char, model.vocab_char, model.vocab_clen)  # (M, V)
+    *_, emit_aug, copy_mask, _T, _nmt = pairhmm_smc._build_candidates(
+        model, obs_words, [None] * M, obs_char, emit_form, max_dist=2, Ke=6, channel_fn=channel_form_logpdf)
+    wins_vec = jnp.broadcast_to(jnp.float32(WINS), (M,))
+    lp_copy, lp_sub, wdel_p, wins_p = pairhmm_smc._theta_to_costs(theta[None], True, wins_vec)
+    costs = (float(lp_copy[0]), float(lp_sub[0]), float(wdel_p[0]), float(wins_p[0, 0]))
+    return model, emit_aug, copy_mask.astype(jnp.float32), costs
+
+
+def _wa_exact_posterior(observed, theta, lm, Lmax):
+    """Exact posterior over intended sentences under the WORD-ACTION channel at fixed ``theta`` -- the
+    same vectorized brute force as :func:`exact_posterior`, but with the FORM emission + per-word action
+    offset + theta-derived indel costs, scored by the shared :func:`channel_carry` DP. Using the same DP
+    the sweep uses makes the ground truth and the sweep score the IDENTICAL channel (the comparison is in
+    the enumeration vs sampling, exactly as the char-copy gates)."""
+    model, emit_aug, copy_mask, (lp_copy, lp_sub, wdel, wins) = _wa_emit_copymask_costs(observed, theta, lm)
+    M = len(observed.split())
+    log_bigram = _bigram_table(lm)
+    ks = jnp.arange(M + 1)
+    a0 = jnp.where(ks == 0, 0.0, ks * wins)                                # leading-spurious init
+
+    def chan_batch(seqs, n):                                               # (N, n) -> (N,) channel logp
+        N = seqs.shape[0]
+        if n == 0:
+            return jnp.full((N,), float(a0[M]))
+        carry = channel_carry(jnp.broadcast_to(a0, (N, M + 1)), emit_aug, None, M,
+                              seqs.astype(jnp.int32), jnp.ones((N, n), jnp.int32),
+                              jnp.full(N, lp_copy), jnp.full(N, lp_sub), jnp.full(N, wdel),
+                              jnp.broadcast_to(jnp.float32(wins), (N, M)), copy_mask)
+        return carry[:, M]
+
+    sents, joints = [], []
+    for n in range(Lmax + 1):
+        seqs = (jnp.array(list(itertools.product(range(V), repeat=n)), jnp.int32).reshape(-1, n)
+                if n else jnp.zeros((1, 0), jnp.int32))
+        if n == 0:
+            lm_lp = jnp.full((1,), float(log_bigram[BOS, EOS]))
+        else:
+            frm = jnp.concatenate([jnp.full((seqs.shape[0], 1), BOS), seqs], axis=1)
+            to = jnp.concatenate([seqs, jnp.full((seqs.shape[0], 1), EOS)], axis=1)
+            lm_lp = jnp.sum(log_bigram[frm, to], axis=1)
+        sents.extend(" ".join(VOCAB[int(i)] for i in s) for s in seqs)
+        joints.append(lm_lp + chan_batch(seqs, n))
+    joints = jnp.concatenate(joints)
+    post = jax.nn.softmax(joints)
+    words = {}
+    for s, p in zip(sents, post):
+        words[s] = words.get(s, 0.0) + float(p)
+    return words, float(logsumexp(joints))
+
+
+def _wa_ctx_pool_costs(observed, theta, lm, P, slack=3):
+    """``RejuvCtx`` (FORM ``emit_full`` + full-vocab Gibbs pool) + the per-particle ``theta_costs`` tuple
+    the word-action sweep takes, at the concentrated-alpha fixed ``theta`` -- mirroring how
+    ``pairhmm_smc.run`` wires the sweep when ``action_alpha`` is set (the full vocab -> a true Gibbs
+    step, matching the char-copy rejuv gates)."""
+    model, emit_aug, copy_mask, (lp_copy, lp_sub, wdel, wins) = _wa_emit_copymask_costs(observed, theta, lm)
+    M = len(observed.split()); Wmax = M + slack
+    ks = jnp.arange(M + 1)
+    a0 = jnp.where(ks == 0, 0.0, ks * wins)
+    ctx = rejuv.RejuvCtx(model, emit_aug, a0, M, 0, Wmax, wdel, wins, None, t_max=1, lm_temp=1.0)
+    cand_table = jnp.broadcast_to(jnp.arange(V)[None, :], (Wmax, V))       # full-vocab Gibbs
+    pool_tok, pool_len = rejuv.pool_from_table(cand_table)
+    theta_costs = (jnp.full(P, lp_copy), jnp.full(P, lp_sub), jnp.full(P, wdel),
+                   jnp.broadcast_to(jnp.float32(wins), (P, M)), jnp.broadcast_to(a0, (P, M + 1)), copy_mask)
+    return ctx, pool_tok, pool_len, theta_costs
+
+
+def test_wa_rejuv_leaves_exact_posterior_invariant():
+    """Phase 2: the theta-aware sweep on a cloud already at the WORD-ACTION exact posterior leaves it
+    there (invariance) -- the word-action analog of ``test_rejuv_leaves_exact_posterior_invariant``,
+    proving the channel-ON move does not corrupt the certified word-action posterior."""
+    lm, P = _peaked(), 6000
+    exact, _ = _wa_exact_posterior(_PEAKED_OBS, _WA_THETA, lm, _PEAKED_LMAX)
+    ctx, pool_tok, pool_len, theta_costs = _wa_ctx_pool_costs(_PEAKED_OBS, _WA_THETA, lm, P)
+    swp = rejuv.make_sweep(ctx, pool_tok, pool_len)
+    key, sub = jax.random.split(jax.random.PRNGKey(0))
+    buf, clen = _cloud_from_dist(exact, P, sub, ctx.Wmax)
+    for _ in range(3):
+        key, sub = jax.random.split(key)
+        buf, clen, _wl, _ws, _la, _mlw = swp(sub, buf, clen, theta_costs=theta_costs)
+    after = rejuv.decode_counts(buf, clen, ctx.model, ctx.seed_len)
+    assert max(after, key=after.get) == max(exact, key=exact.get), \
+        f"WA rejuv moved the MAP: {max(after, key=after.get)!r} vs exact {max(exact, key=exact.get)!r}"
+    assert tv_distance(after, exact) < 0.08, f"WA rejuv perturbed the posterior: TV {tv_distance(after, exact):.3f}"
+
+
+def test_wa_rejuv_recovers_collapsed_cloud():
+    """Phase 2: from a cloud COLLAPSED onto a wrong same-length reading ('the dog sat'), theta-aware
+    sweeps recover the word-action exact MAP -- the impoverishment cure on the ON channel, the concrete
+    behaviour the boolean fork disabled. The channel must pull the wrong middle word ('dog') back to the
+    cheap COPY of the observed 'cat'."""
+    lm, P = _peaked(), 4000
+    exact, _ = _wa_exact_posterior(_PEAKED_OBS, _WA_THETA, lm, _PEAKED_LMAX)
+    truth = max(exact, key=exact.get)
+    ctx, pool_tok, pool_len, theta_costs = _wa_ctx_pool_costs(_PEAKED_OBS, _WA_THETA, lm, P)
+    swp = rejuv.make_sweep(ctx, pool_tok, pool_len)
+    buf, clen = _cloud_from_sentence("the dog sat", P, ctx.Wmax)          # wrong middle word, right length
+    key = jax.random.PRNGKey(0)
+    for _ in range(6):
+        key, sub = jax.random.split(key)
+        buf, clen, _wl, _ws, _la, _mlw = swp(sub, buf, clen, theta_costs=theta_costs)
+    rec = rejuv.decode_counts(buf, clen, ctx.model, ctx.seed_len)
+    assert max(rec, key=rec.get) == truth, f"WA rejuv failed to escape the collapse: MAP {max(rec, key=rec.get)!r}"
+    assert rec[truth] > 0.5, f"weak WA recovery: p={rec.get(truth, 0.0):.2f}"
+
+
+def test_wa_rejuv_smcp3_weight_zero():
+    """Phase 2: the genjax SMCP3 reweight of the theta-aware full-conditional move is ~0 -- the
+    built-it-right check that threading the per-particle ``theta`` costs into ``channel_carry`` keeps the
+    sweep's proposal the EXACT conditional (a non-zero weight would mean proposal/target/model drifted)."""
+    lm, P = _peaked(), 2000
+    exact, _ = _wa_exact_posterior(_PEAKED_OBS, _WA_THETA, lm, _PEAKED_LMAX)
+    ctx, pool_tok, pool_len, theta_costs = _wa_ctx_pool_costs(_PEAKED_OBS, _WA_THETA, lm, P)
+    swp = rejuv.make_sweep(ctx, pool_tok, pool_len)
+    key, sub = jax.random.split(jax.random.PRNGKey(0))
+    buf, clen = _cloud_from_dist(exact, P, sub, ctx.Wmax)
+    *_, mlw = swp(sub, buf, clen, theta_costs=theta_costs)
+    assert float(jnp.max(jnp.abs(mlw))) < 1e-3, \
+        f"WA full-conditional SMCP3 weight not ~0: max|w|={float(jnp.max(jnp.abs(mlw))):.2e}"
+
+
+def test_wa_run_gibbs_end_to_end():
+    """Phase 2 INTEGRATION: the full filter with the word-action channel (``action_alpha`` set) AND
+    ``rejuv='gibbs'`` runs the theta-aware SWEEP-THEN-REFRESH inside ``run`` end-to-end and recovers the
+    MAP -- the path the boolean fork disabled (ON used to force theta-refresh-only because the sweep
+    could not see theta). Concentrated ``action_alpha`` (~the _WA_THETA copy-dominated operating point);
+    'teh cat sat' -> 'the cat sat'. Exercises the wiring the direct-sweep gates above cannot: the
+    per-particle ``theta_costs`` assembled in ``run`` from the gathered theta, then the conjugate refresh
+    on the swept parse."""
+    lm = _peaked()
+    model = _toy_model(lm)
+    st, dw, _logZ, _sl = pairhmm_smc.run(_PEAKED_OBS, jax.random.PRNGKey(0), model, P=4000,
+                                         proposal="caprop", wdel=WDEL, wins=WINS, band=2,
+                                         rejuv="gibbs", action_alpha=[8.5, 0.5, 0.5, 0.5])
+    smc = {s: p for s, p in pairhmm_smc.decode(st, dw, model, top=50)}
+    assert max(smc, key=smc.get) == _PEAKED_TRUTH, \
+        f"WA run+gibbs MAP {max(smc, key=smc.get)!r}, expected {_PEAKED_TRUTH!r}"
 
 
 def test_dedup_forward_exact():

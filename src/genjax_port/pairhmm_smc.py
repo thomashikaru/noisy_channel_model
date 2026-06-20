@@ -458,8 +458,11 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     (REJUV_GOAL3). ``rejuv_pool`` is ``(pool_tok, pool_len)`` (model-specific candidate spans, e.g.
     ``pairhmm_rejuv.build_pool``). ``rejuv_stats`` (optional dict) accumulates LM-forward + degeneracy
     counters for the R2 cost measurement. The forward filter itself is untouched -- rejuvenation is
-    additive and only runs inside the ``rejuv == "gibbs"`` branch. (Multi-token rejuvenation is R4 --
-    not yet wired -- so ``rejuv != "off"`` with multi-token candidates raises.)
+    additive and only runs inside the ``rejuv == "gibbs"`` branch. Multi-token candidates are handled
+    (R4). On the WORD-ACTION channel (``action_alpha`` set) the sweep is theta-aware -- it scores
+    candidates against the live per-particle channel via ``theta_costs`` -- and each resample event runs
+    the word sweep THEN a Dirichlet-conjugate ``theta`` refresh on the corrected parse (plan
+    WORD_ACTION_REJUV_PLAN sec 3); on the char-copy channel it is the certified zero-action sweep.
 
     ``lm_temp`` (lambda) tempers the LM PRIOR in BOTH the caprop step and the rejuvenation move: the
     target posterior is ``P_LM^lm_temp * P_channel`` (see :func:`_caprop_scores`). ``1.0`` = untempered
@@ -534,7 +537,8 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     # rejuv_dedup (R3 item 1b) runs the sweep's tail_fn on the unique buffers only (host-side) -- EXACT,
     # cuts the sweep's dominant per-particle prefill cost (~linear in P). A DedupStats tracks rows saved.
     rj_sweep, rj_dedup_stats = None, None
-    if rejuv == "gibbs" and not ON:      # ON: the alignment sweep is not theta-aware -> theta refresh only (5.4)
+    if rejuv == "gibbs":                  # word sweep for BOTH channels: theta-aware via theta_costs when ON,
+        #                                   char-copy / zero-action (theta_costs=None) when OFF (Phase 2 de-fork)
         from genjax_port import pairhmm_rejuv as RJ
         # R4: t_max = the forward's T_max; the pool carries multi-token spans + surface ids, built from
         # the SAME candidate inventory (so its surfaces index the SAME augmented emit_full).
@@ -635,14 +639,21 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
             if theta is not None:
                 theta = theta[anc]
             log_w = jnp.zeros(P)
-            if rj_sweep is not None:     # post-resample windowed Gibbs/SMCP3 sweep; fold its weight
+            if rj_sweep is not None:     # SWEEP-THEN-REFRESH (plan sec 3): run the theta-aware word move
                 ctx_buf, ctx_len, n_words, word_len, word_surf, _, done = state  # pre-resample (GOAL3 b)
                 hi = min(s + 1, M + slack)                   # frontier word count (upper bound)
                 lo = max(0, hi - rejuv_lookback)
+                # theta_costs: the current per-particle action costs so the sweep scores every candidate
+                # against the LIVE channel (theta). OFF -> None -> char-copy/zero-action (bit-identical).
+                theta_costs = None
+                if ON:
+                    a0p = jax.vmap(lambda wn: band_mask(
+                        jnp.concatenate([jnp.zeros((1,), wn.dtype), jnp.cumsum(wn)]), 0))(wins_p)  # (P,M+1)
+                    theta_costs = (lp_copy, lp_sub, wdel_p, wins_p, a0p, copy_mask)
                 key, sub = jax.random.split(key)
                 cb, cl2, wl2, ws2, la, mlw = rj_sweep(sub, ctx_buf, ctx_len, word_len, word_surf,
                                                       positions=range(lo, hi), done=done,
-                                                      dedup_stats=rj_dedup_stats)
+                                                      dedup_stats=rj_dedup_stats, theta_costs=theta_costs)
                 state = (cb, cl2, n_words, wl2, ws2, la, done)   # word count fixed; spans/lengths may move
                 log_w = log_w + mlw
                 rejuv_info = {"words": [int(lo), int(hi)], "ess_after": float(_ess(log_w)),
@@ -655,21 +666,21 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                     if rj_dedup_stats is not None:            # R3 1b: actual unique rows fed to tail_fn
                         rejuv_stats["dedup_rows_in"] = rj_dedup_stats.rows_in
                         rejuv_stats["dedup_rows_computed"] = rj_dedup_stats.rows_computed
-            elif rj_theta:               # word-action: Dirichlet-conjugate theta refresh (plan sec 3.3 / 5.4)
-                ctx_buf, ctx_len, n_words, word_len, word_surf, _, done = state
-                counts = _action_counts(word_surf, word_len, copy_mask, M)   # (P,4) positional action counts
-                key, sub = jax.random.split(key)
-                theta = jax.random.dirichlet(sub, action_alpha + counts)     # theta | counts ~ Dir(alpha+counts)
-                lp_copy, lp_sub, wdel_p, wins_p = _theta_to_costs(theta, enable_indel, wins_vec)
-                a0p = jax.vmap(lambda wn: band_mask(                          # new leading-spurious init per theta
-                    jnp.concatenate([jnp.zeros((1,), wn.dtype), jnp.cumsum(wn)]), 0))(wins_p)
-                la = channel_carry(a0p, emit_full, band, M, word_surf, word_len,   # log_alpha consistent
-                                   lp_copy, lp_sub, wdel_p, wins_p, copy_mask)      # with the new theta
-                state = (ctx_buf, ctx_len, n_words, word_len, word_surf, la, done)
-                # weight 0: a conjugate Gibbs step under the deterministic-alignment likelihood (exact for the
-                # near-deterministic battery alignments; the positional-count approximation is the general-text
-                # caveat -- plan sec 6). theta now reflects the data (clean context -> high p_copy).
-                rejuv_info = {"theta_mean": [round(float(x), 3) for x in jnp.mean(theta, axis=0)]}
+                if rj_theta:             # ...THEN refresh: Dirichlet-conjugate theta on the CORRECTED parse
+                    ctx_buf, ctx_len, n_words, word_len, word_surf, _, done = state  # post-move (sec 3)
+                    counts = _action_counts(word_surf, word_len, copy_mask, M)   # (P,4) positional action counts
+                    key, sub = jax.random.split(key)
+                    theta = jax.random.dirichlet(sub, action_alpha + counts)     # theta | counts ~ Dir(alpha+counts)
+                    lp_copy, lp_sub, wdel_p, wins_p = _theta_to_costs(theta, enable_indel, wins_vec)
+                    a0p = jax.vmap(lambda wn: band_mask(                          # new leading-spurious init per theta
+                        jnp.concatenate([jnp.zeros((1,), wn.dtype), jnp.cumsum(wn)]), 0))(wins_p)
+                    la = channel_carry(a0p, emit_full, band, M, word_surf, word_len,   # log_alpha consistent
+                                       lp_copy, lp_sub, wdel_p, wins_p, copy_mask)      # with the new theta
+                    state = (ctx_buf, ctx_len, n_words, word_len, word_surf, la, done)
+                    # The word move gives the particle the escape route the refresh-alone path lacked: the
+                    # sweep can RESTORE a dropped word, then the conjugate refresh re-estimates theta on the
+                    # corrected parse (theta now reflects the data: clean context -> high p_copy).
+                    rejuv_info["theta_mean"] = [round(float(x), 3) for x in jnp.mean(theta, axis=0)]
         if trace is not None:            # per-step snapshot of the cloud (post-extend/resample/rejuv)
             trace.append(_record_step(model, state, log_w, seed_len, s, ess_pre, resampled, logZ,
                                       rejuv_info))

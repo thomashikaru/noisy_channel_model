@@ -187,27 +187,11 @@ def _lm_logprior(ctx, bufs, total_tokens, add_eos):
     return total
 
 
-def _channel_carry_a(a0, emit_full, wdel, wins, band, M, Vc, word_surf, word_len):
-    """(N, M+1) forward carry after consuming all active words -- the channel marginal the filter
-    carries as ``log_alpha`` (terminal ``carry[:, M]``; partial mid-loop ``logsumexp(carry)``).
-
-    This is the **char-copy / certified** sweep call: it delegates to the shared
-    ``word_dp.channel_carry`` with ZERO action offset (``lp_copy = lp_sub = 0`` -> bare ``emit_full``
-    columns) and the global ``wdel``/``wins`` broadcast over rows -- bit-identical to the pre-unification
-    carry. The word-action sweep threads real per-particle theta costs into ``channel_carry`` directly."""
-    N = word_surf.shape[0]
-    zeros = jnp.zeros((N,), jnp.float32)
-    a0b = jnp.broadcast_to(a0, (N, M + 1))
-    wdel_b = jnp.broadcast_to(jnp.asarray(wdel, jnp.float32), (N,))
-    wins_b = jnp.broadcast_to(jnp.asarray(wins, jnp.float32), (N, M))
-    copy_mask0 = jnp.zeros((M, emit_full.shape[1]), jnp.float32)   # unused (offset is x0 when zero-action)
-    return channel_carry(a0b, emit_full, band, M, word_surf, word_len,
-                         zeros, zeros, wdel_b, wins_b, copy_mask0)
-
-
-def _channel_carry(ctx, word_surf, word_len):
-    return _channel_carry_a(ctx.a0, ctx.emit_full, ctx.wdel, ctx.wins, ctx.band,
-                            ctx.M, ctx.model.emit_vocab, word_surf, word_len)
+# The channel forward carry is ``word_dp.channel_carry`` (one source of truth shared with the forward
+# filter's theta-refresh). Both the sweep's per-candidate scorer (``_chan_scores``) and its final
+# ``log_alpha`` recompute call it with the per-particle word-action costs; the char-copy / OFF path
+# passes the zero-action parameterization (``lp_copy=lp_sub=0``, global ``wdel``/``wins``, all-zero
+# ``copy_mask``) the sweep builds from ``ctx`` -- bit-identical to the pre-word-action carry.
 
 
 def _tail_chain_uncached(lm_fn, ctx_bufs, ctx_lens, tails, tail_lens):
@@ -305,16 +289,23 @@ def _candidates(w, word_tok, word_len, word_surf, pool_tok, pool_len, pool_surf,
 
 
 def _chan_scores(w, word_len, word_surf, cand_len, cand_surf, done,
-                 a0, emit_full, wdel, wins, band, M, Vc, Wmax):
+                 a0p, emit_full, wdel_p, wins_p, band, M, Wmax, lp_copy, lp_sub, copy_mask):
     """Done-aware channel marginal per candidate (P,Kt): splice each candidate into slot w, run the
-    word forward DP. DONE particles read the terminal ``alpha[M]``; mid-loop ones the partial forward
-    mass ``logsumexp(alpha)``."""
+    word forward DP with the PER-PARTICLE word-action costs. DONE particles read the terminal
+    ``alpha[M]``; mid-loop ones the partial forward mass ``logsumexp(alpha)``.
+
+    The per-particle costs (``a0p`` (P,M+1), ``lp_copy``/``lp_sub``/``wdel_p`` (P,), ``wins_p`` (P,M))
+    are ``jnp.repeat``-ed by ``Kt`` to align with the P*Kt spliced rows and handed to the SHARED
+    ``word_dp.channel_carry`` -- the same carry the forward filter's theta-refresh uses, so the sweep
+    scores every candidate against the live per-particle channel (theta). The char-copy / OFF path
+    passes the zero-action parameterization -> bit-identical to the pre-word-action carry."""
     P, Kt = cand_surf.shape
     wl = jnp.broadcast_to(word_len[:, None], (P, Kt, Wmax)).at[:, :, w].set(cand_len)
     ws = jnp.broadcast_to(word_surf[:, None], (P, Kt, Wmax)).at[:, :, w].set(cand_surf)
     N = P * Kt
-    carry = _channel_carry_a(a0, emit_full, wdel, wins, band, M, Vc,
-                             ws.reshape(N, Wmax), wl.reshape(N, Wmax))               # (N, M+1)
+    rep = lambda a: jnp.repeat(a, Kt, axis=0)                       # align (P, ...) -> (P*Kt, ...)
+    carry = channel_carry(rep(a0p), emit_full, band, M, ws.reshape(N, Wmax), wl.reshape(N, Wmax),
+                          rep(lp_copy), rep(lp_sub), rep(wdel_p), rep(wins_p), copy_mask)   # (N, M+1)
     return jnp.where(jnp.repeat(done, Kt), carry[:, M], logsumexp(carry, axis=1)).reshape(P, Kt)
 
 
@@ -389,11 +380,12 @@ def _build_step(sl, Wmax, T, M, K, mt, eos_id, Vc, band, tail_fn):
 
     @jax.jit
     def step(key, w, word_tok, word_len, word_surf, move_logw, done, n_words,
-             emit_full, a0, pool_tok, pool_len, pool_surf, wdel, wins, seed_ids, lm_temp):
+             emit_full, a0p, pool_tok, pool_len, pool_surf, wdel_p, wins_p, seed_ids, lm_temp,
+             lp_copy, lp_sub, copy_mask):
         cand_tok, cand_len, cand_surf, valid = _candidates(
             w, word_tok, word_len, word_surf, pool_tok, pool_len, pool_surf, K, T)
         chan = _chan_scores(w, word_len, word_surf, cand_len, cand_surf, done,
-                            a0, emit_full, wdel, wins, band, M, Vc, Wmax)
+                            a0p, emit_full, wdel_p, wins_p, band, M, Wmax, lp_copy, lp_sub, copy_mask)
         ctx_bufs, ctx_lens, tail, tail_len = _tail_inputs(
             w, word_tok, word_len, cand_tok, cand_len, done, n_words, sl, Wmax, T, mt, eos_id, seed_ids)
         chain = tail_fn(ctx_bufs, ctx_lens, tail, tail_len)                         # (P, Kt) -- LM forward
@@ -424,11 +416,12 @@ def _build_dedup_steps(sl, Wmax, T, M, K, mt, eos_id, Vc, band):
 
     @jax.jit
     def move(key, chain, w, word_tok, word_len, word_surf, move_logw, done, n_words,
-             emit_full, a0, pool_tok, pool_len, pool_surf, wdel, wins, lm_temp):
+             emit_full, a0p, pool_tok, pool_len, pool_surf, wdel_p, wins_p, lm_temp,
+             lp_copy, lp_sub, copy_mask):
         cand_tok, cand_len, cand_surf, valid = _candidates(
             w, word_tok, word_len, word_surf, pool_tok, pool_len, pool_surf, K, T)
         chan = _chan_scores(w, word_len, word_surf, cand_len, cand_surf, done,
-                            a0, emit_full, wdel, wins, band, M, Vc, Wmax)
+                            a0p, emit_full, wdel_p, wins_p, band, M, Wmax, lp_copy, lp_sub, copy_mask)
         target = jnp.where(valid, lm_temp * chain + chan, -jnp.inf)
         return _apply_move(key, target, w, cand_tok, cand_len, cand_surf,
                            word_tok, word_len, word_surf, move_logw, n_words, slot_model, slot_proposal)
@@ -510,9 +503,11 @@ def make_sweep(ctx, pool_tok, pool_len, pool_surf=None, max_tail=None, dedup=Fal
         step = _build_step(sl, Wmax, T, M, K, mt, eos_id, Vc, ctx.band, tail_fn)
 
     # Per-run data threaded as TRACED args (not baked into the step) so same-shape runs reuse the compile.
-    emit_full, a0 = ctx.emit_full, ctx.a0
-    wdel = jnp.float32(ctx.wdel)
-    wins = jnp.asarray(ctx.wins, jnp.float32)                 # scalar or (M,) per-word insertion cost (traced)
+    emit_full = ctx.emit_full
+    Vc_aug = emit_full.shape[1]                               # augmented channel width (copy_mask columns)
+    wdel0 = jnp.float32(ctx.wdel)                             # global delete cost (OFF / char-copy default)
+    wins0 = jnp.asarray(ctx.wins, jnp.float32)               # scalar or (M,) global insertion cost (OFF)
+    a00 = jnp.asarray(ctx.a0, jnp.float32)                   # (M+1,) leading-spurious init (OFF)
     lm_temp = jnp.float32(ctx.lm_temp)                        # LM-prior temperature (traced; see RejuvCtx)
     seed_ids = jnp.asarray(ctx.model.seed_ids, jnp.int32) if sl else jnp.zeros((0,), jnp.int32)
     if pool_surf is None:
@@ -520,7 +515,12 @@ def make_sweep(ctx, pool_tok, pool_len, pool_surf=None, max_tail=None, dedup=Fal
     pool_tok, pool_len, pool_surf = jnp.asarray(pool_tok), jnp.asarray(pool_len), jnp.asarray(pool_surf)
 
     def sweep(key, ctx_buf, ctx_len, word_len=None, word_surf=None, positions=None, done=None,
-              dedup_stats=None):
+              dedup_stats=None, theta_costs=None):
+        """``theta_costs`` (None = char-copy / OFF) is the per-particle WORD-ACTION cost tuple
+        ``(lp_copy (P,), lp_sub (P,), wdel_p (P,), wins_p (P,M), a0p (P,M+1), copy_mask (M,Vc_aug))`` --
+        the SAME costs the forward filter carries from each particle's theta. Absent, the zero-action
+        char-copy parameterization is built from ``ctx`` (``lp_copy=lp_sub=0``, global ``wdel``/``wins``,
+        ``ctx.a0``, all-zero ``copy_mask``) -> bit-identical to the pre-word-action sweep."""
         P, LCTX = ctx_buf.shape
         done = jnp.ones(P, bool) if done is None else done
         if word_len is None:                                     # single-token default (toy / gibbs_sweep)
@@ -528,6 +528,14 @@ def make_sweep(ctx, pool_tok, pool_len, pool_surf=None, max_tail=None, dedup=Fal
             word_len = (jnp.arange(Wmax)[None, :] < n0[:, None]).astype(jnp.int32)
         if word_surf is None:
             word_surf = ctx_buf[:, sl:sl + Wmax]
+        if theta_costs is None:                                  # char-copy / OFF: zero action offset
+            lp_copy, lp_sub = jnp.zeros(P), jnp.zeros(P)
+            wdel_p = jnp.broadcast_to(wdel0, (P,))
+            wins_p = jnp.broadcast_to(wins0, (P, M))
+            a0p = jnp.broadcast_to(a00, (P, M + 1))
+            copy_mask = jnp.zeros((M, Vc_aug), jnp.float32)
+        else:
+            lp_copy, lp_sub, wdel_p, wins_p, a0p, copy_mask = theta_costs
         word_tok, n_words = _unpack(ctx_buf, word_len, sl, Wmax, T)
         move_logw = jnp.zeros(P)
         for w in (range(Wmax) if positions is None else positions):
@@ -539,14 +547,17 @@ def make_sweep(ctx, pool_tok, pool_len, pool_surf=None, max_tail=None, dedup=Fal
                 chain = _dedup_tail(tail_fn, *ci, stats=dedup_stats)    # host: unique tail_fn -> [P,Kt]
                 word_tok, word_len, word_surf, move_logw = move(
                     sub, chain, wi, word_tok, word_len, word_surf, move_logw, done, n_words,
-                    emit_full, a0, pool_tok, pool_len, pool_surf, wdel, wins, lm_temp)
+                    emit_full, a0p, pool_tok, pool_len, pool_surf, wdel_p, wins_p, lm_temp,
+                    lp_copy, lp_sub, copy_mask)
             else:
                 word_tok, word_len, word_surf, move_logw = step(
                     sub, wi, word_tok, word_len, word_surf, move_logw, done, n_words,
-                    emit_full, a0, pool_tok, pool_len, pool_surf, wdel, wins, seed_ids, lm_temp)
+                    emit_full, a0p, pool_tok, pool_len, pool_surf, wdel_p, wins_p, seed_ids, lm_temp,
+                    lp_copy, lp_sub, copy_mask)
         bufs, total = _flat_buffer(ctx, word_tok, word_len, LCTX, n_out)
         ctx_len2 = sl + total.astype(jnp.int32)                  # word lengths may have changed (multi-token)
-        log_alpha = _channel_carry(ctx, word_surf, word_len)                        # (P, M+1) for filter
+        log_alpha = channel_carry(a0p, emit_full, ctx.band, M, word_surf, word_len,  # (P, M+1) for filter
+                                  lp_copy, lp_sub, wdel_p, wins_p, copy_mask)
         return bufs, ctx_len2, word_len, word_surf, log_alpha, move_logw
 
     return sweep
