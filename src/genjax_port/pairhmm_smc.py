@@ -42,8 +42,8 @@ from jax.scipy.special import logsumexp
 import genjax
 from genjax import ChoiceMap
 
-from genjax_port.genjax_model import factor
-from genjax_port.poc_word_indel import _word_row_update, _ess
+from genjax_port.genjax_factor import factor
+from genjax_port.word_dp import _word_row_update, _ess
 
 
 @dataclass
@@ -82,9 +82,14 @@ class PairHMMModel:
     obs_spans: Callable = None  # observed_str -> list[token-span tuple], parallel to obs_words: each
     #                             unit's actual observed token ids, threaded into candidate_words for a
     #                             faithful COPY. None => candidate_words re-encodes (the toy / generic).
+    channel_form: Callable = None  # the base-rate-DECOUPLED FORM channel (COPY_LP=0): scores only the
+    #                                substitution FORM, the word-action redesign's emission table (plan
+    #                                WORD_ACTION_CHANNEL_PLAN sec 2/3). Used iff run(action_alpha=...) is
+    #                                set; the per-word action cost (log p_copy / log p_sub) is added on
+    #                                the column. None => word-action unsupported (the OFF / certified path).
 
 
-def _build_candidates(model, obs_words, obs_spans, obs_char, emit_full, max_dist, Ke):
+def _build_candidates(model, obs_words, obs_spans, obs_char, emit_full, max_dist, Ke, channel_fn=None):
     """Assemble the per-observed-word candidate inventory (Phase D), generalizing the old
     single-token ``_emit_table``. Each candidate is a (token span, surface) from
     ``model.candidate_words``. Returns:
@@ -135,10 +140,11 @@ def _build_candidates(model, obs_words, obs_spans, obs_char, emit_full, max_dist
                 mtidx[i, j] = mt_index[key]
     n_mt = len(mt_list)
 
+    channel_fn = channel_fn or model.channel_logpdf       # match the fn that built emit_full (form vs base)
     if extra_surfaces:
         extra_char = jnp.stack([jnp.asarray(model.char_ids(s)[0], jnp.int32) for s in extra_surfaces])
         extra_clen = jnp.asarray([model.char_ids(s)[1] for s in extra_surfaces], jnp.int32)
-        extra_cols = jax.vmap(jax.vmap(model.channel_logpdf, in_axes=(None, 0, 0)),
+        extra_cols = jax.vmap(jax.vmap(channel_fn, in_axes=(None, 0, 0)),
                               in_axes=(0, None, None))(obs_char, extra_char, extra_clen)  # (M, n_app)
         emit_full_aug = jnp.concatenate([emit_full, extra_cols], axis=1)
     else:
@@ -150,8 +156,19 @@ def _build_candidates(model, obs_words, obs_spans, obs_char, emit_full, max_dist
     for k, (span, _sid) in enumerate(mt_list):
         mt_span[k, :len(span)] = span
         mt_len[k] = len(span)
+
+    # Case-INSENSITIVE copy mask (M, Vc_aug): copy_mask[m, s] = surface s is a COPY of observed word m,
+    # i.e. its (lowercased) char row equals the COPY surface's. This is the word-action analogue of the
+    # OFF channel's case-INSENSITIVE char DP: a sentence-initial / orthographic capitalization ('she'->
+    # 'She') is a faithful copy, not a substitution. Using ``vocab_char`` (already lowercased by
+    # ``char_ids``) makes ' She' and ' she' share a char row, so both match the COPY -- restoring the
+    # case-insensitivity the word-action emission offset previously lost by comparing surface IDs.
+    vocab_char_aug = (jnp.concatenate([model.vocab_char, extra_char], axis=0)
+                      if extra_surfaces else model.vocab_char)             # (Vc_aug, LC)
+    copy_chars = vocab_char_aug[jnp.asarray(surf[:, 0])]                   # (M, LC) each slot's COPY chars
+    copy_mask = jnp.all(vocab_char_aug[None] == copy_chars[:, None], axis=2)  # (M, Vc_aug) bool
     return (jnp.asarray(first), jnp.asarray(surf), jnp.asarray(mtidx),
-            jnp.asarray(mt_span), jnp.asarray(mt_len), emit_full_aug, T_max, n_mt)
+            jnp.asarray(mt_span), jnp.asarray(mt_len), emit_full_aug, copy_mask, T_max, n_mt)
 
 
 def _rejuv_pool_from_inventory(emit_first, emit_surf, emit_mtidx, mt_span, mt_len, M, Wmax, T_max):
@@ -183,19 +200,21 @@ def _rejuv_pool_from_inventory(emit_first, emit_surf, emit_mtidx, mt_span, mt_le
 
 
 def _caprop_scores(log_alpha, lmlog, mt_chain, emit_first, emit_surf, emit_mtidx, mt_span, mt_len,
-                   emit_full, offs, J, M, band_mask, t_new, eos_id, emit_vocab, WDEL, WINS,
-                   word_mask, lm_temp, T_max, n_mt):
+                   emit_full, offs, J, M, band_mask, t_new, eos_id, emit_vocab, wdel, wins,
+                   word_mask, lm_temp, T_max, n_mt, lp_copy, lp_sub, copy_mask):
     """Channel-aware (fully-adapted) candidate scores: [word(Kw), EOS(1)], plus the chosen word's
     token span for the kernel to splice.
 
     Candidate set C = emission candidates in a window around the alignment frontier (channel-
     compatible) + top-J LM words (fluency/deletion bridges), deduped by SURFACE id. Each word's score
     is ``lm_temp * lm_logprob + dZ`` where ``dZ`` is the forward-mass increment of one
-    ``_word_row_update`` row (using the candidate's surface channel column ``emit_full[:, surf]``).
-    The LM log-prob is ``lmlog[first_token]`` for a single-token candidate (the cheap one-forward
-    path) or the precomputed chain-rule ``mt_chain[mt]`` for a multi-token one. The incremental
-    importance weight is ``logsumexp(scores)`` (independent of the draw). EOS reads the terminal
-    full-consumption mass ``alpha[M]``.
+    ``_word_row_update`` row (using the candidate's surface channel column ``emit_full[:, surf]`` with
+    the per-particle word-action offset ``lp_sub + (lp_copy-lp_sub)*copy_mask[m, surf]`` added, and
+    the per-particle ``wdel``/``wins`` -- all trivial when the word-action channel is OFF). The LM
+    log-prob is ``lmlog[first_token]`` for a single-token candidate (the cheap one-forward path) or the
+    precomputed chain-rule ``mt_chain[mt]`` for a multi-token one. The incremental importance weight is
+    ``logsumexp(scores)`` (independent of the draw). EOS reads the terminal full-consumption mass
+    ``alpha[M]``.
 
     Returns ``(cand_span [Kw, T_max], cand_len [Kw], emit_cols [M, Kw], scores [Kw+1])``. With
     ``n_mt == 0`` and ``T_max == 1`` this reduces exactly to the certified single-token scoring (the
@@ -229,9 +248,17 @@ def _caprop_scores(log_alpha, lmlog, mt_chain, emit_first, emit_surf, emit_mtidx
     valid = valid & ~jnp.any(earlier_eq, axis=1)                          # keep first occurrence
 
     emit_cols = emit_full[:, cand_surf_c]                                 # (M, Kw)
+    # Word-action offset (plan WORD_ACTION_CHANNEL_PLAN sec 3.1): a cell (obs word m, candidate surf)
+    # is a COPY iff surf matches m's observed word UP TO CASE (``copy_mask[m, surf]``), paying
+    # ``log p_copy``; otherwise a substitution, paying ``log p_sub``. Case-insensitivity is essential --
+    # a sentence-initial 'she'->'She' is a copy, not a sub (the OFF char DP is case-insensitive too).
+    # The form (edited-char cost) is already in ``emit_full`` (the COPY_LP=0 form table when ON). OFF:
+    # lp_copy=lp_sub=0 -> offset is identically 0 -> bit-identical to the certified path.
+    is_copy = copy_mask[jnp.arange(M)[:, None], cand_surf_c[None, :]]     # (M, Kw)
+    emit_cols = emit_cols + lp_sub + (lp_copy - lp_sub) * is_copy
 
     def cand_dZ(col):
-        return logsumexp(band_mask(_word_row_update(log_alpha, col, WDEL, WINS), t_new)) - Z
+        return logsumexp(band_mask(_word_row_update(log_alpha, col, wdel, wins), t_new)) - Z
 
     dZ = jax.vmap(cand_dZ, in_axes=1)(emit_cols)
     cand_first_c = jnp.clip(cand_first, 0, emit_vocab - 1)
@@ -256,7 +283,7 @@ def _caprop_scores(log_alpha, lmlog, mt_chain, emit_first, emit_surf, emit_mtidx
     return cand_span, cand_len, cand_surf_out, emit_cols, scores
 
 
-def _make_kernel(seed_len, M, band, WDEL, WINS, T_max, LCTX, Wmax):
+def _make_kernel(seed_len, M, band, T_max, LCTX, Wmax):
     ks = jnp.arange(M + 1)
 
     def band_mask(log_alpha, t):
@@ -265,7 +292,7 @@ def _make_kernel(seed_len, M, band, WDEL, WINS, T_max, LCTX, Wmax):
         return jnp.where(jnp.abs(ks - t) <= band, log_alpha, -jnp.inf)
 
     @genjax.gen
-    def kernel(state, cand_span, cand_len, cand_surf, emit_cols, scores):
+    def kernel(state, cand_span, cand_len, cand_surf, emit_cols, scores, wdel, wins):
         ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done = state
         action = genjax.categorical(scores) @ "action"
         incr = logsumexp(scores)
@@ -283,7 +310,7 @@ def _make_kernel(seed_len, M, band, WDEL, WINS, T_max, LCTX, Wmax):
 
         advance = (~done) & (~chose_eos)
         t_after = n_words + 1                                            # band uses WORD count, not tokens
-        new_alpha = band_mask(_word_row_update(log_alpha, col, WDEL, WINS), t_after)
+        new_alpha = band_mask(_word_row_update(log_alpha, col, wdel, wins), t_after)
         pos = jnp.clip(ctx_len + jnp.arange(T_max), 0, LCTX - 1)         # splice the span's tokens
         write = advance & (jnp.arange(T_max) < span_len)
         ctx_buf2 = ctx_buf.at[pos].set(jnp.where(write, span.astype(jnp.int32), ctx_buf[pos]))
@@ -345,16 +372,90 @@ def _record_step(model, state, log_w, seed_len, t, ess, resampled, logZ, rejuv, 
             "particles": particles, "rejuv": rejuv}
 
 
+def _theta_to_costs(theta, enable_indel, wins_vec):
+    """``theta`` (P,4) over the word action ``(copy, sub, insert, delete)`` -> the per-particle channel
+    action costs ``(lp_copy (P,), lp_sub (P,), wdel_p (P,), wins_p (P,M))``. ``wins_vec`` (M,) is the
+    per-observed-word CONTENT cost (``-unigram_surprisal``); the insertion RATE is ``log p_insert`` (so
+    ``wins_p = log p_insert + content``). ``enable_indel=False`` masks delete/insert to -inf."""
+    P = theta.shape[0]
+    neg = jnp.float32(-jnp.inf)
+    lp = jnp.log(theta)
+    lp_copy, lp_sub = lp[:, 0], lp[:, 1]
+    wdel_p = jnp.where(enable_indel, lp[:, 3], neg) * jnp.ones(P)                  # log p_delete (P,)
+    wins_p = jnp.where(enable_indel, lp[:, 2][:, None] + wins_vec[None, :], neg)  # log p_insert + content
+    return lp_copy, lp_sub, wdel_p, wins_p
+
+
+def _action_counts(word_surf, word_len, copy_mask, M):
+    """Per-particle word-action counts ``(n_copy, n_sub, n_ins, n_del)`` (P,4) from a POSITIONAL 1:1
+    alignment (intended word i <-> observed word i). EXACT for substitution-dominated, near-deterministic
+    alignments -- the calibration battery's one-edit items (plan WORD_ACTION_CHANNEL_PLAN sec 3.3) --
+    and approximate when an insertion/deletion shifts the alignment mid-sentence (a documented
+    general-text refinement: the true counts need the sampled/MAP alignment). Drives the Dirichlet-
+    conjugate theta refresh (sec 5.4). Copy vs sub is CASE-INSENSITIVE via ``copy_mask`` (a capitalization
+    is a copy, not a substitution), consistent with the emission offset."""
+    Wmax = word_surf.shape[1]
+    idx = jnp.arange(Wmax)[None, :]
+    n_words = jnp.sum(word_len > 0, axis=1)                         # (P,) intended word count
+    active = idx < n_words[:, None]
+    aligned = idx < M                                              # positional slot maps to an observed word
+    slot = jnp.clip(jnp.arange(Wmax), 0, M - 1)                    # (Wmax,) observed word each slot maps to
+    ws_c = jnp.clip(word_surf, 0, copy_mask.shape[1] - 1)
+    is_cp = copy_mask[slot[None, :], ws_c]                         # (P,Wmax) word_surf is a (case-insens) COPY
+    is_copy = active & aligned & is_cp
+    is_sub = active & aligned & (~is_cp)
+    is_del = active & (~aligned)                                   # intended word past the observed length
+    n_copy = jnp.sum(is_copy, axis=1)
+    n_sub = jnp.sum(is_sub, axis=1)
+    n_del = jnp.sum(is_del, axis=1)
+    n_ins = jnp.maximum(0, M - n_words)                           # observed words past the intended length
+    return jnp.stack([n_copy, n_sub, n_ins, n_del], axis=1).astype(jnp.float32)
+
+
+def _channel_carry_action(a0p, emit_form, copy_mask, band_mask, M, Wmax,
+                          word_surf, word_len, lp_copy, lp_sub, wdel_p, wins_p):
+    """Per-particle channel forward carry ``log_alpha`` (P, M+1) for the word-action model: re-run the
+    word DP over each particle's intended words with ITS theta's action costs (emission offset
+    ``lp_sub + (lp_copy-lp_sub)*copy_mask[m, surf]`` + per-particle ``wdel_p/wins_p``). Used to make
+    ``log_alpha`` consistent with a refreshed theta (sec 5.4), mirroring the forward filter's band
+    schedule (``t = word index + 1``). Copy vs sub is CASE-INSENSITIVE via ``copy_mask``."""
+    Vc = emit_form.shape[1]
+
+    def one(ws, wl, a0, lpc, lps, wd, wn):
+        def step(alpha, i):
+            s = jnp.clip(ws[i], 0, Vc - 1)
+            col = emit_form[:, s] + lps + (lpc - lps) * copy_mask[:, s]           # (M,) offset form column
+            new = band_mask(_word_row_update(alpha, col, wd, wn), i + 1)
+            return jnp.where(wl[i] > 0, new, alpha), None
+
+        alpha, _ = jax.lax.scan(step, a0, jnp.arange(Wmax))
+        return alpha
+
+    return jax.vmap(one)(word_surf, word_len, a0p, lp_copy, lp_sub, wdel_p, wins_p)
+
+
 def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), slack=3, band=None,
         max_dist=2, Ke=6, J=4, cwin=1, proposal="caprop", enable_indel=True,
         rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False,
-        lm_temp=1.0):
+        lm_temp=1.0, action_alpha=None):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
     ``"bootstrap"`` proposes from the LM prior (baseline). ``band=None`` disables the band mask
     (the toy); Pythia passes an integer band, which also gives insertions/deletions their reach
     (consumption ``k`` may run up to ``band`` ahead of / behind the emission count).
+
+    ``action_alpha`` (default ``None`` -- the OFF / certified path) turns on the **word-action channel**
+    (plan WORD_ACTION_CHANNEL_PLAN): a length-4 Dirichlet concentration over the per-word action
+    ``(copy, sub, insert, delete)``. When set, a latent ``theta ~ Dirichlet(action_alpha)`` is drawn per
+    particle and the channel score factors into a word-level action cost + a form cost: the emission
+    table is built from the base-rate-DECOUPLED FORM channel (``model.channel_form``, COPY_LP=0) and
+    each emission cell pays ``log p_copy`` (verbatim copy of that observed word) or ``log p_sub`` (a
+    substitution); deletion pays ``log p_delete`` (the WDEL arc) and insertion ``log p_insert + wins``
+    (``wins`` is then the per-word CONTENT cost ``-unigram_surprisal``, the rate coming from theta).
+    With ``action_alpha=None`` every value is bit-identical to the certified char-copy filter (lp=0
+    offset, the bundled ``channel_logpdf``, global ``WDEL/WINS``). theta is carried per particle and
+    refreshed by the (Dirichlet-conjugate) rejuvenation move when ``rejuv="gibbs"``.
 
     Intended words may span multiple BPE tokens (Phase D): ``_build_candidates`` builds the
     candidate inventory (a candidate = a token span + a surface id) and ``T_max`` = the max span
@@ -384,16 +485,21 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     read more literally (curbs over-editing). Applies to ``proposal="caprop"`` (production); the
     ``"bootstrap"`` baseline samples from the raw LM and is meaningful only at ``lm_temp=1.0``.
     """
+    ON = action_alpha is not None                                       # word-action channel?
+    rj_theta = ON and rejuv != "off"                                    # Dirichlet-conjugate theta refresh (5.4)
     seed_ids = list(model.seed_ids)
     seed_len = len(seed_ids)
     obs_words = model.obs_words(observed)
     M = len(obs_words)
     obs_spans = model.obs_spans(observed) if model.obs_spans is not None else [None] * M
     obs_char = jnp.stack([jnp.asarray(model.char_ids(w)[0], jnp.int32) for w in obs_words])  # (M,Lc)
-    emit_full = jax.vmap(jax.vmap(model.channel_logpdf, in_axes=(None, 0, 0)),
+    chan_fn = model.channel_form if ON else model.channel_logpdf        # FORM table (COPY_LP=0) when ON
+    emit_full = jax.vmap(jax.vmap(chan_fn, in_axes=(None, 0, 0)),
                          in_axes=(0, None, None))(obs_char, model.vocab_char, model.vocab_clen)
-    (emit_first, emit_surf, emit_mtidx, mt_span, mt_len, emit_full, T_max, n_mt) = _build_candidates(
-        model, obs_words, obs_spans, obs_char, emit_full, max_dist, Ke)
+    # copy_mask (M, Vc_aug): the CASE-INSENSITIVE copy classifier for the word-action emission offset
+    # (a capitalization 'she'->'She' is a copy, not a sub -- the bug the word-action path silently had).
+    (emit_first, emit_surf, emit_mtidx, mt_span, mt_len, emit_full, copy_mask, T_max, n_mt) = _build_candidates(
+        model, obs_words, obs_spans, obs_char, emit_full, max_dist, Ke, channel_fn=chan_fn)
     WDEL = wdel if enable_indel else -jnp.inf
     WINS = wins if enable_indel else -jnp.inf
     offs = jnp.arange(-cwin, cwin + 1)
@@ -401,21 +507,35 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     Wmax = M + slack
     LCTX = seed_len + Wmax * T_max + 1
 
-    kernel, band_mask = _make_kernel(seed_len, M, band, WDEL, WINS, T_max, LCTX, Wmax)
+    # Per-particle action costs (plan sec 3.2). OFF: lp_copy=lp_sub=0 (zero emission offset) and the
+    # global WDEL/WINS broadcast over P -> bit-identical to the certified path. ON: draw theta ~
+    # Dirichlet(action_alpha) per particle and read off log p_copy/p_sub/p_insert/p_delete; the insertion
+    # rate replaces ins_rate (so ``wins`` carries only the per-word content cost -unigram_surprisal).
+    wins_vec = jnp.broadcast_to(jnp.asarray(WINS, jnp.float32), (M,))    # per-observed-word insertion cost
+    if ON:
+        key, tkey = jax.random.split(key)
+        action_alpha = jnp.asarray(action_alpha, jnp.float32)
+        theta = jax.random.dirichlet(tkey, action_alpha, shape=(P,))                 # (P,4)
+        lp_copy, lp_sub, wdel_p, wins_p = _theta_to_costs(theta, enable_indel, wins_vec)
+    else:
+        theta = None
+        lp_copy = jnp.zeros(P); lp_sub = jnp.zeros(P)
+        wdel_p = jnp.broadcast_to(jnp.asarray(WDEL, jnp.float32), (P,))
+        wins_p = jnp.broadcast_to(wins_vec, (P, M))
+
+    kernel, band_mask = _make_kernel(seed_len, M, band, T_max, LCTX, Wmax)
     constraint = ChoiceMap.d({"ev": jnp.float32(0.0)})
-    ks = jnp.arange(M + 1)
-    wins_arr = jnp.asarray(WINS)                                         # scalar (uniform) or (M,) per-word
-    if wins_arr.ndim == 0:                                              # uniform: keep the exact original
-        a0 = band_mask(jnp.where(ks == 0, 0.0, ks * WINS), 0)           # leading spurious words
-    else:                                                              # per-word: a0[k] = sum of the first
-        a0 = band_mask(jnp.concatenate(                                 # k observed words' insertion costs
-            [jnp.zeros((1,), wins_arr.dtype), jnp.cumsum(wins_arr)]), 0)
+    # a0 per particle (leading spurious words): a0[k] = sum of the first k observed-word insertion costs.
+    # OFF: every particle's wins_p row is identical -> a0 matches the old broadcast a0 exactly.
+    a0p = jax.vmap(lambda wn: band_mask(
+        jnp.concatenate([jnp.zeros((1,), wn.dtype), jnp.cumsum(wn)]), 0))(wins_p)       # (P, M+1)
+    a0 = a0p[0]                                                          # representative row (rejuv ctx)
     ctx0 = jnp.full((P, LCTX), eos_id, jnp.int32)
     if seed_len:
         ctx0 = ctx0.at[:, :seed_len].set(jnp.array(seed_ids, jnp.int32))
     state = (ctx0, jnp.full(P, seed_len, jnp.int32), jnp.zeros(P, jnp.int32),
              jnp.zeros((P, Wmax), jnp.int32), jnp.zeros((P, Wmax), jnp.int32),
-             jnp.broadcast_to(a0, (P, M + 1)), jnp.zeros(P, bool))   # +word_len, +word_surf (R4)
+             a0p, jnp.zeros(P, bool))   # +word_len, +word_surf (R4)
     log_w = jnp.zeros(P)
     logZ = 0.0
 
@@ -432,7 +552,7 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     # rejuv_dedup (R3 item 1b) runs the sweep's tail_fn on the unique buffers only (host-side) -- EXACT,
     # cuts the sweep's dominant per-particle prefill cost (~linear in P). A DedupStats tracks rows saved.
     rj_sweep, rj_dedup_stats = None, None
-    if rejuv == "gibbs":
+    if rejuv == "gibbs" and not ON:      # ON: the alignment sweep is not theta-aware -> theta refresh only (5.4)
         from genjax_port import pairhmm_rejuv as RJ
         # R4: t_max = the forward's T_max; the pool carries multi-token spans + surface ids, built from
         # the SAME candidate inventory (so its surfaces index the SAME augmented emit_full).
@@ -450,37 +570,40 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                                dedup_rows_in=0, dedup_rows_computed=0)
 
     word_mask = model.word_mask
-    def _assemble(n_words, log_alpha, lmlog, mt_chain):
+    def _assemble(n_words, log_alpha, lmlog, mt_chain, lp_copy, lp_sub, wdel_p, wins_p):
         return jax.vmap(
-            lambda la, lm, mtc, nw: _caprop_scores(la, lm, mtc, emit_first, emit_surf, emit_mtidx,
-                                                   mt_span, mt_len, emit_full, offs, J, M, band_mask,
-                                                   nw + 1, eos_id, Vc, WDEL, WINS, word_mask,
-                                                   lm_temp, T_max, n_mt),
-            in_axes=(0, 0, 0, 0))(log_alpha, lmlog, mt_chain, n_words)
+            lambda la, lm, mtc, nw, lpc, lps, wd, wn: _caprop_scores(
+                la, lm, mtc, emit_first, emit_surf, emit_mtidx, mt_span, mt_len, emit_full, offs, J, M,
+                band_mask, nw + 1, eos_id, Vc, wd, wn, word_mask, lm_temp, T_max, n_mt,
+                lpc, lps, copy_mask),
+            in_axes=(0, 0, 0, 0, 0, 0, 0, 0))(log_alpha, lmlog, mt_chain, n_words,
+                                              lp_copy, lp_sub, wdel_p, wins_p)
 
     @jax.jit
     def extend_caprop(keys, ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done,
-                      cand_span, cand_len, cand_surf, emit_cols, scores):
-        def one(k, cb, cl, nw, wl, ws_, la, dn, csp, cln, csf, ec, sc):
+                      cand_span, cand_len, cand_surf, emit_cols, scores, wdel_p, wins_p):
+        def one(k, cb, cl, nw, wl, ws_, la, dn, csp, cln, csf, ec, sc, wd, wn):
             tr, w = kernel.importance(k, constraint,
-                                      ((cb, cl, nw, wl, ws_, la, dn), csp, cln, csf, ec, sc))
+                                      ((cb, cl, nw, wl, ws_, la, dn), csp, cln, csf, ec, sc, wd, wn))
             rv = tr.get_retval()
             return rv[0], rv[1], rv[2], rv[3], rv[4], rv[5], rv[6], w
 
         cb, cl, nw, wl, ws2, la, dn, ws = jax.vmap(one)(
             keys, ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done,
-            cand_span, cand_len, cand_surf, emit_cols, scores)
+            cand_span, cand_len, cand_surf, emit_cols, scores, wdel_p, wins_p)
         return (cb, cl, nw, wl, ws2, la, dn), ws
 
     @jax.jit
-    def extend_bootstrap(keys, ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done, lmlog):
-        def one(k, cb, cl, nw, wl, wsf, la, dn, lm):
+    def extend_bootstrap(keys, ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done, lmlog,
+                         lp_copy, lp_sub, wdel_p, wins_p):
+        def one(k, cb, cl, nw, wl, wsf, la, dn, lm, lpc, lps, wd, wn):
             Z = logsumexp(la)
             s = jax.random.categorical(k, lm)
             chose_eos = s == eos_id
             w_id = jnp.where(chose_eos, 0, s)
-            col = emit_full[:, jnp.clip(w_id, 0, Vc - 1)]
-            new_alpha = band_mask(_word_row_update(la, col, WDEL, WINS), nw + 1)
+            wclip = jnp.clip(w_id, 0, Vc - 1)
+            col = emit_full[:, wclip] + lps + (lpc - lps) * copy_mask[:, wclip]  # word-action offset (case-insens copy)
+            new_alpha = band_mask(_word_row_update(la, col, wd, wn), nw + 1)
             incr = jnp.where(chose_eos, 0.0, logsumexp(new_alpha) - Z)
             advance = (~dn) & (~chose_eos)
             incr = jnp.where(dn, 0.0, incr)
@@ -493,7 +616,7 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                     jnp.where(advance, new_alpha, la), dn | chose_eos), incr
 
         states, ws = jax.vmap(one)(keys, ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha,
-                                   done, lmlog)
+                                   done, lmlog, lp_copy, lp_sub, wdel_p, wins_p)
         return states, ws
 
     for s in range(M + slack):
@@ -508,14 +631,14 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                 mt_chain = tail_fn(ctx_buf, ctx_len, mt_span_b, mt_len_b)
             else:
                 mt_chain = jnp.zeros((P, 1))
-            cand_span, cand_len, cand_surf, emit_cols, scores = _assemble(n_words, log_alpha, lmlog,
-                                                                          mt_chain)
+            cand_span, cand_len, cand_surf, emit_cols, scores = _assemble(
+                n_words, log_alpha, lmlog, mt_chain, lp_copy, lp_sub, wdel_p, wins_p)
             state, incr = extend_caprop(keys, ctx_buf, ctx_len, n_words, word_len, word_surf,
                                         log_alpha, done, cand_span, cand_len, cand_surf, emit_cols,
-                                        scores)
+                                        scores, wdel_p, wins_p)
         else:
             state, incr = extend_bootstrap(keys, ctx_buf, ctx_len, n_words, word_len, word_surf,
-                                           log_alpha, done, lmlog)
+                                           log_alpha, done, lmlog, lp_copy, lp_sub, wdel_p, wins_p)
         log_w = log_w + incr
         ess_pre = float(_ess(log_w))     # the ESS that triggers/avoids resampling (recorded for the viz)
         resampled, rejuv_info = False, None
@@ -525,6 +648,10 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
             key, sub = jax.random.split(key)
             anc = jax.random.categorical(sub, log_w, shape=(P,))
             state = jax.tree_util.tree_map(lambda a: a[anc], state)
+            lp_copy, lp_sub = lp_copy[anc], lp_sub[anc]   # per-particle action costs follow the ancestors
+            wdel_p, wins_p = wdel_p[anc], wins_p[anc]
+            if theta is not None:
+                theta = theta[anc]
             log_w = jnp.zeros(P)
             if rj_sweep is not None:     # post-resample windowed Gibbs/SMCP3 sweep; fold its weight
                 ctx_buf, ctx_len, n_words, word_len, word_surf, _, done = state  # pre-resample (GOAL3 b)
@@ -546,6 +673,21 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                     if rj_dedup_stats is not None:            # R3 1b: actual unique rows fed to tail_fn
                         rejuv_stats["dedup_rows_in"] = rj_dedup_stats.rows_in
                         rejuv_stats["dedup_rows_computed"] = rj_dedup_stats.rows_computed
+            elif rj_theta:               # word-action: Dirichlet-conjugate theta refresh (plan sec 3.3 / 5.4)
+                ctx_buf, ctx_len, n_words, word_len, word_surf, _, done = state
+                counts = _action_counts(word_surf, word_len, copy_mask, M)   # (P,4) positional action counts
+                key, sub = jax.random.split(key)
+                theta = jax.random.dirichlet(sub, action_alpha + counts)     # theta | counts ~ Dir(alpha+counts)
+                lp_copy, lp_sub, wdel_p, wins_p = _theta_to_costs(theta, enable_indel, wins_vec)
+                a0p = jax.vmap(lambda wn: band_mask(                          # new leading-spurious init per theta
+                    jnp.concatenate([jnp.zeros((1,), wn.dtype), jnp.cumsum(wn)]), 0))(wins_p)
+                la = _channel_carry_action(a0p, emit_full, copy_mask, band_mask, M, Wmax,  # log_alpha consistent
+                                           word_surf, word_len, lp_copy, lp_sub, wdel_p, wins_p)  # with new theta
+                state = (ctx_buf, ctx_len, n_words, word_len, word_surf, la, done)
+                # weight 0: a conjugate Gibbs step under the deterministic-alignment likelihood (exact for the
+                # near-deterministic battery alignments; the positional-count approximation is the general-text
+                # caveat -- plan sec 6). theta now reflects the data (clean context -> high p_copy).
+                rejuv_info = {"theta_mean": [round(float(x), 3) for x in jnp.mean(theta, axis=0)]}
         if trace is not None:            # per-step snapshot of the cloud (post-extend/resample/rejuv)
             trace.append(_record_step(model, state, log_w, seed_len, s, ess_pre, resampled, logZ,
                                       rejuv_info))

@@ -7,7 +7,7 @@ import jax
 os.environ.setdefault("NC_LM", "EleutherAI/pythia-70m")
 
 from genjax_port import lm_penzai
-from genjax_port.poc_word_indel import _word_row_update, _wins_only_row
+from genjax_port.word_dp import _word_row_update, _wins_only_row
 from genjax_port.pythia_word_caprop import run, decode, _norm
 import jax.numpy as jnp
 

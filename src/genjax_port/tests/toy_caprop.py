@@ -50,17 +50,17 @@ The candidate set C (where "channel-aware" lives) is the union of, per particle:
   3. EOS.
 Deduped and padded to fixed width, frontier-localized so K stays bounded for long sentences.
 
-Run:  python -m genjax_port.poc_word_indel_caprop
+Run:  python -m genjax_port.tests.toy_caprop
 """
 
 import jax
 import jax.numpy as jnp
 from jax.scipy.special import logsumexp
 
-from genjax_port.poc_pairhmm_channel import channel_logpdf, encode, PAD
-from genjax_port.poc_word_smc import (VOCAB, V, VOCAB_IDS, VOCAB_LEN, WORD2IDX, CORPUS, LCTX)
-from genjax_port.poc_word_indel import (EOS, BOS, lm_logits, _word_row_update, _wins_only_row,
-                                        _ess, decode)
+from genjax_port.tests.toy_channel import channel_logpdf, encode, PAD
+from genjax_port.tests.toy_vocab import (VOCAB, V, VOCAB_IDS, VOCAB_LEN, WORD2IDX, CORPUS, LCTX)
+from genjax_port.tests.toy_bigram import EOS, BOS, lm_logits, decode
+from genjax_port.word_dp import _word_row_update, _wins_only_row, _ess
 from genjax_port.noise_word import _damerau_levenshtein
 
 

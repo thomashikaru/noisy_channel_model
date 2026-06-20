@@ -12,6 +12,11 @@ import jax.numpy as jnp
 
 # Dirichlet concentration for the action prior (copy, sub, insert); copy favored,
 # matching --normal_alpha=3 / --error_alpha=1 in the original Gen.jl config.
+# NOTE: this 3-way prior is read only by the TOKEN-level reference filter (particle_filter_unified,
+# smc_substitution) and must stay 3-way for those call-sites. The pair-HMM word-action channel
+# (planning/WORD_ACTION_CHANNEL_PLAN.md) uses the 4-way extension (copy, sub, insert, DELETE) settled by
+# calibration_word_action_prior_search.py and homed as ``pythia_word_caprop.ACTION_ALPHA_DEFAULT =
+# (3,1,1,1)`` (next to where it is consumed) -- NOT here, to avoid breaking the 3-way consumers.
 ACTION_ALPHAS = jnp.array([3.0, 1.0, 1.0])
 
 # Deletion gap: before each emission a particle may posit up to MAX_DELETIONS intended

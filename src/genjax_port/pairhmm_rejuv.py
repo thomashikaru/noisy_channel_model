@@ -55,8 +55,8 @@ from jax.scipy.special import logsumexp
 import genjax
 from genjax import ChoiceMap, Update, Diff
 
-from genjax_port.genjax_model import factor
-from genjax_port.poc_word_indel import _word_row_update
+from genjax_port.genjax_factor import factor
+from genjax_port.word_dp import _word_row_update
 
 
 @dataclass

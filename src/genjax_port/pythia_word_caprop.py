@@ -43,6 +43,18 @@ INS_LP = jnp.log(CH_INDEL)
 # generation, which already uses Damerau-Levenshtein distance.
 TRANSP_LP = SUB_LP
 
+# --- word-action channel: the FORM-only edit costs (planning/WORD_ACTION_CHANNEL_PLAN.md sec 2) -------
+# In the word-action redesign the base RATE of editing lives in the per-word Dirichlet action prob
+# (p_copy / p_sub), NOT in the character DP. So the demoted pair-HMM scores only the *form* of a
+# substitution (which neighbour / how far) with the copy reward REMOVED: matched chars are free
+# (COPY_LP=0) and an edited char pays the pure 'which of 26 letters' sharpness SUB_FORM_LP = log(1/26)
+# (a transposition is determined -> free form). Option (a) of the plan (sec 2): the per-intended-word
+# form partition folds into the calibrated p_sub, so the form table need not be surface-normalized.
+# SUB_FORM_LP was settled by the prior search (calibration_word_action_prior_search.py): it is
+# uncalibratable from the battery (most sub-edits are distance-1 / transpositions) so it is fixed by
+# first principles at log(1/26), the principled 'uniform over the alphabet, given an edit occurred'.
+SUB_FORM_LP = jnp.log(1.0 / ALPHA)
+
 # Content-neutral "." seed (after the leading <|endoftext|>) marks a sentence boundary without any
 # semantics. It must NOT end in a space: candidate words are word-initial tokens (' the'), which
 # carry their own single leading space, so a trailing-space prime (the old ". ") tokenizes as
@@ -59,6 +71,13 @@ PRIME = "."
 # per run via wdel= / --wdel. (Spurious-word insertions are penalized by WINS = insertion_loglik.)
 WDEL_DEFAULT = -9.0
 
+# Word-action channel (planning/WORD_ACTION_CHANNEL_PLAN.md): the settled Dirichlet action prior over
+# (copy, sub, insert, delete), from calibration_word_action_prior_search.py -- the widest copy-favoured
+# prior hitting the battery targets (the faithful 4-way extension of Gen.jl's [3,1,1]). Pass
+# action_alpha=ACTION_ALPHA_DEFAULT (or --word_action) to enable the word-action channel; None keeps the
+# original bundled char-copy channel (bit-identical certified path).
+ACTION_ALPHA_DEFAULT = (3.0, 1.0, 1.0, 1.0)
+
 
 def _char_ids(s):
     s = s.strip().lower()
@@ -67,33 +86,36 @@ def _char_ids(s):
     return ids + [CHAR_PAD] * (LC - n), n
 
 
-def channel_logpdf(observed_ids, intended_ids, n_x):
+def _channel_dp(observed_ids, intended_ids, n_x, copy_lp, sub_lp, del_lp, ins_lp, transp_lp):
     """Char-level edit-channel logpdf via a forward (sum-product) pair-HMM DP with copy / substitute
     / insert / delete AND adjacent transposition (Damerau). grid[i][j] = log P(observed[:j] | first i
-    intended chars). The transposition edge ``grid[i][j] <- grid[i-2][j-2] + TRANSP_LP`` fires when
+    intended chars). The transposition edge ``grid[i][j] <- grid[i-2][j-2] + transp_lp`` fires when
     the trailing two chars are swapped (intended[i-1]==observed[j-2] and intended[i-2]==observed[j-1])
     -- it carries one extra previous row (grid[i-2]) and the previous intended char in the scan; the
     DP stays fixed-shape and vmap/jit-clean. Case-insensitive (surfaces are lowercased in _char_ids).
-    """
+
+    The five edit log-costs are arguments so the same recurrence serves BOTH the bundled base-rate
+    channel (:func:`channel_logpdf`, copy_lp=log0.9) AND the base-rate-decoupled FORM channel
+    (:func:`channel_form_logpdf`, copy_lp=0) of the word-action redesign."""
     n_o = jnp.sum(observed_ids != CHAR_PAD)
-    row0 = jnp.arange(LC + 1, dtype=jnp.float32) * INS_LP
+    row0 = jnp.arange(LC + 1, dtype=jnp.float32) * ins_lp
     neg_inf_row = jnp.full(LC + 1, -jnp.inf)                  # grid[-1]: no transposition into row 1
     pad = jnp.zeros((1,), observed_ids.dtype)
 
     def fill_row(carry, x_char):
         prev2_row, prev_row, prev_x = carry                  # grid[i-2], grid[i-1], intended[i-2]
-        cur0 = prev_row[0] + DEL_LP
+        cur0 = prev_row[0] + del_lp
         obs_jm2 = jnp.concatenate([pad, observed_ids[:-1]])  # observed[j-2] per output column j
         tp_back = jnp.concatenate([jnp.array([-jnp.inf]), prev2_row[:LC - 1]])  # grid[i-2][j-2]
         can_tr = ((x_char == obs_jm2) & (prev_x == observed_ids)              # last two chars swapped
                   & (observed_ids != CHAR_PAD) & (obs_jm2 != CHAR_PAD) & (prev_x != CHAR_PAD))
-        transp = jnp.where(can_tr, tp_back + TRANSP_LP, -jnp.inf)
+        transp = jnp.where(can_tr, tp_back + transp_lp, -jnp.inf)
 
         def step(left, cols):
             o_char, prev_diag, prev_up, tr = cols
-            sub = prev_diag + jnp.where(o_char == x_char, COPY_LP, SUB_LP)
-            dele = prev_up + DEL_LP
-            ins = left + INS_LP
+            sub = prev_diag + jnp.where(o_char == x_char, copy_lp, sub_lp)
+            dele = prev_up + del_lp
+            ins = left + ins_lp
             cell = logsumexp(jnp.stack([sub, dele, ins, tr]))
             return cell, cell
 
@@ -106,6 +128,22 @@ def channel_logpdf(observed_ids, intended_ids, n_x):
     _, rows = jax.lax.scan(fill_row, init, intended_ids)
     grid = jnp.concatenate([row0[None], rows])
     return grid[n_x, n_o]
+
+
+def channel_logpdf(observed_ids, intended_ids, n_x):
+    """The BUNDLED base-rate char channel (the original port): matched chars are rewarded COPY_LP and
+    edited chars pay SUB_LP, so the score is ``copy^matched . sub^changed . ...`` (base rate * form
+    together). This is the OFF / certified path; the word-action ON path uses the FORM variant."""
+    return _channel_dp(observed_ids, intended_ids, n_x, COPY_LP, SUB_LP, DEL_LP, INS_LP, TRANSP_LP)
+
+
+def channel_form_logpdf(observed_ids, intended_ids, n_x):
+    """The base-rate-DECOUPLED FORM channel (word-action redesign, plan sec 2 option a): COPY_LP=0
+    (matched chars free -- the copy reward is removed; the base rate lives in p_copy now), and each
+    edited char pays only the form sharpness SUB_FORM_LP (a transposition is determined -> free). The
+    returned score is the pure edit-op form cost ``SUB_FORM_LP^(sub+indel)`` summed over alignments;
+    the per-word action cost (log p_copy / log p_sub) is added separately on the emission column."""
+    return _channel_dp(observed_ids, intended_ids, n_x, 0.0, SUB_FORM_LP, SUB_FORM_LP, SUB_FORM_LP, 0.0)
 
 
 @functools.lru_cache(maxsize=1)
@@ -216,6 +254,7 @@ def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False):
     return pairhmm_smc.PairHMMModel(
         lm_fn=lm_fn, eos_id=EOS_ID, emit_vocab=vocab_char.shape[0],
         vocab_char=vocab_char, vocab_clen=vocab_clen, channel_logpdf=channel_logpdf,
+        channel_form=channel_form_logpdf,   # word-action FORM channel (COPY_LP=0); used iff action_alpha set
         char_ids=_char_ids, candidate_words=_candidate_words, obs_words=_obs_word_units,
         obs_spans=_obs_word_spans,
         decode_ids=lambda t: tokenizer.decode(t).strip(), tail_logprobs=tail_fn,
@@ -225,7 +264,7 @@ def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False):
 def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         max_dist=2, Ke=12, J=8, cwin=1, prime=PRIME, lm_logprobs_fn=None, use_word_mask=False,
         rejuv="off", rejuv_lookback=3, rejuv_Ke=8, rejuv_stats=None, trace=None, dedup=False,
-        lm_temp=1.0, ins_rate=0.02, uniform_ins=False):
+        lm_temp=1.0, ins_rate=0.02, uniform_ins=False, action_alpha=None):
     """Channel-aware RB-SMC on Pythia via the shared filter. Returns (state, log_w, logZ, seed_len).
 
     ``wdel`` is the missing-word (over-editing) log-penalty (default ``WDEL_DEFAULT``).
@@ -260,7 +299,10 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
     ntok = model.emit_vocab
     obs_words = model.obs_words(observed)
     WDEL = WDEL_DEFAULT if wdel is None else wdel
-    if wins is not None:                                 # explicit uniform scalar override
+    if action_alpha is not None:                         # word-action: the insertion RATE comes from theta,
+        WINS = jnp.array([-unigram_surprisal(w)          # so WINS carries only the per-word CONTENT cost
+                          for w in obs_words], jnp.float32)
+    elif wins is not None:                               # explicit uniform scalar override
         WINS = wins
     elif uniform_ins:                                    # legacy flat -log(vocab) over the whole vocab
         WINS = insertion_loglik(ntok)
@@ -282,7 +324,7 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
                            band=band, max_dist=max_dist, Ke=Ke, J=J, cwin=cwin,
                            proposal="caprop", rejuv=rejuv, rejuv_pool=None,
                            rejuv_lookback=rejuv_lookback, rejuv_stats=rejuv_stats, trace=trace,
-                           rejuv_dedup=dedup, lm_temp=lm_temp)
+                           rejuv_dedup=dedup, lm_temp=lm_temp, action_alpha=action_alpha)
 
 
 def decode(state, log_w, skip=1, key=jax.random.PRNGKey(0), top=3):
@@ -365,6 +407,14 @@ def cli():
                          ">1 sharpens the prior (more aggressive correction).")
     ap.add_argument("--word_mask", action="store_true",
                     help="restrict the LM bridge pool to whole-word tokens (off by default)")
+    ap.add_argument("--word_action", action="store_true",
+                    help="enable the WORD-ACTION channel (planning/WORD_ACTION_CHANNEL_PLAN.md): the noise "
+                         "rate is a per-word Dirichlet action distribution (copy,sub,insert,delete) latent "
+                         "per particle, with the pair-HMM scoring only substitution FORM. Off => the "
+                         "original bundled char-copy channel (certified path).")
+    ap.add_argument("--action_alpha", default=None,
+                    help="override the word-action Dirichlet prior, 'copy,sub,ins,del' (default "
+                         f"{','.join(str(x) for x in ACTION_ALPHA_DEFAULT)}); implies --word_action.")
     ap.add_argument("--rejuv", choices=("off", "gibbs"), default="off",
                     help="post-resample Gibbs/SMCP3 rejuvenation sweep (R3): 'gibbs' re-diversifies "
                          "the cloud and cures impoverishment collapses, at ~a few x the runtime "
@@ -387,6 +437,11 @@ def cli():
         ap.error("--sentence is required unless --selftest is set")
 
     import time
+    action_alpha = None
+    if args.action_alpha is not None:
+        action_alpha = tuple(float(x) for x in args.action_alpha.split(","))
+    elif args.word_action:
+        action_alpha = ACTION_ALPHA_DEFAULT
     lm_penzai.load_model()
     t0 = time.time()
     trace = [] if args.output_json else None     # record the per-step cloud trace only when writing JSON
@@ -394,7 +449,8 @@ def cli():
                            band=args.band, max_dist=args.max_dist, wdel=args.wdel, wins=args.wins,
                            use_word_mask=args.word_mask, rejuv=args.rejuv,
                            rejuv_lookback=args.rejuv_lookback, trace=trace, dedup=not args.no_dedup,
-                           lm_temp=args.lm_temp, ins_rate=args.ins_rate, uniform_ins=args.uniform_ins)
+                           lm_temp=args.lm_temp, ins_rate=args.ins_rate, uniform_ins=args.uniform_ins,
+                           action_alpha=action_alpha)
     top = decode(st, lw, skip=sl, top=args.top)
     ins_desc = "uniform" if (args.uniform_ins or args.wins is not None) else f"rate={args.ins_rate}"
     print(f"observed : {args.sentence!r}")

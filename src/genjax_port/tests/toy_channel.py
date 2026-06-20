@@ -21,7 +21,7 @@ a second; nothing here needs Pythia/penzai. The same skeleton scales up by (a) s
 unigram dictionary prior for an autoregressive LM written as a ``@gen`` scan, and (b) running
 the built-in SMC sequentially over words instead of one-shot importance sampling.
 
-Run:  python -m genjax_port.poc_pairhmm_channel
+Run:  python -m genjax_port.tests.toy_channel
 """
 
 import jax
@@ -54,35 +54,35 @@ COPY_LP = jnp.log(0.90)
 SUB_LP = jnp.log(0.10 / 26.0)  # substitute to a *specific* wrong letter
 DEL_LP = jnp.log(0.05)         # intended char produced no observation
 INS_LP = jnp.log(0.05)         # observed char came from nowhere
+# FORM-only variant (word-action redesign, mirrors pythia_word_caprop.channel_form_logpdf): the copy
+# reward is removed (matched chars free) so the DP returns the pure edit-op form cost; the base rate
+# lives in the per-word Dirichlet action prob (p_copy/p_sub), added on the emission column.
+SUB_FORM_LP = jnp.log(1.0 / 26.0)
 
 
-def _emit_lp(o_char, x_char):
-    """log P(observe o_char | intend x_char) for an aligned (substitute/copy) step."""
-    return jnp.where(o_char == x_char, COPY_LP, SUB_LP)
-
-
-def channel_logpdf(observed_ids, intended_ids, n_x):
+def _toy_channel_dp(observed_ids, intended_ids, n_x, copy_lp, sub_lp, del_lp, ins_lp):
     """log P(observed | intended), summed over ALL monotone alignments (pair-HMM forward).
 
     ``observed_ids``/``intended_ids`` are length-L padded char buffers; ``n_x`` is the intended
     length. The observed length ``n_o`` is read off the value itself (count of non-PAD), so the
     observed string is fully data. Builds the (L+1)x(L+1) log-alpha grid and returns the cell
-    ``[n_x, n_o]`` -- the marginal likelihood of the observation under the edit process.
-    """
+    ``[n_x, n_o]`` -- the marginal likelihood of the observation under the edit process. The four
+    edit log-costs are arguments so the same recurrence serves the bundled channel (copy_lp=log0.9)
+    and the base-rate-decoupled FORM channel (copy_lp=0)."""
     n_o = jnp.sum(observed_ids != PAD)
 
     # Row 0: only insertions can have happened (no intended char consumed yet).
-    row0 = jnp.arange(L + 1, dtype=jnp.float32) * INS_LP
+    row0 = jnp.arange(L + 1, dtype=jnp.float32) * ins_lp
 
     def fill_row(prev_row, x_char):
         # cur[0]: only a deletion leads here (consume x_char, emit nothing).
-        cur0 = prev_row[0] + DEL_LP
+        cur0 = prev_row[0] + del_lp
 
         def step(left, cols):
             o_char, prev_diag, prev_up = cols
-            sub = prev_diag + _emit_lp(o_char, x_char)  # align x_char <-> o_char
-            dele = prev_up + DEL_LP                      # drop x_char
-            ins = left + INS_LP                          # spurious o_char
+            sub = prev_diag + jnp.where(o_char == x_char, copy_lp, sub_lp)  # align x_char <-> o_char
+            dele = prev_up + del_lp                      # drop x_char
+            ins = left + ins_lp                          # spurious o_char
             cell = logsumexp(jnp.stack([sub, dele, ins]))
             return cell, cell
 
@@ -94,6 +94,17 @@ def channel_logpdf(observed_ids, intended_ids, n_x):
     _, rows = jax.lax.scan(fill_row, row0, intended_ids)  # rows for j = 1..L
     grid = jnp.concatenate([row0[None], rows])            # (L+1, L+1)
     return grid[n_x, n_o]
+
+
+def channel_logpdf(observed_ids, intended_ids, n_x):
+    """The bundled base-rate char channel (copy^matched . sub^changed) -- the OFF / certified path."""
+    return _toy_channel_dp(observed_ids, intended_ids, n_x, COPY_LP, SUB_LP, DEL_LP, INS_LP)
+
+
+def channel_form_logpdf(observed_ids, intended_ids, n_x):
+    """The base-rate-decoupled FORM channel (COPY_LP=0, edited chars pay SUB_FORM_LP): the word-action
+    redesign's form-only score, with the per-word action cost added separately on the emission column."""
+    return _toy_channel_dp(observed_ids, intended_ids, n_x, 0.0, SUB_FORM_LP, SUB_FORM_LP, SUB_FORM_LP)
 
 
 # GenJAX distribution: sample is a never-used stub (observed is always constrained data); the

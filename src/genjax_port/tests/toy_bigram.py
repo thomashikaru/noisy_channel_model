@@ -30,7 +30,7 @@ Validation here:
   * a SPURIOUS-word sentence is corrected to a SHORTER intended sentence;
   * a MISSING-word sentence is corrected to a LONGER intended sentence.
 
-Run:  python -m genjax_port.poc_word_indel
+Run:  python -m genjax_port.tests.toy_bigram
 """
 
 from collections import Counter
@@ -42,9 +42,11 @@ from jax.scipy.special import logsumexp
 import genjax
 from genjax import ChoiceMap, exact_density
 
-from genjax_port.poc_pairhmm_channel import channel_logpdf, encode, PAD
-from genjax_port.poc_word_smc import (VOCAB, V, VOCAB_IDS, VOCAB_LEN, WORD2IDX,
-                                      CORPUS, LCTX)
+from genjax_port.tests.toy_channel import channel_logpdf, encode, PAD
+from genjax_port.tests.toy_vocab import (VOCAB, V, VOCAB_IDS, VOCAB_LEN, WORD2IDX,
+                                         CORPUS, LCTX)
+# DP recurrences live in the core now (shared with the live filter); re-import for this demo.
+from genjax_port.word_dp import _word_row_update, _wins_only_row, _ess
 
 BOS = V   # context row id for start-of-sentence
 EOS = V   # next-token column id for end-of-sentence
@@ -74,49 +76,7 @@ def lm_logits(ctx_buf, ctx_len):
 factor = exact_density(lambda key, lw: jnp.float32(0.0), lambda v, lw: lw, "factor")
 
 
-def _word_row_update(log_alpha, emit_col, wdel, wins):
-    """One word-level pair-HMM row: extend the alignment by one intended word.
-
-    log_alpha[k] : log P(prefix so far, k observed words consumed). emit_col[k-1] = channel score
-    of aligning THIS intended word to observed word k. Returns the updated length-(M+1) vector.
-    Same three-way recurrence as the char DP in poc_pairhmm_channel, one level up.
-
-    ``wins`` is the spurious-word (insertion) log-cost. It may be a SCALAR (uniform over the vocab --
-    the toy / certified default) OR an ``(M,)`` vector ``wins[j]`` = the cost of explaining observed
-    word ``j`` as a spurious insertion. The insertion arc into consumed-count ``k`` consumes observed
-    word ``k`` (1-indexed), so it pays ``wins[k-1]``. A frequency-aware channel passes the unigram cost
-    here so a rare observed word is expensive to "explain away" as an insertion (broadcast of a scalar
-    is bit-identical to the old uniform path)."""
-    M = emit_col.shape[0]
-    diag = log_alpha[0:M] + emit_col          # align this word to observed word k  (substitute/match)
-    up = log_alpha[1:M + 1] + wdel            # this word is MISSING (no observation)  (delete)
-    beta_rest = logsumexp(jnp.stack([diag, up]), axis=0)
-    beta0 = log_alpha[0] + wdel
-    beta = jnp.concatenate([beta0[None], beta_rest])
-    wins_vec = jnp.broadcast_to(jnp.asarray(wins, beta.dtype), (M,))  # per-inserted-observed-word cost
-
-    def ins_step(left, bw):                    # spurious observed word (insert): left-to-right sweep
-        b, w = bw
-        cell = logsumexp(jnp.stack([b, left + w]))
-        return cell, cell
-
-    _, rest = jax.lax.scan(ins_step, beta[0], (beta[1:], wins_vec))
-    return jnp.concatenate([beta[0][None], rest])
-
-
-def _wins_only_row(log_alpha, wins):
-    """Consume one spurious observed word (INSERT); emit no intended word this step.
-
-    ``new_alpha[k+1] = log_alpha[k] + wins[k]``; ``new_alpha[0] = -inf`` (must advance consumption).
-    ``wins`` is a scalar (uniform) or an ``(M,)`` per-observed-word vector (see ``_word_row_update``)."""
-    M = log_alpha.shape[0] - 1
-    wins_vec = jnp.broadcast_to(jnp.asarray(wins, log_alpha.dtype), (M,))
-    return jnp.concatenate([jnp.array([-jnp.inf], dtype=log_alpha.dtype), log_alpha[:-1] + wins_vec])
-
-
-def _ess(log_w):
-    w = jax.nn.softmax(log_w)
-    return 1.0 / jnp.sum(w * w)
+# _word_row_update / _wins_only_row / _ess moved to genjax_port.word_dp (core); imported above.
 
 
 def run(observed, key, P=16000, enable_indel=True, wdel=jnp.log(0.1), wins=jnp.log(0.05),

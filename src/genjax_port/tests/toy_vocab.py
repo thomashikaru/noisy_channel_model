@@ -23,7 +23,7 @@ Scope (skipping edge cases, per the plan): observed words are pre-segmented (spl
 one intended word per observed word. Uncertain word boundaries / whole-word insert-delete are a
 later DP edge, not a new paradigm -- the same way transposition was a missing edge in PoC #1.
 
-Run:  python -m genjax_port.poc_word_smc
+Run:  python -m genjax_port.tests.toy_vocab
 """
 
 from collections import Counter
@@ -34,7 +34,7 @@ import jax.numpy as jnp
 import genjax
 from genjax import ChoiceMap
 
-from genjax_port.poc_pairhmm_channel import edit_channel, encode, L, PAD
+from genjax_port.tests.toy_channel import edit_channel, encode, L, PAD
 
 # --- toy vocabulary + char encodings (for the channel) ----------------------------------------
 VOCAB = ["the", "a", "cat", "dog", "sat", "ran", "slept",

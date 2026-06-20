@@ -38,11 +38,12 @@ import jax.numpy as jnp
 import numpy as np
 from jax.scipy.special import logsumexp
 
-from genjax_port.poc_pairhmm_channel import channel_logpdf, encode
-from genjax_port.poc_word_smc import V, VOCAB, VOCAB_IDS, VOCAB_LEN, WORD2IDX
-from genjax_port.poc_word_indel import BOS, EOS, LOG_BIGRAM, _word_row_update, lm_logits
+from genjax_port.tests.toy_channel import channel_logpdf, encode
+from genjax_port.tests.toy_vocab import V, VOCAB, VOCAB_IDS, VOCAB_LEN, WORD2IDX
+from genjax_port.tests.toy_bigram import BOS, EOS, LOG_BIGRAM, lm_logits
+from genjax_port.word_dp import _word_row_update
 from genjax_port.noise_word import _damerau_levenshtein
-from genjax_port import poc_word_indel_caprop as caprop
+from genjax_port.tests import toy_caprop as caprop
 from genjax_port import pairhmm_smc
 from genjax_port import pairhmm_rejuv as rejuv
 
@@ -536,7 +537,9 @@ def _mt_rejuv_ctx_pool(observed, sub_log_bigram, slack=3, Ke=8):
     obs_char = jnp.stack([encode(w)[0] for w in obs_words])
     emit_full = jax.vmap(jax.vmap(channel_logpdf, in_axes=(None, 0, 0)),
                          in_axes=(0, None, None))(obs_char, model.vocab_char, model.vocab_clen)
-    ef, es, em, mt_span, mt_len, emit_aug, T_max, _n_mt = pairhmm_smc._build_candidates(
+    # _build_candidates gained a 9th return (copy_mask, word-action scoring); the rejuv ctx/pool
+    # don't use it -- mirror live pairhmm_smc.run, which unpacks it then builds RejuvCtx without it.
+    ef, es, em, mt_span, mt_len, emit_aug, _copy_mask, T_max, _n_mt = pairhmm_smc._build_candidates(
         model, obs_words, obs_spans, obs_char, emit_full, max_dist=2, Ke=Ke)
     Wmax = M + slack
     pool = pairhmm_smc._rejuv_pool_from_inventory(ef, es, em, mt_span, mt_len, M, Wmax, T_max)

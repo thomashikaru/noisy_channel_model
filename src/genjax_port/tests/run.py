@@ -1,21 +1,22 @@
-"""Run all genjax-port regression tests in one process (loads the LM once).
+"""Run the live genjax-port regression suite in one process (loads the LM once).
 
-    NC_LM=EleutherAI/pythia-70m PYTHONPATH=. python -m src.genjax_port.tests.run
+    NC_LM=EleutherAI/pythia-70m PYTHONPATH=src python -m genjax_port.tests.run
 
-Exits non-zero on the first failure. See the package docstring for the pytest alternative.
+Certifies the path that is actually in production -- the unified pair-HMM RB-SMC filter:
+``test_pairhmm_exact`` (exact-enumeration gates + rejuvenation/dedup parity + multi-token),
+``test_pythia_word_caprop`` (the Pythia word-caprop smoke), and ``test_unigram`` (the
+frequency-aware insertion-cost gate). Each module's ``test_*`` functions are the assertions;
+the modules' own ``main()``/``__main__`` blocks are print-only demos and are NOT run here.
+
+Exits non-zero if any assertion fails. See the package docstring for the pytest alternative.
 """
 
 import sys
 
-from src.genjax_port import lm_penzai as L
-from src.genjax_port.tests import test_lm_genjax as t1
-from src.genjax_port.tests import test_noisy_channel as t2
-from src.genjax_port.tests import test_word_model as t3
-from src.genjax_port.tests import test_smc_substitution as t4
-from src.genjax_port.tests import test_rejuvenation as t5
-from src.genjax_port.tests import test_rejuv_model as t7
-from src.genjax_port.tests import test_rejuvenation_r2 as t8
-from src.genjax_port.tests import test_unigram as t9
+from genjax_port import lm_penzai as L
+from genjax_port.tests import test_pairhmm_exact as t_exact
+from genjax_port.tests import test_pythia_word_caprop as t_pythia
+from genjax_port.tests import test_unigram as t_unigram
 
 
 def _tests(module):
@@ -25,14 +26,14 @@ def _tests(module):
 def main():
     L.load_model()
     failures = 0
-    for module in (t1, t2, t3, t4, t5, t7, t8, t9):
+    for module in (t_exact, t_pythia, t_unigram):
         for name, fn in _tests(module):
             try:
                 fn()
-                print(f"OK    {module.__name__.split('.')[-1]}.{name}")
+                print(f"OK    {module.__name__.split('.')[-1]}.{name}", flush=True)
             except Exception as e:  # noqa: BLE001 -- report and continue
                 failures += 1
-                print(f"FAIL  {module.__name__.split('.')[-1]}.{name}: {e}")
+                print(f"FAIL  {module.__name__.split('.')[-1]}.{name}: {e}", flush=True)
     print(f"\n{'all passed' if not failures else str(failures) + ' FAILED'}")
     return 1 if failures else 0
 
