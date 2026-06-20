@@ -1,10 +1,11 @@
 # Restore word-substitution rejuvenation to the word-action path
 
-**Status:** Phase 0 + Phase 1 + Phase 2 + Phase 3 DONE (Phase 3 on 2026-06-20, branch `word-action-rejuv`).
-The boolean fork is gone; channel scoring has one source of truth selected by a named `channel`. **Only the
-word-action battery spot-check remains** (Phase 2/4 owed; needs Pythia) before the branch is ready to compose
-with the α re-tune + the §1b production default-flip. Goal (ACHIEVED for the inference path): the
-post-resample SMCP3 **word-substitution** rejuvenation move
+**Status: COMPLETE** — Phases 0–3 DONE + the live word-action battery spot-check (all 2026-06-20, branch
+`word-action-rejuv`). The boolean fork is gone; channel scoring has one source of truth selected by a named
+`channel`; the rejuvenation sweep is restored on the word-action path and demonstrated live (DEL-to-05a: the
+sweep restores a dropped "to" that the non-sweep path leaves uncorrected — see the Progress log). Ready to
+compose with the α re-tune + the §1b production default-flip (both pending, gated on the re-tune). Goal
+(ACHIEVED): the post-resample SMCP3 **word-substitution** rejuvenation move
 (R2/R3/R4 — the impoverishment cure that fixes "P=128 flips a correct word to a wrong neighbour") runs on the
 **word-action channel**, which is now THE model. It used to not: when the word-action channel was active the
 filter ran a θ-refresh **instead of** the word sweep — Phase 2 made the sweep θ-aware and switched the filter to
@@ -82,10 +83,25 @@ again — then delete the boolean.
      `--word_action`; the user must update it — change `WA_ARGS=(--word_action)` →
      `WA_ARGS=(--channel word_action)` (flagged to the user, per [[keep-run-example-script-current]]).
 
-**Only owed item (Phase 2/4 done-criteria):** a **word-action battery spot-check** (a couple of calibration
-items) showing the restored sweep recovers an early dropped word that θ-refresh-alone left uncorrected — the
-live behaviour this buys. Run once Pythia is loaded (heavier than the toy gates). Then this branch composes
-with the α re-tune + the §1b default-flip.
+- **Word-action battery spot-check DONE (2026-06-20, Phase 2/4 done-criteria).** pythia-70m, P=128, seed 0,
+  α=(3,1,1,1), `channel` inferred from `action_alpha` (the back-compat path). Item **DEL-to-05a** ("I want
+  go home" → restore omitted "to"), `rejuv=off` vs `rejuv=gibbs`:
+  - `off` (forward filter, no sweep/refresh): MAP **"I want go home"** kept at **0.75** — the dropped "to"
+    is NOT restored (E=0.00).
+  - `gibbs` (the restored θ-aware SWEEP-then-refresh): the literal collapses to **0.00** and **100% of the
+    top mass reads "I want **to** …"** — the sweep restores the early dropped word the non-sweep path left
+    uncorrected. ✔ the concrete live behaviour this branch buys.
+  - Caveat (NOT a Phase-3 regression): at the edit-happy deployed α=(3,1,1,1) + weak 70m, gibbs *also*
+    over-edits the tail ("to go home" → "to come/home"; θ infers p_sub≈0.40, and DELTO-01a/DELFROM-02a go
+    sub-happy / un-restored). This is the **documented α mode-collapse / edit-happiness** (WORD_ACTION
+    _CHANNEL_PLAN §6, [[word-action-channel-status]]), deferred to the α re-tune
+    (`planning/WORD_ACTION_ALPHA_SWEEP_PLAN.md`) — a concentrated *copy-favoured* α would suppress the
+    over-editing but also raise the delete cost (restoring an omitted word IS a delete event), so the clean
+    fix is the asymmetric re-tune + a stronger LM, not a knob this branch should turn.
+
+**This branch is COMPLETE.** The boolean fork is gone, channel scoring has one source of truth selected by a
+named `channel`, the rejuvenation sweep is restored on the word-action path and demonstrated live. It now
+composes with the α re-tune + the §1b production default-flip (both still pending, both gated on the re-tune).
 
 ## 2. Phased plan
 
