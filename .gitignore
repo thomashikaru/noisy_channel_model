@@ -14,3 +14,6 @@ data/
 
 run_native.json
 planning/single_token_words.txt
+
+# Personal local demo runner (untracked; edit freely without touching the repo)
+run_example_native.sh
