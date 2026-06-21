@@ -107,6 +107,17 @@ def channel_form_logpdf(observed_ids, intended_ids, n_x):
     return _toy_channel_dp(observed_ids, intended_ids, n_x, 0.0, SUB_FORM_LP, SUB_FORM_LP, SUB_FORM_LP)
 
 
+def align_form_logpdf(slope):
+    """Toy mirror of ``pythia_word_caprop.align_form_logpdf``: the ALIGN channel's FORM table with a
+    SWEEPABLE per-edit cost ``K = slope`` (matched chars free, edited chars / indel pay ``slope``). The
+    emission is then ``K * edit_distance`` with no copy/sub jump. At ``slope == SUB_FORM_LP`` it equals
+    :func:`channel_form_logpdf`; the align gates use a distinct slope to exercise the threading."""
+    slope = jnp.float32(slope)
+    def _f(observed_ids, intended_ids, n_x):
+        return _toy_channel_dp(observed_ids, intended_ids, n_x, 0.0, slope, slope, slope)
+    return _f
+
+
 # GenJAX distribution: sample is a never-used stub (observed is always constrained data); the
 # logpdf is the DP forward score. This mirrors the existing obs_dist pattern in genjax_model.py.
 edit_channel = exact_density(

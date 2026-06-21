@@ -30,6 +30,7 @@ Run as a script:  python -m genjax_port.tests.test_pairhmm_exact
 Run as a test:    pytest src/genjax_port/tests/test_pairhmm_exact.py
 """
 
+import dataclasses
 import functools
 import itertools
 
@@ -38,7 +39,8 @@ import jax.numpy as jnp
 import numpy as np
 from jax.scipy.special import logsumexp
 
-from genjax_port.tests.toy_channel import channel_logpdf, channel_form_logpdf, encode
+from genjax_port.tests.toy_channel import (channel_logpdf, channel_form_logpdf, align_form_logpdf,
+                                           encode)
 from genjax_port.tests.toy_vocab import V, VOCAB, VOCAB_IDS, VOCAB_LEN, WORD2IDX
 from genjax_port.tests.toy_bigram import BOS, EOS, LOG_BIGRAM, lm_logits
 from genjax_port.word_dp import _word_row_update, channel_carry
@@ -486,6 +488,234 @@ def test_wa_run_gibbs_end_to_end():
     smc = {s: p for s, p in pairhmm_smc.decode(st, dw, model, top=50)}
     assert max(smc, key=smc.get) == _PEAKED_TRUTH, \
         f"WA run+gibbs MAP {max(smc, key=smc.get)!r}, expected {_PEAKED_TRUTH!r}"
+
+
+# ==================================================================================================
+# ALIGN channel gates (plan ALIGN_ACTION_CHANNEL_PLAN.md, Phase 2). The align channel merges copy+sub
+# into ONE 'align' action: a 3-way (align,ins,del) Dirichlet latent, no copy/sub jump, and a smooth
+# per-edit distance cost K (= ALIGN_SLOPE) in the FORM table. Algebraically it IS the word-action
+# channel at ``lp_copy == lp_sub == lp_align`` (the emission offset ``lp_sub + (lp_copy-lp_sub)*is_copy``
+# collapses to ``lp_align``), so the cleanest certification has two prongs:
+#
+#  (1) REDUCTION (deterministic, exact-vs-exact): the align exact posterior at (p_align,p_ins,p_del)
+#      with K = log(1/26) equals the *already-certified* word-action exact posterior at
+#      (p_copy=p_align, p_sub=p_align, p_ins, p_del) -- same logZ, same per-sentence mass. This inherits
+#      the word-action exact-enumeration certification for align by construction.
+#  (2) ALIGN-PATH gates at a DISTINCT slope K=log(1/15) (so the align FORM table differs from the
+#      word-action one, exercising the K threading): the theta-aware sweep leaves the align exact
+#      posterior invariant, recovers it from a collapse, and carries a ~0 SMCP3 weight; and the full
+#      filter+gibbs runs the 3-way theta draw / conjugate refresh end-to-end and recovers the MAP.
+#
+# (We do NOT add a fixed-theta forward-filter logZ gate -- the filter MARGINALIZES theta over its
+# Dirichlet prior, so its logZ matches a fixed-theta enumeration only in the concentrated-alpha limit;
+# the word-action section omits one for the same reason. The sweep invariance gate certifies the
+# channel marginal at fixed theta directly, which is the quantity that matters.)
+# ==================================================================================================
+_ALIGN_THETA = jnp.array([0.90, 0.05, 0.05], jnp.float32)     # (align, insert, delete) -- match-dominated
+_ALIGN_SLOPE = float(jnp.log(1.0 / 15.0))                     # K, DISTINCT from log(1/26) -> exercises threading
+_ALIGN_SLOPE_26 = float(jnp.log(1.0 / 26.0))                  # the default K (== SUB_FORM_LP) for the reduction
+
+
+def _align_model(lm, slope=_ALIGN_SLOPE):
+    """The toy :class:`PairHMMModel` with the align FORM table at per-edit cost ``slope`` attached."""
+    return dataclasses.replace(_toy_model(lm), channel_form_align=align_form_logpdf(slope))
+
+
+def _align_emit_costs(observed, theta, lm, slope):
+    """The ALIGN channel pieces at a FIXED ``theta`` (3-way) and slope, built EXACTLY as
+    ``pairhmm_smc.run(channel='align')`` does: the align FORM emission ``emit_aug`` (built from
+    ``align_form_logpdf(slope)``), the (unused-but-present) ``copy_mask``, and the per-particle costs from
+    ``_theta_to_costs_align`` -- with ``lp_copy == lp_sub == lp_align``. Returns
+    ``(model, emit_aug, copy_mask, (lp_copy, lp_sub, wdel, wins))``."""
+    model = _align_model(lm, slope)
+    form = align_form_logpdf(slope)
+    obs_words = observed.split(); M = len(obs_words)
+    obs_char = jnp.stack([encode(w)[0] for w in obs_words])
+    emit_form = jax.vmap(jax.vmap(form, in_axes=(None, 0, 0)),
+                         in_axes=(0, None, None))(obs_char, model.vocab_char, model.vocab_clen)  # (M, V)
+    *_, emit_aug, copy_mask, _T, _nmt = pairhmm_smc._build_candidates(
+        model, obs_words, [None] * M, obs_char, emit_form, max_dist=2, Ke=6, channel_fn=form)
+    wins_vec = jnp.broadcast_to(jnp.float32(WINS), (M,))
+    lp_copy, lp_sub, wdel_p, wins_p = pairhmm_smc._theta_to_costs_align(theta[None], True, wins_vec)
+    costs = (float(lp_copy[0]), float(lp_sub[0]), float(wdel_p[0]), float(wins_p[0, 0]))
+    return model, emit_aug, copy_mask.astype(jnp.float32), costs
+
+
+def _align_exact_posterior(observed, theta, lm, slope, Lmax):
+    """Exact posterior over intended sentences under the ALIGN channel at fixed ``theta`` + slope -- the
+    same vectorized brute force as :func:`_wa_exact_posterior`, scored by the shared :func:`channel_carry`
+    DP with ``lp_copy == lp_sub == lp_align`` (so the emission is ``align_form + lp_align``, no copy/sub
+    jump). Using the same DP the sweep uses makes ground truth and sweep score the IDENTICAL channel."""
+    model, emit_aug, copy_mask, (lp_copy, lp_sub, wdel, wins) = _align_emit_costs(observed, theta, lm, slope)
+    M = len(observed.split())
+    log_bigram = _bigram_table(lm)
+    ks = jnp.arange(M + 1)
+    a0 = jnp.where(ks == 0, 0.0, ks * wins)
+
+    def chan_batch(seqs, n):
+        N = seqs.shape[0]
+        if n == 0:
+            return jnp.full((N,), float(a0[M]))
+        carry = channel_carry(jnp.broadcast_to(a0, (N, M + 1)), emit_aug, None, M,
+                              seqs.astype(jnp.int32), jnp.ones((N, n), jnp.int32),
+                              jnp.full(N, lp_copy), jnp.full(N, lp_sub), jnp.full(N, wdel),
+                              jnp.broadcast_to(jnp.float32(wins), (N, M)), copy_mask)
+        return carry[:, M]
+
+    sents, joints = [], []
+    for n in range(Lmax + 1):
+        seqs = (jnp.array(list(itertools.product(range(V), repeat=n)), jnp.int32).reshape(-1, n)
+                if n else jnp.zeros((1, 0), jnp.int32))
+        if n == 0:
+            lm_lp = jnp.full((1,), float(log_bigram[BOS, EOS]))
+        else:
+            frm = jnp.concatenate([jnp.full((seqs.shape[0], 1), BOS), seqs], axis=1)
+            to = jnp.concatenate([seqs, jnp.full((seqs.shape[0], 1), EOS)], axis=1)
+            lm_lp = jnp.sum(log_bigram[frm, to], axis=1)
+        sents.extend(" ".join(VOCAB[int(i)] for i in s) for s in seqs)
+        joints.append(lm_lp + chan_batch(seqs, n))
+    joints = jnp.concatenate(joints)
+    post = jax.nn.softmax(joints)
+    words = {}
+    for s, p in zip(sents, post):
+        words[s] = words.get(s, 0.0) + float(p)
+    return words, float(logsumexp(joints))
+
+
+def _align_ctx_pool_costs(observed, theta, lm, slope, P, slack=3):
+    """``RejuvCtx`` (align ``emit_full`` + full-vocab Gibbs pool) + the per-particle ``theta_costs`` tuple
+    the align sweep takes (``lp_copy == lp_sub == lp_align``), at the fixed ``theta`` + slope -- mirroring
+    how ``pairhmm_smc.run`` wires the sweep when ``channel='align'``."""
+    model, emit_aug, copy_mask, (lp_copy, lp_sub, wdel, wins) = _align_emit_costs(observed, theta, lm, slope)
+    M = len(observed.split()); Wmax = M + slack
+    ks = jnp.arange(M + 1)
+    a0 = jnp.where(ks == 0, 0.0, ks * wins)
+    ctx = rejuv.RejuvCtx(model, emit_aug, a0, M, 0, Wmax, wdel, wins, None, t_max=1, lm_temp=1.0)
+    cand_table = jnp.broadcast_to(jnp.arange(V)[None, :], (Wmax, V))       # full-vocab Gibbs
+    pool_tok, pool_len = rejuv.pool_from_table(cand_table)
+    theta_costs = (jnp.full(P, lp_copy), jnp.full(P, lp_sub), jnp.full(P, wdel),
+                   jnp.broadcast_to(jnp.float32(wins), (P, M)), jnp.broadcast_to(a0, (P, M + 1)), copy_mask)
+    return ctx, pool_tok, pool_len, theta_costs
+
+
+def test_align_reduces_to_word_action_equal_copy_sub():
+    """Phase 2 REDUCTION (the keystone gate): at K=log(1/26) the ALIGN exact posterior over intended
+    sentences EQUALS the word-action exact posterior with ``p_copy == p_sub == p_align`` -- same logZ and
+    same per-sentence mass. This proves align is algebraically the word-action channel with the copy/sub
+    jump removed, so it inherits word_action's exact-enumeration certification. Deterministic (no
+    sampling): a drift here means the ``lp_copy == lp_sub == lp_align`` reduction or the align FORM table
+    is wrong."""
+    lm = _peaked()
+    pa, pi, pd = 0.90, 0.05, 0.05
+    wa, wa_logZ = _wa_exact_posterior(_PEAKED_OBS, jnp.array([pa, pa, pi, pd], jnp.float32), lm, _PEAKED_LMAX)
+    al, al_logZ = _align_exact_posterior(_PEAKED_OBS, jnp.array([pa, pi, pd], jnp.float32), lm,
+                                         _ALIGN_SLOPE_26, _PEAKED_LMAX)
+    assert abs(wa_logZ - al_logZ) < 1e-4, f"align logZ {al_logZ:.6f} != word_action(copy=sub) {wa_logZ:.6f}"
+    assert set(wa) == set(al), "align / word_action(copy=sub) support differs"
+    worst = max(abs(wa[s] - al[s]) for s in wa)
+    assert worst < 1e-5, f"align posterior != word_action(copy=sub): worst per-sentence gap {worst:.2e}"
+
+
+def test_align_rejuv_leaves_exact_posterior_invariant():
+    """Phase 2: the theta-aware sweep on a cloud already at the ALIGN exact posterior (K=log(1/15), a
+    slope DISTINCT from the word-action log(1/26) so the align FORM table is genuinely exercised) leaves
+    it there -- invariance, the proof the align-path move does not corrupt the certified posterior."""
+    lm, P = _peaked(), 6000
+    exact, _ = _align_exact_posterior(_PEAKED_OBS, _ALIGN_THETA, lm, _ALIGN_SLOPE, _PEAKED_LMAX)
+    ctx, pool_tok, pool_len, theta_costs = _align_ctx_pool_costs(_PEAKED_OBS, _ALIGN_THETA, lm, _ALIGN_SLOPE, P)
+    swp = rejuv.make_sweep(ctx, pool_tok, pool_len)
+    key, sub = jax.random.split(jax.random.PRNGKey(0))
+    buf, clen = _cloud_from_dist(exact, P, sub, ctx.Wmax)
+    for _ in range(3):
+        key, sub = jax.random.split(key)
+        buf, clen, _wl, _ws, _la, _mlw = swp(sub, buf, clen, theta_costs=theta_costs)
+    after = rejuv.decode_counts(buf, clen, ctx.model, ctx.seed_len)
+    assert max(after, key=after.get) == max(exact, key=exact.get), \
+        f"align rejuv moved the MAP: {max(after, key=after.get)!r} vs exact {max(exact, key=exact.get)!r}"
+    assert tv_distance(after, exact) < 0.08, f"align rejuv perturbed the posterior: TV {tv_distance(after, exact):.3f}"
+
+
+def test_align_rejuv_recovers_collapsed_cloud():
+    """Phase 2: from a cloud COLLAPSED onto a wrong same-length reading ('the dog sat'), theta-aware align
+    sweeps recover the align exact MAP -- the impoverishment cure on the align channel. The channel must
+    pull the wrong middle word ('dog') back to the cheap align (d=0) of the observed 'cat'."""
+    lm, P = _peaked(), 4000
+    exact, _ = _align_exact_posterior(_PEAKED_OBS, _ALIGN_THETA, lm, _ALIGN_SLOPE, _PEAKED_LMAX)
+    truth = max(exact, key=exact.get)
+    ctx, pool_tok, pool_len, theta_costs = _align_ctx_pool_costs(_PEAKED_OBS, _ALIGN_THETA, lm, _ALIGN_SLOPE, P)
+    swp = rejuv.make_sweep(ctx, pool_tok, pool_len)
+    buf, clen = _cloud_from_sentence("the dog sat", P, ctx.Wmax)
+    key = jax.random.PRNGKey(0)
+    for _ in range(6):
+        key, sub = jax.random.split(key)
+        buf, clen, _wl, _ws, _la, _mlw = swp(sub, buf, clen, theta_costs=theta_costs)
+    rec = rejuv.decode_counts(buf, clen, ctx.model, ctx.seed_len)
+    assert max(rec, key=rec.get) == truth, f"align rejuv failed to escape the collapse: MAP {max(rec, key=rec.get)!r}"
+    assert rec[truth] > 0.5, f"weak align recovery: p={rec.get(truth, 0.0):.2f}"
+
+
+def test_align_rejuv_smcp3_weight_zero():
+    """Phase 2: the genjax SMCP3 reweight of the theta-aware full-conditional align move is ~0 -- the
+    built-it-right check that threading the 3-way (lp_copy==lp_sub==lp_align) costs into ``channel_carry``
+    keeps the sweep's proposal the EXACT conditional."""
+    lm, P = _peaked(), 2000
+    exact, _ = _align_exact_posterior(_PEAKED_OBS, _ALIGN_THETA, lm, _ALIGN_SLOPE, _PEAKED_LMAX)
+    ctx, pool_tok, pool_len, theta_costs = _align_ctx_pool_costs(_PEAKED_OBS, _ALIGN_THETA, lm, _ALIGN_SLOPE, P)
+    swp = rejuv.make_sweep(ctx, pool_tok, pool_len)
+    key, sub = jax.random.split(jax.random.PRNGKey(0))
+    buf, clen = _cloud_from_dist(exact, P, sub, ctx.Wmax)
+    *_, mlw = swp(sub, buf, clen, theta_costs=theta_costs)
+    assert float(jnp.max(jnp.abs(mlw))) < 1e-3, \
+        f"align full-conditional SMCP3 weight not ~0: max|w|={float(jnp.max(jnp.abs(mlw))):.2e}"
+
+
+def test_align_run_gibbs_end_to_end():
+    """Phase 2 INTEGRATION: the full filter with ``channel='align'`` (3-way action_alpha) AND
+    ``rejuv='gibbs'`` runs the align SWEEP-THEN-REFRESH inside ``run`` end-to-end and recovers the MAP --
+    exercising the path the direct-sweep gates cannot: the 3-way Dirichlet theta DRAW, the per-particle
+    ``theta_costs`` assembled from ``_theta_to_costs_align`` in ``run``, and the conjugate 3-way refresh
+    via ``_action_counts_align``. Concentrated 3-way alpha (~the _ALIGN_THETA match-dominated point);
+    'teh cat sat' -> 'the cat sat'."""
+    lm = _peaked()
+    model = _align_model(lm, _ALIGN_SLOPE)
+    st, dw, _logZ, _sl = pairhmm_smc.run(_PEAKED_OBS, jax.random.PRNGKey(0), model, P=4000,
+                                         proposal="caprop", wdel=WDEL, wins=WINS, band=2,
+                                         rejuv="gibbs", channel="align", action_alpha=[9.0, 0.5, 0.5])
+    smc = {s: p for s, p in pairhmm_smc.decode(st, dw, model, top=50)}
+    assert max(smc, key=smc.get) == _PEAKED_TRUTH, \
+        f"align run+gibbs MAP {max(smc, key=smc.get)!r}, expected {_PEAKED_TRUTH!r}"
+
+
+def test_align_channel_selector_validation():
+    """Phase 2: the align channel/action_alpha contract is enforced -- align needs a length-3
+    concentration (align,ins,del), a length-4 (word_action) alpha is rejected, and the inverse mistake
+    (a length-3 alpha on word_action) is too. Catches caller mistakes the shape would otherwise crash on
+    deep inside the Dirichlet draw."""
+    model = _align_model(lm_logits)
+    obs, key = "teh cat sat", jax.random.PRNGKey(0)
+    run = lambda **kw: pairhmm_smc.run(obs, key, model, P=64, wdel=WDEL, wins=WINS, band=2, **kw)
+    _assert_raises(lambda: run(channel="align"), "requires action_alpha")
+    _assert_raises(lambda: run(channel="align", action_alpha=[8.5, 0.5, 0.5, 0.5]), "length-3")
+    _assert_raises(lambda: run(channel="word_action", action_alpha=[9.0, 0.5, 0.5]), "length-4")
+
+
+def test_align_slope_threads():
+    """Phase 2: the align FORM table's per-edit cost K is the ``align_form_logpdf(slope)`` argument --
+    the K-threading the Phase-4 sweep relies on (LM-free). At K = SUB_FORM_LP the align FORM is
+    BYTE-IDENTICAL to the word-action FORM ``channel_form_logpdf`` (so the default align reuses the
+    calibrated table -- the proof the slope flows into the DP and reproduces it at the canonical value);
+    a sharper (more-negative) K lowers a d>=1 form cost monotonically (so K genuinely controls the
+    per-edit cost). The DP is a sum over alignments, so neither value is exactly K*d."""
+    from genjax_port.tests.toy_channel import SUB_FORM_LP
+    o, _ = encode("cat"); x, n = encode("car")               # one substitution (d=1)
+    cp, _ = encode("cat"); xcp, ncp = encode("cat")          # exact copy (d=0)
+    base = float(jnp.float32(SUB_FORM_LP))                    # the canonical K = log(1/26)
+    for ob, ix, ln in ((o, x, n), (cp, xcp, ncp)):
+        assert abs(float(align_form_logpdf(base)(ob, ix, ln)) - float(channel_form_logpdf(ob, ix, ln))) < 1e-5, \
+            "align FORM at K=SUB_FORM_LP != word-action FORM (slope did not thread to the canonical value)"
+    d_soft = float(align_form_logpdf(float(jnp.log(1.0 / 8.0)))(o, x, n))     # softer K (less negative)
+    d_sharp = float(align_form_logpdf(float(jnp.log(1.0 / 40.0)))(o, x, n))   # sharper K (more negative)
+    assert d_sharp < d_soft, f"sharper slope did not lower the d=1 form cost: soft={d_soft:.3f} sharp={d_sharp:.3f}"
 
 
 def test_channel_selector_pure_rename():

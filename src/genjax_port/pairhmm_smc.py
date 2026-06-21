@@ -87,6 +87,10 @@ class PairHMMModel:
     #                                WORD_ACTION_CHANNEL_PLAN sec 2/3). Used iff run(action_alpha=...) is
     #                                set; the per-word action cost (log p_copy / log p_sub) is added on
     #                                the column. None => word-action unsupported (the OFF / certified path).
+    channel_form_align: Callable = None  # the ALIGN channel's FORM table (plan ALIGN_ACTION_CHANNEL_PLAN):
+    #                                like ``channel_form`` but its per-edit cost is the sweepable slope K
+    #                                (=ALIGN_SLOPE) rather than the fixed log(1/26), so smooth edit-distance
+    #                                emission ``K*d`` is the one over-editing knob. Used iff channel="align".
 
 
 def _build_candidates(model, obs_words, obs_spans, obs_char, emit_full, max_dist, Ke, channel_fn=None):
@@ -386,6 +390,27 @@ def _theta_to_costs(theta, enable_indel, wins_vec):
     return lp_copy, lp_sub, wdel_p, wins_p
 
 
+def _theta_to_costs_align(theta, enable_indel, wins_vec):
+    """ALIGN-channel costs (plan ALIGN_ACTION_CHANNEL_PLAN sec 3): ``theta`` (P,3) over the 3-way action
+    ``(align, insert, delete)`` -> the per-particle channel costs in the SAME 4-tuple shape
+    ``_theta_to_costs`` returns, but with **``lp_copy == lp_sub == lp_align``**. The align channel has
+    no categorical copy/sub split -- a perfect match (d=0) and a near-miss (d>=1) are ONE 'align' action;
+    "how good the match is" lives entirely in the FORM emission (the per-edit ``K*d`` distance cost). By
+    returning ``lp_copy = lp_sub = lp_align`` the word-action emission offset
+    ``lp_sub + (lp_copy - lp_sub) * is_copy`` collapses to ``lp_align`` for EVERY cell (the ``copy_mask``
+    coefficient is identically 0), so align reuses the entire word-action emission/carry/sweep path
+    unchanged -- the one-knob, surface-driven over-editing control of the plan. ``wins_p = log p_insert
+    + content`` and ``wdel_p = log p_delete`` exactly as the 4-way path. ``enable_indel=False`` masks
+    indel to -inf."""
+    P = theta.shape[0]
+    neg = jnp.float32(-jnp.inf)
+    lp = jnp.log(theta)
+    lp_align = lp[:, 0]
+    wdel_p = jnp.where(enable_indel, lp[:, 2], neg) * jnp.ones(P)                  # log p_delete (P,)
+    wins_p = jnp.where(enable_indel, lp[:, 1][:, None] + wins_vec[None, :], neg)  # log p_insert + content
+    return lp_align, lp_align, wdel_p, wins_p
+
+
 def _action_counts(word_surf, word_len, copy_mask, M):
     """Per-particle word-action counts ``(n_copy, n_sub, n_ins, n_del)`` (P,4) from a POSITIONAL 1:1
     alignment (intended word i <-> observed word i). EXACT for substitution-dominated, near-deterministic
@@ -412,6 +437,24 @@ def _action_counts(word_surf, word_len, copy_mask, M):
     return jnp.stack([n_copy, n_sub, n_ins, n_del], axis=1).astype(jnp.float32)
 
 
+def _action_counts_align(word_surf, word_len, M):
+    """Per-particle 3-way ALIGN action counts ``(n_align, n_ins, n_del)`` (P,3) from the POSITIONAL 1:1
+    alignment (the 3-way analogue of :func:`_action_counts`). ``n_align`` = active intended slots within
+    the observed length -- a match OR a near-miss alike, since align makes no copy/sub distinction (so NO
+    ``copy_mask`` is needed: the copy-vs-sub classifier that the 4-way count requires has no role here);
+    ``n_del`` = active slots past the observed length (a missing / restored word); ``n_ins`` = observed
+    words past the intended length. Drives the Dirichlet-conjugate 3-way theta refresh (plan sec 3)."""
+    Wmax = word_surf.shape[1]
+    idx = jnp.arange(Wmax)[None, :]
+    n_words = jnp.sum(word_len > 0, axis=1)                         # (P,) intended word count
+    active = idx < n_words[:, None]
+    aligned = idx < M                                             # positional slot maps to an observed word
+    n_align = jnp.sum(active & aligned, axis=1)
+    n_del = jnp.sum(active & (~aligned), axis=1)
+    n_ins = jnp.maximum(0, M - n_words)
+    return jnp.stack([n_align, n_ins, n_del], axis=1).astype(jnp.float32)
+
+
 # The per-particle channel forward carry now lives in word_dp.channel_carry (one source of truth shared
 # with the rejuvenation sweep); the filter's theta-refresh calls it directly below.
 
@@ -427,12 +470,15 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     (the toy); Pythia passes an integer band, which also gives insertions/deletions their reach
     (consumption ``k`` may run up to ``band`` ahead of / behind the emission count).
 
-    ``channel`` names the noise model: ``"word_action"`` is THE model (the per-word Dirichlet action
-    channel below); ``"char_copy"`` is the deprecated bundled char channel, kept ONLY as the
-    exact-enumeration **certification anchor** -- ``test_pairhmm_exact`` proves the SMC/DP machinery is
-    bit-identical to brute-force enumeration through it, and it is the concentrated-alpha limit, not a
-    deployment option. ``channel=None`` (default) infers the channel from ``action_alpha`` (set ->
-    ``"word_action"``, ``None`` -> ``"char_copy"``), a back-compat shim for the retired ``ON`` boolean.
+    ``channel`` names the noise model: ``"word_action"`` is THE 4-way (copy,sub,ins,del) Dirichlet action
+    channel below; ``"align"`` (plan ALIGN_ACTION_CHANNEL_PLAN) is the 3-way (align,ins,del) variant that
+    merges copy+sub into one ``align`` action whose only edit cost is the smooth distance ``K*d`` in the
+    form table -- it shares all of word_action's theta machinery via ``lp_copy == lp_sub == lp_align``;
+    ``"char_copy"`` is the deprecated bundled char channel, kept ONLY as the exact-enumeration
+    **certification anchor** -- ``test_pairhmm_exact`` proves the SMC/DP machinery is bit-identical to
+    brute-force enumeration through it, and it is the concentrated-alpha limit, not a deployment option.
+    ``channel=None`` (default) infers the channel from ``action_alpha`` (set -> ``"word_action"``, ``None``
+    -> ``"char_copy"``), a back-compat shim for the retired ``ON`` boolean.
 
     ``action_alpha`` (default ``None`` -- the OFF / char-copy anchor path) carries the **word-action
     channel**'s (plan WORD_ACTION_CHANNEL_PLAN) length-4 Dirichlet concentration over the per-word action
@@ -484,13 +530,27 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     # so every existing caller is bit-identical with no edit.
     if channel is None:
         channel = "word_action" if action_alpha is not None else "char_copy"
-    if channel not in ("word_action", "char_copy"):
-        raise ValueError(f"channel must be 'word_action' or 'char_copy', got {channel!r}")
-    if channel == "word_action" and action_alpha is None:
-        raise ValueError("channel='word_action' requires action_alpha (the Dirichlet action concentration)")
+    if channel not in ("word_action", "align", "char_copy"):
+        raise ValueError(f"channel must be 'word_action', 'align', or 'char_copy', got {channel!r}")
+    if channel in ("word_action", "align") and action_alpha is None:
+        raise ValueError(f"channel={channel!r} requires action_alpha (the Dirichlet action concentration)")
     if channel == "char_copy" and action_alpha is not None:
         raise ValueError("channel='char_copy' is the zero-action anchor; do not pass action_alpha")
-    ON = channel == "word_action"                                       # word-action channel?
+    if channel == "word_action" and len(action_alpha) != 4:
+        raise ValueError(f"channel='word_action' needs a length-4 action_alpha (copy,sub,ins,del), "
+                         f"got length {len(action_alpha)}")
+    if channel == "align" and len(action_alpha) != 3:
+        raise ValueError(f"channel='align' needs a length-3 action_alpha (align,ins,del), "
+                         f"got length {len(action_alpha)}")
+    # The ALIGN channel (plan ALIGN_ACTION_CHANNEL_PLAN) merges copy+sub into one 'align' action: it
+    # shares ALL of word_action's per-particle theta machinery (the Dirichlet draw, the emission offset,
+    # the conjugate refresh) but with a 3-way (align,ins,del) latent and ``lp_copy == lp_sub == lp_align``,
+    # so the copy/sub jump vanishes and "how good the match is" lives purely in the FORM emission (the K*d
+    # distance cost). ``ON`` therefore gates the SHARED theta path (both word_action and align); ``ALIGN``
+    # selects the 3-way variants of the theta->costs / action-count helpers + the align FORM table.
+    ON = channel in ("word_action", "align")                           # uses the Dirichlet action latent?
+    ALIGN = channel == "align"
+    theta_costs_fn = _theta_to_costs_align if ALIGN else _theta_to_costs
     rj_theta = ON and rejuv != "off"                                    # Dirichlet-conjugate theta refresh (5.4)
     seed_ids = list(model.seed_ids)
     seed_len = len(seed_ids)
@@ -498,7 +558,10 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     M = len(obs_words)
     obs_spans = model.obs_spans(observed) if model.obs_spans is not None else [None] * M
     obs_char = jnp.stack([jnp.asarray(model.char_ids(w)[0], jnp.int32) for w in obs_words])  # (M,Lc)
-    chan_fn = model.channel_form if ON else model.channel_logpdf        # FORM table (COPY_LP=0) when ON
+    # FORM table (COPY_LP=0) when ON: align uses its OWN form (per-edit cost = ALIGN_SLOPE/K, sweepable),
+    # word_action the fixed log(1/26) form, char_copy the bundled base-rate channel.
+    chan_fn = (model.channel_form_align if ALIGN
+               else model.channel_form if ON else model.channel_logpdf)
     emit_full = jax.vmap(jax.vmap(chan_fn, in_axes=(None, 0, 0)),
                          in_axes=(0, None, None))(obs_char, model.vocab_char, model.vocab_clen)
     # copy_mask (M, Vc_aug): the CASE-INSENSITIVE copy classifier for the word-action emission offset
@@ -520,8 +583,8 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     if ON:
         key, tkey = jax.random.split(key)
         action_alpha = jnp.asarray(action_alpha, jnp.float32)
-        theta = jax.random.dirichlet(tkey, action_alpha, shape=(P,))                 # (P,4)
-        lp_copy, lp_sub, wdel_p, wins_p = _theta_to_costs(theta, enable_indel, wins_vec)
+        theta = jax.random.dirichlet(tkey, action_alpha, shape=(P,))                 # (P,4) WA | (P,3) align
+        lp_copy, lp_sub, wdel_p, wins_p = theta_costs_fn(theta, enable_indel, wins_vec)
     else:
         theta = None
         lp_copy = jnp.zeros(P); lp_sub = jnp.zeros(P)
@@ -688,10 +751,11 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                         rejuv_stats["dedup_rows_computed"] = rj_dedup_stats.rows_computed
                 if rj_theta:             # ...THEN refresh: Dirichlet-conjugate theta on the CORRECTED parse
                     ctx_buf, ctx_len, n_words, word_len, word_surf, _, done = state  # post-move (sec 3)
-                    counts = _action_counts(word_surf, word_len, copy_mask, M)   # (P,4) positional action counts
+                    counts = (_action_counts_align(word_surf, word_len, M) if ALIGN      # (P,3) align counts
+                              else _action_counts(word_surf, word_len, copy_mask, M))     # (P,4) word-action
                     key, sub = jax.random.split(key)
                     theta = jax.random.dirichlet(sub, action_alpha + counts)     # theta | counts ~ Dir(alpha+counts)
-                    lp_copy, lp_sub, wdel_p, wins_p = _theta_to_costs(theta, enable_indel, wins_vec)
+                    lp_copy, lp_sub, wdel_p, wins_p = theta_costs_fn(theta, enable_indel, wins_vec)
                     a0p = jax.vmap(lambda wn: band_mask(                          # new leading-spurious init per theta
                         jnp.concatenate([jnp.zeros((1,), wn.dtype), jnp.cumsum(wn)]), 0))(wins_p)
                     la = channel_carry(a0p, emit_full, band, M, word_surf, word_len,   # log_alpha consistent

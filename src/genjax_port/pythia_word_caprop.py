@@ -82,6 +82,18 @@ WDEL_DEFAULT = -9.0
 # exact-enumeration certification anchor). NB the battery is synthetic, NOT the reserved human hold-out.
 ACTION_ALPHA_DEFAULT = (200.0, 1.0, 1.0, 1.0)
 
+# Align channel (planning/ALIGN_ACTION_CHANNEL_PLAN.md): the 3-way (align, insert, delete) Dirichlet
+# action prior that merges copy+sub into a single "align" action. There is no copy/sub jump -- a copy is
+# align at d=0, a near-miss is align at d>=1 -- so the Dirichlet governs only align-vs-insert-vs-delete
+# and "how good the match is" lives entirely in the FORM emission: a smooth per-edit distance cost
+# ALIGN_SLOPE (= K). The align concentration mirrors the calibrated word-action copy concentration
+# (alpha_align=200) as the starting point; K starts at SUB_FORM_LP = log(1/26) (so the default align FORM
+# table is numerically identical to the word-action one) and is the single sweepable over-editing knob,
+# decoupled from alpha. Selected by channel="align" (gated; word_action stays the default until the plan's
+# Phase 5 promotion). See ALIGN_ACTION_CHANNEL_PLAN sec 1 for the garage->garbage motivation.
+ALIGN_ALPHA_DEFAULT = (200.0, 1.0, 1.0)
+ALIGN_SLOPE = math.log(1.0 / ALPHA)   # K: per-edit log-cost in the align FORM table (python float, sweepable)
+
 
 def _char_ids(s):
     s = s.strip().lower()
@@ -148,6 +160,20 @@ def channel_form_logpdf(observed_ids, intended_ids, n_x):
     returned score is the pure edit-op form cost ``SUB_FORM_LP^(sub+indel)`` summed over alignments;
     the per-word action cost (log p_copy / log p_sub) is added separately on the emission column."""
     return _channel_dp(observed_ids, intended_ids, n_x, 0.0, SUB_FORM_LP, SUB_FORM_LP, SUB_FORM_LP, 0.0)
+
+
+def align_form_logpdf(slope):
+    """Factory for the ALIGN channel's FORM table (plan ALIGN_ACTION_CHANNEL_PLAN sec 1/3): like
+    :func:`channel_form_logpdf` but with the per-edit cost set to the SWEEPABLE slope ``K = slope``
+    (matched chars still free, COPY_LP=0; a transposition still determined -> free) instead of the
+    hardcoded SUB_FORM_LP. The emission is then a smooth function of (case-insensitive) edit distance,
+    ``K * d``, with no copy/sub jump -- the single over-editing knob K decoupled from the action prior.
+    At ``slope == SUB_FORM_LP`` it is byte-identical to ``channel_form_logpdf``, so the default align
+    form reuses the calibrated word-action form table. ``slope`` is a python float (Phase-4 sweepable)."""
+    slope = jnp.float32(slope)
+    def _f(observed_ids, intended_ids, n_x):
+        return _channel_dp(observed_ids, intended_ids, n_x, 0.0, slope, slope, slope, 0.0)
+    return _f
 
 
 @functools.lru_cache(maxsize=1)
@@ -231,9 +257,13 @@ def _candidate_words(word, obs_span, max_dist, Ke):
 
 
 @functools.lru_cache(maxsize=8)
-def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False):
+def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False, align_slope=None):
     """Build the Pythia :class:`pairhmm_smc.PairHMMModel`. Cached per prime so the vocab char table
     + seed are reused across runs. ``lm_logprobs_fn`` defaults to the loaded penzai model.
+
+    ``align_slope`` (default ``None`` -> ``ALIGN_SLOPE``) is the per-edit cost K of the align channel's
+    FORM table; it is part of the cache key so a Phase-4 K-sweep gets a distinct cached model per slope
+    without disturbing the default-keyed (``None``) word_action / char_copy model.
 
     ``use_word_mask`` (default OFF) restricts the proposal's top-J LM pool to whole-word tokens
     (:func:`_word_token_mask`). It was added to stop sentence-initial non-word tokens ('#'), but the
@@ -259,6 +289,7 @@ def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False):
         lm_fn=lm_fn, eos_id=EOS_ID, emit_vocab=vocab_char.shape[0],
         vocab_char=vocab_char, vocab_clen=vocab_clen, channel_logpdf=channel_logpdf,
         channel_form=channel_form_logpdf,   # word-action FORM channel (COPY_LP=0); used iff action_alpha set
+        channel_form_align=align_form_logpdf(ALIGN_SLOPE if align_slope is None else align_slope),
         char_ids=_char_ids, candidate_words=_candidate_words, obs_words=_obs_word_units,
         obs_spans=_obs_word_spans,
         decode_ids=lambda t: tokenizer.decode(t).strip(), tail_logprobs=tail_fn,
@@ -268,11 +299,14 @@ def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False):
 def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         max_dist=2, Ke=12, J=8, cwin=1, prime=PRIME, lm_logprobs_fn=None, use_word_mask=False,
         rejuv="off", rejuv_lookback=3, rejuv_Ke=8, rejuv_stats=None, trace=None, dedup=False,
-        lm_temp=1.0, ins_rate=0.02, uniform_ins=False, action_alpha=None, channel=None):
+        lm_temp=1.0, ins_rate=0.02, uniform_ins=False, action_alpha=None, channel=None,
+        align_slope=None):
     """Channel-aware RB-SMC on Pythia via the shared filter. Returns (state, log_w, logZ, seed_len).
 
-    ``channel`` picks the noise model: ``"word_action"`` (the deployment model -- per-word Dirichlet
-    action latents, concentration ``action_alpha`` defaulting to ``ACTION_ALPHA_DEFAULT``) or
+    ``channel`` picks the noise model: ``"word_action"`` (the deployment model -- per-word 4-way Dirichlet
+    action latents, concentration ``action_alpha`` defaulting to ``ACTION_ALPHA_DEFAULT``), ``"align"``
+    (the 3-way copy+sub-merged action channel, plan ALIGN_ACTION_CHANNEL_PLAN; ``action_alpha`` defaults
+    to ``ALIGN_ALPHA_DEFAULT`` and the form per-edit cost K to ``align_slope``/``ALIGN_SLOPE``), or
     ``"char_copy"`` (the deprecated bundled char channel, kept as the exact-enumeration certification
     anchor + opt-out). ``channel=None`` infers it from ``action_alpha`` (back-compat for the retired
     ON/OFF boolean).
@@ -312,11 +346,13 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         channel = "word_action" if action_alpha is not None else "char_copy"
     if channel == "word_action" and action_alpha is None:
         action_alpha = ACTION_ALPHA_DEFAULT
+    elif channel == "align" and action_alpha is None:        # 3-way (align,ins,del) default
+        action_alpha = ALIGN_ALPHA_DEFAULT
     elif channel == "char_copy":
         action_alpha = None
     if lm_logprobs_fn is None:
         lm_penzai.load_model()
-    model = _pythia_model(prime, lm_logprobs_fn, use_word_mask, dedup)
+    model = _pythia_model(prime, lm_logprobs_fn, use_word_mask, dedup, align_slope)
     ntok = model.emit_vocab
     obs_words = model.obs_words(observed)
     WDEL = WDEL_DEFAULT if wdel is None else wdel
@@ -436,15 +472,24 @@ def cli():
                          ">1 sharpens the prior (more aggressive correction).")
     ap.add_argument("--word_mask", action="store_true",
                     help="restrict the LM bridge pool to whole-word tokens (off by default)")
-    ap.add_argument("--channel", choices=("word_action", "char_copy"), default="word_action",
-                    help="noise model (planning/WORD_ACTION_CHANNEL_PLAN.md): 'word_action' (default) = the "
-                         "per-word Dirichlet action channel (copy,sub,insert,delete latent per particle; "
-                         "pair-HMM scores substitution FORM only) -- the deployment model, calibrated to "
-                         "ACTION_ALPHA_DEFAULT; 'char_copy' = the deprecated bundled char channel, kept as "
-                         "the exact-enumeration certification anchor + opt-out.")
+    ap.add_argument("--channel", choices=("word_action", "align", "char_copy"), default="word_action",
+                    help="noise model: 'word_action' (default; WORD_ACTION_CHANNEL_PLAN.md) = the per-word "
+                         "4-way Dirichlet action channel (copy,sub,insert,delete latent per particle; pair-HMM "
+                         "scores substitution FORM only), calibrated to ACTION_ALPHA_DEFAULT; 'align' "
+                         "(ALIGN_ACTION_CHANNEL_PLAN.md) = the 3-way (align,insert,delete) variant that merges "
+                         "copy+sub into one 'align' action with a smooth K*d edit-distance form cost (the one "
+                         "over-editing knob --align_slope); 'char_copy' = the deprecated bundled char channel, "
+                         "kept as the exact-enumeration certification anchor + opt-out.")
     ap.add_argument("--action_alpha", default=None,
-                    help="override the word-action Dirichlet prior, 'copy,sub,ins,del' (default "
-                         f"{','.join(str(x) for x in ACTION_ALPHA_DEFAULT)}); implies --channel word_action.")
+                    help="override the action Dirichlet prior: 'copy,sub,ins,del' for --channel word_action "
+                         f"(default {','.join(str(x) for x in ACTION_ALPHA_DEFAULT)}; implies word_action) or "
+                         f"'align,ins,del' for --channel align (default "
+                         f"{','.join(str(x) for x in ALIGN_ALPHA_DEFAULT)}).")
+    ap.add_argument("--align_slope", type=float, default=None,
+                    help="align channel: the per-edit log-cost K of the smooth distance form table "
+                         f"(emission = K*edit_distance; default ALIGN_SLOPE={ALIGN_SLOPE:.3f}=log(1/26)). "
+                         "Less negative => cheaper near-misses (more correction); more negative => fewer. "
+                         "The single over-editing knob, decoupled from --action_alpha. Only used by --channel align.")
     ap.add_argument("--rejuv", choices=("off", "gibbs"), default="off",
                     help="post-resample Gibbs/SMCP3 rejuvenation sweep (R3): 'gibbs' re-diversifies "
                          "the cloud and cures impoverishment collapses, at ~a few x the runtime "
@@ -469,9 +514,10 @@ def cli():
     import time
     channel = args.channel
     action_alpha = None
-    if args.action_alpha is not None:                # an explicit prior wins and implies word_action
+    if args.action_alpha is not None:                # an explicit prior implies an action channel
         action_alpha = tuple(float(x) for x in args.action_alpha.split(","))
-        channel = "word_action"
+        if channel == "char_copy":                   # ...defaulting to word_action (align is opt-in via --channel)
+            channel = "word_action"
     lm_penzai.load_model()
     t0 = time.time()
     trace = [] if args.output_json else None     # record the per-step cloud trace only when writing JSON
@@ -480,7 +526,7 @@ def cli():
                            use_word_mask=args.word_mask, rejuv=args.rejuv,
                            rejuv_lookback=args.rejuv_lookback, trace=trace, dedup=not args.no_dedup,
                            lm_temp=args.lm_temp, ins_rate=args.ins_rate, uniform_ins=args.uniform_ins,
-                           action_alpha=action_alpha, channel=channel)
+                           action_alpha=action_alpha, channel=channel, align_slope=args.align_slope)
     top = decode(st, lw, skip=sl, top=args.top)
     ins_desc = "uniform" if (args.uniform_ins or args.wins is not None) else f"rate={args.ins_rate}"
     print(f"observed : {args.sentence!r}")
