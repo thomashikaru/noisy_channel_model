@@ -32,7 +32,13 @@ import jax
 
 from genjax_port import pythia_word_caprop as W
 from genjax_port import lm_penzai
-from genjax_port.pythia_word_caprop import _norm, ACTION_ALPHA_DEFAULT
+from genjax_port.pythia_word_caprop import _norm, ACTION_ALPHA_DEFAULT, ALIGN_ALPHA_DEFAULT
+
+# Channel hook (plan ALIGN_ACTION_CHANNEL_PLAN Phase 4): NC_CHANNEL=align runs the 3-way align channel
+# (default word_action, unchanged). NC_ALIGN_SLOPE overrides K (the form per-edit cost); NC_ALPHA still
+# overrides the concentration (length-3 'align,ins,del' for align, length-4 for word_action).
+CHANNEL = os.environ.get("NC_CHANNEL", "word_action")
+ALIGN_SLOPE = float(os.environ["NC_ALIGN_SLOPE"]) if os.environ.get("NC_ALIGN_SLOPE") else None
 
 # Default to the 70m gate for 70m sweeps (item membership / observed / intended are identical to the
 # 410m variant -- only the gate columns differ). NC_CSV overrides (e.g. the 410m gate for a 410m run).
@@ -72,7 +78,8 @@ def evaluate(item_id, P, seed, alpha, rejuv, dedup):
         observed, intended = _wellform(observed), _wellform(intended)
     trace = [] if rejuv != "off" else None    # capture the final posterior theta (rejuv_info.theta_mean)
     st, lw, logZ, sl = W.run(observed, jax.random.PRNGKey(seed), P=P, band=2,
-                             action_alpha=alpha, rejuv=rejuv, dedup=dedup, trace=trace)
+                             action_alpha=alpha, rejuv=rejuv, dedup=dedup, trace=trace,
+                             channel=CHANNEL, align_slope=ALIGN_SLOPE)
     top = W.decode(st, lw, skip=sl, top=60)
     lit_n, cor_n = _norm(observed), _norm(intended)
     lit = sum(p for s, p in top if _norm(s) == lit_n)
@@ -100,12 +107,13 @@ def main():
     rejuv = os.environ.get("NC_REJUV", "off")        # 'gibbs' = intended deployment (theta posterior)
     dedup = True
     verbose = os.environ.get("NC_VERBOSE", "1") not in ("", "0", "false")  # per-item top-3 (off for ALL)
-    alpha = ACTION_ALPHA_DEFAULT
+    alpha = ALIGN_ALPHA_DEFAULT if CHANNEL == "align" else ACTION_ALPHA_DEFAULT
     if os.environ.get("NC_ALPHA"):                   # sweep concentrated/copy-favoured priors
         alpha = tuple(float(x) for x in os.environ["NC_ALPHA"].split(","))
     lm_penzai.load_model()
-    print(f"LM={lm_penzai.MODEL_NAME}  P={P}  seed={seed}  alpha={alpha}  rejuv={rejuv}  "
-          f"dedup={dedup}  cap_initial={CAP}  items={len(items)}\n", flush=True)
+    print(f"LM={lm_penzai.MODEL_NAME}  P={P}  seed={seed}  channel={CHANNEL}  alpha={alpha}  "
+          f"align_slope={ALIGN_SLOPE}  rejuv={rejuv}  dedup={dedup}  cap_initial={CAP}  "
+          f"items={len(items)}\n", flush=True)
     print(f"{'item':12s} {'exp':5s} {'metric':>6s} {'q_ref':>6s}  {'L':>4s} {'E':>4s} {'junk':>4s}  obs -> intended",
           flush=True)
     # Aggregate pass-rate tallies. EDIT pass = correction wins the L-vs-E contest (q_smc > 0.5); KEEP pass

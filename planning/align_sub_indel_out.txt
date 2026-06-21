@@ -1,0 +1,41 @@
+LM=EleutherAI/pythia-70m  P=128  rejuv=gibbs  lm_only=False
+
+item      kind        LMgap  band     obs -> correction
+--------------------------------------------------------------------------------------------
+GARAGE    edit_disc   +5.78  DISCRIM  'The garage needs to be tossed out.' -> 'The garbage needs to be tossed out.'
+QUIET     edit_disc   +7.56  DISCRIM  'She was quiet sure about it.' -> 'She was quite sure about it.'
+DESERT    edit_disc   +6.91  DISCRIM  'We had cake for desert tonight.' -> 'We had cake for dessert tonight.'
+FORM      edit_easy  +12.32  easy     'I heard the news form a friend.' -> 'I heard the news from a friend.'
+TRAIL     edit_easy   +8.71  easy     'The court trail lasted three weeks.' -> 'The court trial lasted three weeks.'
+KEEP-DES  keep        -3.57  keep-lit keep 'The desert was hot and dry.' (vs 'dessert': -41.8 < lit -38.2?)
+KEEP-ADV  keep        -6.21  keep-lit keep 'She gave me sound advice.' (vs 'advise': -40.9 < lit -34.7?)
+KEEP-QTE  keep        -8.69  keep-lit keep 'I am quite happy today.' (vs 'quiet': -38.4 < lit -29.7?)
+
+item      kind      channel     verdict   MAP
+--------------------------------------------------------------------------------------------
+GARAGE    edit_disc word_action miss      p=1.00 'The garage door needs to be tossed out.'  (30s)
+GARAGE    edit_disc align       CORRECT   p=0.82 'The garbage needs to be tossed out.'  (25s)
+QUIET     edit_disc word_action CORRECT   p=0.90 'She was quite sure about it.'  (23s)
+QUIET     edit_disc align       CORRECT   p=0.96 'She was quite sure about it.'  (8s)
+DESERT    edit_disc word_action miss      p=0.88 'We had cake for a desert tonight.'  (39s)
+DESERT    edit_disc align       CORRECT   p=0.99 'We had cake for dessert tonight.'  (23s)
+FORM      edit_easy word_action CORRECT   p=0.99 'I heard the news from a friend.'  (20s)
+FORM      edit_easy align       CORRECT   p=0.99 'I heard the news from a friend.'  (18s)
+TRAIL     edit_easy word_action miss      p=0.99 'The Court of trial lasted three weeks.'  (32s)
+TRAIL     edit_easy align       CORRECT   p=0.87 'The court trial lasted three weeks.'  (35s)
+KEEP-DES  keep      word_action KEPT      p=0.93 'The desert was hot and dry.'  (16s)
+KEEP-DES  keep      align       KEPT      p=1.00 'The desert was hot and dry.'  (16s)
+KEEP-ADV  keep      word_action KEPT      p=1.00 'She gave me sound advice.'  (19s)
+KEEP-ADV  keep      align       KEPT      p=1.00 'She gave me sound advice.'  (8s)
+KEEP-QTE  keep      word_action KEPT      p=1.00 'I am quite happy today.'  (21s)
+KEEP-QTE  keep      align       KEPT      p=0.98 'I am quite happy today.'  (17s)
+
+=== TALLY (correct/total) ===
+  edit_disc align        3/3
+  edit_disc word_action  1/3
+  edit_easy align        2/2
+  edit_easy word_action  1/2
+  keep      align        3/3
+  keep      word_action  3/3
+
+EXIT=0
