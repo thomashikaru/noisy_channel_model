@@ -1,0 +1,19 @@
+### (A) garage at sharpening K
+--- K=-3.2581 ---
+inferred intended (P=128, band=2, rejuv=gibbs, lm_temp=1.0, ins=rate=0.02, logZ=-41.34):
+   p=0.82  'The garbage needs to be tossed out.'
+   p=0.18  'The garage needs to be tossed out.'
+--- K=-3.6889 ---
+inferred intended (P=128, band=2, rejuv=gibbs, lm_temp=1.0, ins=rate=0.02, logZ=-48.51):
+   p=0.96  'The garage needs to be tossed out.'
+   p=0.04  'The garage needs to be crossed out.'
+--- K=-4.0943 ---
+inferred intended (P=128, band=2, rejuv=gibbs, lm_temp=1.0, ins=rate=0.02, logZ=-48.40):
+   p=1.00  'The garage needs to be tossed out.'
+--- K=-4.6052 ---
+inferred intended (P=128, band=2, rejuv=gibbs, lm_temp=1.0, ins=rate=0.02, logZ=-48.31):
+   p=1.00  'The garage needs to be tossed out.'
+### (B) full subsample K=log(1/40)=-3.6889
+### (C) SUB K-sweep
+### done
+DRIVER_EXIT=0

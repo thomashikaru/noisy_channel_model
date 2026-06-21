@@ -1,0 +1,8 @@
+### (1) full subsample, align K=log(1/26) default, gibbs
+### (2) K-sweep on SUB items
+tr: illegal option -- .
+usage: tr [-Ccsu] string1 string2
+       tr [-Ccu] -d string1
+       tr [-Ccu] -s string1
+       tr [-Ccu] -ds string1 string2
+DRIVER_EXIT=1

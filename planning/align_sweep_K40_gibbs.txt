@@ -1,0 +1,36 @@
+LM=EleutherAI/pythia-70m  P=128  seed=0  channel=align  alpha=(200.0, 1.0, 1.0)  align_slope=-3.6889  rejuv=gibbs  dedup=True  cap_initial=True  items=8
+
+item         exp   metric  q_ref     L    E junk  obs -> intended
+SUBW-01a     edit    0.99   0.89  0.01 0.84 0.15  'the storyteller told an amusing antidote' -> 'the storyteller told an amusing anecdote'  (q_smc; 34s)  theta(c,s,i,d)=[0.99, 0.004, 0.005]
+             p=0.83  'The storyteller told an amusing anecdote.'
+             p=0.10  'For the best storyteller told an amusing anecdote.'
+             p=0.04  'This is the storyteller and an amusing anecdote.'
+SUBW-01b     keep    0.77   0.00  0.77 0.77 0.00  'the doctor prepared a fast-acting antidote' -> 'the doctor prepared a fast-acting antidote'  (kept; 29s)  theta(c,s,i,d)=[0.975, 0.02, 0.005]
+             p=0.77  'The doctor prepared a fast-acting antidote.'
+             p=0.23  'The Doctor prepares a fast-acting antidote.'
+             p=0.00  'The doctor prepared a fast-acting antidote,'
+SUBW-02a     edit     nan    nan  0.00 0.00 1.00  'the medic treated the wound to prevent an inflection' -> 'the medic treated the wound to prevent an infection'  (q_smc; 36s)  theta(c,s,i,d)=[0.986, 0.005, 0.009]
+             p=0.99  'The medicament treated the wound to prevent an infection.'
+             p=0.01  'The medicament treated with the wound to prevent an infection.'
+SUBW-02b     keep    0.99    nan  0.99 0.99 0.00  'the teacher explained the verb's inflection' -> 'the teacher explained the verb's inflection'  (kept; 28s)  theta(c,s,i,d)=[0.989, 0.006, 0.006]
+             p=0.99  "The teacher explained the verb's inflection."
+             p=0.01  "The teacher explained the new verb's inflection."
+             p=0.00  "The teacher explained the new verb's inflection. It"
+SUBN-01a     edit    1.00   0.87  0.00 1.00 0.00  'did you recieve the message' -> 'did you receive the message'  (q_smc; 24s)  theta(c,s,i,d)=[0.99, 0.005, 0.005]
+             p=0.54  'Did you receive the message?'
+             p=0.46  'Did you receive the message.'
+SUBN-01b     keep    1.00    nan  1.00 1.00 0.00  'did you receive the message' -> 'did you receive the message'  (kept; 14s)  theta(c,s,i,d)=[0.99, 0.005, 0.005]
+             p=0.54  'Did you receive the message?'
+             p=0.46  'Did you receive the message.'
+SUBN-02a     edit    1.00   1.00  0.00 1.00 0.00  'the boy did an experimemt today' -> 'the boy did an experiment today'  (q_smc; 41s)  theta(c,s,i,d)=[0.991, 0.004, 0.005]
+             p=0.98  'The boy did an experiment today.'
+             p=0.02  'The boy did an Experiment today.'
+             p=0.00  'The boy did an experiment on me today.'
+SUBN-02b     keep    1.00    nan  1.00 1.00 0.00  'the boy did an experiment today' -> 'the boy did an experiment today'  (kept; 31s)  theta(c,s,i,d)=[0.991, 0.004, 0.005]
+             p=1.00  'The boy did an experiment today.'
+             p=0.00  'The boy did an experiment today.\nA'
+
+=== SUMMARY ===
+  edit  n=  4  pass(q_smc>0.5)=  3/4 (75%)  mean_metric=0.747
+  keep  n=  4  pass(kept>0.5)=  4/4 (100%)  mean_metric=0.940
+  junk>0.5 (leading-opener / over-edit artifact): 1/8
