@@ -30,6 +30,12 @@
 \newcommand{\chan}{g}            % channel emission score
 \newcommand{\wdel}{w_{\delact}}
 \newcommand{\wins}{w_{\insact}}
+\newcommand{\actdist}{\bm{\pi}}            % word-action edit-rate vector (Dirichlet draw)
+\newcommand{\pcopy}{\pi_{\copyact}}
+\newcommand{\psub}{\pi_{\subact}}
+\newcommand{\pins}{\pi_{\insact}}
+\newcommand{\pdel}{\pi_{\delact}}
+\newcommand{\Dir}{\mathrm{Dir}}
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}{Lemma}
@@ -56,19 +62,23 @@ words, and deleting intended ones---into the \emph{observed} sentence; comprehen
 posterior over intended sentences. The central modelling decision is that \emph{the edit alignment
 between intended and observed words is never sampled}: it is marginalized analytically by a forward
 dynamic program (a pair-HMM run at
-the word level, whose per-cell emission is itself a character-level pair-HMM). The only sampled
-latent is the intended sentence. Inference is then a Rao--Blackwellized sequential Monte Carlo
+the word level, whose per-cell emission is itself a character-level pair-HMM). The sampled
+latents are the intended sentence and a low-dimensional vector of word-level \emph{edit rates}
+(copy / substitute / insert / delete) drawn from a Dirichlet \emph{action} prior; the alignment
+itself is never instantiated. Inference is then a Rao--Blackwellized sequential Monte Carlo
 (SMC) filter over intended words, with a fully-adapted (channel-aware) proposal whose incremental
-weight is a marginal step-likelihood, and a rejuvenation kernel that revisits earlier words as
-later context disambiguates them.
+weight is a marginal step-likelihood, and a rejuvenation kernel that revisits earlier words---and
+refreshes the edit rates from their conjugate posterior---as later context disambiguates them.
 
 The document is in two parts. \textbf{Part~I} is the theoretical framework: the LM prior, the
-two-level pair-HMM channel, the Rao--Blackwellized SMC filter, and reanalysis by rejuvenation,
+two-level pair-HMM channel, the Dirichlet action prior over edit rates, the Rao--Blackwellized SMC
+filter, and reanalysis by rejuvenation (word moves and the conjugate edit-rate refresh),
 together with the correctness statements (proper weighting, unbiased evidence, posterior
 invariance of the moves). \textbf{Part~II} is the engineering that makes it run: vectorization over
 particles under GenJAX \code{vmap}/\code{jit}, multi-token intended words, the key/value (KV) cache
-that powers rejuvenation, deduplication over the redundant post-resample particle set, and candidate
-generation.
+that powers rejuvenation, deduplication over the redundant post-resample particle set, candidate
+generation, and the calibration of the action prior against a battery of plausible/implausible
+sentence pairs.
 Part~I is meant to read independently of Part~II.
 \end{abstract}
 
@@ -89,11 +99,16 @@ span of one or more subword tokens; see \S\ref{sec:lm}) and $o = (o_1,\dots,o_M)
 sentence (segmented
 deterministically into $M$ word/punctuation units), the joint is
 \begin{equation}\label{eq:joint-abstract}
-  p(x, o) \;=\; \underbrace{p_{\mathrm{prior}}(x)}_{\text{LM over intended sentences}}
-              \;\cdot\; \underbrace{p_{\mathrm{chan}}(o \given x)}_{\text{word-level noisy channel}} .
+  p(\actdist, x, o) \;=\; \underbrace{p_{\mathrm{act}}(\actdist)}_{\text{Dirichlet edit-rate prior}}
+              \;\cdot\; \underbrace{p_{\mathrm{prior}}(x)}_{\text{LM over intended sentences}}
+              \;\cdot\; \underbrace{p_{\mathrm{chan}}(o \given x, \actdist)}_{\text{word-level noisy channel}} ,
 \end{equation}
-Comprehension/correction is the posterior $p(x \given o) \propto p(x,o)$; the most probable
-intended sentence is the model's reconstruction of what the speaker meant.
+where $\actdist = (\pcopy,\psub,\pins,\pdel)$ is a word-level \emph{edit-rate} vector---a
+copy/substitute/insert/delete distribution---drawn from a Dirichlet prior that parameterizes the
+channel (the \emph{word-action} channel of \S\ref{sec:word-action}). Comprehension/correction is the
+posterior over intended sentences $p(x \given o)$, with the edit rates $\actdist$ a nuisance latent
+the particle cloud integrates out; the most probable intended sentence is the model's reconstruction
+of what the speaker meant.
 
 \paragraph{What is and is not latent.} The intended sentence $x$ is latent. The segmentation of $o$
 into units is a deterministic function of $o$ (\code{noise\_word.segment\_words}), so it is
@@ -101,7 +116,11 @@ into units is a deterministic function of $o$ (\code{noise\_word.segment\_words}
 the same order. The \emph{alignment} between intended and observed words---which intended word
 produced which observed unit, which observed unit is spurious, which intended word was
 dropped---\emph{is} a latent object, but it is one we will never instantiate: Section~\ref{sec:channel}
-marginalizes it in closed form. This is the Rao--Blackwellization at the heart of the model.
+marginalizes it in closed form. This is the Rao--Blackwellization at the heart of the model. A
+second, low-dimensional latent---the edit-rate vector $\actdist$---\emph{is} genuinely sampled (one
+draw per particle, shared across the whole sentence); it is the channel's only stochastic parameter,
+and \S\ref{sec:word-action} gives its prior while \S\ref{sec:rejuv-theta} gives its conjugate
+posterior refresh during inference.
 
 \section{The language-model prior}
 \label{sec:lm}
@@ -241,7 +260,11 @@ $\wins[k]$ (spurious-word) is by default \emph{frequency-aware}: $\wins[k] = \lo
 word's base frequency keeps a rare-but-correct word from being dropped as spurious: under a flat cost
 (say $-\log V$, uniform over the vocabulary), any word rarer than uniform would be cheaper to discard
 than to keep, whereas here a rare word is expensive to explain away (\code{unigram.py}; the cost
-enters \eqref{eq:row-ins} as a per-observed-word vector).
+enters \eqref{eq:row-ins} as a per-observed-word vector). In the \emph{word-action} channel
+(\S\ref{sec:word-action}) neither cost is a free constant: $\wdel = \log\pdel$ and the insertion
+\emph{rate} $\log\pins$ (replacing $\rho_{\insact}$) are both read off the sampled edit-rate vector
+$\actdist$, so the entire edit budget is set by one Dirichlet draw while the content term
+$-\mathrm{surp}_{\mathrm{uni}}(o_k)$ is retained.
 
 \paragraph{The band: bounded reach for insertions and deletions.} Insertions and deletions let the
 intended-word count $n$ and
@@ -257,8 +280,77 @@ up arcs of \eqref{eq:row-beta}; insertion is the left-to-right pass of \eqref{eq
 spurious word as if it were a word the LM chose to emit would be a category error---a spurious word is
 a channel event, not an LM emission---and would double-count its probability mass, biasing the
 evidence by $\approx 0.2$ nats against exact enumeration. Every SMC step is thus a clean choice of the
-next intended word (or $\eos$); the edits live entirely inside the marginalized channel.
+next intended word (or $\eos$); the edits live entirely inside the marginalized channel. The
+word-action channel (\S\ref{sec:word-action}) does not change this: it makes the channel's edit
+\emph{rates} $\actdist$ a latent, but the per-word edit \emph{type} stays summed out inside the same
+forward DP. The latent is a distribution over the arcs, never a sampled per-word action.
 \end{remark}
+
+\subsection{The word-action parameterization: a Dirichlet prior over edit rates}
+\label{sec:word-action}
+
+So far the edit costs have been fixed constants: the character-level copy/substitution rates
+$\theta_{\copyact},\theta_{\subact}$ of \eqref{eq:char-dp} and the word-level
+$\wdel,\wins$ of \S\ref{sec:word-channel}. This bundles two conceptually distinct quantities into one
+number---\emph{how often} the channel edits at all (a base rate) and \emph{what shape} an edit takes
+(a substitution of one character vs.\ several). The \emph{word-action channel} decouples them and
+makes the base rate a latent.
+
+\paragraph{The form channel and the action rates.} Split each edit cost into a \emph{form} term and
+an \emph{action-rate} term:
+\begin{itemize}[leftmargin=1.6em,itemsep=1pt]
+  \item \textbf{Form} (fixed). The inner character pair-HMM \eqref{eq:char-dp} is run with a
+        \emph{base-rate-free} parameterization (\code{channel\_form\_logpdf}): a matched character is
+        free ($\log\theta_{\copyact}=0$) and every character-level edit---substitution, insertion,
+        deletion---pays a single sharpness $\mathrm{SUB\_FORM\_LP} = \log(1/26)$ (a transposition is
+        determined, hence free). The emission \eqref{eq:char-channel} now scores only the \emph{shape}
+        of a word-level substitution---roughly $d\cdot\log(1/26)$ for a $d$-character edit---with the
+        ``did it edit at all'' decision removed.
+  \item \textbf{Action rates} (latent). A single vector
+        $\actdist = (\pcopy,\psub,\pins,\pdel)$, a distribution over the four word-level actions
+        \{copy, substitute, insert, delete\}, supplies the base rates, drawn once per particle from a
+        Dirichlet prior
+        \begin{equation}\label{eq:action-prior}
+          \actdist \;\sim\; \Dir(\bm\alpha), \qquad
+          \bm\alpha = (\alpha_{\copyact},\alpha_{\subact},\alpha_{\insact},\alpha_{\delact})
+                    \;=\; (200,1,1,1).
+        \end{equation}
+        The copy concentration $\alpha_{\copyact}=200$ (the calibrated default \code{ACTION\_ALPHA\_DEFAULT})
+        is not arbitrary: it is the value selected by the calibration of \S\ref{sec:calibration}, the
+        others held at $1$.
+\end{itemize}
+The word-level forward recurrence \eqref{eq:row-beta0}--\eqref{eq:row-ins} is unchanged in form; only
+its costs are now read off $\actdist$. The emission of aligning intended word $x$ to observed unit
+$o_k$ (the diagonal arc) is the form score offset by the action log-rate,
+\begin{equation}\label{eq:wa-emit}
+  \mathrm{e}[k] \;=\; \underbrace{\chan_{\mathrm{form}}(o_k\given x)}_{\text{shape}}
+     \;+\; \log\psub \;+\; \big(\log\pcopy - \log\psub\big)\,\Ind[\,x \text{ is a copy of } o_k\,],
+\end{equation}
+i.e.\ a (case-insensitive) copy pays $\log\pcopy$ and a substitution pays $\log\psub$ on top of its
+form cost; the missing-word arc pays $\wdel = \log\pdel$; and the spurious-word pass pays
+$\wins[k] = \log\pins - \mathrm{surp}_{\mathrm{uni}}(o_k)$ (the insertion \emph{rate} $\log\pins$
+times the same frequency-aware content term as before). The copy test is deliberately
+case-insensitive---a sentence-initial capitalization (``she''$\to$``She'') is a faithful copy, not a
+substitution---matching the case-insensitive character DP of the original channel.
+
+\paragraph{The channel selector.} The implementation exposes the noise model as a named
+\code{channel} argument with two values (\code{pythia\_word\_caprop.run}):
+\code{"word\_action"} is the model just described; \code{"char\_copy"} is the original bundled
+character channel of \S\ref{sec:char-channel}--\S\ref{sec:word-channel}, retained only as the
+exact-enumeration certification anchor (\S\ref{sec:certification}). The two are not independent
+codepaths: \code{char\_copy} is exactly the \emph{zero-action degenerate} of \eqref{eq:wa-emit}, with
+$\log\pcopy = \log\psub = 0$ (the action offset vanishes, leaving the bundled character emission) and
+the global constants $\wdel,\wins$ broadcast across particles in place of the per-particle rates. With
+the action prior absent the word-action code is therefore bit-identical to the certified path, so the
+brute-force gates of \S\ref{sec:certification} continue to certify it.
+
+\paragraph{Concentration as the over-editing knob.} Absent rejuvenation (\S\ref{sec:rejuv}) each
+particle's $\actdist$ is a \emph{prior draw}, fixed for the whole run, so the prior mean
+$\bar p_{\copyact} = \alpha_{\copyact}/\!\sum_a \alpha_a$ directly sets that particle's edit budget:
+the more concentration on copy, the less the channel edits. The SMC targets of \S\ref{sec:smc} are
+thus understood as conditioned on the particle's current $\actdist$ (a prior draw here; refreshed by
+\S\ref{sec:rejuv-theta} once rejuvenation is on). Tuning $\bm\alpha$ to a target editing behaviour is
+the calibration of \S\ref{sec:calibration}.
 
 \section{Rao--Blackwellized sequential Monte Carlo}
 \label{sec:smc}
@@ -484,6 +576,52 @@ $\sum f\,\bar\gamma$. The schedule invariance is immediate: a composition of $\b
 kernels is $\bar\gamma$-invariant regardless of how the (data-dependent) schedule chooses them. \qed
 \end{proof}
 
+\subsection{Refreshing the edit rates: a conjugate sweep-then-refresh}
+\label{sec:rejuv-theta}
+
+In the word-action channel (\S\ref{sec:word-action}) the edit rates $\actdist$ are themselves latent,
+so rejuvenation resamples them too. After a resampling step the kernel runs \emph{sweep-then-refresh}:
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+  \item \textbf{Sweep (words).} Run the full-conditional word move of \S\ref{sec:rejuv-move} over the
+        lookback window, scoring every candidate against the particle's \emph{current} per-particle
+        channel (the move is $\actdist$-aware: the same $\log\pcopy/\log\psub/\log\pdel/\log\pins$
+        costs and the form table that the forward filter uses). This can restore a dropped word or
+        revise a substitution.
+  \item \textbf{Refresh (rates).} On the just-corrected parse, resample $\actdist$ from its
+        Dirichlet--multinomial conjugate posterior. Counting the actions realized by the parse,
+        $\bm n = (n_{\copyact}, n_{\subact}, n_{\insact}, n_{\delact})$, the posterior over the
+        rate vector is
+        \begin{equation}\label{eq:theta-refresh}
+          \actdist \given \bm n \;\sim\; \Dir(\bm\alpha + \bm n),
+        \end{equation}
+        the standard conjugacy: a Dirichlet prior \eqref{eq:action-prior} updated by multinomial
+        action counts is Dirichlet with concentration $\bm\alpha + \bm n$. The new $\actdist$ is
+        converted back to per-particle costs and the forward vector $\alpha^{(\cdot)}$ is recomputed
+        from it, so the particle's channel and its rates stay consistent
+        (\code{\_theta\_to\_costs}, \code{channel\_carry}).
+\end{enumerate}
+
+\paragraph{Why sweep \emph{then} refresh.} The order is what makes the move useful. Refreshing the
+rates \emph{alone}, on an over-edited parse, merely re-estimates a high edit rate and entrenches the
+over-editing---the parse looks like one a high-$\psub$/$\pdel$ channel would produce, so the conjugate
+update keeps those rates high. Restoring the word \emph{first} lets the conjugate update see a clean
+(copy-dominated) parse and pull $\pcopy$ up, which in turn makes the next words harder to over-edit.
+The word move is the escape route the refresh-alone path lacked; together they close the loop between
+the parse and the rates that explain it.
+
+\paragraph{Counts and the approximation.} The action counts $\bm n$ are read from a \emph{positional}
+$1{:}1$ alignment (intended word $i$ against observed unit $i$; \code{\_action\_counts}): a word that
+matches its observed unit up to case is a copy, a non-matching one a substitution, an intended word
+past the observed length a deletion, an observed unit past the intended length an insertion. This is
+\emph{exact} for the substitution-dominated, near-deterministic alignments of the calibration battery
+(\S\ref{sec:calibration})---its items carry a single edit---and \emph{approximate} when an insertion
+or deletion shifts the alignment mid-sentence, where the exact counts would need the MAP or sampled
+alignment (a documented general-text refinement). The word move \eqref{eq:full-cond} is
+exactly $\bar\gamma$-invariant (Theorem~\ref{thm:rejuv}); the rate refresh is a Gibbs step on the
+augmented posterior $p(x,\actdist\given o)$, exact in the regime where the positional alignment
+matches the true one.
+
 \subsection{Scheduling: the surprisal-relative gate}
 \label{sec:gate}
 
@@ -655,6 +793,67 @@ verbatim---is always first, so a correctly-spelled (or correctly-punctuated) wor
 emitted as itself; using the \emph{observed} span keeps punctuation and casing faithful (a terminal
 ``\code{.}'' stays the attached token, not a spaced one).
 
+\section{Calibrating the action prior}
+\label{sec:calibration}
+
+The action prior $\bm\alpha$ \eqref{eq:action-prior} has a behavioural signature---it sets how readily
+the channel edits---so it is chosen empirically against a calibration set rather than by fiat. The
+methodology is fixed before any tuning: design the set and the target behaviours first, then sweep the
+prior to match them.
+
+\paragraph{The battery.} The calibration set
+(\code{planning/calibration\_battery\_v0\_gated.csv}) is a collection of \emph{matched minimal pairs}.
+Each pair shares a context but differs in one manipulation: an \emph{implausible} member carrying a
+single slip---a misspelling, a dropped function word (\emph{to / for / from / of / a / the}), a
+spurious doubled word, a dative omission---and a \emph{plausible} member, its clean twin. Pairs are
+grouped into edit families (substitution, the several deletion families, insertion, datives), so the
+analysis can report behaviour family by family. This battery is \emph{synthetic} and was designed
+blind; the human behavioural data is a sealed hold-out, unlocked only at a pre-registered validation
+step and never used to tune the prior.
+
+\paragraph{The target behaviours.} The intuition the prior must encode is simple: a plausible sentence
+should be \emph{read literally} (returned verbatim), and an implausible one should be \emph{corrected}
+to its minimal-pair twin. Two failure modes bound the knob from each side---\emph{under-editing}
+(a genuine slip left uncorrected) and \emph{over-editing} (a clean sentence ``corrected,'' or spurious
+words hallucinated into it). Against the posterior over intended sentences each item is scored by the
+mass the filter puts on the literal reading and on the intended correction; the per-item summaries are
+(\code{calibration\_battery\_analyze.py}):
+\begin{itemize}[leftmargin=1.6em,itemsep=1pt]
+  \item \textbf{should-EDIT correction rate $E$}---on implausible items, the posterior mass on the
+        corrected twin (high is good);
+  \item \textbf{should-KEEP literal retention $L$}---on plausible items, the mass on the verbatim
+        reading (high is good; $1-L$ is spurious editing of a clean sentence);
+  \item \textbf{tracks-manipulation}---the within-pair check that the implausible member is edited
+        more than its plausible twin is spuriously edited ($E_{\text{implausible}} > 1-L_{\text{plausible}}$);
+  \item \textbf{junk}---the residual mass on neither reading (over-edit / spurious-insertion mass).
+\end{itemize}
+
+\paragraph{The sweep.} The single knob tuned here is the \emph{copy concentration}: hold
+$\alpha_{\subact}=\alpha_{\insact}=\alpha_{\delact}=1$ and sweep $\alpha_{\copyact}$. Without
+rejuvenation the per-particle $\actdist$ is a prior draw (\S\ref{sec:word-action}), so the prior mean
+$\bar p_{\copyact}=\alpha_{\copyact}/(\alpha_{\copyact}+3)$ directly sets the edit budget, and the
+sweep cleanly isolates the prior's effect. The copy concentration is orthogonal to the form sharpness
+$\mathrm{SUB\_FORM\_LP}$, which is settled separately (\code{calibration\_word\_action\_prior\_search.py}).
+
+\paragraph{What the sweep reveals.} Naively one expects concentration on copy to simply \emph{suppress}
+editing---trading correction for retention---and the task to be picking the knee before genuine
+corrections collapse. The data invert this: raising $\alpha_{\copyact}$ raises retention $L$ \emph{and}
+correction $E$ together. At a low (edit-happy) concentration the dominant failure is not under-editing
+but a spurious-insertion \emph{junk} channel that steals mass from \emph{both} the literal reading and
+the genuine correction; concentrating the prior on copy closes that junk channel, and the freed mass
+flows to the real correction wherever the LM supports it. The chosen $\alpha$ is the concentration that
+best balances $L$, the tracks-manipulation rate, and a non-collapsed $E$, at low junk; once chosen at
+the prior-only setting it is confirmed at the deployment setting (\code{rejuv="gibbs"}, the
+$\actdist$ posterior of \S\ref{sec:rejuv-theta}) before being promoted to the default. On the
+pythia-70m battery this knee is $\alpha_{\copyact}=200$ (a concentration of $\sim\!500$ finally craters
+the correction rate): there prior-only retention is $L\approx0.91$ at zero over-edit junk, and the
+\code{rejuv="gibbs"} confirmation \emph{raises} retention to $L\approx0.99$ without collapsing
+correction---so $(200,1,1,1)$ is the deployed \code{ACTION\_ALPHA\_DEFAULT}. Two effects the
+prior cannot fix---and must not be chased with $\alpha$---are the language model's own
+semantic/structural ceiling (small models miss argument-structure and content-word edits at every
+$\alpha$) and particle-count noise (sharp single-point wobbles that the rejuvenation sweep, not a
+different prior, is meant to cure).
+
 \section{Reference parameters}
 \label{sec:params}
 
@@ -675,13 +874,23 @@ $J$ & top-$J$ LM bridge candidates & $8$ & \code{J} \\
 $K_e$ & candidate words per observed word & $12$ & \code{Ke} \\
 $\ell$ & rejuvenation lookback window & $3$ words & \code{rejuv\_lookback} \\
 $P$ & particle count (Pythia) & $64$--$256$ & \code{P} \\
+\midrule
+\multicolumn{4}{@{}l}{\emph{word-action channel} (\S\ref{sec:word-action}; supersedes $\wdel,\rho_{\insact}$)} \\
+$\bm\alpha$ & action-rate Dirichlet concentration & $(200,1,1,1)$ & \code{ACTION\_ALPHA\_DEFAULT} \\
+$\mathrm{SUB\_FORM\_LP}$ & char form-edit cost (copy free) & $\log(1/26)$ & \code{pythia\_word\_caprop} \\
+\code{channel} & noise-model selector & \code{word\_action}\,/\,\code{char\_copy} & \code{channel} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \noindent The three over-/under-editing knobs ($\wdel$, $\rho_{\insact}$, $\lambda$) interact and are
 co-tuned on a gold set: $\lambda<1$ trades substitution over-editing for word deletion, so it is set
-alongside $\wdel$.
+alongside $\wdel$. In the word-action channel $\wdel$ and $\rho_{\insact}$ are not free constants but
+read off the sampled rate vector ($\wdel=\log\pdel$, insertion rate $\log\pins$); the editing budget is
+then controlled by the single Dirichlet concentration $\bm\alpha$, tuned in \S\ref{sec:calibration}.
+The action prior's default $(200,1,1,1)$ is the value the \S\ref{sec:calibration} sweep selected; with it
+in place, \code{word\_action} is the default \code{channel} (\code{char\_copy} remaining only as the
+certification anchor).
 
 \appendix
 
