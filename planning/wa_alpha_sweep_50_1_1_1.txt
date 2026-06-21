@@ -1,0 +1,49 @@
+LM=EleutherAI/pythia-70m  P=128  seed=0  alpha=(50.0, 1.0, 1.0, 1.0)  rejuv=off  dedup=True  cap_initial=True  items=40
+
+item         exp   metric  q_ref     L    E junk  obs -> intended
+SUBW-01a     edit    0.83   0.89  0.17 0.81 0.02  'the storyteller told an amusing antidote' -> 'the storyteller told an amusing anecdote'  (q_smc; 22s)
+SUBW-01b     keep    0.98   0.00  0.98 0.98 0.00  'the doctor prepared a fast-acting antidote' -> 'the doctor prepared a fast-acting antidote'  (kept; 18s)
+SUBW-02a     edit    0.98    nan  0.02 0.94 0.04  'the medic treated the wound to prevent an inflection' -> 'the medic treated the wound to prevent an infection'  (q_smc; 18s)
+SUBW-02b     keep    0.99    nan  0.99 0.99 0.00  'the teacher explained the verb's inflection' -> 'the teacher explained the verb's inflection'  (kept; 15s)
+SUBN-01a     edit    0.93   0.87  0.06 0.84 0.09  'did you recieve the message' -> 'did you receive the message'  (q_smc; 14s)
+SUBN-01b     keep    1.00    nan  1.00 1.00 0.00  'did you receive the message' -> 'did you receive the message'  (kept; 9s)
+SUBN-02a     edit     nan   1.00  0.00 0.00 1.00  'the boy did an experimemt today' -> 'the boy did an experiment today'  (q_smc; 18s)
+SUBN-02b     keep    0.01    nan  0.01 0.01 0.98  'the boy did an experiment today' -> 'the boy did an experiment today'  (kept; 13s)
+DELTO-01a    edit    0.00    nan  1.00 0.00 0.00  'The mother gave the candle a daughter' -> 'The mother gave the candle to a daughter'  (q_smc; 9s)
+DELTO-01b    keep    0.99    nan  0.99 0.99 0.00  'The mother gave the daughter a candle' -> 'The mother gave the daughter a candle'  (kept; 7s)
+DELTO-02a    edit    0.00    nan  0.97 0.00 0.03  'The waiter served the soup the customers' -> 'The waiter served the soup to the customers'  (q_smc; 7s)
+DELTO-02b    keep    1.00    nan  1.00 1.00 0.00  'The waiter served the customers the soup' -> 'The waiter served the customers the soup'  (kept; 7s)
+DELFOR-01a   edit    0.00    nan  0.95 0.00 0.05  'The tailor sewed the dress the bride' -> 'The tailor sewed the dress for the bride'  (q_smc; 12s)
+DELFOR-01b   keep    0.91    nan  0.91 0.91 0.00  'The tailor sewed the bride the dress' -> 'The tailor sewed the bride the dress'  (kept; 9s)
+DELFOR-02a   edit    0.00    nan  0.99 0.00 0.01  'The father cooked the dinner the family' -> 'The father cooked the dinner for the family'  (q_smc; 12s)
+DELFOR-02b   keep    0.98    nan  0.98 0.98 0.00  'The father cooked the family the dinner' -> 'The father cooked the family the dinner'  (kept; 9s)
+DELFROM-01a  edit    0.00    nan  0.86 0.00 0.14  'The businessman benefited the tax law' -> 'The businessman benefited from the tax law'  (q_smc; 8s)
+DELFROM-01b  keep    1.00    nan  1.00 1.00 0.00  'The businessman benefited from the tax law' -> 'The businessman benefited from the tax law'  (kept; 10s)
+DELFROM-02a  edit    0.00    nan  0.98 0.00 0.02  'The patient slowly recovered the illness' -> 'The patient slowly recovered from the illness'  (q_smc; 13s)
+DELFROM-02b  keep    0.61    nan  0.61 0.61 0.00  'The patient slowly recovered from the illness' -> 'The patient slowly recovered from the illness'  (kept; 12s)
+INS-01a      edit    0.00    nan  0.91 0.00 0.09  'the boy handed handed the pencil to the girl' -> 'the boy handed the pencil to the girl'  (q_smc; 24s)
+INS-01b      keep    0.95    nan  0.95 0.95 0.00  'the boy handed the pencil to the girl' -> 'the boy handed the pencil to the girl'  (kept; 21s)
+INS-02a      edit    0.00    nan  0.10 0.00 0.90  'the cat sat on on the mat' -> 'the cat sat on the mat'  (q_smc; 6s)
+INS-02b      keep    0.24    nan  0.24 0.24 0.51  'the cat sat on the mat' -> 'the cat sat on the mat'  (kept; 7s)
+LADDER-give-2 edit    0.00    nan  0.02 0.00 0.98  'The volunteer gave the shelter the children' -> 'The volunteer gave the shelter to the children'  (q_smc; 7s)
+LADDER-give-3 keep    0.07    nan  0.07 0.07 0.85  'The volunteer gave the family the children' -> 'The volunteer gave the family the children'  (kept; 7s)
+LADDER-send-2 edit    0.00    nan  1.00 0.00 0.00  'The clerk sent the branch the manager' -> 'The clerk sent the branch to the manager'  (q_smc; 11s)
+LADDER-send-3 keep    1.00    nan  1.00 1.00 0.00  'The clerk sent the team the manager' -> 'The clerk sent the team the manager'  (kept; 7s)
+DEL-of-01a   edit    1.00    nan  0.00 0.97 0.03  'this is one the best' -> 'this is one of the best'  (q_smc; 6s)
+DEL-of-01b   keep    0.97    nan  0.97 0.97 0.00  'this is one of the best' -> 'this is one of the best'  (kept; 8s)
+DEL-a-01a    edit    0.09    nan  0.91 0.09 0.00  'he is good man' -> 'he is a good man'  (q_smc; 7s)
+DEL-a-01b    keep    1.00    nan  1.00 1.00 0.00  'he is a good man' -> 'he is a good man'  (kept; 6s)
+DEL-a-02a    edit     nan    nan  0.00 0.00 1.00  'she lives in big house' -> 'she lives in a big house'  (q_smc; 5s)
+DEL-a-02b    keep    0.00    nan  0.00 0.00 1.00  'she lives in a big house' -> 'she lives in a big house'  (kept; 10s)
+DEL-the-01a  edit     nan    nan  0.00 0.00 1.00  'we went to store' -> 'we went to the store'  (q_smc; 2s)
+DEL-the-01b  keep    0.00    nan  0.00 0.00 1.00  'we went to the store' -> 'we went to the store'  (kept; 3s)
+INS-to-01a   edit    0.00    nan  0.99 0.00 0.01  'The mother gave the daughter to the candle' -> 'The mother gave the daughter the candle'  (q_smc; 11s)
+INS-to-01b   keep    0.99   0.00  0.99 0.99 0.00  'The mother gave the candle to the daughter' -> 'The mother gave the candle to the daughter'  (kept; 8s)
+INS-to-02a   edit    0.00    nan  1.00 0.00 0.00  'The waiter served the customers to the soup' -> 'The waiter served the customers the soup'  (q_smc; 12s)
+INS-to-02b   keep    1.00    nan  1.00 1.00 0.00  'The waiter served the soup to the customers' -> 'The waiter served the soup to the customers'  (kept; 9s)
+
+=== SUMMARY ===
+  edit  n= 20  pass(q_smc>0.5)=  4/20 (20%)  mean_metric=0.191
+  keep  n= 20  pass(kept>0.5)= 15/20 (75%)  mean_metric=0.734
+  junk>0.5 (leading-opener / over-edit artifact): 10/40
+

@@ -71,12 +71,16 @@ PRIME = "."
 # per run via wdel= / --wdel. (Spurious-word insertions are penalized by WINS = insertion_loglik.)
 WDEL_DEFAULT = -9.0
 
-# Word-action channel (planning/WORD_ACTION_CHANNEL_PLAN.md): the settled Dirichlet action prior over
-# (copy, sub, insert, delete), from calibration_word_action_prior_search.py -- the widest copy-favoured
-# prior hitting the battery targets (the faithful 4-way extension of Gen.jl's [3,1,1]). Selected by
-# channel="word_action" (or --channel word_action / an explicit --action_alpha); channel="char_copy"
-# keeps the original bundled char channel (the bit-identical exact-enumeration certification anchor).
-ACTION_ALPHA_DEFAULT = (3.0, 1.0, 1.0, 1.0)
+# Word-action channel (planning/WORD_ACTION_CHANNEL_PLAN.md): the Dirichlet action prior over
+# (copy, sub, insert, delete). The copy concentration was CALIBRATED on the synthetic plausible/implausible
+# battery (planning/WORD_ACTION_ALPHA_SWEEP_PLAN.md, 2026-06-21): sweeping alpha_copy with sub=ins=del=1,
+# alpha_copy=200 is the knee -- it maximizes literal retention (L=0.91 rejuv=off, 0.99 under rejuv=gibbs)
+# and within-pair discrimination at zero over-edit junk, while keeping genuine corrections non-collapsed
+# (alpha_copy=500 craters them). Concentrating on copy HELPS editing by killing a spurious-insertion junk
+# channel, not by suppressing it. Selected by channel="word_action" (the default; or an explicit
+# --action_alpha); channel="char_copy" keeps the original bundled char channel (the bit-identical
+# exact-enumeration certification anchor). NB the battery is synthetic, NOT the reserved human hold-out.
+ACTION_ALPHA_DEFAULT = (200.0, 1.0, 1.0, 1.0)
 
 
 def _char_ids(s):
@@ -376,19 +380,27 @@ def _norm(s):
 
 
 def main():
-    # Smoke test at the VALIDATED budget (P=128). P=4 decodes pure noise (resample-and-count on 4
-    # particles), so it is not a sanity check. KEEP uses 'i want to go home' (the DEL truth, already
-    # clean): under pythia-70m some clean sentences over-trigger a fluent word-insertion ('dog ran'
-    # -> 'dog was ran') -- a known 70m weakness, not an inference bug -- so the KEEP case is one the
-    # weak LM leaves alone, confirming the filter does not over-correct an already-correct sentence.
+    # Smoke test at the VALIDATED budget (P=128; P=4 decodes pure noise, so it is no sanity check). Two
+    # channels. (1) The DEPLOYMENT default -- word_action at the calibrated ACTION_ALPHA_DEFAULT -- on the
+    # cases the calibrated prior reliably handles: a SUB typo (word-action's strength) and a clean KEEP
+    # (retention ~0.99 at alpha_copy=200). (2) The char_copy CERTIFICATION ANCHOR on DEL/SUB/KEEP. The DEL
+    # (missing-word restoration) smoke stays on char_copy on purpose: the calibrated copy concentration
+    # deliberately suppresses bare-prior deletion restoration (it needs rejuv + a more capable LM --
+    # planning/WORD_ACTION_ALPHA_SWEEP_PLAN.md), so asserting it under word_action would test a behaviour
+    # the calibrated prior intentionally avoids. KEEP ('i want to go home') is a clean sentence the weak
+    # 70m LM leaves alone -- it confirms the filter does not over-correct an already-correct sentence.
     lm_penzai.load_model()
+    wa = dict(channel="word_action", action_alpha=ACTION_ALPHA_DEFAULT)   # the deployment default
+    cc = dict(channel="char_copy")                                        # the exact-enumeration anchor
     trials = [
-        ("DEL (missing) ", "i want go home", "i want to go home"),
-        ("SUB (typo)    ", "teh cat sat on teh mat", "the cat sat on the mat"),
-        ("KEEP (clean)  ", "i want to go home", "i want to go home"),
+        ("word_action SUB (typo)   ", "teh cat sat on teh mat", "the cat sat on the mat", wa),
+        ("word_action KEEP (clean)  ", "i want to go home",      "i want to go home",      wa),
+        ("char_copy   DEL (missing) ", "i want go home",         "i want to go home",      cc),
+        ("char_copy   SUB (typo)    ", "teh cat sat on teh mat", "the cat sat on the mat", cc),
+        ("char_copy   KEEP (clean)  ", "i want to go home",      "i want to go home",      cc),
     ]
-    for tag, obs, truth in trials:
-        st, lw, _, sl = run(obs, jax.random.PRNGKey(0), P=128, Ke=8, J=8)
+    for tag, obs, truth, kw in trials:
+        st, lw, _, sl = run(obs, jax.random.PRNGKey(0), P=128, Ke=8, J=8, **kw)
         top = decode(st, lw, skip=sl)[0][0]
         ok = _norm(top) == _norm(truth)
         print(f"{tag}  {'OK' if ok else 'FAIL'}  truth={truth!r}  got={top!r}")
@@ -424,12 +436,12 @@ def cli():
                          ">1 sharpens the prior (more aggressive correction).")
     ap.add_argument("--word_mask", action="store_true",
                     help="restrict the LM bridge pool to whole-word tokens (off by default)")
-    ap.add_argument("--channel", choices=("word_action", "char_copy"), default="char_copy",
-                    help="noise model (planning/WORD_ACTION_CHANNEL_PLAN.md): 'word_action' = the per-word "
-                         "Dirichlet action channel (copy,sub,insert,delete latent per particle; pair-HMM "
-                         "scores substitution FORM only) -- the deployment model; 'char_copy' (default) = "
-                         "the deprecated bundled char channel, kept as the exact-enumeration certification "
-                         "anchor + opt-out. (Default flip to word_action is gated on the alpha re-tune.)")
+    ap.add_argument("--channel", choices=("word_action", "char_copy"), default="word_action",
+                    help="noise model (planning/WORD_ACTION_CHANNEL_PLAN.md): 'word_action' (default) = the "
+                         "per-word Dirichlet action channel (copy,sub,insert,delete latent per particle; "
+                         "pair-HMM scores substitution FORM only) -- the deployment model, calibrated to "
+                         "ACTION_ALPHA_DEFAULT; 'char_copy' = the deprecated bundled char channel, kept as "
+                         "the exact-enumeration certification anchor + opt-out.")
     ap.add_argument("--action_alpha", default=None,
                     help="override the word-action Dirichlet prior, 'copy,sub,ins,del' (default "
                          f"{','.join(str(x) for x in ACTION_ALPHA_DEFAULT)}); implies --channel word_action.")

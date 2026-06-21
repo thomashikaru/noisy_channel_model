@@ -34,7 +34,9 @@ from genjax_port import pythia_word_caprop as W
 from genjax_port import lm_penzai
 from genjax_port.pythia_word_caprop import _norm, ACTION_ALPHA_DEFAULT
 
-CSV = "planning/calibration_battery_v0_gated_410m.csv"
+# Default to the 70m gate for 70m sweeps (item membership / observed / intended are identical to the
+# 410m variant -- only the gate columns differ). NC_CSV overrides (e.g. the 410m gate for a 410m run).
+CSV = os.environ.get("NC_CSV", "planning/calibration_battery_v0_gated.csv")
 META = {r["item_id"]: r for r in csv.DictReader(open(CSV))}
 # offline q_hier reference (alpha=(3,1,1,1)) from calibration_word_action_preview, for a few named items.
 QREF = {"SUBW-01a": 0.89, "SUBW-03a": 0.63, "SUBN-01a": 0.87, "SUBN-02a": 1.00,
@@ -50,15 +52,24 @@ DEFAULT_ITEMS = ["SUBW-01a", "SUBW-01b", "SUBN-01a", "SUBN-02a", "DEL-to-05a", "
 CAP = os.environ.get("NC_NOCAP", "0") not in ("1", "true", "yes")
 
 
-def _cap(s):
-    return s[0].upper() + s[1:] if s else s
+def _wellform(s):
+    """Well-form the LM input: capitalize the initial letter AND ensure a terminal period (the user
+    requirement -- real sentences / behavioral stimuli are capitalized and punctuated). Safe for L/E
+    matching because ``_norm`` strips ``[^a-z0-9 ]``, so the period only well-forms the LM input; it
+    does not change which decoded sentences count as the literal / correction reading."""
+    s = s.strip()
+    if s and s[0].islower():
+        s = s[0].upper() + s[1:]          # capitalize initial
+    if s and s[-1] not in ".!?":
+        s = s + "."                       # ensure terminal period
+    return s
 
 
 def evaluate(item_id, P, seed, alpha, rejuv, dedup):
     m = META[item_id]
     observed, intended = m["observed"], m["intended"]
     if CAP:
-        observed, intended = _cap(observed), _cap(intended)
+        observed, intended = _wellform(observed), _wellform(intended)
     trace = [] if rejuv != "off" else None    # capture the final posterior theta (rejuv_info.theta_mean)
     st, lw, logZ, sl = W.run(observed, jax.random.PRNGKey(seed), P=P, band=2,
                              action_alpha=alpha, rejuv=rejuv, dedup=dedup, trace=trace)

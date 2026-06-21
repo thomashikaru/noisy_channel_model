@@ -1,0 +1,49 @@
+LM=EleutherAI/pythia-70m  P=128  seed=0  alpha=(100.0, 1.0, 1.0, 1.0)  rejuv=gibbs  dedup=True  cap_initial=True  items=40
+
+item         exp   metric  q_ref     L    E junk  obs -> intended
+SUBW-01a     edit    0.87   0.89  0.12 0.82 0.06  'the storyteller told an amusing antidote' -> 'the storyteller told an amusing anecdote'  (q_smc; 30s)  theta(c,s,i,d)=[0.91, 0.044, 0.037, 0.008]
+SUBW-01b     keep    1.00   0.00  1.00 1.00 0.00  'the doctor prepared a fast-acting antidote' -> 'the doctor prepared a fast-acting antidote'  (kept; 38s)  theta(c,s,i,d)=[0.973, 0.009, 0.008, 0.01]
+SUBW-02a     edit    1.00    nan  0.00 0.01 0.99  'the medic treated the wound to prevent an inflection' -> 'the medic treated the wound to prevent an infection'  (q_smc; 31s)  theta(c,s,i,d)=[0.902, 0.08, 0.009, 0.01]
+SUBW-02b     keep    1.00    nan  1.00 1.00 0.00  'the teacher explained the verb's inflection' -> 'the teacher explained the verb's inflection'  (kept; 38s)  theta(c,s,i,d)=[0.972, 0.009, 0.009, 0.01]
+SUBN-01a     edit    0.90   0.87  0.10 0.90 0.00  'did you recieve the message' -> 'did you receive the message'  (q_smc; 29s)  theta(c,s,i,d)=[0.963, 0.018, 0.01, 0.008]
+SUBN-01b     keep    1.00    nan  1.00 1.00 0.00  'did you receive the message' -> 'did you receive the message'  (kept; 14s)  theta(c,s,i,d)=[0.97, 0.011, 0.01, 0.01]
+SUBN-02a     edit    1.00   1.00  0.00 0.59 0.41  'the boy did an experimemt today' -> 'the boy did an experiment today'  (q_smc; 51s)  theta(c,s,i,d)=[0.901, 0.06, 0.01, 0.03]
+SUBN-02b     keep    1.00    nan  1.00 1.00 0.00  'the boy did an experiment today' -> 'the boy did an experiment today'  (kept; 32s)  theta(c,s,i,d)=[0.972, 0.011, 0.008, 0.009]
+DELTO-01a    edit    0.00    nan  1.00 0.00 0.00  'The mother gave the candle a daughter' -> 'The mother gave the candle to a daughter'  (q_smc; 28s)  theta(c,s,i,d)=[0.969, 0.01, 0.01, 0.011]
+DELTO-01b    keep    1.00    nan  1.00 1.00 0.00  'The mother gave the daughter a candle' -> 'The mother gave the daughter a candle'  (kept; 19s)  theta(c,s,i,d)=[0.97, 0.012, 0.01, 0.008]
+DELTO-02a    edit    0.00    nan  1.00 0.00 0.00  'The waiter served the soup the customers' -> 'The waiter served the soup to the customers'  (q_smc; 13s)  theta(c,s,i,d)=[0.902, 0.053, 0.035, 0.01]
+DELTO-02b    keep    1.00    nan  1.00 1.00 0.00  'The waiter served the customers the soup' -> 'The waiter served the customers the soup'  (kept; 13s)  theta(c,s,i,d)=[0.902, 0.053, 0.035, 0.01]
+DELFOR-01a   edit     nan    nan  0.00 0.00 1.00  'The tailor sewed the dress the bride' -> 'The tailor sewed the dress for the bride'  (q_smc; 34s)  theta(c,s,i,d)=[0.96, 0.02, 0.009, 0.011]
+DELFOR-01b   keep    0.00    nan  0.00 0.00 1.00  'The tailor sewed the bride the dress' -> 'The tailor sewed the bride the dress'  (kept; 35s)  theta(c,s,i,d)=[0.955, 0.02, 0.01, 0.014]
+DELFOR-02a   edit    1.00    nan  0.00 0.69 0.31  'The father cooked the dinner the family' -> 'The father cooked the dinner for the family'  (q_smc; 26s)  theta(c,s,i,d)=[0.935, 0.037, 0.01, 0.018]
+DELFOR-02b   keep    0.99    nan  0.99 0.99 0.00  'The father cooked the family the dinner' -> 'The father cooked the family the dinner'  (kept; 23s)  theta(c,s,i,d)=[0.952, 0.02, 0.01, 0.018]
+DELFROM-01a  edit    0.00    nan  1.00 0.00 0.00  'The businessman benefited the tax law' -> 'The businessman benefited from the tax law'  (q_smc; 15s)  theta(c,s,i,d)=[0.973, 0.009, 0.009, 0.009]
+DELFROM-01b  keep    0.94    nan  0.94 0.94 0.00  'The businessman benefited from the tax law' -> 'The businessman benefited from the tax law'  (kept; 16s)  theta(c,s,i,d)=[0.896, 0.071, 0.01, 0.023]
+DELFROM-02a  edit     nan    nan  0.00 0.00 1.00  'The patient slowly recovered the illness' -> 'The patient slowly recovered from the illness'  (q_smc; 24s)  theta(c,s,i,d)=[0.924, 0.057, 0.009, 0.01]
+DELFROM-02b  keep    0.78    nan  0.78 0.78 0.00  'The patient slowly recovered from the illness' -> 'The patient slowly recovered from the illness'  (kept; 25s)  theta(c,s,i,d)=[0.941, 0.033, 0.01, 0.016]
+INS-01a      edit    0.00    nan  1.00 0.00 0.00  'the boy handed handed the pencil to the girl' -> 'the boy handed the pencil to the girl'  (q_smc; 47s)  theta(c,s,i,d)=[0.971, 0.009, 0.01, 0.01]
+INS-01b      keep    1.00    nan  1.00 1.00 0.00  'the boy handed the pencil to the girl' -> 'the boy handed the pencil to the girl'  (kept; 45s)  theta(c,s,i,d)=[0.972, 0.009, 0.01, 0.009]
+INS-02a      edit    0.00    nan  0.65 0.00 0.35  'the cat sat on on the mat' -> 'the cat sat on the mat'  (q_smc; 24s)  theta(c,s,i,d)=[0.966, 0.014, 0.01, 0.01]
+INS-02b      keep    1.00    nan  1.00 1.00 0.00  'the cat sat on the mat' -> 'the cat sat on the mat'  (kept; 19s)  theta(c,s,i,d)=[0.961, 0.018, 0.009, 0.012]
+LADDER-give-2 edit    0.00    nan  0.86 0.00 0.14  'The volunteer gave the shelter the children' -> 'The volunteer gave the shelter to the children'  (q_smc; 20s)  theta(c,s,i,d)=[0.969, 0.013, 0.01, 0.008]
+LADDER-give-3 keep    1.00    nan  1.00 1.00 0.00  'The volunteer gave the family the children' -> 'The volunteer gave the family the children'  (kept; 21s)  theta(c,s,i,d)=[0.969, 0.01, 0.01, 0.011]
+LADDER-send-2 edit     nan    nan  0.00 0.00 1.00  'The clerk sent the branch the manager' -> 'The clerk sent the branch to the manager'  (q_smc; 27s)  theta(c,s,i,d)=[0.91, 0.063, 0.008, 0.019]
+LADDER-send-3 keep    0.00    nan  0.00 0.00 1.00  'The clerk sent the team the manager' -> 'The clerk sent the team the manager'  (kept; 20s)  theta(c,s,i,d)=[0.91, 0.063, 0.008, 0.019]
+DEL-of-01a   edit    0.49    nan  0.51 0.49 0.00  'this is one the best' -> 'this is one of the best'  (q_smc; 12s)  theta(c,s,i,d)=[0.953, 0.023, 0.008, 0.016]
+DEL-of-01b   keep    1.00    nan  1.00 1.00 0.00  'this is one of the best' -> 'this is one of the best'  (kept; 16s)  theta(c,s,i,d)=[0.973, 0.008, 0.01, 0.009]
+DEL-a-01a    edit    0.02    nan  0.98 0.02 0.00  'he is good man' -> 'he is a good man'  (q_smc; 14s)  theta(c,s,i,d)=[0.962, 0.015, 0.009, 0.013]
+DEL-a-01b    keep    0.98    nan  0.98 0.98 0.00  'he is a good man' -> 'he is a good man'  (kept; 10s)  theta(c,s,i,d)=[0.969, 0.012, 0.01, 0.01]
+DEL-a-02a    edit    0.02    nan  0.98 0.02 0.00  'she lives in big house' -> 'she lives in a big house'  (q_smc; 16s)  theta(c,s,i,d)=[0.964, 0.015, 0.01, 0.012]
+DEL-a-02b    keep    1.00    nan  1.00 1.00 0.00  'she lives in a big house' -> 'she lives in a big house'  (kept; 16s)  theta(c,s,i,d)=[0.97, 0.009, 0.008, 0.013]
+DEL-the-01a  edit    0.01    nan  0.99 0.01 0.00  'we went to store' -> 'we went to the store'  (q_smc; 10s)  theta(c,s,i,d)=[0.971, 0.009, 0.009, 0.011]
+DEL-the-01b  keep    1.00    nan  1.00 1.00 0.00  'we went to the store' -> 'we went to the store'  (kept; 12s)  theta(c,s,i,d)=[0.969, 0.011, 0.01, 0.01]
+INS-to-01a   edit    0.00    nan  1.00 0.00 0.00  'The mother gave the daughter to the candle' -> 'The mother gave the daughter the candle'  (q_smc; 25s)  theta(c,s,i,d)=[0.97, 0.01, 0.01, 0.01]
+INS-to-01b   keep    1.00   0.00  1.00 1.00 0.00  'The mother gave the candle to the daughter' -> 'The mother gave the candle to the daughter'  (kept; 21s)  theta(c,s,i,d)=[0.97, 0.01, 0.01, 0.009]
+INS-to-02a   edit    0.00    nan  1.00 0.00 0.00  'The waiter served the customers to the soup' -> 'The waiter served the customers the soup'  (q_smc; 18s)  theta(c,s,i,d)=[0.894, 0.053, 0.043, 0.01]
+INS-to-02b   keep    1.00    nan  1.00 1.00 0.00  'The waiter served the soup to the customers' -> 'The waiter served the soup to the customers'  (kept; 16s)  theta(c,s,i,d)=[0.894, 0.053, 0.043, 0.01]
+
+=== SUMMARY ===
+  edit  n= 20  pass(q_smc>0.5)=  5/20 (25%)  mean_metric=0.266
+  keep  n= 20  pass(kept>0.5)= 18/20 (90%)  mean_metric=0.884
+  junk>0.5 (leading-opener / over-edit artifact): 6/40
+

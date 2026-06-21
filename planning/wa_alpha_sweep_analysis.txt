@@ -1,0 +1,50 @@
+
+### wa_alpha_sweep_3_1_1_1.txt   (40 items: 20 edit / 20 keep)
+  should-EDIT  correction rate E   mean 0.09   (high = infers real slips)
+  should-KEEP  literal retention L mean 0.75   spurious-edit (1-L) 0.25   (high L / low 1-L = leaves clean text alone)
+  matched pairs (20): E_implausible 0.09 vs spurious_plausible 0.25;  tracks manipulation (E_a>1-L_b) in 3/20 (15%);  mean gap -0.16
+  leading-opener/over-edit junk >0.5: 10/40 (separate prime artifact, not the rate)
+  by family:  DEL_A[E_edit 0.00/L_keep 0.00]  DEL_FOR[E_edit 0.00/L_keep 0.67]  DEL_FROM[E_edit 0.00/L_keep 0.98]  DEL_OF[E_edit 0.00/L_keep 0.99]  DEL_THE[E_edit 0.00/L_keep 0.00]  DEL_TO[E_edit 0.00/L_keep 0.99]  INS_DUP[E_edit 0.00/L_keep 0.96]  INS_TO[E_edit 0.00/L_keep 0.98]  LADDER[E_edit 0.00/L_keep 0.97]  SUBN[E_edit 0.41/L_keep 0.45]  SUBW[E_edit 0.48/L_keep 0.97]
+
+### wa_alpha_sweep_10_1_1_1.txt   (40 items: 20 edit / 20 keep)
+  should-EDIT  correction rate E   mean 0.20   (high = infers real slips)
+  should-KEEP  literal retention L mean 0.80   spurious-edit (1-L) 0.20   (high L / low 1-L = leaves clean text alone)
+  matched pairs (20): E_implausible 0.20 vs spurious_plausible 0.20;  tracks manipulation (E_a>1-L_b) in 4/20 (20%);  mean gap +0.00
+  leading-opener/over-edit junk >0.5: 8/40 (separate prime artifact, not the rate)
+  by family:  DEL_A[E_edit 0.00/L_keep 0.50]  DEL_FOR[E_edit 0.00/L_keep 0.68]  DEL_FROM[E_edit 0.00/L_keep 0.99]  DEL_OF[E_edit 0.94/L_keep 0.96]  DEL_THE[E_edit 0.00/L_keep 0.00]  DEL_TO[E_edit 0.00/L_keep 0.97]  INS_DUP[E_edit 0.00/L_keep 0.86]  INS_TO[E_edit 0.00/L_keep 0.97]  LADDER[E_edit 0.00/L_keep 0.99]  SUBN[E_edit 0.59/L_keep 0.56]  SUBW[E_edit 0.96/L_keep 1.00]
+
+### wa_alpha_sweep_50_1_1_1.txt   (40 items: 20 edit / 20 keep)
+  should-EDIT  correction rate E   mean 0.18   (high = infers real slips)
+  should-KEEP  literal retention L mean 0.73   spurious-edit (1-L) 0.27   (high L / low 1-L = leaves clean text alone)
+  matched pairs (20): E_implausible 0.18 vs spurious_plausible 0.27;  tracks manipulation (E_a>1-L_b) in 5/20 (25%);  mean gap -0.08
+  leading-opener/over-edit junk >0.5: 10/40 (separate prime artifact, not the rate)
+  by family:  DEL_A[E_edit 0.04/L_keep 0.50]  DEL_FOR[E_edit 0.00/L_keep 0.95]  DEL_FROM[E_edit 0.00/L_keep 0.80]  DEL_OF[E_edit 0.97/L_keep 0.97]  DEL_THE[E_edit 0.00/L_keep 0.00]  DEL_TO[E_edit 0.00/L_keep 0.99]  INS_DUP[E_edit 0.00/L_keep 0.59]  INS_TO[E_edit 0.00/L_keep 0.99]  LADDER[E_edit 0.00/L_keep 0.54]  SUBN[E_edit 0.42/L_keep 0.51]  SUBW[E_edit 0.88/L_keep 0.98]
+
+### wa_alpha_sweep_100_1_1_1.txt   (40 items: 20 edit / 20 keep)
+  should-EDIT  correction rate E   mean 0.25   (high = infers real slips)
+  should-KEEP  literal retention L mean 0.73   spurious-edit (1-L) 0.27   (high L / low 1-L = leaves clean text alone)
+  matched pairs (20): E_implausible 0.25 vs spurious_plausible 0.27;  tracks manipulation (E_a>1-L_b) in 7/20 (35%);  mean gap -0.02
+  leading-opener/over-edit junk >0.5: 7/40 (separate prime artifact, not the rate)
+  by family:  DEL_A[E_edit 0.09/L_keep 1.00]  DEL_FOR[E_edit 0.00/L_keep 0.72]  DEL_FROM[E_edit 0.00/L_keep 0.62]  DEL_OF[E_edit 0.98/L_keep 1.00]  DEL_THE[E_edit 0.00/L_keep 0.00]  DEL_TO[E_edit 0.00/L_keep 1.00]  INS_DUP[E_edit 0.38/L_keep 0.71]  INS_TO[E_edit 0.00/L_keep 1.00]  LADDER[E_edit 0.00/L_keep 0.10]  SUBN[E_edit 0.76/L_keep 0.71]  SUBW[E_edit 0.80/L_keep 0.93]
+
+### wa_alpha_sweep_200_1_1_1.txt   (40 items: 20 edit / 20 keep)
+  should-EDIT  correction rate E   mean 0.22   (high = infers real slips)
+  should-KEEP  literal retention L mean 0.91   spurious-edit (1-L) 0.09   (high L / low 1-L = leaves clean text alone)
+  matched pairs (20): E_implausible 0.22 vs spurious_plausible 0.09;  tracks manipulation (E_a>1-L_b) in 8/20 (40%);  mean gap +0.13
+  leading-opener/over-edit junk >0.5: 0/40 (separate prime artifact, not the rate)
+  by family:  DEL_A[E_edit 0.04/L_keep 1.00]  DEL_FOR[E_edit 0.00/L_keep 0.75]  DEL_FROM[E_edit 0.00/L_keep 0.84]  DEL_OF[E_edit 1.00/L_keep 1.00]  DEL_THE[E_edit 0.07/L_keep 1.00]  DEL_TO[E_edit 0.00/L_keep 1.00]  INS_DUP[E_edit 0.19/L_keep 0.81]  INS_TO[E_edit 0.00/L_keep 0.99]  LADDER[E_edit 0.00/L_keep 0.97]  SUBN[E_edit 0.78/L_keep 0.78]  SUBW[E_edit 0.69/L_keep 0.95]
+
+### wa_alpha_sweep_500_1_1_1.txt   (40 items: 20 edit / 20 keep)
+  should-EDIT  correction rate E   mean 0.08   (high = infers real slips)
+  should-KEEP  literal retention L mean 0.86   spurious-edit (1-L) 0.14   (high L / low 1-L = leaves clean text alone)
+  matched pairs (20): E_implausible 0.08 vs spurious_plausible 0.14;  tracks manipulation (E_a>1-L_b) in 6/20 (30%);  mean gap -0.06
+  leading-opener/over-edit junk >0.5: 4/40 (separate prime artifact, not the rate)
+  by family:  DEL_A[E_edit 0.01/L_keep 1.00]  DEL_FOR[E_edit 0.00/L_keep 0.92]  DEL_FROM[E_edit 0.00/L_keep 0.74]  DEL_OF[E_edit 0.20/L_keep 1.00]  DEL_THE[E_edit 0.01/L_keep 1.00]  DEL_TO[E_edit 0.00/L_keep 0.99]  INS_DUP[E_edit 0.00/L_keep 0.54]  INS_TO[E_edit 0.00/L_keep 0.99]  LADDER[E_edit 0.00/L_keep 0.93]  SUBN[E_edit 0.51/L_keep 1.00]  SUBW[E_edit 0.16/L_keep 0.50]
+
+### wa_alpha_sweep_gibbs_100_1_1_1.txt   (40 items: 20 edit / 20 keep)
+  should-EDIT  correction rate E   mean 0.18   (high = infers real slips)
+  should-KEEP  literal retention L mean 0.88   spurious-edit (1-L) 0.12   (high L / low 1-L = leaves clean text alone)
+  matched pairs (20): E_implausible 0.18 vs spurious_plausible 0.12;  tracks manipulation (E_a>1-L_b) in 8/20 (40%);  mean gap +0.06
+  leading-opener/over-edit junk >0.5: 6/40 (separate prime artifact, not the rate)
+  by family:  DEL_A[E_edit 0.02/L_keep 0.99]  DEL_FOR[E_edit 0.34/L_keep 0.49]  DEL_FROM[E_edit 0.00/L_keep 0.86]  DEL_OF[E_edit 0.49/L_keep 1.00]  DEL_THE[E_edit 0.01/L_keep 1.00]  DEL_TO[E_edit 0.00/L_keep 1.00]  INS_DUP[E_edit 0.00/L_keep 1.00]  INS_TO[E_edit 0.00/L_keep 1.00]  LADDER[E_edit 0.00/L_keep 0.50]  SUBN[E_edit 0.74/L_keep 1.00]  SUBW[E_edit 0.41/L_keep 1.00]
+

@@ -127,3 +127,167 @@ for p in order:
         seen[f]+=1; items += [bypair[p]["edit"], bypair[p]["keep"]]
 open("planning/wa_alpha_subsample.txt","w").write(" ".join(items)+"\n")
 ```
+
+---
+
+# Progress log / RESULTS (2026-06-21) — rejuv=off sweep DONE
+
+**Status: the §2 rejuv=off α grid is RUN and analyzed. α=100,1,1,1 is the clear winner; the user's
+hypothesis is confirmed. NOT yet done: the §6 grid extension (200/500) and the §7 rejuv=gibbs
+confirmation — both deferred to the next session at the user's request ("no new long runs tonight;
+tomorrow I'll want both alpha=200/500 AND with rejuv").**
+
+## What was done
+- **§4 runner edits made** in `src/genjax_port/calibration_word_action_smc.py` (UNCOMMITTED working-tree
+  change, branch `word-action-rejuv`): (a) `_cap()` → `_wellform()` (capitalize initial **and** add a
+  terminal period; safe because `_norm` strips `[^a-z0-9 ]` so L/E matching is unaffected); (b) `CSV` now
+  defaults to the **70m** gate `planning/calibration_battery_v0_gated.csv` with an `NC_CSV` override.
+- **§3 subsample generated** → `planning/wa_alpha_subsample.txt` (the exact 40 ids in §3; regenerator reproduces them).
+- **Migration sanity check (the `--word_action` → `--channel word_action` Phase-3 rename):** full live
+  regression suite **24/24 green** (incl. `test_channel_selector_pure_rename` + `test_channel_selector_validation`).
+  The runner uses the Python API `W.run(action_alpha=…, channel=None)`, which infers `channel="word_action"`
+  — insulated from the CLI rename. CLI is `--channel {word_action,char_copy}` + `--action_alpha`; no `--word_action` stragglers.
+- **§2 sweep RUN** (P=128, 70m, seed=0, dedup=True, band=2, rejuv=off): four files
+  `planning/wa_alpha_sweep_{3,10,50,100}_1_1_1.txt` + side-by-side `planning/wa_alpha_sweep_analysis.txt`.
+
+## Headline numbers (20 edit + 20 keep)
+| α_copy | prior p_copy | E (should-EDIT corr.) | L (should-KEEP literal) | tracks-manip. (E_a>1−L_b) | junk>0.5 |
+|--------|-------------|----------------------|------------------------|---------------------------|----------|
+| 3 (baseline) | 0.50 | 0.09 | 0.75 | 15% | 10/40 |
+| 10 | 0.77 | 0.20 | 0.80 | 20% | 8/40 |
+| 50 | 0.94 | 0.18 | 0.73 | 25% | 10/40 |
+| **100** | 0.97 | **0.25** | 0.73 | **35%** | **7/40** |
+
+## The mechanism (INVERTS the §0 hypothesis — good news)
+§0 predicted concentration would *suppress* editing (pick the knee before E craters). Instead, raising
+α_copy **raises** E. At the edit-happy α=3 the dominant failure is not under-editing but the model bleeding
+mass into spurious-insertion / over-edit **junk**, which steals probability from BOTH the literal reading
+and the genuine correction. Concentrating the prior on copy kills that junk channel, freeing the mass to
+flow to the real correction wherever the LM supports it. Decisive per-item evidence (item-level rows in the
+sweep files): SUBN-01a "recieve"→"receive" **junk 1.00 @α=3 → E 0.99 @α=100**; DEL-of-01a "one the best"→"one
+of the best" **E 0.00/junk 0.49 @α=3 → E 0.98 @α=100**; SUBW-01a "antidote"→"anecdote" junk 0.85→0.03 (E 0.67);
+INS-02a "on on"→"on" E 0.00→0.75. Keep-retention holds flat (~0.73–0.80) — no over-editing of the plausible twins.
+
+α=100 is best on the grid on E, tracks-manipulation, AND junk, with L flat. **Both E and tracks-manipulation
+are still RISING at α=100 → the knee is at or above 100** (hence the §6 extension is well-motivated).
+
+## Two caveats — neither is fixable by the prior α (do NOT chase them with α)
+1. **70m semantic/structural ceiling (E≈0.00 at EVERY α):** DEL_TO, INS_TO, DEL_FOR, DEL_FROM (dative/argument
+   cases), and **content-word** doublings ("handed handed"→"handed", surp too high under frequency-aware
+   insertion — the documented INS_DUP × ins-cost tension). These need **410m** and/or the duplicate-aware
+   channel, not a different prior. (Function-word doublings like "on on" DO work at α=100.)
+2. **Particle-noise wobbles at P=128/seed=0 (NOT α trends):** LADDER-send-3 keep is L=1.00 @α=3/10/50 then
+   cliffs to 0.00 *only* @α=100; SUBN-02a craters *only* @α=50. Sharp non-monotonic single-point collapses =
+   impoverishment the `rejuv=gibbs` sweep is designed to cure → re-test with rejuv + a 2nd seed (below).
+   SEPARATE α-invariant bug: **DEL-the-01b "we went to the store" is 100% junk at ALL α** — a 70m
+   over-insertion on a short clean sentence (3s runs); unrelated to the prior, worth its own look.
+
+## RESUME TOMORROW (the two runs the user wants), in priority order
+Env reminders: ncgenjax conda env; **the Bash tool shell is zsh** — bare `$SUB` does NOT word-split, use
+`${=SUB}` (this bit us once). `conda run` BUFFERS stdout, so each α's result file only populates when that
+α's process exits (no incremental progress; ~12 min/α at this budget). Always redirect to a file, never pipe.
+```bash
+cd /Users/thomasclark/mit/noisy_channel_model
+source /Users/thomasclark/miniforge3_arm/etc/profile.d/conda.sh; SUB=$(cat planning/wa_alpha_subsample.txt)
+
+# (A) §6 GRID EXTENSION (rejuv=off, ~22 min for 2 α): does E keep rising / where does it crater?
+for A in 200,1,1,1 500,1,1,1; do
+  NC_LM=EleutherAI/pythia-70m NC_ALPHA=$A NC_REJUV=off NC_VERBOSE=0 PYTHONPATH=src \
+    conda run -n ncgenjax python -u -m genjax_port.calibration_word_action_smc 128 0 ${=SUB} \
+    > planning/wa_alpha_sweep_${A//,/_}.txt 2>&1; done
+
+# (B) §7 rejuv=gibbs CONFIRMATION at the chosen α (the DEPLOYMENT setting; slower, a few× per item).
+#     Run at α=100 (and at the §6 winner if 200/500 wins). Expect it to CURE the LADDER/SUBN-02a noise
+#     collapses and to test that the θ-posterior path doesn't reintroduce over-editing (the §5.5 caveat).
+for A in 100,1,1,1; do
+  NC_LM=EleutherAI/pythia-70m NC_ALPHA=$A NC_REJUV=gibbs NC_VERBOSE=0 PYTHONPATH=src \
+    conda run -n ncgenjax python -u -m genjax_port.calibration_word_action_smc 128 0 ${=SUB} \
+    > planning/wa_alpha_sweep_gibbs_${A//,/_}.txt 2>&1; done
+
+# Re-analyze everything side by side (analyzer meta uses pair_id/family, identical across 70m/410m gates):
+PYTHONPATH=src conda run -n ncgenjax python -m genjax_port.calibration_battery_analyze \
+  planning/wa_alpha_sweep_3_1_1_1.txt planning/wa_alpha_sweep_10_1_1_1.txt \
+  planning/wa_alpha_sweep_50_1_1_1.txt planning/wa_alpha_sweep_100_1_1_1.txt \
+  planning/wa_alpha_sweep_200_1_1_1.txt planning/wa_alpha_sweep_500_1_1_1.txt \
+  planning/wa_alpha_sweep_gibbs_100_1_1_1.txt > planning/wa_alpha_sweep_analysis.txt 2>&1
+```
+Optional 3rd check: 2nd seed (`128 1 …`) at α=100 to confirm the keep wobbles are noise. **Only after the
+gibbs confirmation looks clean** promote the chosen α to the deployment default (consolidation §1b): flip
+`ACTION_ALPHA_DEFAULT` in `pythia_word_caprop.py`, the `run_example_native.sh` default, and the `--selftest`
+expectations. The synthetic battery here is NOT the reserved human hold-out (`data/`) — keep it sealed.
+
+---
+
+# RESULTS (2026-06-21, session 2) — §6 grid extension + §7 gibbs confirmation DONE
+
+**Status: both RESUME runs are DONE and analyzed. The knee is α=200,1,1,1 (rejuv=off), and the
+gibbs (θ-posterior, deployment) path is confirmed safe — it does NOT reintroduce over-editing.
+Final promotion of α=200 is gated on the one remaining confirmation, gibbs@α=200 (RUNNING).**
+
+## What was run (P=128, 70m, seed=0, dedup=True, band=2)
+- §6 grid extension (rejuv=off): `planning/wa_alpha_sweep_{200,500}_1_1_1.txt` (~7 min each).
+- §7 gibbs confirmation (rejuv=gibbs, deployment setting): `planning/wa_alpha_sweep_gibbs_100_1_1_1.txt`
+  (~16 min). gibbs@α=200 launched after (the winner — see below); file
+  `planning/wa_alpha_sweep_gibbs_200_1_1_1.txt`.
+- Re-analyzed all 7 side by side → `planning/wa_alpha_sweep_analysis.txt`.
+
+## Full headline numbers (20 edit + 20 keep)
+| α_copy | prior p_copy | E (corr.) | L (retention) | tracks-manip | junk>0.5 | mean gap |
+|--------|-------------|-----------|---------------|--------------|----------|----------|
+| 3      | 0.50  | 0.09 | 0.75 | 15% | 10/40 | −0.16 |
+| 10     | 0.77  | 0.20 | 0.80 | 20% | 8/40  | +0.00 |
+| 50     | 0.94  | 0.18 | 0.73 | 25% | 10/40 | −0.08 |
+| 100    | 0.97  | **0.25** | 0.73 | 35% | 7/40 | −0.02 |
+| **200**| 0.985 | 0.22 | **0.91** | **40%** | **0/40** | **+0.13** |
+| 500    | 0.994 | 0.08 | 0.86 | 30% | 4/40 | −0.06 |
+| gibbs@100 | post. | 0.18 | 0.88 | 40% | 6/40 | +0.06 |
+
+## The knee is α=200 (§6 conclusion)
+α=200 wins on **all four** §6 criteria: highest retention L=0.91 (the user's primary concern — the
+over-editing we're curing), **zero** junk (0/40, down from 7–10), best within-pair tracks-manipulation
+40%, best gap +0.13 — while keeping E healthy at 0.22 (vs α=100's 0.25). At **α=500 the E craters to
+0.08** (SUBW retention 0.50, SUBW E 0.16): over-concentration finally suppresses genuine correction,
+so the §0-predicted "knee then crater" does exist — just far higher than §0 expected (knee≈200, not ≤10).
+The E peak is broad over α≈100–200; α=200 is chosen because it dominates on L/junk/tracks at near-peak E.
+
+## §7 gibbs confirmation is CLEAN — the θ-posterior path does not over-edit
+gibbs@α=100 vs rejuv=off@α=100: E 0.25→0.18, **L 0.73→0.88**, tracks 35%→40%, gap −0.02→+0.06,
+junk 7→6. The deployment (θ-posterior) path **raises** retention rather than reintroducing the §5.5
+over-editing it was feared to — the conjugate refresh self-concentrates p_copy on the clean parse, so
+gibbs@100 ≈ rejuv=off@200 in profile. It also **unlocks deletion corrections the prior-only path never
+made**: DEL_FOR E 0.00→0.34, DEL_OF→0.49 (the sweep's word-restoration move + refresh). It partly cures
+the earlier P=128 keep wobbles too: LADDER L 0.10→0.50, SUBN L→1.00. The §5.5 deletion mode-collapse
+caveat does NOT bite on this battery.
+
+## DECISION (gibbs@200 DONE — the deployment config wins outright)
+**Chosen α = 200,1,1,1.** gibbs@α=200 (the final deployment-setting confirmation) is the BEST config on
+the whole grid: E=0.21 (non-collapsed — NOT the α=500 crater), **L=0.99 (keep 20/20)**, tracks-manip
+**55%**, gap **+0.20**, junk **0/40**. The §7 fear — that the conjugate refresh at the higher prior would
+over-suppress E the way α=500 did at rejuv=off — did NOT materialize. SUBN 0.94 / SUBW 0.84 (sub
+correction climbed); deletion-restoration is lower than gibbs@100 (DEL_FOR 0.34→0.01, DEL_OF 0.49→0.34:
+higher p_copy ⇒ less word-restoration), a mild tension but net dominant. Caveat on 55%: with L_keep=0.99
+the within-pair bar 1−L_b≈0.01 is trivially low, so part of 40→55% is near-perfect twin-retention, not
+raw correction — itself the good news (zero over-editing).
+
+**PROMOTED α=200 (consolidation §1b DONE — user chose full promotion 2026-06-21).** Edits in
+`src/genjax_port/pythia_word_caprop.py`: `ACTION_ALPHA_DEFAULT` (3,1,1,1)→(200,1,1,1) w/ calibration
+provenance comment; `--channel` CLI default char_copy→**word_action** (word_action is now the default
+model); `main()`/`--selftest` rebuilt to smoke the word_action default (SUB+KEEP) alongside the char_copy
+anchor (DEL/SUB/KEEP). **Verified: selftest 5/5 OK** (word_action SUB→"the cat sat on the mat", KEEP held;
+char_copy DEL restores "to"); **full live suite 22/22 green** (all exact-enum cert anchors +
+channel-selector + wa-rejuv + pythia smoke). `model_current.tex` reference values updated to (200,1,1,1) +
+word_action default (compiles clean). `run_example_native.sh` is skip-worktree: already defaults to
+word_action (WORD_ACTION=1) so it auto-picks-up ACTION_ALPHA_DEFAULT=200 — only its stale `(3,1,1,1)`
+comments need a local touch (flagged to user, NOT committed). All edits UNCOMMITTED on branch
+`word-action-rejuv` (user hasn't asked to commit).
+
+## Evidence depth (added this session): slp_gain ⟷ E and the two ceilings
+Joined the gated CSV's `slp_gain` (= 70m log P(intended)−log P(observed), the LM's own preference for the
+grammatical sentence) against per-item E@α=200. Pearson r(slp_gain,E)=**0.55**. The 14 E≈0 pairs split
+into TWO causes, not one LM ceiling: (1) ~5 genuine **LM-indifference** items (slp_gain<2 nats: LADDER,
+DELTO-01, DEL-a-02 — mean E 0.01); (2) several **inference/channel-limited** items where the LM DOES
+prefer grammatical (DELFROM-01 6.4 nats, INS-01 9.6 nats, DELTO-02 3.5 — all E=0) but the fix is a
+word-restoration/deletion the rejuv=off channel doesn't execute. Class (2) is exactly what gibbs
+rescues (DEL_FROM/DEL_FOR/DEL_OF 0→0.3–0.5 under rejuv) — NOT an LM limit. So the earlier blanket "70m
+semantic ceiling" over-attributed to the LM: ~5 are LM-bound (need 410m), the rest are channel/rejuv-bound.
+The persistent LM-bound families (DEL_TO datives, true content-word INS_DUP) still need 410m, not α.
