@@ -804,3 +804,80 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
     W = _bd_log_weight(logp_y, logp_yp, d_birth, n_words, D_y, D_yp, Wmax, Kc)
     move_logw = jnp.where(none, 0.0, W)
     return (new_tok, new_len, new_surf, new_nw), move_logw
+
+
+# --------------------------------------------------------------------------------------------------
+# Production scoring + the in-filter sweep (plan §4). ``_make_bd_score_fn`` reproduces the SAME target the
+# filter uses for a complete hypothesis -- ``lm_temp * LM + channel_marginal`` -- via the shared
+# ``channel_carry`` / ``_lm_logprior`` (no suffix-tail KV cancellation yet; that is the Phase-2 perf win).
+# Only the RATIO logπ(y')−logπ(y) enters the weight, so any constant offset (e.g. the leading-spurious a0)
+# cancels. ``make_bd_sweep`` wraps ``birth_death_move`` into a filter-shaped sweep: unpack the flat buffer
+# to per-word slots, run N done-ONLY moves (mid-construction particles are left untouched so the forward
+# filter's n_words counter never desyncs), repack, and recompute ``log_alpha`` consistent with the move.
+# --------------------------------------------------------------------------------------------------
+def _bd_costs(ctx, P, theta_costs):
+    """The per-particle word-action cost 6-tuple ``(lp_copy, lp_sub, wdel_p, wins_p, a0p, copy_mask)`` --
+    the LIVE theta costs when ``theta_costs`` is given (channel ON), else the zero-action char-copy / OFF
+    parameterization built from ``ctx`` (bit-identical to the pre-word-action carry), matching ``make_sweep``."""
+    if theta_costs is not None:
+        return theta_costs
+    M, Vc_aug = ctx.M, ctx.emit_full.shape[1]
+    return (jnp.zeros(P), jnp.zeros(P),
+            jnp.broadcast_to(jnp.float32(ctx.wdel), (P,)),
+            jnp.broadcast_to(jnp.asarray(ctx.wins, jnp.float32), (P, M)),
+            jnp.broadcast_to(jnp.asarray(ctx.a0, jnp.float32), (P, M + 1)),
+            jnp.zeros((M, Vc_aug), jnp.float32))
+
+
+def _make_bd_score_fn(ctx):
+    """``score(word_tok, word_len, word_surf, n_words, done, theta_costs=None) -> logπ [P]`` =
+    ``lm_temp * LM(sentence) + channel`` for a batch of states (DONE reads ``alpha[M]``; mid-loop the partial
+    forward mass), the same quantity the sweep/filter score. Injected into :func:`birth_death_move`."""
+    sl, Wmax, T, M = ctx.seed_len, ctx.Wmax, ctx.t_max, ctx.M
+    n_out = Wmax * T
+
+    def score(word_tok, word_len, word_surf, n_words, done, theta_costs=None):
+        P = word_tok.shape[0]
+        lp_copy, lp_sub, wdel_p, wins_p, a0p, copy_mask = _bd_costs(ctx, P, theta_costs)
+        carry = channel_carry(a0p, ctx.emit_full, ctx.band, M, word_surf, word_len,
+                              lp_copy, lp_sub, wdel_p, wins_p, copy_mask)              # (P, M+1)
+        chan = jnp.where(done, carry[:, M], logsumexp(carry, axis=1))
+        bufs, total = _flat_buffer(ctx, word_tok, word_len, sl + n_out + 1, n_out)
+        lm = _lm_logprior(ctx, bufs, total, done)
+        return ctx.lm_temp * lm + chan
+
+    return score
+
+
+def make_bd_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=2):
+    """Build a reusable birth/death rejuvenation sweep over a fixed candidate pool ``cand_*`` (Phase 1 =
+    observed surfaces). ``sweep(key, ctx_buf, ctx_len, word_len, word_surf, done, theta_costs) ->
+    (state', move_logw)`` where ``state'`` is the filter's 7-tuple ``(ctx_buf, ctx_len, n_words, word_len,
+    word_surf, log_alpha, done)``. Runs ``n_attempts`` moves (each adds/removes <=1 word) on DONE particles
+    only; folds every move's SMCP3 weight into ``move_logw`` for the caller to add to ``log_w``."""
+    sl, Wmax, T, M = ctx.seed_len, ctx.Wmax, ctx.t_max, ctx.M
+    n_out = Wmax * T
+    score = _make_bd_score_fn(ctx)
+
+    def sweep(key, ctx_buf, ctx_len, word_len, word_surf, done, theta_costs=None):
+        P, LCTX = ctx_buf.shape
+        wt, nw = _unpack(ctx_buf, word_len, sl, Wmax, T)
+        wl, ws = word_len, word_surf
+        sfn = lambda a, b, c, d, e: score(a, b, c, d, e, theta_costs)
+        move_logw = jnp.zeros(P)
+        for _ in range(n_attempts):
+            key, sub = jax.random.split(key)
+            (nt, nl, ns, nnw), mlw = birth_death_move(sub, wt, wl, ws, nw, done,
+                                                      sfn, cand_tok, cand_len, cand_surf)
+            m, m2, m3 = done, done[:, None], done[:, None, None]            # done-only gate
+            wt = jnp.where(m3, nt, wt); wl = jnp.where(m2, nl, wl)
+            ws = jnp.where(m2, ns, ws); nw = jnp.where(m, nnw, nw)
+            move_logw = move_logw + jnp.where(m, mlw, 0.0)
+        bufs, total = _flat_buffer(ctx, wt, wl, LCTX, n_out)
+        ctx_len2 = sl + total.astype(jnp.int32)
+        lp_copy, lp_sub, wdel_p, wins_p, a0p, copy_mask = _bd_costs(ctx, P, theta_costs)
+        log_alpha = channel_carry(a0p, ctx.emit_full, ctx.band, M, ws, wl,
+                                  lp_copy, lp_sub, wdel_p, wins_p, copy_mask)
+        return (bufs, ctx_len2, nw, wl, ws, log_alpha, done), move_logw
+
+    return sweep

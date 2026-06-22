@@ -140,6 +140,27 @@ stages is (a) **proposal sophistication** and (b) **which cases we validate agai
 - **Phase 3 — battery + writeup.** 40-item battery (E/L/junk), `gibbs` vs `gibbs+bd`; record in
   `REJUV_BIRTH_DEATH_RESULTS.md`. Recommend default only on a clean win.
 
+## 5b. Phase-1 status / finding (2026-06-21)
+
+Phase 1 is **built and proven correct**, and surfaced the expected variance wall:
+
+- **Correctness chain closed.** (i) `_bd_log_weight` passes an EXACT transition-sum reversible-jump
+  invariance test (`Σ_y π(y)q_fwd exp(W)=π(y')`, err <1e-6); (ii) `_make_bd_score_fn` reproduces the exact
+  enumeration joint `LM+channel` to <1e-4 over varied-length sentences (`test_bd_score_fn_matches_exact_joint`).
+  Weight ∘ correct-target ⇒ the integrated move is correct. Certified `off`/`gibbs` paths bit-identical
+  (32 gates green).
+- **Uniform proposals are too noisy for the live filter.** Wired `rejuv="gibbs+bd"` (move after the
+  substitution sweep, done-only, n_attempts=2, pool = observed surfaces). On a toy duplicate (`the cat cat
+  sat`, target prefers the deduped `the cat sat` by +0.81 nats) `gibbs+bd` *degraded* the posterior vs
+  `gibbs` and shifted logZ ~1.3 nats — the signature of high weight-variance (logsumexp downward bias),
+  NOT bias: every done particle does 2 random add/remove moves per resample, ~half of them bad births of
+  random pool words. This is exactly the §7 risk.
+- **Consequence for the phase boundary.** The behavioral win (duplicate removal *improving* the posterior,
+  `handed handed`) needs the variance down, i.e. **Phase 2's informed proposals** (near-conditional `q_del`
+  that targets the removable duplicate; channel/LM-informed `q_ins`). The uniform Phase-1 move is the
+  correct-but-not-useful scaffold; Phase 2 makes it help. (Tune: also consider fewer attempts / running
+  bd only near terminal.)
+
 ## 6. Tests / correctness ledger
 
 1. **Involution round-trip** (Phase 0) — `φ∘φ = id` on state + fwd/bwd density consistency.

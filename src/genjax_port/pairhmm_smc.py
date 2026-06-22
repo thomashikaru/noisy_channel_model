@@ -619,8 +619,8 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     # Flag-gated rejuvenation (R2): build the sweep ONCE (jitted step reused across resample events).
     # rejuv_dedup (R3 item 1b) runs the sweep's tail_fn on the unique buffers only (host-side) -- EXACT,
     # cuts the sweep's dominant per-particle prefill cost (~linear in P). A DedupStats tracks rows saved.
-    rj_sweep, rj_dedup_stats = None, None
-    if rejuv == "gibbs":                  # word sweep for BOTH channels: theta-aware via theta_costs when ON,
+    rj_sweep, rj_dedup_stats, bd_sweep = None, None, None
+    if rejuv in ("gibbs", "gibbs+bd"):    # word sweep for BOTH channels: theta-aware via theta_costs when ON,
         #                                   char-copy / zero-action (theta_costs=None) when OFF (Phase 2 de-fork)
         from genjax_port import pairhmm_rejuv as RJ
         # R4: t_max = the forward's T_max; the pool carries multi-token spans + surface ids, built from
@@ -637,6 +637,17 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
             rejuv_stats.update(P=P, Kt=rj_pool[0].shape[1] + 1, max_tail=mt_tokens,
                                filter_lm_calls=0, sweep_prefills=0, sweep_tail_steps=0, uniq_frac=[],
                                dedup_rows_in=0, dedup_rows_computed=0)
+        if rejuv == "gibbs+bd":           # Phase 1 birth/death pass: pool = observed surfaces (rj_pool col 0)
+            pt, pl, ps = (np.asarray(x) for x in rj_pool)            # (Wmax,Ke,T),(Wmax,Ke),(Wmax,Ke)
+            seen, ct, cl_, cs = set(), [], [], []
+            for i in range(M):                                       # candidate column 0 is the COPY surface
+                sid = int(ps[i, 0])
+                if sid < 0 or sid in seen:
+                    continue
+                seen.add(sid); ct.append(pt[i, 0]); cl_.append(int(pl[i, 0])); cs.append(sid)
+            bd_sweep = RJ.make_bd_sweep(rj_ctx, jnp.asarray(np.array(ct), jnp.int32),
+                                        jnp.asarray(np.array(cl_), jnp.int32),
+                                        jnp.asarray(np.array(cs), jnp.int32), n_attempts=2)
 
     word_mask = model.word_mask
     def _assemble(n_words, log_alpha, lmlog, mt_chain, lp_copy, lp_sub, wdel_p, wins_p):
@@ -765,6 +776,16 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                     # sweep can RESTORE a dropped word, then the conjugate refresh re-estimates theta on the
                     # corrected parse (theta now reflects the data: clean context -> high p_copy).
                     rejuv_info["theta_mean"] = [round(float(x), 3) for x in jnp.mean(theta, axis=0)]
+                if bd_sweep is not None:     # Phase 1 birth/death: add/remove a word on DONE particles, then
+                    #                          fold the trans-dim SMCP3 weight into log_w (plan §4)
+                    ctx_buf, ctx_len, n_words, word_len, word_surf, _, done = state
+                    bd_theta = (lp_copy, lp_sub, wdel_p, wins_p, a0p, copy_mask) if ON else None
+                    key, sub = jax.random.split(key)
+                    state, bd_mlw = bd_sweep(sub, ctx_buf, ctx_len, word_len, word_surf, done,
+                                             theta_costs=bd_theta)
+                    log_w = log_w + bd_mlw
+                    if rejuv_info is not None:
+                        rejuv_info["bd_mean_abs_w"] = float(jnp.mean(jnp.abs(bd_mlw)))
         if trace is not None:            # per-step snapshot of the cloud (post-extend/resample/rejuv)
             trace.append(_record_step(model, state, log_w, seed_len, s, ess_pre, resampled, logZ,
                                       rejuv_info))

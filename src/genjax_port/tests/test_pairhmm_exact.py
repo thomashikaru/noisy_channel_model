@@ -317,6 +317,35 @@ def test_rejuv_smcp3_weight_zero():
         f"full-conditional SMCP3 weight not ~0: max|w|={float(jnp.max(jnp.abs(move_logw))):.2e}"
 
 
+def test_bd_score_fn_matches_exact_joint():
+    """Birth/death (REJUV_BIRTH_DEATH_PLAN) Phase 1: the injected target ``_make_bd_score_fn`` must equal
+    the exact joint ``LM + channel`` the enumeration uses, for sentences of VARYING length (the move spans
+    lengths). With the weight algebra ``_bd_log_weight`` already exact-invariance certified, this closes the
+    correctness chain for the integrated move -- any live degradation is then proposal variance, not bias."""
+    obs = "the cat cat sat"
+    ctx = rejuv.make_rejuv_ctx(obs, _toy_model(lm_logits), WDEL, WINS, band=None)
+    score = rejuv._make_bd_score_fn(ctx)
+    sents = ["the cat sat", "the cat cat sat", "the cat", "cat sat", "the cat cat cat sat", "the dog sat"]
+    P, Wmax = len(sents), ctx.Wmax
+    word_tok = np.zeros((P, Wmax, 1), np.int32)
+    word_len = np.zeros((P, Wmax), np.int32)
+    word_surf = np.full((P, Wmax), -1, np.int32)
+    n_words = np.zeros((P,), np.int32)
+    for p, s in enumerate(sents):
+        r = [WORD2IDX[w] for w in s.split()]
+        n_words[p] = len(r)
+        for i, t in enumerate(r):
+            word_tok[p, i, 0] = t; word_len[p, i] = 1; word_surf[p, i] = t
+    sc = np.asarray(score(jnp.asarray(word_tok), jnp.asarray(word_len), jnp.asarray(word_surf),
+                          jnp.asarray(n_words), jnp.ones((P,), bool)))
+    emit, a0 = _emit_table(obs), ctx.a0
+    exact = np.array([float(_joint_batch(jnp.array([[WORD2IDX[w] for w in s.split()]], jnp.int32),
+                                         len(s.split()), emit, LOG_BIGRAM, len(obs.split()), a0)[0])
+                      for s in sents])
+    err = float(np.max(np.abs(sc - exact)))
+    assert err < 1e-4, f"_make_bd_score_fn disagrees with the exact joint: max|diff|={err:.2e}"
+
+
 # ==================================================================================================
 # Phase 2 (WORD_ACTION_REJUV_PLAN) -- word-action ON rejuvenation gates. The single-token rejuv gates
 # above run the CHAR-COPY channel (``action_alpha=None``); these certify the SAME sweep on the
