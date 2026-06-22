@@ -77,8 +77,8 @@ WDEL_DEFAULT = -9.0
 # alpha_copy=200 is the knee -- it maximizes literal retention (L=0.91 rejuv=off, 0.99 under rejuv=gibbs)
 # and within-pair discrimination at zero over-edit junk, while keeping genuine corrections non-collapsed
 # (alpha_copy=500 craters them). Concentrating on copy HELPS editing by killing a spurious-insertion junk
-# channel, not by suppressing it. Selected by channel="word_action" (the default; or an explicit
-# --action_alpha); channel="char_copy" keeps the original bundled char channel (the bit-identical
+# channel, not by suppressing it. Selected by channel="word_action" (the higher-retention alternative to
+# the align default; or an explicit --action_alpha); channel="char_copy" keeps the original bundled char channel (the bit-identical
 # exact-enumeration certification anchor). NB the battery is synthetic, NOT the reserved human hold-out.
 ACTION_ALPHA_DEFAULT = (200.0, 1.0, 1.0, 1.0)
 
@@ -86,13 +86,25 @@ ACTION_ALPHA_DEFAULT = (200.0, 1.0, 1.0, 1.0)
 # action prior that merges copy+sub into a single "align" action. There is no copy/sub jump -- a copy is
 # align at d=0, a near-miss is align at d>=1 -- so the Dirichlet governs only align-vs-insert-vs-delete
 # and "how good the match is" lives entirely in the FORM emission: a smooth per-edit distance cost
-# ALIGN_SLOPE (= K). The align concentration mirrors the calibrated word-action copy concentration
-# (alpha_align=200) as the starting point; K starts at SUB_FORM_LP = log(1/26) (so the default align FORM
-# table is numerically identical to the word-action one) and is the single sweepable over-editing knob,
-# decoupled from alpha. Selected by channel="align" (gated; word_action stays the default until the plan's
-# Phase 5 promotion). See ALIGN_ACTION_CHANNEL_PLAN sec 1 for the garage->garbage motivation.
-ALIGN_ALPHA_DEFAULT = (200.0, 1.0, 1.0)
-ALIGN_SLOPE = math.log(1.0 / ALPHA)   # K: per-edit log-cost in the align FORM table (python float, sweepable)
+# ALIGN_SLOPE (= K). channel="align" is now the DEPLOYMENT DEFAULT (promoted 2026-06-21 after the
+# calibration below; word_action remains available as the higher-retention alternative).
+#
+# CALIBRATED 2026-06-21 (planning/ALIGN_OPT_RESULTS.md) on the 40-item plausible/implausible battery to
+# jointly maximize correction mass on implausible items (E) and literal retention on plausible items (L):
+#   * K = -4.5 (was log(1/26) = -3.26): in the align channel a substitution pays only log(p_align)+K*d
+#     (~K*d), with NO per-word sub penalty -- so the old K=-3.26 was ~5 nats CHEAPER per sub than the
+#     calibrated word_action operating point (reduction-gate equivalent K=-8.56) and over-edited. K
+#     governs ONLY substitutions; sharpening to -4.5 is the knee where real-word-sub corrections peak
+#     (SUBW E 0.09->0.82) and sub-driven keep over-edits vanish, before the corrections die (-8.0 reverts
+#     to word_action: high L, low E). K is the SUBSTITUTION over-editing knob.
+#   * alpha = (200, 2, 2) (was (200,1,1)): the (ins,del)=2 entries are the DELETION/INSERTION knob,
+#     independent of K. alpha=2 is a sharp Pareto knee: enough ins/del to fix pythia-70m's passive-voice
+#     keep hallucinations ("the boy IS handed...") AND restore dropped function words (DEL-of 0.11->0.70,
+#     INS-02a 0->0.95), but not so much that it triggers word-insertion over-edits on clean keeps
+#     ("the patient's BODY recovered...", which alpha=4 does). Net vs the old align default, 3-seed mean:
+#     E 0.14->0.29, L 0.77->0.93, junk 9/40->~1/40.  (NB battery is synthetic, not the human hold-out.)
+ALIGN_ALPHA_DEFAULT = (200.0, 2.0, 2.0)
+ALIGN_SLOPE = -4.5   # K: per-edit substitution log-cost in the align FORM table (python float, sweepable)
 
 
 def _char_ids(s):
@@ -472,14 +484,15 @@ def cli():
                          ">1 sharpens the prior (more aggressive correction).")
     ap.add_argument("--word_mask", action="store_true",
                     help="restrict the LM bridge pool to whole-word tokens (off by default)")
-    ap.add_argument("--channel", choices=("word_action", "align", "char_copy"), default="word_action",
-                    help="noise model: 'word_action' (default; WORD_ACTION_CHANNEL_PLAN.md) = the per-word "
-                         "4-way Dirichlet action channel (copy,sub,insert,delete latent per particle; pair-HMM "
-                         "scores substitution FORM only), calibrated to ACTION_ALPHA_DEFAULT; 'align' "
-                         "(ALIGN_ACTION_CHANNEL_PLAN.md) = the 3-way (align,insert,delete) variant that merges "
-                         "copy+sub into one 'align' action with a smooth K*d edit-distance form cost (the one "
-                         "over-editing knob --align_slope); 'char_copy' = the deprecated bundled char channel, "
-                         "kept as the exact-enumeration certification anchor + opt-out.")
+    ap.add_argument("--channel", choices=("word_action", "align", "char_copy"), default="align",
+                    help="noise model: 'align' (DEFAULT; ALIGN_ACTION_CHANNEL_PLAN.md + ALIGN_OPT_RESULTS.md) = "
+                         "the 3-way (align,insert,delete) Dirichlet channel that merges copy+sub into one 'align' "
+                         "action with a smooth K*d edit-distance form cost, calibrated to ALIGN_ALPHA_DEFAULT + "
+                         "ALIGN_SLOPE (K=-4.5, alpha=(200,2,2)); it catches real-word typos word_action misses "
+                         "(garage->garbage) -- more correction at a small retention cost. 'word_action' "
+                         "(WORD_ACTION_CHANNEL_PLAN.md) = the per-word 4-way (copy,sub,insert,delete) channel "
+                         "calibrated to ACTION_ALPHA_DEFAULT (higher literal retention; the prior default). "
+                         "'char_copy' = the deprecated bundled char channel, the exact-enumeration cert anchor.")
     ap.add_argument("--action_alpha", default=None,
                     help="override the action Dirichlet prior: 'copy,sub,ins,del' for --channel word_action "
                          f"(default {','.join(str(x) for x in ACTION_ALPHA_DEFAULT)}; implies word_action) or "
@@ -487,7 +500,7 @@ def cli():
                          f"{','.join(str(x) for x in ALIGN_ALPHA_DEFAULT)}).")
     ap.add_argument("--align_slope", type=float, default=None,
                     help="align channel: the per-edit log-cost K of the smooth distance form table "
-                         f"(emission = K*edit_distance; default ALIGN_SLOPE={ALIGN_SLOPE:.3f}=log(1/26)). "
+                         f"(emission = K*edit_distance; default ALIGN_SLOPE={ALIGN_SLOPE:.3f}, calibrated). "
                          "Less negative => cheaper near-misses (more correction); more negative => fewer. "
                          "The single over-editing knob, decoupled from --action_alpha. Only used by --channel align.")
     ap.add_argument("--rejuv", choices=("off", "gibbs"), default="off",
@@ -516,7 +529,7 @@ def cli():
     action_alpha = None
     if args.action_alpha is not None:                # an explicit prior implies an action channel
         action_alpha = tuple(float(x) for x in args.action_alpha.split(","))
-        if channel == "char_copy":                   # ...defaulting to word_action (align is opt-in via --channel)
+        if channel == "char_copy":                   # an explicit alpha + the cert channel -> word_action
             channel = "word_action"
     lm_penzai.load_model()
     t0 = time.time()

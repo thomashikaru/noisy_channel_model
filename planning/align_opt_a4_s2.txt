@@ -1,0 +1,56 @@
+LM=EleutherAI/pythia-70m  P=128  seed=2  channel=align  alpha=(200.0, 4.0, 4.0)  align_slope=-4.5  rejuv=gibbs  dedup=True  cap_initial=True  items=12
+
+item         exp   metric  q_ref     L    E junk  obs -> intended
+SUBW-01a     edit    0.94   0.89  0.06 0.93 0.01  'the storyteller told an amusing antidote' -> 'the storyteller told an amusing anecdote'  (q_smc; 33s)  theta(c,s,i,d)=[0.939, 0.042, 0.018]
+             p=0.87  'The storyteller told an amusing anecdote.'
+             p=0.06  'The storyteller told an amusing antidote.'
+             p=0.06  '- The storyteller told an amusing anecdote.'
+SUBN-01a     edit    1.00   0.87  0.00 0.99 0.01  'did you recieve the message' -> 'did you receive the message'  (q_smc; 22s)  theta(c,s,i,d)=[0.962, 0.019, 0.019]
+             p=0.81  'Did you receive the message.'
+             p=0.18  'Did you receive the message?'
+             p=0.01  'Did you receive the email message.'
+DEL-a-01a    edit    0.01    nan  0.99 0.01 0.00  'he is good man' -> 'he is a good man'  (q_smc; 18s)  theta(c,s,i,d)=[0.961, 0.018, 0.02]
+             p=0.99  'He is good man.'
+             p=0.01  'He is a good man.'
+             p=0.00  'He is a good man..'
+DELTO-02a    edit    0.00    nan  0.05 0.00 0.95  'The waiter served the soup the customers' -> 'The waiter served the soup to the customers'  (q_smc; 37s)  theta(c,s,i,d)=[0.958, 0.018, 0.023]
+             p=0.77  'The waiter served the soup and the customers.'
+             p=0.17  'The waiter served the soup with the customers.'
+             p=0.05  'The waiter served the soup the customers.'
+INS-01a      edit    0.00    nan  0.48 0.00 0.52  'the boy handed handed the pencil to the girl' -> 'the boy handed the pencil to the girl'  (q_smc; 44s)  theta(c,s,i,d)=[0.946, 0.036, 0.018]
+             p=0.48  'The boy handed handed the pencil to the girl.'
+             p=0.26  'It was the boy handed handed the pencil to the girl.'
+             p=0.25  'This is the boy handed handed the pencil to the girl.'
+DEL-the-01a  edit    0.03    nan  0.92 0.03 0.05  'we went to store' -> 'we went to the store'  (q_smc; 12s)  theta(c,s,i,d)=[0.963, 0.018, 0.019]
+             p=0.88  'We went to store.'
+             p=0.05  'We want to store.'
+             p=0.04  'We went to Store.'
+SUBW-01b     keep    0.99   0.00  0.99 0.99 0.00  'the doctor prepared a fast-acting antidote' -> 'the doctor prepared a fast-acting antidote'  (kept; 43s)  theta(c,s,i,d)=[0.963, 0.018, 0.019]
+             p=0.99  'The doctor prepared a fast-acting antidote.'
+             p=0.01  'The doctor who prepared a fast-acting antidote.'
+             p=0.00  'The doctor prepared a fast-acting antidote.\nA'
+SUBN-01b     keep    0.99    nan  0.99 0.99 0.00  'did you receive the message' -> 'did you receive the message'  (kept; 20s)  theta(c,s,i,d)=[0.962, 0.019, 0.019]
+             p=0.79  'Did you receive the message.'
+             p=0.20  'Did you receive the message?'
+             p=0.01  'Did you receive the email message.'
+DEL-a-01b    keep    1.00    nan  1.00 1.00 0.00  'he is a good man' -> 'he is a good man'  (kept; 12s)  theta(c,s,i,d)=[0.962, 0.019, 0.019]
+             p=1.00  'He is a good man.'
+             p=0.00  'He is a good man.\nHe'
+             p=0.00  'He is a good man. I am'
+INS-01b      keep    0.80    nan  0.80 0.80 0.00  'the boy handed the pencil to the girl' -> 'the boy handed the pencil to the girl'  (kept; 38s)  theta(c,s,i,d)=[0.944, 0.037, 0.019]
+             p=0.78  'The boy handed the pencil to the girl.'
+             p=0.13  'This is the boy handed the pencil to the girl.'
+             p=0.07  'It was the boy handed the pencil to the girl.'
+DELTO-02b    keep    0.00    nan  0.00 0.00 1.00  'The waiter served the customers the soup' -> 'The waiter served the customers the soup'  (kept; 16s)  theta(c,s,i,d)=[0.957, 0.018, 0.025]
+             p=0.61  'The waiter served the customers with the soup.'
+             p=0.18  'The waiter served the customer with the soup.'
+             p=0.13  'The waiter served the customers in the soup.'
+DELFOR-01b   keep    0.41    nan  0.41 0.41 0.18  'The tailor sewed the bride the dress' -> 'The tailor sewed the bride the dress'  (kept; 22s)  theta(c,s,i,d)=[0.953, 0.019, 0.028]
+             p=0.40  'The tailor sewed the bride the dress.'
+             p=0.15  "The tailor-made to the bride's dress."
+             p=0.10  'The tailor-made for the bride the dress.'
+
+=== SUMMARY ===
+  edit  n=  6  pass(q_smc>0.5)=  2/6 (33%)  mean_metric=0.330
+  keep  n=  6  pass(kept>0.5)=  4/6 (67%)  mean_metric=0.698
+  junk>0.5 (leading-opener / over-edit artifact): 3/12
