@@ -801,22 +801,34 @@ def _ins_logq(score_fn, word_tok, word_len, word_surf, n_words, done, cand_tok, 
 
 
 def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
-                     score_fn, cand_tok, cand_len, cand_surf):
+                     score_fn, cand_tok, cand_len, cand_surf, p_stay=0.0):
     """One SMCP3-weighted birth/death involution move per particle (plan §1-2). ``score_fn(word_tok,
     word_len, word_surf, n_words, done) -> logπ [P]`` is the injected target (lm_temp*LM + channel).
     ``cand_*`` is the fixed candidate pool: ``cand_tok [Kc, T]`` / ``cand_len [Kc]`` / ``cand_surf [Kc]``.
     Returns ``((word_tok', word_len', word_surf', n_words'), move_logw [P])`` -- the move always applies;
-    fold ``move_logw`` into ``log_w`` before the next resample."""
+    fold ``move_logw`` into ``log_w`` before the next resample.
+
+    ``p_stay`` (plan §11) adds a STAY direction to the {birth, death} mixture: with probability ``p_stay`` a
+    particle keeps its state with weight 0. The kernel becomes ``s·I + (1−s)·K_old``; the ``(1−s)`` factor
+    multiplies BOTH the forward and the reverse direction prob (the reverse of a birth/death is itself a
+    not-stay move), so it CANCELS in ``W`` -- the move weights are UNCHANGED and invariance holds for any ``s``.
+    Without a stay option EVERY particle is forced off its parse each event and the immediate resample locks in
+    the damage, so a clean/optimal parse cannot survive (the gate-5 INS-02b regression). ``p_stay=0.0`` is the
+    current always-move behavior, bit-identical."""
     P, Wmax, T = word_tok.shape
     Kc = cand_surf.shape[0]
     parange = jnp.arange(P)
-    kdir, kbpos, kbword, kdpos = jax.random.split(key, 4)
+    kdir, kbpos, kbword, kdpos, kstay = jax.random.split(key, 5)
 
     D_y = _deletable_count(word_len, word_surf, cand_surf)
     feas_birth = n_words < Wmax
     feas_death = D_y > 0
     both = feas_birth & feas_death
     none = (~feas_birth) & (~feas_death)
+    # STAY (plan §11): keep state with weight 0. ``none`` particles already stay (forced); add a probabilistic
+    # stay elsewhere. The (1−p_stay) scaling of the move directions cancels in W (see docstring), so the
+    # birth/death densities below are computed exactly as before.
+    stay = none | (jax.random.bernoulli(kstay, p_stay, (P,)) & (~none))
     p_birth = jnp.where(both, 0.5, jnp.where(feas_birth, 1.0, 0.0))          # 0 if only death feasible
     d_birth = jax.random.bernoulli(kdir, p_birth) & (~none)
 
@@ -838,9 +850,9 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
     w_d = jax.random.categorical(kdpos, cat_logits)
     dstate, _aux = _delete_word(word_tok, word_len, word_surf, n_words, w_d)
 
-    # select branch; no-op particles (neither feasible) keep their state
+    # select branch; STAY particles (incl. the no-op none ones) keep their state
     sel, sel3 = d_birth[:, None], d_birth[:, None, None]
-    keep, keep2, keep3 = none, none[:, None], none[:, None, None]
+    keep, keep2, keep3 = stay, stay[:, None], stay[:, None, None]
     new_tok = jnp.where(keep3, word_tok, jnp.where(sel3, bstate[0], dstate[0]))
     new_len = jnp.where(keep2, word_len, jnp.where(sel, bstate[1], dstate[1]))
     new_surf = jnp.where(keep2, word_surf, jnp.where(sel, bstate[2], dstate[2]))
@@ -882,7 +894,7 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
     # finite source moved to an impossible y') and all finite weights pass through unchanged; the toy
     # (band=None) never triggers this, so its results are bit-identical.
     W = jnp.where(jnp.isnan(W) | (W == jnp.inf), -jnp.inf, W)
-    move_logw = jnp.where(none, 0.0, W)
+    move_logw = jnp.where(stay, 0.0, W)                              # STAY (incl. none): weight 0
     return (new_tok, new_len, new_surf, new_nw), move_logw
 
 
@@ -929,12 +941,13 @@ def _make_bd_score_fn(ctx):
     return score
 
 
-def make_bd_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=2):
+def make_bd_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=2, p_stay=0.0):
     """Build a reusable birth/death rejuvenation sweep over a fixed candidate pool ``cand_*`` (Phase 1 =
     observed surfaces). ``sweep(key, ctx_buf, ctx_len, word_len, word_surf, done, theta_costs) ->
     (state', move_logw)`` where ``state'`` is the filter's 7-tuple ``(ctx_buf, ctx_len, n_words, word_len,
     word_surf, log_alpha, done)``. Runs ``n_attempts`` moves (each adds/removes <=1 word) on DONE particles
-    only; folds every move's SMCP3 weight into ``move_logw`` for the caller to add to ``log_w``."""
+    only; folds every move's SMCP3 weight into ``move_logw`` for the caller to add to ``log_w``. ``p_stay``
+    (plan §11) is the per-move STAY probability passed through to :func:`birth_death_move` (0.0 = always move)."""
     sl, Wmax, T, M = ctx.seed_len, ctx.Wmax, ctx.t_max, ctx.M
     n_out = Wmax * T
     score = _make_bd_score_fn(ctx)
@@ -948,7 +961,7 @@ def make_bd_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=2):
         for _ in range(n_attempts):
             key, sub = jax.random.split(key)
             (nt, nl, ns, nnw), mlw = birth_death_move(sub, wt, wl, ws, nw, done,
-                                                      sfn, cand_tok, cand_len, cand_surf)
+                                                      sfn, cand_tok, cand_len, cand_surf, p_stay=p_stay)
             m, m2, m3 = done, done[:, None], done[:, None, None]            # done-only gate
             wt = jnp.where(m3, nt, wt); wl = jnp.where(m2, nl, wl)
             ws = jnp.where(m2, ns, ws); nw = jnp.where(m, nnw, nw)

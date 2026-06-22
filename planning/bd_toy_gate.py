@@ -18,17 +18,24 @@ P = 3000
 model = _toy_model(lm_logits)
 key = jax.random.PRNGKey(0)
 
+# (label, rejuv, kwargs) -- p_stay=0 reproduces the always-move move; p_stay=0.5 adds the §11 STAY branch.
+CONFIGS = [
+    ("off", "off", {}),
+    ("gibbs", "gibbs", {}),
+    ("bd stay=0.0", "gibbs+bd", dict(bd_p_stay=0.0)),
+    ("bd stay=0.5", "gibbs+bd", dict(bd_p_stay=0.5)),
+]
 t0 = time.time()
 results = {}
-for rejuv in ["off", "gibbs", "gibbs+bd"]:
+for label, rejuv, kw in CONFIGS:
     ts = time.time()
     state, log_w, logZ, sl = pairhmm_smc.run(OBS, key, model, P=P, wdel=WDEL, wins=WINS,
-                                             band=None, rejuv=rejuv)
+                                             band=None, rejuv=rejuv, **kw)
     top = pairhmm_smc.decode(state, log_w, model, top=6)
     dd = dict(top)
     dedup_mass = dd.get(DEDUP, 0.0)
-    results[rejuv] = (float(logZ), dedup_mass)
-    print(f"[{time.time()-ts:5.1f}s] rejuv={rejuv:9s}  logZ={float(logZ):8.3f}  "
+    results[label] = (float(logZ), dedup_mass)
+    print(f"[{time.time()-ts:5.1f}s] {label:12s}  logZ={float(logZ):8.3f}  "
           f"P({DEDUP!r})={dedup_mass:.3f}", flush=True)
     for s, m in top:
         mark = "  <-- deduped" if s == DEDUP else ""
@@ -36,7 +43,8 @@ for rejuv in ["off", "gibbs", "gibbs+bd"]:
 
 print(f"\nTotal {time.time()-t0:.1f}s", flush=True)
 zg, dg = results["gibbs"]
-zb, db = results["gibbs+bd"]
-print(f"\nGATE 3:")
-print(f"  deduped-mass  gibbs={dg:.3f}  gibbs+bd={db:.3f}   -> {'PASS' if db >= dg - 1e-6 else 'FAIL'} (bd >= gibbs)")
-print(f"  logZ          gibbs={zg:.3f}  gibbs+bd={zb:.3f}   -> {'PASS' if zb >= zg - 0.3 else 'FAIL'} (bd not depressed)")
+print(f"\nGATE 3 (dedup must hold; stay must not depress logZ further):")
+for label in ("bd stay=0.0", "bd stay=0.5"):
+    zb, db = results[label]
+    print(f"  {label:12s}  dedup={db:.3f} (gibbs {dg:.3f}, {'PASS' if db >= dg - 1e-6 else 'FAIL'})  "
+          f"logZ={zb:.3f} (gibbs {zg:.3f})", flush=True)

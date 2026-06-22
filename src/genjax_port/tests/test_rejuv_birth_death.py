@@ -283,6 +283,51 @@ def test_rj_weight_invariance_informed():
     assert err < 1e-6, f"informed RJ invariance violated: max|mass - pi| = {err:.2e}"
 
 
+def test_rj_weight_invariance_with_stay():
+    """Same exact transition-sum invariance with the §11 STAY branch added: the kernel is the mixture
+    ``s·I + (1−s)·K_old``. Each y gains a diagonal self-loop (y->y, weight 0, forward density s); every move's
+    ACTUAL forward density is scaled by (1−s). The (1−s) factor multiplies BOTH the forward and reverse
+    direction probs, so it cancels inside W -- the densities fed to ``_bd_log_weight`` are the SAME informed
+    ones as ``test_rj_weight_invariance_informed`` (W is unchanged); only the OUTER forward density used in the
+    transition sum carries the (1−s) scaling (moves) / s (stay). Verifies invariance still holds for s != 0,1."""
+    seqs, idx, logp, pi = _enumerate()
+    s = 0.4                                                  # arbitrary stay probability in (0, 1)
+    src, dst, qf, qb, qfull = [], [], [], [], []             # qf/qb fed to W (unscaled); qfull = actual fwd
+    for i, y in enumerate(seqs):
+        n = len(y)
+        pb, pd = _dir_probs(n)
+        if n < _BD_WMAX:                                     # births: informed word fwd; reverse death at y'
+            _pbp, pdp = _dir_probs(n + 1)
+            for w in range(n + 1):
+                ism = _ins_softmax(y, w)
+                for x in _BD_V:
+                    yp = y[:w] + (x,) + y[w:]
+                    src.append(i); dst.append(idx[yp])
+                    qf.append(pb * (1.0 / (n + 1)) * ism[x])
+                    qb.append(pdp * _del_softmax(yp)[w])
+                    qfull.append((1.0 - s) * pb * (1.0 / (n + 1)) * ism[x])
+        if n > 0:                                            # deaths: informed fwd; reverse birth at y'
+            pbp, _pdp = _dir_probs(n - 1)
+            dsm = _del_softmax(y)
+            for w in range(n):
+                yp = y[:w] + y[w + 1:]
+                ism_yp = _ins_softmax(yp, w)
+                src.append(i); dst.append(idx[yp])
+                qf.append(pd * dsm[w])
+                qb.append(pbp * (1.0 / n) * ism_yp[y[w]])
+                qfull.append((1.0 - s) * pd * dsm[w])
+        src.append(i); dst.append(i)                         # STAY self-loop: y->y, weight 0, fwd density s
+        qf.append(1.0); qb.append(1.0); qfull.append(s)
+    src, dst = np.array(src), np.array(dst)
+    W = np.asarray(_bd_log_weight(
+        jnp.asarray(logp[src]), jnp.asarray(logp[dst]),
+        jnp.asarray(np.log(qf)), jnp.asarray(np.log(qb))))
+    mass = np.zeros(len(seqs))
+    np.add.at(mass, dst, pi[src] * np.array(qfull) * np.exp(W))
+    err = np.max(np.abs(mass - pi))
+    assert err < 1e-6, f"stay-branch RJ invariance violated: max|mass - pi| = {err:.2e}"
+
+
 def test_birth_death_move_smoke():
     """End-to-end: birth_death_move runs over a mixed batch with an injected synthetic score_fn, returns
     canonical states, valid n_words in [0, Wmax], finite weights, and actually moves some particles."""
