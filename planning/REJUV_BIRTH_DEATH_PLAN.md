@@ -184,3 +184,51 @@ Phase 1 is **built and proven correct**, and surfaced the expected variance wall
 - Run birth/death **per position** (like the substitution sweep) vs a fixed **K attempts** per resample event.
 - Whether `q_ins` word choice is a full local conditional (lower variance, costlier) or a cheap top-1 from the
   pool.
+
+## 9. Phase 2 — KICKOFF (start here next session)
+
+**Goal:** drive the weight variance down so the move *helps* — the toy duplicate (`the cat cat sat`) improves
+under `gibbs+bd` (deduped reading ≥ `gibbs`, no `logZ` blow-up), the live `handed handed` duplicate is removed,
+and forward-pass restorations don't regress. Phase 1 proved the move correct; Phase 2 makes it useful.
+
+**State of the code (all committed, branch `rejuv-birth-death`):**
+- `pairhmm_rejuv.birth_death_move` — proposals are currently **uniform**: direction p=½ (forced at
+  boundaries), gap `κ`=1/(#gaps), `q_ins`=1/Kc over a fixed pool, `q_del`=1/D over deletable positions.
+- `pairhmm_rejuv._bd_log_weight` — **hardcodes those uniform densities** (`log(n+1)`, `log Kc`, `log D` are
+  baked in). ⚠️ **This is the key refactor:** for non-uniform proposals the weight must use the *actual*
+  forward/reverse proposal log-densities, not the uniform ones.
+- `pairhmm_rejuv.make_bd_sweep` wraps the move (done-only, `n_attempts=2` hardcoded at the call site in
+  `pairhmm_smc.py`'s `rejuv=="gibbs+bd"` build block). `_make_bd_score_fn` (the target) is **done — proven
+  exact**, reuse it as-is.
+
+**Step 1 — generalize the weight (do this first).** Replace `_bd_log_weight`'s internal uniform terms with a
+proposal-agnostic form: have `birth_death_move` compute, for the chosen move, `log q_fwd` (= `log p_dir +
+log κ + log q_ins` for a birth; `log p_dir + log q_del` for a death) and the **reverse** `log q_bwd` (the
+density of the move that undoes it from `y'`), then `W = (logπ(y') − logπ(y)) + log q_bwd − log q_fwd`. The
+current uniform formula is the special case. Update the EXACT invariance test
+(`test_rj_weight_invariance_exact`) to the new proposal densities — it's the regression guard for this refactor.
+
+**Step 2 — informed proposals:**
+- `q_del` **near-conditional**: for each deletable position `w`, score `π(y with w removed)` (reuse
+  `_make_bd_score_fn`; ~`n_words` scores) and set `q_del(w) ∝ softmax`. Concentrates deaths on the
+  removable duplicate. Its reverse (birth re-inserting the removed word) needs `q_ins` — see below.
+- `q_ins` **informed**: broaden the pool from observed-surfaces to the **forward-filter inventory + LM
+  bridges** (`_rejuv_pool_from_inventory` is the same candidate set, so births can restore words not
+  literally in the input); pick the gap/word by scoring candidate insertions and softmax-sampling.
+- Both directions' densities must be exactly the ones fed to the generalized weight (Step 1).
+
+**Step 3 — tune aggression:** try `n_attempts=1`, and/or run birth/death only near terminal (e.g. when the
+post-substitution-sweep ESS is high) instead of every resample. Measure ESS vs `gibbs`.
+
+**Gates (in order):** (1) generalized `_bd_log_weight` passes the updated exact RJ-invariance test;
+(2) certified `off`/`gibbs` still bit-identical; (3) toy `the cat cat sat` — `gibbs+bd` deduped-reading mass
+≥ `gibbs`, `logZ` not depressed; (4) live `handed handed` duplicate removed; (5) no-regression on
+restorations (`DEL-of`, `INS-02a`).
+
+**Quick behavioral harness** (the Phase-1 throwaway, recipe to recreate): run `pairhmm_smc.run` on a duplicate
+sentence with `rejuv` in `{off, gibbs, gibbs+bd}` and compare `pairhmm_smc.decode(...)` top posteriors + `logZ`.
+Toy: `_toy_model(lm_logits)` (from `tests/test_pairhmm_exact`), `OBS="the cat cat sat"`, `P≈3000`, `band=None`,
+`WDEL/WINS` from `test_pairhmm_exact`. Live: a pythia `handed handed` sentence.
+
+**Watch-outs:** births capped at `Wmax=M+slack` (bump `slack` if births are frequent); the move runs
+**done-only** by design (mid-construction births would desync the forward filter's `n_words`) — keep it that way.
