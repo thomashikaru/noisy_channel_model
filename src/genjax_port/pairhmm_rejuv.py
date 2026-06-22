@@ -619,3 +619,90 @@ def decode_counts(ctx_buf, ctx_len, model, seed_len, top=50):
     trajs = [tuple(int(t) for t in ctx_buf[p][seed_len:int(ctx_len[p])]) for p in range(P)]
     c = Counter(trajs)
     return {model.decode_ids(t): n / P for t, n in c.most_common(top)}
+
+
+# ==================================================================================================
+# Birth/death involution core -- REJUV_BIRTH_DEATH_PLAN.md Phase 0.
+#
+# A single SYMMETRIC move that adds OR removes one intended word, built as an involution: ``_insert_word``
+# (birth) and ``_delete_word`` (death) are mutual inverses at the same position ``w``, with the deleted
+# word as the dimension-matching auxiliary ``x``. ``_involve`` is the one move -- it flips direction and
+# is its OWN INVERSE (``_involve ∘ _involve = id``). Everything here is PURE array surgery on the per-word
+# buffers (no LM / channel scoring); the SMCP3 weight + the proposals (q_ins / q_del / κ) land in Phase 1.
+#
+# All ops are vectorized over P with PER-PARTICLE ``(w, x)``. Canonical state convention (matches the
+# forward filter / ``_unpack``): a word slot is ACTIVE iff ``word_len > 0``; active words fill the prefix
+# ``[0, n_words)`` and pad slots carry ``(word_tok=0, word_len=0, word_surf=_PAD_SURF)``. Both ops preserve
+# this canonical form, so the round-trip is bit-exact on the full buffers (tests/test_rejuv_birth_death.py).
+# ==================================================================================================
+_PAD_SURF = -1
+
+
+def _gather_slots(arr, idx):
+    """Gather along the word axis (axis=1) for a 2-D ``(P, Wmax)`` or 3-D ``(P, Wmax, T)`` per-word buffer,
+    broadcasting the ``(P, Wmax)`` index over the trailing token axis when present."""
+    if arr.ndim == 3:
+        return jnp.take_along_axis(arr, jnp.broadcast_to(idx[:, :, None], arr.shape), axis=1)
+    return jnp.take_along_axis(arr, idx, axis=1)
+
+
+def _insert_word(word_tok, word_len, word_surf, n_words, w, x_tok, x_len, x_surf):
+    """Birth: insert word ``x = (x_tok [P,T], x_len [P], x_surf [P])`` at gap ``w [P]`` (``0 <= w <= n_words``).
+    Words at positions ``>= w`` shift right one slot; ``n_words += 1``. Inverse of :func:`_delete_word` at the
+    same ``w``. The caller's birth boundary guarantees ``n_words < Wmax`` (else the last word would fall off
+    the end -- never happens under the move). Output stays canonical."""
+    P, Wmax, T = word_tok.shape
+    ar = jnp.arange(Wmax)[None, :]                                   # (1, Wmax) output slot indices
+    at = ar == w[:, None]                                            # (P, Wmax) the slot that receives x
+    src = jnp.where(ar <= w[:, None], ar, ar - 1)                    # i<=w -> i (i==w overridden); i>w -> i-1
+    srcc = jnp.clip(src, 0, Wmax - 1)
+    new_tok = jnp.where(at[:, :, None], x_tok[:, None, :], _gather_slots(word_tok, srcc))
+    new_len = jnp.where(at, x_len[:, None], _gather_slots(word_len, srcc))
+    new_surf = jnp.where(at, x_surf[:, None], _gather_slots(word_surf, srcc))
+    return new_tok, new_len, new_surf, n_words + 1
+
+
+def _delete_word(word_tok, word_len, word_surf, n_words, w):
+    """Death: remove the word at position ``w [P]`` (``0 <= w < n_words``). Words at positions ``> w`` shift
+    left one slot; ``n_words -= 1``; the freed tail slot is forced to canonical pad. Returns
+    ``((word_tok', word_len', word_surf', n_words'), (x_tok, x_len, x_surf))`` where ``x`` is the removed
+    word -- the dimension-matching auxiliary that :func:`_insert_word` at the same ``w`` re-inserts. Inverse
+    of :func:`_insert_word`."""
+    P, Wmax, T = word_tok.shape
+    ar = jnp.arange(Wmax)[None, :]
+    idx = ar + (ar >= w[:, None]).astype(jnp.int32)                  # pull from i+1 at/after w (shift left)
+    overflow = idx >= Wmax                                           # last slot has nothing to pull -> pad
+    idxc = jnp.clip(idx, 0, Wmax - 1)
+    new_tok = jnp.where(overflow[:, :, None], 0, _gather_slots(word_tok, idxc))
+    new_len = jnp.where(overflow, 0, _gather_slots(word_len, idxc))
+    new_surf = jnp.where(overflow, _PAD_SURF, _gather_slots(word_surf, idxc))
+    wc = jnp.clip(w, 0, Wmax - 1)
+    x_tok = _gather_slots(word_tok, jnp.broadcast_to(wc[:, None], (P, Wmax)))[:, 0, :]
+    x_len = _gather_slots(word_len, wc[:, None])[:, 0]
+    x_surf = _gather_slots(word_surf, wc[:, None])[:, 0]
+    return (new_tok, new_len, new_surf, n_words - 1), (x_tok, x_len, x_surf)
+
+
+def _involve(word_tok, word_len, word_surf, n_words, d_birth, w, x_tok, x_len, x_surf):
+    """The single symmetric birth/death move as an INVOLUTION. ``d_birth [P]`` selects per particle: True =
+    insert ``x`` at ``w`` (birth), False = delete the word at ``w`` (death). Returns the new augmented tuple
+    ``(word_tok, word_len, word_surf, n_words, d_birth, w, x_tok, x_len, x_surf)`` with the direction FLIPPED
+    and the auxiliary carried so that ``_involve ∘ _involve = id``:
+
+      * birth -> death: ``x`` is the inserted word, which is exactly the word now at slot ``w`` -- so the
+        re-applied death recovers it and undoes the insert.
+      * death -> birth: ``x`` is the recovered (removed) word -- so the re-applied birth re-inserts it.
+
+    Self-inverse holds on the move's support: a death's input ``x`` slot is the word at ``w`` (which death
+    ignores but carries), birth's ``x`` is the word to insert. The position ``w`` is unchanged by φ."""
+    ins = _insert_word(word_tok, word_len, word_surf, n_words, w, x_tok, x_len, x_surf)
+    (dlt, (rx_tok, rx_len, rx_surf)) = _delete_word(word_tok, word_len, word_surf, n_words, w)
+    sel, sel3 = d_birth[:, None], d_birth[:, None, None]
+    out_tok = jnp.where(sel3, ins[0], dlt[0])
+    out_len = jnp.where(sel, ins[1], dlt[1])
+    out_surf = jnp.where(sel, ins[2], dlt[2])
+    out_nw = jnp.where(d_birth, ins[3], dlt[3])
+    out_x_tok = jnp.where(sel, x_tok, rx_tok)                       # birth carries x; death carries removed
+    out_x_len = jnp.where(d_birth, x_len, rx_len)
+    out_x_surf = jnp.where(d_birth, x_surf, rx_surf)
+    return out_tok, out_len, out_surf, out_nw, ~d_birth, w, out_x_tok, out_x_len, out_x_surf
