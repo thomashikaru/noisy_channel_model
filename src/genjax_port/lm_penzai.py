@@ -108,6 +108,25 @@ def next_token_logprobs(token_bufs, i_lens):
     return jax.nn.log_softmax(next_token_logits(token_bufs, i_lens), axis=-1)
 
 
+@functools.partial(jax.jit, static_argnums=())
+def _seq_token_logprobs_jit(token_bufs):
+    all_lp = jax.nn.log_softmax(_raw_logits(token_bufs), axis=-1)             # [N, seq, vocab]
+    nxt = token_bufs[:, 1:]                                                   # [N, seq-1] next tokens
+    g = jnp.take_along_axis(all_lp[:, :-1, :], nxt[:, :, None], axis=2)[:, :, 0]  # [N, seq-1]
+    return jnp.concatenate([jnp.zeros((token_bufs.shape[0], 1), g.dtype), g], axis=1)  # [N, seq]
+
+
+def seq_token_logprobs(token_bufs):
+    """Teacher-forcing next-token logprobs for EVERY position in ONE forward: ``[N, seq]`` where
+    ``[:, j] = log P(token_bufs[:, j] | token_bufs[:, :j])`` (and ``[:, 0] = 0``, no prefix). The rewind/
+    rescore scorers (the bd move's ``_lm_logprior``) need the logprob at many positions of the same buffer;
+    reading them from a single pass replaces one full :func:`next_token_logits` forward PER position (which
+    recomputes the identical forward and discards all but one row). ``load_model()`` is forced eagerly for
+    the same tracer-leak reason as :func:`next_token_logits`."""
+    load_model()
+    return _seq_token_logprobs_jit(token_bufs)
+
+
 def _batch_tail_logprobs_uncached(ctx_bufs, ctx_lens, tails, tail_lens):
     """Uncached chain-rule tail scorer (fallback)."""
     b, k, w = tails.shape

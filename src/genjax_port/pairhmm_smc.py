@@ -74,6 +74,12 @@ class PairHMMModel:
     #                                 step (Phase D) and the candidate SUFFIX in the rejuvenation sweep
     #                                 (R3). Pythia injects the KV scorer; None => a generic uncached
     #                                 fallback built from lm_fn (pairhmm_rejuv._tail_chain_uncached).
+    seq_token_logprobs: Callable = None  # (token_bufs [N,seq]) -> [N,seq] teacher-forcing next-token
+    #                                 logprobs ([:,j] = log P(buf[:,j] | buf[:,:j]), [:,0]=0): ALL positions
+    #                                 from ONE forward. The bd score_fn's _lm_logprior uses it instead of one
+    #                                 lm_fn forward PER position (the same full forward recomputed n_out+1
+    #                                 times). Pythia injects lm_penzai.seq_token_logprobs; None => the per-
+    #                                 position loop fallback (toy / custom lm_fn), bit-identical.
     seed_ids: Sequence[int] = ()  # context seed (toy: (); Pythia: [EOS] + prime tokens)
     word_mask: jnp.ndarray = None  # (emit_vocab,) bool: True where the token is a lexical word; the
     #                                top-J LM candidate pool is restricted to it so the prior cannot

@@ -169,21 +169,33 @@ def _flat_buffer(ctx, word_tok, word_len, LCTX, n_out):
 
 def _lm_logprior(ctx, bufs, total_tokens, add_eos):
     """(N,) LM prior = sum_t log P(token_t | seed + tokens[:t]) [+ log P(EOS | all tokens) where
-    ``add_eos``]. Loops over TOKEN positions (chain-rule), so a multi-token word contributes the
+    ``add_eos``]. Sums the chain-rule over TOKEN positions, so a multi-token word contributes the
     product over its tokens; at T_max=1 this is one term per word. ``add_eos [N]`` is the EOS term --
     on for DONE (complete-hypothesis) particles, off for partial mid-loop ones (no EOS yet). Same
-    quantity ``_joint_batch``'s ``lm`` computes, driven through the injected ``lm_fn``."""
+    quantity ``_joint_batch``'s ``lm`` computes.
+
+    The EOS slot needs no special case: ``bufs`` is padded with ``eos_id`` past ``total``, so the per-
+    position logprob at index ``sl + total`` IS ``log P(EOS | tokens)``; the mask keeps it only when
+    ``add_eos``. The fast path (``model.seq_token_logprobs``, Pythia) reads every position from ONE
+    forward; the fallback (toy / custom ``lm_fn``) loops one forward per position -- the SAME full forward
+    recomputed ``n_out+1`` times, the perf bottleneck the fast path removes. Both are bit-identical."""
     model = ctx.model
     sl, LCTX, N = ctx.seed_len, bufs.shape[1], bufs.shape[0]
     n_out = ctx.Wmax * ctx.t_max
-    total = jnp.zeros(N)
-    for t in range(n_out + 1):
-        lp = model.lm_fn(bufs, jnp.full((N,), sl + t, jnp.int32))  # (N, vocab) next-token logprobs
-        tok = bufs[:, min(sl + t, LCTX - 1)]
+    t = jnp.arange(n_out + 1)
+    keep = (t[None, :] < total_tokens[:, None]) | (
+        (t[None, :] == total_tokens[:, None]) & add_eos[:, None])              # (N, n_out+1) term mask
+    if model.seq_token_logprobs is not None:
+        seq_lp = model.seq_token_logprobs(bufs)                                # (N, seq): logP(buf[:,j]|prefix)
+        pos = jnp.clip(sl + t, 0, LCTX - 1)
+        lp_at = seq_lp[:, pos]                                                 # (N, n_out+1)
+        return jnp.sum(jnp.where(keep, lp_at, 0.0), axis=1)
+    total = jnp.zeros(N)                                                       # fallback: one forward per pos
+    for ti in range(n_out + 1):
+        lp = model.lm_fn(bufs, jnp.full((N,), sl + ti, jnp.int32))  # (N, vocab) next-token logprobs
+        tok = bufs[:, min(sl + ti, LCTX - 1)]
         tok_lp = jnp.take_along_axis(lp, tok[:, None], axis=1)[:, 0]
-        eos_lp = lp[:, model.eos_id]
-        total = total + jnp.where(t < total_tokens, tok_lp,
-                                  jnp.where((t == total_tokens) & add_eos, eos_lp, 0.0))
+        total = total + jnp.where(keep[:, ti], tok_lp, 0.0)
     return total
 
 

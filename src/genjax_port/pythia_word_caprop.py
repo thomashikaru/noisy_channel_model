@@ -305,6 +305,7 @@ def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False, 
         char_ids=_char_ids, candidate_words=_candidate_words, obs_words=_obs_word_units,
         obs_spans=_obs_word_spans,
         decode_ids=lambda t: tokenizer.decode(t).strip(), tail_logprobs=tail_fn,
+        seq_token_logprobs=(None if lm_logprobs_fn else lm_penzai.seq_token_logprobs),
         seed_ids=tuple(seed_ids), word_mask=_word_token_mask() if use_word_mask else None)
 
 
