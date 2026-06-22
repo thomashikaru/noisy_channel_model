@@ -312,7 +312,7 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         max_dist=2, Ke=12, J=8, cwin=1, prime=PRIME, lm_logprobs_fn=None, use_word_mask=False,
         rejuv="off", rejuv_lookback=3, rejuv_Ke=8, rejuv_stats=None, trace=None, dedup=False,
         lm_temp=1.0, ins_rate=0.02, uniform_ins=False, action_alpha=None, channel=None,
-        align_slope=None):
+        align_slope=None, bd_bridge_j=0, bd_pool_cap=None):
     """Channel-aware RB-SMC on Pythia via the shared filter. Returns (state, log_w, logZ, seed_len).
 
     ``channel`` picks the noise model: ``"word_action"`` (the deployment model -- per-word 4-way Dirichlet
@@ -378,7 +378,7 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
     else:                                                # frequency-aware: log(rate) - unigram_surprisal,
         WINS = jnp.array([math.log(ins_rate) - unigram_surprisal(w)  # so rare words are dear to drop
                           for w in obs_words], jnp.float32)
-    if rejuv == "gibbs":
+    if rejuv in ("gibbs", "gibbs+bd"):    # gibbs+bd also runs the embedded sub-sweep, which needs the KV pre-warm
         Wmax = len(obs_words) + slack
         # The rejuvenation pool is now built INSIDE pairhmm_smc.run from the shared candidate inventory
         # (so its surface ids match the augmented emit_full; R4 multi-token). Here we only pre-build the
@@ -393,7 +393,8 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
                            band=band, max_dist=max_dist, Ke=Ke, J=J, cwin=cwin,
                            proposal="caprop", rejuv=rejuv, rejuv_pool=None,
                            rejuv_lookback=rejuv_lookback, rejuv_stats=rejuv_stats, trace=trace,
-                           rejuv_dedup=dedup, lm_temp=lm_temp, action_alpha=action_alpha, channel=channel)
+                           rejuv_dedup=dedup, lm_temp=lm_temp, action_alpha=action_alpha, channel=channel,
+                           bd_bridge_j=bd_bridge_j, bd_pool_cap=bd_pool_cap)
 
 
 def decode(state, log_w, skip=1, key=jax.random.PRNGKey(0), top=3):

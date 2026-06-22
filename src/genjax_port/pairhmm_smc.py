@@ -462,7 +462,7 @@ def _action_counts_align(word_surf, word_len, M):
 def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), slack=3, band=None,
         max_dist=2, Ke=6, J=4, cwin=1, proposal="caprop", enable_indel=True,
         rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False,
-        lm_temp=1.0, action_alpha=None, channel=None, bd_min_done=0.0):
+        lm_temp=1.0, action_alpha=None, channel=None, bd_min_done=0.0, bd_bridge_j=0, bd_pool_cap=None):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
@@ -637,7 +637,9 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
             rejuv_stats.update(P=P, Kt=rj_pool[0].shape[1] + 1, max_tail=mt_tokens,
                                filter_lm_calls=0, sweep_prefills=0, sweep_tail_steps=0, uniq_frac=[],
                                dedup_rows_in=0, dedup_rows_computed=0)
-        if rejuv == "gibbs+bd":           # birth/death pass: pool = observed surfaces (rj_pool col 0)
+        if rejuv == "gibbs+bd":           # birth/death pass
+            # Pool, part 1: the observed COPY surfaces (rj_pool col 0). These cover the duplicate-removal
+            # wins (a doubled observed word is in-pool -> deletable) and are always valid re-inserts.
             pt, pl, ps = (np.asarray(x) for x in rj_pool)            # (Wmax,Ke,T),(Wmax,Ke),(Wmax,Ke)
             seen, ct, cl_, cs = set(), [], [], []
             for i in range(M):                                       # candidate column 0 is the COPY surface
@@ -645,6 +647,42 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                 if sid < 0 or sid in seen:
                     continue
                 seen.add(sid); ct.append(pt[i, 0]); cl_.append(int(pl[i, 0])); cs.append(sid)
+            # Pool, part 2 (Phase 2.5): LM-bridge candidates -- the SAME top-J the forward filter's caprop
+            # uses (``_caprop_scores``: ``top_k(lm_word, J)``, "fluency/deletion bridges"), but precomputed
+            # STATICALLY over the observed-sentence prefixes (one LM forward, host-side, before the loop).
+            # Without these a birth can only re-insert an OBSERVED word, so it cannot restore a dropped word
+            # (e.g. "of") that is not a surface in the input -- the gate-5 DEL-of regression. ``bd_bridge_j``
+            # is the per-gap top-J (0 = disabled = observed-only, bit-identical to the pre-2.5 pool); the
+            # union is deduped against the observed surfaces + ranked by LM logprob + capped at ``bd_pool_cap``
+            # (the move's ``_ins_logq`` is O(Kc) score_fn calls, so the cap bounds the cost). Needs token
+            # spans (Pythia); the toy (obs_spans=None) skips it -> bd stays bit-identical there.
+            if bd_bridge_j > 0 and all(s is not None for s in obs_spans):
+                prefixes, cum = [], list(seed_ids)
+                prefixes.append(list(cum))                           # gap 0 (before the first word)
+                for g in range(M):
+                    cum = cum + [int(t) for t in obs_spans[g]]
+                    prefixes.append(list(cum))                       # gap g+1 (after observed word g)
+                Lp = max(len(p) for p in prefixes)
+                bufs = np.full((len(prefixes), Lp), eos_id, np.int32)
+                ilens = np.zeros(len(prefixes), np.int32)
+                for r, p in enumerate(prefixes):
+                    bufs[r, :len(p)] = p; ilens[r] = len(p)
+                blp = np.asarray(model.lm_fn(jnp.asarray(bufs), jnp.asarray(ilens)))   # (M+1, vocab)
+                blp = blp[:, :Vc].copy()                             # single-token emission vocab only
+                blp[:, eos_id] = -np.inf                             # EOS is handled separately by the move
+                bridge_best = {}                                     # tid -> best LM logprob across gaps
+                for r in range(blp.shape[0]):
+                    for tid in np.argpartition(blp[r], -bd_bridge_j)[-bd_bridge_j:]:
+                        tid = int(tid)
+                        if tid in seen or not np.isfinite(blp[r, tid]):
+                            continue
+                        bridge_best[tid] = max(bridge_best.get(tid, -np.inf), float(blp[r, tid]))
+                ranked = sorted(bridge_best.items(), key=lambda kv: -kv[1])
+                if bd_pool_cap is not None:
+                    ranked = ranked[:max(0, bd_pool_cap - len(cs))]
+                for tid, _v in ranked:
+                    row = np.full((T_max,), -1, np.int32); row[0] = tid
+                    ct.append(row); cl_.append(1); cs.append(tid); seen.add(tid)
             # Phase 2: near-conditional q_del concentrates each move on the most-improving removal, so ONE
             # targeted move per resample event (not 2 random ones) -- also halves the O(Wmax^2) scoring cost.
             bd_sweep = RJ.make_bd_sweep(rj_ctx, jnp.asarray(np.array(ct), jnp.int32),
