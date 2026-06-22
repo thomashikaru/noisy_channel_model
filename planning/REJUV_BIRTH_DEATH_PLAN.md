@@ -211,17 +211,26 @@ forward (`qf`) AND reverse (`qb`) densities and feed them in — it now certifie
 (err <1e-6) and is the regression guard for Step 2's informed densities. Gates: birth/death 6/6 + full suite
 38/38 (off/gibbs bit-identical). **Resume at Step 2.**
 
-**Step 2 — informed proposals:**
-- `q_del` **near-conditional**: for each deletable position `w`, score `π(y with w removed)` (reuse
-  `_make_bd_score_fn`; ~`n_words` scores) and set `q_del(w) ∝ softmax`. Concentrates deaths on the
-  removable duplicate. Its reverse (birth re-inserting the removed word) needs `q_ins` — see below.
-- `q_ins` **informed**: broaden the pool from observed-surfaces to the **forward-filter inventory + LM
-  bridges** (`_rejuv_pool_from_inventory` is the same candidate set, so births can restore words not
-  literally in the input); pick the gap/word by scoring candidate insertions and softmax-sampling.
-- Both directions' densities must be exactly the ones fed to the generalized weight (Step 1).
+**Step 2 — informed proposals. ✅ CORE DONE (2026-06-22).**
+- `q_del` **near-conditional** (`_del_logq`): score `π(y with w removed)` for each deletable position
+  (~`n_words` `score_fn` calls via `lax.map`), `q_del(w) ∝ softmax`. Concentrates deaths on the removable
+  duplicate. Its reverse density (a death at y') is `_del_logq` re-evaluated at y', indexed at the inserted slot.
+- `q_ins` **near-conditional WORD** (`_ins_logq`): gap stays uniform, but the inserted word `x ∝ softmax` over
+  the pool of `π(y + x @ gap)`. Balancing q_ins against q_del is the variance lever — informed births stop
+  proposing easy-to-undo spurious words (the Phase-1 uniform asymmetry was the logZ-depressing source). Pool is
+  still observed-surfaces; broadening to the full `_rejuv_pool_from_inventory` + LM bridges is a later refinement.
+- Both directions' ACTUAL densities are fed to the Step-1 weight; certified by the rewritten exact
+  invariance test `test_rj_weight_invariance_informed` (both informed, err <1e-6). `n_attempts=1` (one
+  targeted move/event). Gates: birth/death 7/7 + full suite 39/39 (off/gibbs bit-identical).
+- **Toy gate-3 result** (`the cat cat sat`, `P=3000`, `planning/bd_toy_gate.py`): deduped `the cat sat` mass
+  **off 0.412 / gibbs 0.428 / gibbs+bd 0.468** (PASS, ≥ gibbs); duplicate `the cat cat sat` **0.178 / 0.169 /
+  0.122** (driven down — the behavioral win). logZ depression vs `gibbs` went **1.3 (Phase-1 uniform) → 0.72
+  (informed q_del) → 0.56 (both informed)**: improved but NOT fully closed. The residual is the inherent
+  variance of a ½/½ trans-dim move applied at EVERY resample event to already-converged done particles → Step 3.
 
-**Step 3 — tune aggression:** try `n_attempts=1`, and/or run birth/death only near terminal (e.g. when the
-post-substitution-sweep ESS is high) instead of every resample. Measure ESS vs `gibbs`.
+**Step 3 — tune aggression:** the residual logZ variance is from over-applying the move. Try running
+birth/death only near terminal / once per particle (not every resample event), and/or informed direction.
+Measure ESS vs `gibbs`. (`n_attempts=1` already set.)
 
 **Gates (in order):** (1) generalized `_bd_log_weight` passes the updated exact RJ-invariance test;
 (2) certified `off`/`gibbs` still bit-identical; (3) toy `the cat cat sat` — `gibbs+bd` deduped-reading mass

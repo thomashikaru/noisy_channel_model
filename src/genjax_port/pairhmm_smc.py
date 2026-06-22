@@ -637,7 +637,7 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
             rejuv_stats.update(P=P, Kt=rj_pool[0].shape[1] + 1, max_tail=mt_tokens,
                                filter_lm_calls=0, sweep_prefills=0, sweep_tail_steps=0, uniq_frac=[],
                                dedup_rows_in=0, dedup_rows_computed=0)
-        if rejuv == "gibbs+bd":           # Phase 1 birth/death pass: pool = observed surfaces (rj_pool col 0)
+        if rejuv == "gibbs+bd":           # birth/death pass: pool = observed surfaces (rj_pool col 0)
             pt, pl, ps = (np.asarray(x) for x in rj_pool)            # (Wmax,Ke,T),(Wmax,Ke),(Wmax,Ke)
             seen, ct, cl_, cs = set(), [], [], []
             for i in range(M):                                       # candidate column 0 is the COPY surface
@@ -645,9 +645,11 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                 if sid < 0 or sid in seen:
                     continue
                 seen.add(sid); ct.append(pt[i, 0]); cl_.append(int(pl[i, 0])); cs.append(sid)
+            # Phase 2: near-conditional q_del concentrates each move on the most-improving removal, so ONE
+            # targeted move per resample event (not 2 random ones) -- also halves the O(Wmax^2) scoring cost.
             bd_sweep = RJ.make_bd_sweep(rj_ctx, jnp.asarray(np.array(ct), jnp.int32),
                                         jnp.asarray(np.array(cl_), jnp.int32),
-                                        jnp.asarray(np.array(cs), jnp.int32), n_attempts=2)
+                                        jnp.asarray(np.array(cs), jnp.int32), n_attempts=1)
 
     word_mask = model.word_mask
     def _assemble(n_words, log_alpha, lmlog, mt_chain, lp_copy, lp_sub, wdel_p, wins_p):

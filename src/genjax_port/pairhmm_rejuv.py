@@ -714,15 +714,18 @@ def _involve(word_tok, word_len, word_surf, n_words, d_birth, w, x_tok, x_len, x
 # ``birth_death_move`` performs one involutive add/remove-a-word move per particle and RETURNS the
 # trans-dimensional SMCP3 weight to fold into ``log_w`` before resampling (the move ALWAYS applies --
 # no accept/reject; the weight does the correction, exactly as the substitution sweep folds ``move_logw``).
-# Phase-1 proposals are UNIFORM (cheap): direction p=1/2 forced at the boundaries, gap κ=1/(#gaps), word
-# q_ins=1/Kc over a fixed candidate pool, q_del=1/D over deletable positions. A word is "deletable" iff
-# its surface is in the pool -- so the pool is exactly the set of words a birth can create, which is what
-# makes every death reversible (its reverse birth has positive density). ``score_fn`` is injected (the
-# toy test passes a synthetic target; production passes an LM+channel closure). As of Phase 2 the weight
-# ``_bd_log_weight`` is PROPOSAL-AGNOSTIC -- ``birth_death_move`` computes the actual forward/reverse proposal
-# log-densities (uniform for now; informed later) and feeds them in -- so the RISKY part (densities + weight)
-# is certified END-TO-END by the exact transition-sum invariance test (tests/test_rejuv_birth_death.py),
-# independent of any scoring; informed proposals reuse the same test with their densities.
+# Proposals are NEAR-CONDITIONAL (Phase 2), both directions: a DEATH samples its position from q_del(w) ∝
+# softmax over deletable positions of logπ(y \ word w) (``_del_logq``), concentrating on the removable
+# duplicate; a BIRTH keeps the gap uniform but samples its word from q_ins(x) ∝ softmax over the pool of
+# logπ(y + x @ gap) (``_ins_logq``). Balancing q_ins against q_del is what keeps the trans-dim weight
+# low-variance -- informed births stop proposing easy-to-undo spurious words (the Phase-1 uniform asymmetry
+# was the logZ-depressing variance source). A word is "deletable" iff its surface is in the pool -- so the
+# pool is exactly the set of words a birth can create, which makes every death reversible (its reverse birth
+# has positive density). ``score_fn`` is injected (the toy test passes a synthetic target; production passes
+# an LM+channel closure). The weight ``_bd_log_weight`` is PROPOSAL-AGNOSTIC -- ``birth_death_move`` computes
+# the ACTUAL forward/reverse densities (q_del/q_ins at y for the chosen move, and re-evaluated at y' for the
+# reverse) and feeds them in -- so the RISKY part (densities + weight) is certified END-TO-END by the exact
+# transition-sum invariance tests (tests/test_rejuv_birth_death.py), independent of any scoring.
 # ==================================================================================================
 def _in_pool(word_surf, cand_surf):
     """(P, Wmax) bool: is each slot's surface one of the ``cand_surf`` (Kc,) pool surfaces?"""
@@ -750,6 +753,53 @@ def _bd_log_weight(logp_y, logp_yp, log_qfwd, log_qbwd):
     return (logp_yp - logp_y) + log_qbwd - log_qfwd
 
 
+def _del_logq(score_fn, word_tok, word_len, word_surf, n_words, done, cand_surf):
+    """(P, Wmax) NEAR-CONDITIONAL deletion log-distribution (Phase 2): for each position ``w``, the log-softmax
+    -- over the DELETABLE positions of that particle (active and surface-in-pool) -- of ``logπ(y with word w
+    removed)``. Non-deletable positions are masked to ``−inf`` (≈ zero probability); a particle with no
+    deletable position gets an all-``−inf`` (→ NaN after log_softmax) row, which is harmless because its death
+    branch is never selected and birth-reverse only ever indexes the inserted (always-deletable) slot.
+
+    Scores the ``Wmax`` candidate removals with the injected ``score_fn`` via ``lax.map`` (sequential over
+    positions -> O(Wmax) score_fn calls, gentle on memory; each score_fn is itself ~O(Wmax) LM steps, so this
+    is the O(Wmax^2) cost the Phase-2/3 suffix-tail KV sharing will cut). The malformed states produced by
+    "removing" a pad position are scored too but masked out, so any NaN/inf there never reaches the softmax."""
+    P, Wmax, T = word_tok.shape
+
+    def score_remove_at(i):
+        wcol = jnp.full((P,), i, jnp.int32)
+        (dt, dl, ds, dnw), _ = _delete_word(word_tok, word_len, word_surf, n_words, wcol)
+        return score_fn(dt, dl, ds, dnw, done)                       # (P,) logπ(y \ word i)
+
+    scores = jax.lax.map(score_remove_at, jnp.arange(Wmax)).T         # (P, Wmax)
+    deletable = (jnp.arange(Wmax)[None, :] < n_words[:, None]) & _in_pool(word_surf, cand_surf)
+    logits = jnp.where(deletable, scores, -jnp.inf)                  # mask drops any garbage/NaN at pad slots
+    return jax.nn.log_softmax(logits, axis=1)
+
+
+def _ins_logq(score_fn, word_tok, word_len, word_surf, n_words, done, cand_tok, cand_len, cand_surf, gap):
+    """(P, Kc) NEAR-CONDITIONAL insertion-word log-distribution at a GIVEN per-particle ``gap [P]``: for each
+    pool candidate ``c``, the log-softmax over the WHOLE pool of ``logπ(y with candidate c inserted at gap)``.
+    The pool is the full candidate set (every entry insertable), so the row is always finite and normalized.
+    This is the birth's WORD proposal q_ins(·|gap, y); re-evaluated at y' with gap = w_d it is the reverse
+    density of a death (the birth that re-inserts the removed word). Balancing q_ins against q_del is what
+    keeps the trans-dim weight low-variance: informed births stop proposing easy-to-undo spurious words.
+    Scores Kc insertions via score_fn (lax.map over the pool). Full particles (no headroom) get garbage rows
+    that the caller discards (their birth branch is never selected)."""
+    P = word_tok.shape[0]
+    Kc = cand_surf.shape[0]
+
+    def score_ins(c):
+        it, il, is_, inw = _insert_word(word_tok, word_len, word_surf, n_words, gap,
+                                        jnp.broadcast_to(cand_tok[c], (P,) + cand_tok.shape[1:]),
+                                        jnp.broadcast_to(cand_len[c], (P,)),
+                                        jnp.broadcast_to(cand_surf[c], (P,)))
+        return score_fn(it, il, is_, inw, done)                      # (P,) logπ(y + cand c @ gap)
+
+    scores = jax.lax.map(score_ins, jnp.arange(Kc)).T                # (P, Kc)
+    return jax.nn.log_softmax(scores, axis=1)
+
+
 def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
                      score_fn, cand_tok, cand_len, cand_surf):
     """One SMCP3-weighted birth/death involution move per particle (plan §1-2). ``score_fn(word_tok,
@@ -759,6 +809,7 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
     fold ``move_logw`` into ``log_w`` before the next resample."""
     P, Wmax, T = word_tok.shape
     Kc = cand_surf.shape[0]
+    parange = jnp.arange(P)
     kdir, kbpos, kbword, kdpos = jax.random.split(key, 4)
 
     D_y = _deletable_count(word_len, word_surf, cand_surf)
@@ -769,17 +820,22 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
     p_birth = jnp.where(both, 0.5, jnp.where(feas_birth, 1.0, 0.0))          # 0 if only death feasible
     d_birth = jax.random.bernoulli(kdir, p_birth) & (~none)
 
-    # birth proposal: gap w_b ~ U{0..n}; word ~ U(pool)
+    # birth proposal: gap w_b ~ U{0..n}; word x ~ q_ins, the NEAR-CONDITIONAL softmax over the pool at w_b
+    # (_ins_logq). Informed word choice is what balances q_ins against q_del so the trans-dim weight stays
+    # low-variance. ``ins_logq_y`` re-evaluated at y'/w_d below is also the reverse density of a death.
     nf = n_words.astype(jnp.float32)
     w_b = jnp.clip(jnp.floor(jax.random.uniform(kbpos, (P,)) * (nf + 1.0)).astype(jnp.int32), 0, n_words)
-    ci = jax.random.randint(kbword, (P,), 0, Kc)
+    ins_logq_y = _ins_logq(score_fn, word_tok, word_len, word_surf, n_words, done,
+                           cand_tok, cand_len, cand_surf, w_b)              # (P, Kc)
+    ci = jax.random.categorical(kbword, ins_logq_y)
     bstate = _insert_word(word_tok, word_len, word_surf, n_words, w_b,
                           cand_tok[ci], cand_len[ci], cand_surf[ci])
 
-    # death proposal: position w_d ~ U(deletable positions)
-    deletable = (jnp.arange(Wmax)[None, :] < n_words[:, None]) & _in_pool(word_surf, cand_surf)
-    del_logits = jnp.where(feas_death[:, None], jnp.where(deletable, 0.0, -jnp.inf), 0.0)  # avoid all-(-inf)
-    w_d = jax.random.categorical(kdpos, del_logits)
+    # death proposal: position w_d ~ q_del, the NEAR-CONDITIONAL softmax over deletable positions (_del_logq).
+    # The same distribution re-evaluated at y' is the reverse density of a birth (computed below).
+    del_logq_y = _del_logq(score_fn, word_tok, word_len, word_surf, n_words, done, cand_surf)
+    cat_logits = jnp.where(feas_death[:, None], del_logq_y, 0.0)     # D=0 rows -> uniform (sampled, discarded)
+    w_d = jax.random.categorical(kdpos, cat_logits)
     dstate, _aux = _delete_word(word_tok, word_len, word_surf, n_words, w_d)
 
     # select branch; no-op particles (neither feasible) keep their state
@@ -795,13 +851,20 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
     D_yp = _deletable_count(new_len, new_surf, cand_surf)
 
     # Forward/reverse proposal log-densities for the SELECTED move, fed to the proposal-agnostic weight
-    # (_bd_log_weight). Phase-1 uniform: a birth's density is direction·gap·word = p_dir·(1/(n+1))·(1/Kc);
-    # a death's is direction·position = p_dir·(1/D). The REVERSE of a birth is a death at y' (1/D_yp over the
-    # n+1 deletable slots); the reverse of a death is a birth at y' (gap 1/(n'+1)=1/n, word 1/Kc). Phase-2
-    # informed proposals replace ONLY the gap/word/position terms here -- the weight formula is unchanged.
-    lKc = jnp.log(jnp.float32(Kc))
-    nf, nnwf = n_words.astype(jnp.float32), new_nw.astype(jnp.float32)
-    D_yf, D_ypf = D_y.astype(jnp.float32), D_yp.astype(jnp.float32)
+    # (_bd_log_weight). A birth = direction · gap(uniform 1/(n+1)) · q_ins(near-conditional word); a death =
+    # direction · q_del(near-conditional position). The REVERSE of a birth is a death at y' -- its density is
+    # q_del RE-EVALUATED at y' (``del_logq_yp``) at the inserted slot w_b; the reverse of a death is a birth at
+    # y' re-inserting the removed word at gap w_d -- density gap(1/(n'+1)) · q_ins RE-EVALUATED at y'/w_d.
+    nnwf = new_nw.astype(jnp.float32)
+    qdel_fwd = del_logq_y[parange, w_d]                                            # death fwd: log q_del(w_d|y)
+    qins_fwd = ins_logq_y[parange, ci]                                             # birth fwd: log q_ins(x|w_b,y)
+    del_logq_yp = _del_logq(score_fn, new_tok, new_len, new_surf, new_nw, done, cand_surf)
+    qdel_rev = del_logq_yp[parange, w_b]                                           # birth rev: log q_del(w_b|y')
+    ins_logq_yp = _ins_logq(score_fn, new_tok, new_len, new_surf, new_nw, done,
+                            cand_tok, cand_len, cand_surf, w_d)                     # q_ins at y', gap = w_d
+    rem_surf = word_surf[parange, w_d]                                             # surface the death removed
+    rem_ci = jnp.argmax(cand_surf[None, :] == rem_surf[:, None], axis=1)           # its pool index (in-pool)
+    qins_rev = ins_logq_yp[parange, rem_ci]                                        # death rev: log q_ins(rem|w_d,y')
     # direction probabilities: p_dir_fwd = prob this direction was sampled at y; p_dir_rev = prob the move's
     # own direction rule picks the REVERSE direction at y'. Recompute the rule at y' (feasibility there).
     p_dir_fwd = jnp.where(d_birth, p_birth, 1.0 - p_birth)
@@ -810,8 +873,8 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
     p_birth_yp = jnp.where(both_yp, 0.5, jnp.where(fb_yp, 1.0, 0.0))
     p_death_yp = jnp.where(both_yp, 0.5, jnp.where(fd_yp, 1.0, 0.0))
     p_dir_rev = jnp.where(d_birth, p_death_yp, p_birth_yp)        # undo a birth = death; undo a death = birth
-    log_qfwd = jnp.log(p_dir_fwd) + jnp.where(d_birth, -jnp.log(nf + 1.0) - lKc, -jnp.log(D_yf))
-    log_qbwd = jnp.log(p_dir_rev) + jnp.where(d_birth, -jnp.log(D_ypf), -jnp.log(nnwf + 1.0) - lKc)
+    log_qfwd = jnp.log(p_dir_fwd) + jnp.where(d_birth, -jnp.log(nf + 1.0) + qins_fwd, qdel_fwd)
+    log_qbwd = jnp.log(p_dir_rev) + jnp.where(d_birth, qdel_rev, -jnp.log(nnwf + 1.0) + qins_rev)
     W = _bd_log_weight(logp_y, logp_yp, log_qfwd, log_qbwd)
     move_logw = jnp.where(none, 0.0, W)
     return (new_tok, new_len, new_surf, new_nw), move_logw

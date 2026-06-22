@@ -184,6 +184,29 @@ def _dir_probs(n):
     return (1.0, 0.0) if fb else (0.0, 1.0)
 
 
+def _del_softmax(seq):
+    """(len(seq),) NEAR-CONDITIONAL deletion distribution over positions of ``seq`` -- the exact reference for
+    ``pairhmm_rejuv._del_logq`` under the full-vocab pool (every position deletable): q_del(w) ∝ exp(logπ(seq
+    with position w removed)). Empty for a 0-length sequence (no death possible)."""
+    n = len(seq)
+    if n == 0:
+        return np.array([])
+    sc = np.array([_synth_logpi(seq[:w] + seq[w + 1:]) for w in range(n)])
+    e = np.exp(sc - sc.max())
+    return e / e.sum()
+
+
+def _ins_softmax(seq, gap):
+    """{surface: prob} NEAR-CONDITIONAL insertion-word distribution at ``gap`` -- the exact reference for
+    ``pairhmm_rejuv._ins_logq`` under the full pool (every vocab word insertable): q_ins(x) ∝ exp(logπ(seq
+    with x inserted at gap))."""
+    sc = {x: _synth_logpi(seq[:gap] + (x,) + seq[gap:]) for x in _BD_V}
+    m = max(sc.values())
+    e = {x: np.exp(v - m) for x, v in sc.items()}
+    z = sum(e.values())
+    return {x: e[x] / z for x in _BD_V}
+
+
 def test_rj_weight_invariance_exact():
     """Exact transition-sum: Σ_y π(y) q_fwd(y'|y) exp(W) == π(y') for every y'. Certifies the proposal-agnostic
     _bd_log_weight together with the uniform forward (``qf``) and reverse (``qb``) densities fed to it: a birth's
@@ -217,6 +240,47 @@ def test_rj_weight_invariance_exact():
     np.add.at(mass, dst, pi[src] * np.array(qf) * np.exp(W))
     err = np.max(np.abs(mass - pi))
     assert err < 1e-6, f"RJ invariance violated: max|mass - pi| = {err:.2e}"
+
+
+def test_rj_weight_invariance_informed():
+    """Same exact transition-sum invariance with the PHASE-2 informed proposals the move actually uses, BOTH
+    directions: a death's position ~ q_del (softmax of the removal target, ``_del_softmax``) and a birth's word
+    ~ q_ins (softmax of the insertion target, ``_ins_softmax``), gap uniform. So a death's forward density is
+    dir·q_del(w|y) and its reverse is a birth at y' (dir·gap·q_ins(removed|w,y')); a birth's forward is
+    dir·gap·q_ins(x|w,y) and its reverse a death at y' (dir·q_del(w|y')). Certifies that ``birth_death_move``
+    feeds the proposal-agnostic ``_bd_log_weight`` consistent forward/reverse densities under the informed
+    proposals -- the exact case the live move runs (score_fn = LM+channel instead of the synthetic target)."""
+    seqs, idx, logp, pi = _enumerate()
+    src, dst, qf, qb = [], [], [], []
+    for i, y in enumerate(seqs):
+        n = len(y)
+        pb, pd = _dir_probs(n)
+        if n < _BD_WMAX:                                     # births: informed word fwd; reverse death at y'
+            _pbp, pdp = _dir_probs(n + 1)
+            for w in range(n + 1):
+                ism = _ins_softmax(y, w)
+                for x in _BD_V:
+                    yp = y[:w] + (x,) + y[w:]
+                    src.append(i); dst.append(idx[yp])
+                    qf.append(pb * (1.0 / (n + 1)) * ism[x])             # fwd birth: dir·gap·q_ins(x|w,y)
+                    qb.append(pdp * _del_softmax(yp)[w])                 # rev death at y': dir·q_del(w|y')
+        if n > 0:                                            # deaths: informed fwd; reverse birth at y' informed
+            pbp, _pdp = _dir_probs(n - 1)
+            dsm = _del_softmax(y)
+            for w in range(n):
+                yp = y[:w] + y[w + 1:]
+                ism_yp = _ins_softmax(yp, w)                          # reverse birth re-inserts removed @ gap w
+                src.append(i); dst.append(idx[yp])
+                qf.append(pd * dsm[w])                               # fwd death: dir·q_del(w|y)
+                qb.append(pbp * (1.0 / n) * ism_yp[y[w]])           # rev birth at y': dir·gap·q_ins(rem|w,y')
+    src, dst = np.array(src), np.array(dst)
+    W = np.asarray(_bd_log_weight(
+        jnp.asarray(logp[src]), jnp.asarray(logp[dst]),
+        jnp.asarray(np.log(qf)), jnp.asarray(np.log(qb))))
+    mass = np.zeros(len(seqs))
+    np.add.at(mass, dst, pi[src] * np.array(qf) * np.exp(W))
+    err = np.max(np.abs(mass - pi))
+    assert err < 1e-6, f"informed RJ invariance violated: max|mass - pi| = {err:.2e}"
 
 
 def test_birth_death_move_smoke():
@@ -266,8 +330,9 @@ def main():
     test_involution_self_inverse()
     test_boundary_append_and_remove_last()
     test_rj_weight_invariance_exact()
+    test_rj_weight_invariance_informed()
     test_birth_death_move_smoke()
-    print("birth/death Phase-0 + Phase-1 gates: 6/6 PASS")
+    print("birth/death Phase-0 + Phase-1 + Phase-2 gates: 7/7 PASS")
 
 
 if __name__ == "__main__":
