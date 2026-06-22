@@ -201,12 +201,15 @@ and forward-pass restorations don't regress. Phase 1 proved the move correct; Ph
   `pairhmm_smc.py`'s `rejuv=="gibbs+bd"` build block). `_make_bd_score_fn` (the target) is **done — proven
   exact**, reuse it as-is.
 
-**Step 1 — generalize the weight (do this first).** Replace `_bd_log_weight`'s internal uniform terms with a
-proposal-agnostic form: have `birth_death_move` compute, for the chosen move, `log q_fwd` (= `log p_dir +
-log κ + log q_ins` for a birth; `log p_dir + log q_del` for a death) and the **reverse** `log q_bwd` (the
-density of the move that undoes it from `y'`), then `W = (logπ(y') − logπ(y)) + log q_bwd − log q_fwd`. The
-current uniform formula is the special case. Update the EXACT invariance test
-(`test_rj_weight_invariance_exact`) to the new proposal densities — it's the regression guard for this refactor.
+**Step 1 — generalize the weight (do this first). ✅ DONE (2026-06-22).** `_bd_log_weight` is now the
+proposal-agnostic `W = (logπ(y') − logπ(y)) + log q_bwd − log q_fwd` (a 4-arg pure ratio); `birth_death_move`
+computes, for the chosen move, `log q_fwd` (= `log p_dir + log κ + log q_ins` for a birth; `log p_dir +
+log q_del` for a death) and the **reverse** `log q_bwd` (density of the move that undoes it from `y'`,
+recomputing the direction rule at `y'`). The old uniform formula is now the explicit special case computed in
+the move (proven bit-identical term-by-term). `test_rj_weight_invariance_exact` was rewritten to build the
+forward (`qf`) AND reverse (`qb`) densities and feed them in — it now certifies densities + weight END-TO-END
+(err <1e-6) and is the regression guard for Step 2's informed densities. Gates: birth/death 6/6 + full suite
+38/38 (off/gibbs bit-identical). **Resume at Step 2.**
 
 **Step 2 — informed proposals:**
 - `q_del` **near-conditional**: for each deletable position `w`, score `π(y with w removed)` (reuse

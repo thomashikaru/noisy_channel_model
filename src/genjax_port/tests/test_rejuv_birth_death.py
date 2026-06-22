@@ -146,8 +146,10 @@ def test_boundary_append_and_remove_last():
 # Taking g = indicator of each sentence, this is  Σ_y π(y) q_fwd(y'|y) exp(W) = π(y')  for every y'. We
 # verify it deterministically by enumerating EVERY (y, move) transition over a small synthetic target,
 # closing the move on lengths {0..Wmax} (Wmax small so births at Wmax are infeasible -> no escape).
-# Pool = full vocab, so every word is deletable (D = length); proposals are uniform. This isolates and
-# certifies the weight algebra ``_bd_log_weight`` -- the part the involution's correctness hinges on.
+# Pool = full vocab, so every word is deletable (D = length); proposals are uniform. We build the explicit
+# forward density ``qf`` and reverse density ``qb`` for each transition and feed them to the now
+# proposal-AGNOSTIC ``_bd_log_weight`` -- so this certifies the densities + weight END-TO-END (the part the
+# involution's correctness hinges on), and the same harness recertifies any future informed proposals.
 # ==================================================================================================
 _BD_WMAX, _BD_V = 3, (1, 2, 3, 4, 5)            # sentence-length cap; vocab of surfaces (avoid 0 = pad tok)
 _BD_KC = len(_BD_V)
@@ -183,30 +185,34 @@ def _dir_probs(n):
 
 
 def test_rj_weight_invariance_exact():
-    """Exact transition-sum: Σ_y π(y) q_fwd(y'|y) exp(W) == π(y') for every y'. Certifies _bd_log_weight."""
+    """Exact transition-sum: Σ_y π(y) q_fwd(y'|y) exp(W) == π(y') for every y'. Certifies the proposal-agnostic
+    _bd_log_weight together with the uniform forward (``qf``) and reverse (``qb``) densities fed to it: a birth's
+    forward density is direction·gap·word, its reverse is a death at y'; a death's forward is direction·position,
+    its reverse a birth at y'. Full-vocab pool ⇒ D = length, so every reverse move has positive density."""
     seqs, idx, logp, pi = _enumerate()
-    src, dst, dbirth, n_src, qf = [], [], [], [], []
+    src, dst, qf, qb = [], [], [], []
     for i, y in enumerate(seqs):
         n = len(y)
         pb, pd = _dir_probs(n)
         if n < _BD_WMAX:                                     # births: gap w in 0..n, word x in vocab
+            _pbp, pdp = _dir_probs(n + 1)                    # direction rule at y' (n+1 words)
             for w in range(n + 1):
                 for x in _BD_V:
                     yp = y[:w] + (x,) + y[w:]
-                    src.append(i); dst.append(idx[yp]); dbirth.append(True); n_src.append(n)
-                    qf.append(pb * (1.0 / (n + 1)) * (1.0 / _BD_KC))
+                    src.append(i); dst.append(idx[yp])
+                    qf.append(pb * (1.0 / (n + 1)) * (1.0 / _BD_KC))     # fwd birth: dir·gap·word
+                    qb.append(pdp * (1.0 / (n + 1)))                     # rev death at y' (D_yp = n+1)
         if n > 0:                                            # deaths: position w in 0..n-1 (all deletable)
+            pbp, _pdp = _dir_probs(n - 1)                    # direction rule at y' (n-1 words)
             for w in range(n):
                 yp = y[:w] + y[w + 1:]
-                src.append(i); dst.append(idx[yp]); dbirth.append(False); n_src.append(n)
-                qf.append(pd * (1.0 / n))
+                src.append(i); dst.append(idx[yp])
+                qf.append(pd * (1.0 / n))                             # fwd death: dir·position (D_y = n)
+                qb.append(pbp * (1.0 / n) * (1.0 / _BD_KC))          # rev birth at y' (gaps = n, words = Kc)
     src, dst = np.array(src), np.array(dst)
-    n_src = np.array(n_src)
-    D_y = n_src                                              # full-vocab pool: deletable count == length
-    D_yp = np.array([len(seqs[d]) for d in dst])             # result length == its deletable count
     W = np.asarray(_bd_log_weight(
-        jnp.asarray(logp[src]), jnp.asarray(logp[dst]), jnp.asarray(np.array(dbirth)),
-        jnp.asarray(n_src), jnp.asarray(D_y), jnp.asarray(D_yp), _BD_WMAX, _BD_KC))
+        jnp.asarray(logp[src]), jnp.asarray(logp[dst]),
+        jnp.asarray(np.log(qf)), jnp.asarray(np.log(qb))))
     mass = np.zeros(len(seqs))
     np.add.at(mass, dst, pi[src] * np.array(qf) * np.exp(W))
     err = np.max(np.abs(mass - pi))

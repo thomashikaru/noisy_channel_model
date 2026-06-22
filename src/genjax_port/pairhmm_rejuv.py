@@ -718,9 +718,11 @@ def _involve(word_tok, word_len, word_surf, n_words, d_birth, w, x_tok, x_len, x
 # q_ins=1/Kc over a fixed candidate pool, q_del=1/D over deletable positions. A word is "deletable" iff
 # its surface is in the pool -- so the pool is exactly the set of words a birth can create, which is what
 # makes every death reversible (its reverse birth has positive density). ``score_fn`` is injected (the
-# toy test passes a synthetic target; production passes an LM+channel closure), so the RISKY part -- the
-# weight algebra ``_bd_log_weight`` -- is a PURE function certified by an exact transition-sum invariance
-# test (tests/test_rejuv_birth_death.py), independent of any scoring.
+# toy test passes a synthetic target; production passes an LM+channel closure). As of Phase 2 the weight
+# ``_bd_log_weight`` is PROPOSAL-AGNOSTIC -- ``birth_death_move`` computes the actual forward/reverse proposal
+# log-densities (uniform for now; informed later) and feeds them in -- so the RISKY part (densities + weight)
+# is certified END-TO-END by the exact transition-sum invariance test (tests/test_rejuv_birth_death.py),
+# independent of any scoring; informed proposals reuse the same test with their densities.
 # ==================================================================================================
 def _in_pool(word_surf, cand_surf):
     """(P, Wmax) bool: is each slot's surface one of the ``cand_surf`` (Kc,) pool surfaces?"""
@@ -732,30 +734,20 @@ def _deletable_count(word_len, word_surf, cand_surf):
     return jnp.sum((word_len > 0) & _in_pool(word_surf, cand_surf), axis=1)
 
 
-def _bd_log_weight(logp_y, logp_yp, d_birth, n, D_y, D_yp, Wmax, Kc):
-    """Trans-dim reversible-jump / SMCP3 log-weight for one birth/death move (plan §2), vectorized over P,
-    Jacobian 1 (discrete). Uniform proposals: direction 1/2 (forced at boundaries), gap κ=1/(#gaps),
-    q_ins=1/Kc, q_del=1/D. Scalars from y and the chosen y': ``n`` = #words of y, ``D_y`` = #deletable
-    positions of y, ``D_yp`` = #deletable positions of the RESULT y' (matching the selected direction).
+def _bd_log_weight(logp_y, logp_yp, log_qfwd, log_qbwd):
+    """Trans-dim reversible-jump / SMCP3 log-weight for one birth/death move (plan §2), Jacobian 1 (discrete),
+    **proposal-agnostic**: the caller supplies the actual forward proposal log-density ``log_qfwd`` (the density
+    of the move that produced y' from y) and the reverse log-density ``log_qbwd`` (the move that undoes it from
+    y'). The involutive-MCMC weight is then just
 
-      birth:  W = [logπ(y')−logπ(y)] + log p_death(y') − log D_yp − log p_birth(y) + log(n+1) + log Kc
-      death:  W = [logπ(y')−logπ(y)] + log p_birth(y') − log n   − log Kc       − log p_death(y) + log D_y
+        W = [logπ(y') − logπ(y)] + log_qbwd − log_qfwd.
 
-    Only the SELECTED branch is used per particle; the other may be ±inf (e.g. a birth at n=0 makes the
-    death formula's ``log n`` = −inf) but ``jnp.where`` discards it. The selected branch is always finite:
-    a birth inserts a pool word so D_yp≥1; a death needs D_y≥1 hence n≥1."""
-    n, D_y, D_yp = n.astype(jnp.float32), D_y.astype(jnp.float32), D_yp.astype(jnp.float32)
-    lKc = jnp.log(jnp.float32(Kc))
-    dratio = logp_yp - logp_y
-    # birth (y -> y' with n+1 words); death is always feasible in y' (the inserted pool word is deletable)
-    pby = jnp.where(D_y > 0, 0.5, 1.0)                       # p_birth(y): both feasible -> 1/2; only birth -> 1
-    pd_yp = jnp.where((n + 1.0) < Wmax, 0.5, 1.0)            # p_death(y'): both -> 1/2; only death (full) -> 1
-    W_birth = dratio + jnp.log(pd_yp) - jnp.log(D_yp) - jnp.log(pby) + jnp.log(n + 1.0) + lKc
-    # death (y -> y' with n-1 words); birth is always feasible in y' (it just lost a word, so n-1 < Wmax)
-    pdy = jnp.where(n < Wmax, 0.5, 1.0)                      # p_death(y): both -> 1/2; only death (full) -> 1
-    pb_yp = jnp.where(D_yp > 0, 0.5, 1.0)                    # p_birth(y'): both -> 1/2; only birth -> 1
-    W_death = dratio + jnp.log(pb_yp) - jnp.log(n) - lKc - jnp.log(pdy) + jnp.log(D_y)
-    return jnp.where(d_birth, W_birth, W_death)
+    Phase-1's uniform proposals (direction·gap·word for a birth, direction·position for a death) are the special
+    case where the caller passes the uniform densities; Phase-2 informed proposals only change those two scalars
+    in :func:`birth_death_move`, never this formula. Vectorized over P; only the SELECTED move's densities enter
+    per particle (the caller zeroes no-op particles). The selected branch's reverse density is always positive
+    (a birth leaves a deletable pool word; a death leaves births feasible), so ``W`` is finite there."""
+    return (logp_yp - logp_y) + log_qbwd - log_qfwd
 
 
 def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
@@ -801,7 +793,26 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
     logp_y = score_fn(word_tok, word_len, word_surf, n_words, done)
     logp_yp = score_fn(new_tok, new_len, new_surf, new_nw, done)
     D_yp = _deletable_count(new_len, new_surf, cand_surf)
-    W = _bd_log_weight(logp_y, logp_yp, d_birth, n_words, D_y, D_yp, Wmax, Kc)
+
+    # Forward/reverse proposal log-densities for the SELECTED move, fed to the proposal-agnostic weight
+    # (_bd_log_weight). Phase-1 uniform: a birth's density is direction·gap·word = p_dir·(1/(n+1))·(1/Kc);
+    # a death's is direction·position = p_dir·(1/D). The REVERSE of a birth is a death at y' (1/D_yp over the
+    # n+1 deletable slots); the reverse of a death is a birth at y' (gap 1/(n'+1)=1/n, word 1/Kc). Phase-2
+    # informed proposals replace ONLY the gap/word/position terms here -- the weight formula is unchanged.
+    lKc = jnp.log(jnp.float32(Kc))
+    nf, nnwf = n_words.astype(jnp.float32), new_nw.astype(jnp.float32)
+    D_yf, D_ypf = D_y.astype(jnp.float32), D_yp.astype(jnp.float32)
+    # direction probabilities: p_dir_fwd = prob this direction was sampled at y; p_dir_rev = prob the move's
+    # own direction rule picks the REVERSE direction at y'. Recompute the rule at y' (feasibility there).
+    p_dir_fwd = jnp.where(d_birth, p_birth, 1.0 - p_birth)
+    fb_yp, fd_yp = new_nw < Wmax, D_yp > 0
+    both_yp = fb_yp & fd_yp
+    p_birth_yp = jnp.where(both_yp, 0.5, jnp.where(fb_yp, 1.0, 0.0))
+    p_death_yp = jnp.where(both_yp, 0.5, jnp.where(fd_yp, 1.0, 0.0))
+    p_dir_rev = jnp.where(d_birth, p_death_yp, p_birth_yp)        # undo a birth = death; undo a death = birth
+    log_qfwd = jnp.log(p_dir_fwd) + jnp.where(d_birth, -jnp.log(nf + 1.0) - lKc, -jnp.log(D_yf))
+    log_qbwd = jnp.log(p_dir_rev) + jnp.where(d_birth, -jnp.log(D_ypf), -jnp.log(nnwf + 1.0) - lKc)
+    W = _bd_log_weight(logp_y, logp_yp, log_qfwd, log_qbwd)
     move_logw = jnp.where(none, 0.0, W)
     return (new_tok, new_len, new_surf, new_nw), move_logw
 
