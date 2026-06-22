@@ -16,11 +16,15 @@ Run as a script:  python -m genjax_port.tests.test_rejuv_birth_death
 Run as a test:    pytest src/genjax_port/tests/test_rejuv_birth_death.py
 """
 
+import itertools
+
 import numpy as np
+import jax
 import jax.numpy as jnp
 
 from genjax_port.pairhmm_rejuv import (
     _PAD_SURF, _insert_word, _delete_word, _involve,
+    _bd_log_weight, birth_death_move,
 )
 
 # --------------------------------------------------------------------------------------------------
@@ -134,12 +138,130 @@ def test_boundary_append_and_remove_last():
     assert _eq(rx_tok, x_tok)
 
 
+# ==================================================================================================
+# Phase-1 weight gate: the reversible-jump invariance identity, checked EXACTLY (no Monte Carlo).
+#
+# For a properly weighted SMCP3/RJ move, starting from y ~ π and proposing y' ~ q_fwd with weight
+# w = exp(W), the move leaves π invariant:  Σ_y π(y) Σ_{y'} q_fwd(y'|y) w(y->y') g(y')  =  E_π[g]  for all g.
+# Taking g = indicator of each sentence, this is  Σ_y π(y) q_fwd(y'|y) exp(W) = π(y')  for every y'. We
+# verify it deterministically by enumerating EVERY (y, move) transition over a small synthetic target,
+# closing the move on lengths {0..Wmax} (Wmax small so births at Wmax are infeasible -> no escape).
+# Pool = full vocab, so every word is deletable (D = length); proposals are uniform. This isolates and
+# certifies the weight algebra ``_bd_log_weight`` -- the part the involution's correctness hinges on.
+# ==================================================================================================
+_BD_WMAX, _BD_V = 3, (1, 2, 3, 4, 5)            # sentence-length cap; vocab of surfaces (avoid 0 = pad tok)
+_BD_KC = len(_BD_V)
+_ALPHA = {1: 0.3, 2: -0.5, 3: 0.1, 4: -0.2, 5: 0.4}
+_BETA = -0.7                                      # per-word length term
+
+
+def _synth_logpi(seq):
+    """Arbitrary black-box target over a sentence (tuple of surfaces): per-word weights + a length term +
+    an adjacency bonus for repeats (so the target couples neighbours, exercising the score difference)."""
+    lp = _BETA * len(seq) + sum(_ALPHA[s] for s in seq)
+    lp += 0.2 * sum(1.0 for a, b in zip(seq, seq[1:]) if a == b)
+    return lp
+
+
+def _enumerate():
+    seqs = []
+    for n in range(_BD_WMAX + 1):
+        seqs.extend(itertools.product(_BD_V, repeat=n))
+    idx = {s: i for i, s in enumerate(seqs)}
+    logp = np.array([_synth_logpi(s) for s in seqs])
+    pi = np.exp(logp - logp.max())
+    pi /= pi.sum()
+    return seqs, idx, logp, pi
+
+
+def _dir_probs(n):
+    """(p_birth, p_death) the move uses at a length-n sentence with full-vocab pool (D = n)."""
+    fb, fd = n < _BD_WMAX, n > 0
+    if fb and fd:
+        return 0.5, 0.5
+    return (1.0, 0.0) if fb else (0.0, 1.0)
+
+
+def test_rj_weight_invariance_exact():
+    """Exact transition-sum: Σ_y π(y) q_fwd(y'|y) exp(W) == π(y') for every y'. Certifies _bd_log_weight."""
+    seqs, idx, logp, pi = _enumerate()
+    src, dst, dbirth, n_src, qf = [], [], [], [], []
+    for i, y in enumerate(seqs):
+        n = len(y)
+        pb, pd = _dir_probs(n)
+        if n < _BD_WMAX:                                     # births: gap w in 0..n, word x in vocab
+            for w in range(n + 1):
+                for x in _BD_V:
+                    yp = y[:w] + (x,) + y[w:]
+                    src.append(i); dst.append(idx[yp]); dbirth.append(True); n_src.append(n)
+                    qf.append(pb * (1.0 / (n + 1)) * (1.0 / _BD_KC))
+        if n > 0:                                            # deaths: position w in 0..n-1 (all deletable)
+            for w in range(n):
+                yp = y[:w] + y[w + 1:]
+                src.append(i); dst.append(idx[yp]); dbirth.append(False); n_src.append(n)
+                qf.append(pd * (1.0 / n))
+    src, dst = np.array(src), np.array(dst)
+    n_src = np.array(n_src)
+    D_y = n_src                                              # full-vocab pool: deletable count == length
+    D_yp = np.array([len(seqs[d]) for d in dst])             # result length == its deletable count
+    W = np.asarray(_bd_log_weight(
+        jnp.asarray(logp[src]), jnp.asarray(logp[dst]), jnp.asarray(np.array(dbirth)),
+        jnp.asarray(n_src), jnp.asarray(D_y), jnp.asarray(D_yp), _BD_WMAX, _BD_KC))
+    mass = np.zeros(len(seqs))
+    np.add.at(mass, dst, pi[src] * np.array(qf) * np.exp(W))
+    err = np.max(np.abs(mass - pi))
+    assert err < 1e-6, f"RJ invariance violated: max|mass - pi| = {err:.2e}"
+
+
+def test_birth_death_move_smoke():
+    """End-to-end: birth_death_move runs over a mixed batch with an injected synthetic score_fn, returns
+    canonical states, valid n_words in [0, Wmax], finite weights, and actually moves some particles."""
+    Wmax = _BD_WMAX
+    alpha_vec = np.zeros(max(_BD_V) + 1, np.float32)
+    for s, a in _ALPHA.items():
+        alpha_vec[s] = a
+    alpha_vec = jnp.asarray(alpha_vec)
+
+    def score_fn(word_tok, word_len, word_surf, n_words, done):
+        active = word_len > 0
+        surf = jnp.clip(word_surf, 0, alpha_vec.shape[0] - 1)
+        per = jnp.where(active, alpha_vec[surf], 0.0)
+        return jnp.sum(per, axis=1) + _BETA * n_words.astype(jnp.float32)
+
+    words = [[1, 2], [3], [], [4, 5, 1]]                     # incl. empty (birth-only) and full (death-only)
+    P = len(words)
+    word_tok = np.zeros((P, Wmax, T), np.int32)
+    word_len = np.zeros((P, Wmax), np.int32)
+    word_surf = np.full((P, Wmax), _PAD_SURF, np.int32)
+    n_words = np.zeros((P,), np.int32)
+    for p, ws in enumerate(words):
+        n_words[p] = len(ws)
+        for i, s in enumerate(ws):
+            word_tok[p, i, 0] = s; word_len[p, i] = 1; word_surf[p, i] = s
+    state = tuple(jnp.asarray(a) for a in (word_tok, word_len, word_surf, n_words))
+    cand_surf = jnp.asarray(_BD_V, jnp.int32)
+    cand_tok = cand_surf[:, None].astype(jnp.int32)
+    cand_len = jnp.ones((_BD_KC,), jnp.int32)
+    done = jnp.ones((P,), bool)
+
+    (nt, nl, ns, nnw), mlw = birth_death_move(
+        jax.random.PRNGKey(0), *state, done, score_fn, cand_tok, cand_len, cand_surf)
+    _assert_canonical_pad(nt, nl, ns, nnw)
+    nnw_np = np.asarray(nnw)
+    assert np.all((nnw_np >= 0) & (nnw_np <= Wmax)), "n_words out of range"
+    assert nnw_np[2] == 1, "empty sentence must birth (n: 0 -> 1)"
+    assert nnw_np[3] == 2, "full sentence must die (n: 3 -> 2)"
+    assert np.all(np.isfinite(np.asarray(mlw))), "non-finite move weight"
+
+
 def main():
     test_insert_delete_roundtrip()
     test_delete_insert_roundtrip()
     test_involution_self_inverse()
     test_boundary_append_and_remove_last()
-    print("birth/death involution Phase-0 gates: 4/4 PASS")
+    test_rj_weight_invariance_exact()
+    test_birth_death_move_smoke()
+    print("birth/death Phase-0 + Phase-1 gates: 6/6 PASS")
 
 
 if __name__ == "__main__":

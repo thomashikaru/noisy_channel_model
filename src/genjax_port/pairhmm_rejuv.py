@@ -706,3 +706,101 @@ def _involve(word_tok, word_len, word_surf, n_words, d_birth, w, x_tok, x_len, x
     out_x_len = jnp.where(d_birth, x_len, rx_len)
     out_x_surf = jnp.where(d_birth, x_surf, rx_surf)
     return out_tok, out_len, out_surf, out_nw, ~d_birth, w, out_x_tok, out_x_len, out_x_surf
+
+
+# ==================================================================================================
+# Birth/death move + reversible-jump weight -- REJUV_BIRTH_DEATH_PLAN.md Phase 1.
+#
+# ``birth_death_move`` performs one involutive add/remove-a-word move per particle and RETURNS the
+# trans-dimensional SMCP3 weight to fold into ``log_w`` before resampling (the move ALWAYS applies --
+# no accept/reject; the weight does the correction, exactly as the substitution sweep folds ``move_logw``).
+# Phase-1 proposals are UNIFORM (cheap): direction p=1/2 forced at the boundaries, gap κ=1/(#gaps), word
+# q_ins=1/Kc over a fixed candidate pool, q_del=1/D over deletable positions. A word is "deletable" iff
+# its surface is in the pool -- so the pool is exactly the set of words a birth can create, which is what
+# makes every death reversible (its reverse birth has positive density). ``score_fn`` is injected (the
+# toy test passes a synthetic target; production passes an LM+channel closure), so the RISKY part -- the
+# weight algebra ``_bd_log_weight`` -- is a PURE function certified by an exact transition-sum invariance
+# test (tests/test_rejuv_birth_death.py), independent of any scoring.
+# ==================================================================================================
+def _in_pool(word_surf, cand_surf):
+    """(P, Wmax) bool: is each slot's surface one of the ``cand_surf`` (Kc,) pool surfaces?"""
+    return jnp.any(word_surf[:, :, None] == cand_surf[None, None, :], axis=2)
+
+
+def _deletable_count(word_len, word_surf, cand_surf):
+    """(P,) number of ACTIVE slots whose surface is in the pool -- the death proposal's support size D."""
+    return jnp.sum((word_len > 0) & _in_pool(word_surf, cand_surf), axis=1)
+
+
+def _bd_log_weight(logp_y, logp_yp, d_birth, n, D_y, D_yp, Wmax, Kc):
+    """Trans-dim reversible-jump / SMCP3 log-weight for one birth/death move (plan §2), vectorized over P,
+    Jacobian 1 (discrete). Uniform proposals: direction 1/2 (forced at boundaries), gap κ=1/(#gaps),
+    q_ins=1/Kc, q_del=1/D. Scalars from y and the chosen y': ``n`` = #words of y, ``D_y`` = #deletable
+    positions of y, ``D_yp`` = #deletable positions of the RESULT y' (matching the selected direction).
+
+      birth:  W = [logπ(y')−logπ(y)] + log p_death(y') − log D_yp − log p_birth(y) + log(n+1) + log Kc
+      death:  W = [logπ(y')−logπ(y)] + log p_birth(y') − log n   − log Kc       − log p_death(y) + log D_y
+
+    Only the SELECTED branch is used per particle; the other may be ±inf (e.g. a birth at n=0 makes the
+    death formula's ``log n`` = −inf) but ``jnp.where`` discards it. The selected branch is always finite:
+    a birth inserts a pool word so D_yp≥1; a death needs D_y≥1 hence n≥1."""
+    n, D_y, D_yp = n.astype(jnp.float32), D_y.astype(jnp.float32), D_yp.astype(jnp.float32)
+    lKc = jnp.log(jnp.float32(Kc))
+    dratio = logp_yp - logp_y
+    # birth (y -> y' with n+1 words); death is always feasible in y' (the inserted pool word is deletable)
+    pby = jnp.where(D_y > 0, 0.5, 1.0)                       # p_birth(y): both feasible -> 1/2; only birth -> 1
+    pd_yp = jnp.where((n + 1.0) < Wmax, 0.5, 1.0)            # p_death(y'): both -> 1/2; only death (full) -> 1
+    W_birth = dratio + jnp.log(pd_yp) - jnp.log(D_yp) - jnp.log(pby) + jnp.log(n + 1.0) + lKc
+    # death (y -> y' with n-1 words); birth is always feasible in y' (it just lost a word, so n-1 < Wmax)
+    pdy = jnp.where(n < Wmax, 0.5, 1.0)                      # p_death(y): both -> 1/2; only death (full) -> 1
+    pb_yp = jnp.where(D_yp > 0, 0.5, 1.0)                    # p_birth(y'): both -> 1/2; only birth -> 1
+    W_death = dratio + jnp.log(pb_yp) - jnp.log(n) - lKc - jnp.log(pdy) + jnp.log(D_y)
+    return jnp.where(d_birth, W_birth, W_death)
+
+
+def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
+                     score_fn, cand_tok, cand_len, cand_surf):
+    """One SMCP3-weighted birth/death involution move per particle (plan §1-2). ``score_fn(word_tok,
+    word_len, word_surf, n_words, done) -> logπ [P]`` is the injected target (lm_temp*LM + channel).
+    ``cand_*`` is the fixed candidate pool: ``cand_tok [Kc, T]`` / ``cand_len [Kc]`` / ``cand_surf [Kc]``.
+    Returns ``((word_tok', word_len', word_surf', n_words'), move_logw [P])`` -- the move always applies;
+    fold ``move_logw`` into ``log_w`` before the next resample."""
+    P, Wmax, T = word_tok.shape
+    Kc = cand_surf.shape[0]
+    kdir, kbpos, kbword, kdpos = jax.random.split(key, 4)
+
+    D_y = _deletable_count(word_len, word_surf, cand_surf)
+    feas_birth = n_words < Wmax
+    feas_death = D_y > 0
+    both = feas_birth & feas_death
+    none = (~feas_birth) & (~feas_death)
+    p_birth = jnp.where(both, 0.5, jnp.where(feas_birth, 1.0, 0.0))          # 0 if only death feasible
+    d_birth = jax.random.bernoulli(kdir, p_birth) & (~none)
+
+    # birth proposal: gap w_b ~ U{0..n}; word ~ U(pool)
+    nf = n_words.astype(jnp.float32)
+    w_b = jnp.clip(jnp.floor(jax.random.uniform(kbpos, (P,)) * (nf + 1.0)).astype(jnp.int32), 0, n_words)
+    ci = jax.random.randint(kbword, (P,), 0, Kc)
+    bstate = _insert_word(word_tok, word_len, word_surf, n_words, w_b,
+                          cand_tok[ci], cand_len[ci], cand_surf[ci])
+
+    # death proposal: position w_d ~ U(deletable positions)
+    deletable = (jnp.arange(Wmax)[None, :] < n_words[:, None]) & _in_pool(word_surf, cand_surf)
+    del_logits = jnp.where(feas_death[:, None], jnp.where(deletable, 0.0, -jnp.inf), 0.0)  # avoid all-(-inf)
+    w_d = jax.random.categorical(kdpos, del_logits)
+    dstate, _aux = _delete_word(word_tok, word_len, word_surf, n_words, w_d)
+
+    # select branch; no-op particles (neither feasible) keep their state
+    sel, sel3 = d_birth[:, None], d_birth[:, None, None]
+    keep, keep2, keep3 = none, none[:, None], none[:, None, None]
+    new_tok = jnp.where(keep3, word_tok, jnp.where(sel3, bstate[0], dstate[0]))
+    new_len = jnp.where(keep2, word_len, jnp.where(sel, bstate[1], dstate[1]))
+    new_surf = jnp.where(keep2, word_surf, jnp.where(sel, bstate[2], dstate[2]))
+    new_nw = jnp.where(keep, n_words, jnp.where(d_birth, bstate[3], dstate[3]))
+
+    logp_y = score_fn(word_tok, word_len, word_surf, n_words, done)
+    logp_yp = score_fn(new_tok, new_len, new_surf, new_nw, done)
+    D_yp = _deletable_count(new_len, new_surf, cand_surf)
+    W = _bd_log_weight(logp_y, logp_yp, d_birth, n_words, D_y, D_yp, Wmax, Kc)
+    move_logw = jnp.where(none, 0.0, W)
+    return (new_tok, new_len, new_surf, new_nw), move_logw
