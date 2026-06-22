@@ -462,7 +462,7 @@ def _action_counts_align(word_surf, word_len, M):
 def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), slack=3, band=None,
         max_dist=2, Ke=6, J=4, cwin=1, proposal="caprop", enable_indel=True,
         rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False,
-        lm_temp=1.0, action_alpha=None, channel=None):
+        lm_temp=1.0, action_alpha=None, channel=None, bd_min_done=0.0):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
@@ -778,8 +778,12 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                     # sweep can RESTORE a dropped word, then the conjugate refresh re-estimates theta on the
                     # corrected parse (theta now reflects the data: clean context -> high p_copy).
                     rejuv_info["theta_mean"] = [round(float(x), 3) for x in jnp.mean(theta, axis=0)]
-                if bd_sweep is not None:     # Phase 1 birth/death: add/remove a word on DONE particles, then
-                    #                          fold the trans-dim SMCP3 weight into log_w (plan §4)
+                # birth/death (plan §4): add/remove a word on DONE particles, fold the trans-dim SMCP3 weight
+                # into log_w. Step 3 (aggression): each application carries REAL weight (≠ the Gibbs sub-sweep's
+                # ≈0), so firing it at every resample event over-applies the move to already-converged particles
+                # and inflates logZ variance. ``bd_min_done`` gates it to NEAR-TERMINAL events -- run only once a
+                # fraction ≥ bd_min_done of particles are complete (0.0 = every event, the original behavior).
+                if bd_sweep is not None and float(jnp.mean(done.astype(jnp.float32))) >= bd_min_done:
                     ctx_buf, ctx_len, n_words, word_len, word_surf, _, done = state
                     bd_theta = (lp_copy, lp_sub, wdel_p, wins_p, a0p, copy_mask) if ON else None
                     key, sub = jax.random.split(key)

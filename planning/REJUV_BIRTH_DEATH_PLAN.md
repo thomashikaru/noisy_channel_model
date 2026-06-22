@@ -238,9 +238,25 @@ forward (`qf`) AND reverse (`qb`) densities and feed them in — it now certifie
   move) — the strongest motivation for Step 3. Cost: ~18s gibbs vs ~124s gibbs+bd (the O(Wmax²) un-jitted
   scoring). Full INS-01 (9 words, Wmax≈12) not yet run — slow; do it after Step 3 cuts aggression/cost.
 
-**Step 3 — tune aggression:** the residual logZ variance is from over-applying the move. Try running
-birth/death only near terminal / once per particle (not every resample event), and/or informed direction.
-Measure ESS vs `gibbs`. (`n_attempts=1` already set.)
+**Step 3 — tune aggression. ✅ INVESTIGATED (2026-06-22) — near-terminal gating BACKFIRES.** Added the
+tunable `bd_min_done` (`pairhmm_smc.run`; fire bd only once a fraction ≥ bd_min_done of particles are done;
+0.0 = every event = original). Toy `the cat cat sat` (`planning/bd_toy_step3.py`):
+
+| config | logZ | dedup `the cat sat` | dup `the cat cat sat` |
+|---|---|---|---|
+| gibbs (baseline) | −9.43 | 0.428 | 0.169 |
+| gibbs+bd `min_done=0.0` (every event) | −9.99 | **0.468** | **0.122** |
+| gibbs+bd `min_done=0.5` / `0.9` | −9.65 | 0.336 | 0.293 |
+
+Gating to near-terminal cuts the logZ depression (0.56→0.22) but **destroys the behavioral win** — dedup
+drops BELOW the gibbs baseline and the duplicate mass rises. The interleaved **resampling between bd events
+is load-bearing**: it amplifies good deaths and discards the junk births the ½ direction-coin makes; fire bd
+only at the end and that cleanup is gone. ⇒ The logZ depression is the COUPLED COST of the mechanism that
+makes the move help, NOT removable by firing less. **Keep `bd_min_done=0.0` (every event).** The real
+remaining variance lever is BETTER PROPOSALS — chiefly an INFORMED DIRECTION (don't fire junk births at
+converged particles; the weight already supports arbitrary p_dir via p_dir_fwd/p_dir_rev, so this is a clean
+extension) — but it adds the reverse-direction-prob bookkeeping and risks bias, so defer unless gate 5
+(no-regression) shows the variance actually HURTS other sentences.
 
 **Gates (in order):** (1) generalized `_bd_log_weight` passes the updated exact RJ-invariance test;
 (2) certified `off`/`gibbs` still bit-identical; (3) toy `the cat cat sat` — `gibbs+bd` deduped-reading mass
