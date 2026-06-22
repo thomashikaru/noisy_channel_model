@@ -48,7 +48,7 @@ TRANSP_LP = SUB_LP
 # (p_copy / p_sub), NOT in the character DP. So the demoted pair-HMM scores only the *form* of a
 # substitution (which neighbour / how far) with the copy reward REMOVED: matched chars are free
 # (COPY_LP=0) and an edited char pays the pure 'which of 26 letters' sharpness SUB_FORM_LP = log(1/26)
-# (a transposition is determined -> free form). Option (a) of the plan (sec 2): the per-intended-word
+# (a transposition is ONE Damerau edit and pays SUB_FORM_LP too -- NOT free). Option (a) of the plan (sec 2): the per-intended-word
 # form partition folds into the calibrated p_sub, so the form table need not be surface-normalized.
 # SUB_FORM_LP was settled by the prior search (calibration_word_action_prior_search.py): it is
 # uncalibratable from the battery (most sub-edits are distance-1 / transpositions) so it is fixed by
@@ -168,23 +168,28 @@ def channel_logpdf(observed_ids, intended_ids, n_x):
 def channel_form_logpdf(observed_ids, intended_ids, n_x):
     """The base-rate-DECOUPLED FORM channel (word-action redesign, plan sec 2 option a): COPY_LP=0
     (matched chars free -- the copy reward is removed; the base rate lives in p_copy now), and each
-    edited char pays only the form sharpness SUB_FORM_LP (a transposition is determined -> free). The
-    returned score is the pure edit-op form cost ``SUB_FORM_LP^(sub+indel)`` summed over alignments;
-    the per-word action cost (log p_copy / log p_sub) is added separately on the emission column."""
-    return _channel_dp(observed_ids, intended_ids, n_x, 0.0, SUB_FORM_LP, SUB_FORM_LP, SUB_FORM_LP, 0.0)
+    edited char pays only the form sharpness SUB_FORM_LP. A transposition is ONE Damerau edit, so it
+    costs SUB_FORM_LP too (== one substitution; matching the bundled char channel's TRANSP_LP=SUB_LP and
+    the calibrated operating point theta_tr = theta_sub). It is NOT free: a free transposition would make
+    co-anagram word pairs (cat/act, form/from, calm/clam) channel-indistinguishable on form. The returned
+    score is the pure edit-op form cost ``SUB_FORM_LP^(sub+indel+transp)`` summed over alignments; the
+    per-word action cost (log p_copy / log p_sub) is added separately on the emission column."""
+    return _channel_dp(observed_ids, intended_ids, n_x, 0.0, SUB_FORM_LP, SUB_FORM_LP, SUB_FORM_LP,
+                       SUB_FORM_LP)
 
 
 def align_form_logpdf(slope):
     """Factory for the ALIGN channel's FORM table (plan ALIGN_ACTION_CHANNEL_PLAN sec 1/3): like
     :func:`channel_form_logpdf` but with the per-edit cost set to the SWEEPABLE slope ``K = slope``
-    (matched chars still free, COPY_LP=0; a transposition still determined -> free) instead of the
-    hardcoded SUB_FORM_LP. The emission is then a smooth function of (case-insensitive) edit distance,
-    ``K * d``, with no copy/sub jump -- the single over-editing knob K decoupled from the action prior.
-    At ``slope == SUB_FORM_LP`` it is byte-identical to ``channel_form_logpdf``, so the default align
-    form reuses the calibrated word-action form table. ``slope`` is a python float (Phase-4 sweepable)."""
+    (matched chars still free, COPY_LP=0) instead of the hardcoded SUB_FORM_LP. A transposition is ONE
+    Damerau edit, so it pays the slope K too (== one substitution, NOT free -- see channel_form_logpdf).
+    The emission is then a smooth function of (case-insensitive) edit distance, ``K * d``, with no
+    copy/sub jump -- the single over-editing knob K decoupled from the action prior. At
+    ``slope == SUB_FORM_LP`` it is byte-identical to ``channel_form_logpdf``, so the default align form
+    reuses the calibrated word-action form table. ``slope`` is a python float (Phase-4 sweepable)."""
     slope = jnp.float32(slope)
     def _f(observed_ids, intended_ids, n_x):
-        return _channel_dp(observed_ids, intended_ids, n_x, 0.0, slope, slope, slope, 0.0)
+        return _channel_dp(observed_ids, intended_ids, n_x, 0.0, slope, slope, slope, slope)
     return _f
 
 

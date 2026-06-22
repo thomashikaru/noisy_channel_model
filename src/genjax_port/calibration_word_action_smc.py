@@ -39,6 +39,9 @@ from genjax_port.pythia_word_caprop import _norm, ACTION_ALPHA_DEFAULT, ALIGN_AL
 # overrides the concentration (length-3 'align,ins,del' for align, length-4 for word_action).
 CHANNEL = os.environ.get("NC_CHANNEL", "word_action")
 ALIGN_SLOPE = float(os.environ["NC_ALIGN_SLOPE"]) if os.environ.get("NC_ALIGN_SLOPE") else None
+# Action-latent names for the theta print, per channel: align is the 3-way (align,ins,del); word_action
+# is the 4-way (copy,sub,ins,del). (Hardcoding 'c,s,i,d' mislabeled the 3-vector printed for align.)
+THETA_LABEL = "align,ins,del" if CHANNEL == "align" else "c,s,i,d"
 
 # Default to the 70m gate for 70m sweeps (item membership / observed / intended are identical to the
 # 410m variant -- only the gate columns differ). NC_CSV overrides (e.g. the 410m gate for a 410m run).
@@ -127,7 +130,7 @@ def main():
         m = META[iid]
         exp = m["expected"]
         tag = "q_smc" if exp == "edit" else "kept"
-        th = f"  theta(c,s,i,d)={theta}" if theta else ""
+        th = f"  theta({THETA_LABEL})={theta}" if theta else ""
         print(f"{iid:12s} {exp:5s} {metric:6.2f} {QREF.get(iid, float('nan')):6.2f}  "
               f"{lit:4.2f} {cor:4.2f} {junk:4.2f}  '{m['observed']}' -> '{m['intended']}'  "
               f"({tag}; {time.time()-t:.0f}s){th}", flush=True)
