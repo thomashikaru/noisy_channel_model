@@ -227,6 +227,16 @@ forward (`qf`) AND reverse (`qb`) densities and feed them in — it now certifie
   0.122** (driven down — the behavioral win). logZ depression vs `gibbs` went **1.3 (Phase-1 uniform) → 0.72
   (informed q_del) → 0.56 (both informed)**: improved but NOT fully closed. The residual is the inherent
   variance of a ½/½ trans-dim move applied at EVERY resample event to already-converged done particles → Step 3.
+- **NaN guard (live bugfix).** The live band-limited align channel can make a proposed/source parse impossible
+  (logπ = −inf), so the target ratio is −inf−(−inf) = NaN, which poisons logZ + every softmax. Fix in
+  `birth_death_move`: `W = where(isnan(W) | (W==+inf), −inf, W)` — degenerate moves get −inf weight (discarded
+  by resampling); finite weights and clean −inf rejections pass through. Toy (`band=None`) is bit-identical.
+- **Live gate-4 result** (`planning/bd_live_gate.py`, pythia-70m, align channel). Warmup `the the dog ran`
+  (`P=64`): `gibbs` keeps `The the dog ran` (0.891, top1=miss); `gibbs+bd` → **`The dog ran` (0.685, top1=HIT)**
+  — duplicate REMOVED (the behavioral goal the substitution-only sweep cannot reach). logZ −39.6 (gibbs) →
+  −43.6 (gibbs+bd): **~4-nat depression, much larger than the toy's 0.56** (band-limited channel ⇒ noisier
+  move) — the strongest motivation for Step 3. Cost: ~18s gibbs vs ~124s gibbs+bd (the O(Wmax²) un-jitted
+  scoring). Full INS-01 (9 words, Wmax≈12) not yet run — slow; do it after Step 3 cuts aggression/cost.
 
 **Step 3 — tune aggression:** the residual logZ variance is from over-applying the move. Try running
 birth/death only near terminal / once per particle (not every resample event), and/or informed direction.

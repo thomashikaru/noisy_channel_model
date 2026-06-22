@@ -876,6 +876,12 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
     log_qfwd = jnp.log(p_dir_fwd) + jnp.where(d_birth, -jnp.log(nf + 1.0) + qins_fwd, qdel_fwd)
     log_qbwd = jnp.log(p_dir_rev) + jnp.where(d_birth, qdel_rev, -jnp.log(nnwf + 1.0) + qins_rev)
     W = _bd_log_weight(logp_y, logp_yp, log_qfwd, log_qbwd)
+    # A band-limited channel can make a proposed (or source) parse impossible (logπ = −inf); then the target
+    # ratio is −inf−(−inf) = NaN, and a single NaN poisons logZ and every downstream softmax. Such a move is
+    # degenerate -> send its weight to −inf so resampling discards that particle. Clean −inf rejections (a
+    # finite source moved to an impossible y') and all finite weights pass through unchanged; the toy
+    # (band=None) never triggers this, so its results are bit-identical.
+    W = jnp.where(jnp.isnan(W) | (W == jnp.inf), -jnp.inf, W)
     move_logw = jnp.where(none, 0.0, W)
     return (new_tok, new_len, new_surf, new_nw), move_logw
 
