@@ -106,6 +106,18 @@ ACTION_ALPHA_DEFAULT = (200.0, 1.0, 1.0, 1.0)
 ALIGN_ALPHA_DEFAULT = (200.0, 2.0, 2.0)
 ALIGN_SLOPE = -4.5   # K: per-edit substitution log-cost in the align FORM table (python float, sweepable)
 
+# Closed-class function words the indel rejuv move (bd_mode="gibbs") may always insert, so a dropped
+# function word is restorable even when it is not a local top-J LM bridge (see pairhmm_smc pool part 3).
+# Single-token (leading-space) only; the channel treats an inserted intended word as a deletion event.
+FUNCWORDS = ("the", "a", "an", "of", "to", "for", "from", "in", "on", "at", "by", "with", "and", "that", "as")
+def _funcword_ids():
+    ids = []
+    for w in FUNCWORDS:
+        enc = tokenizer.encode(" " + w)
+        if len(enc) == 1:
+            ids.append(int(enc[0]))
+    return ids
+
 
 def _char_ids(s):
     s = s.strip().lower()
@@ -318,7 +330,8 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         max_dist=2, Ke=12, J=8, cwin=1, prime=PRIME, lm_logprobs_fn=None, use_word_mask=False,
         rejuv="off", rejuv_lookback=3, rejuv_Ke=8, rejuv_stats=None, trace=None, dedup=False,
         lm_temp=1.0, ins_rate=0.02, uniform_ins=False, action_alpha=None, channel=None,
-        align_slope=None, bd_bridge_j=0, bd_pool_cap=None, bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1):
+        align_slope=None, bd_bridge_j=0, bd_pool_cap=None, bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1,
+        bd_funcwords=True):
     """Channel-aware RB-SMC on Pythia via the shared filter. Returns (state, log_w, logZ, seed_len).
 
     ``channel`` picks the noise model: ``"word_action"`` (the deployment model -- per-word 4-way Dirichlet
@@ -401,7 +414,8 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
                            rejuv_lookback=rejuv_lookback, rejuv_stats=rejuv_stats, trace=trace,
                            rejuv_dedup=dedup, lm_temp=lm_temp, action_alpha=action_alpha, channel=channel,
                            bd_bridge_j=bd_bridge_j, bd_pool_cap=bd_pool_cap, bd_p_stay=bd_p_stay,
-                           bd_mode=bd_mode, bd_attempts=bd_attempts)
+                           bd_mode=bd_mode, bd_attempts=bd_attempts,
+                           bd_funcword_ids=_funcword_ids() if bd_funcwords else None)
 
 
 def decode(state, log_w, skip=1, key=jax.random.PRNGKey(0), top=3):

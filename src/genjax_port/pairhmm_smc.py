@@ -469,7 +469,7 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
         max_dist=2, Ke=6, J=4, cwin=1, proposal="caprop", enable_indel=True,
         rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False,
         lm_temp=1.0, action_alpha=None, channel=None, bd_min_done=0.0, bd_bridge_j=0, bd_pool_cap=None,
-        bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1):
+        bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1, bd_funcword_ids=None):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
@@ -688,6 +688,22 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                 if bd_pool_cap is not None:
                     ranked = ranked[:max(0, bd_pool_cap - len(cs))]
                 for tid, _v in ranked:
+                    row = np.full((T_max,), -1, np.int32); row[0] = tid
+                    ct.append(row); cl_.append(1); cs.append(tid); seen.add(tid)
+            # Pool, part 3: a fixed CLOSED-CLASS function-word set (articles / prepositions / conjunctions),
+            # ALWAYS insertable regardless of local LM rank. The top-J bridges are the LM's NEXT-token
+            # prediction at a gap, but a dropped function word is often NOT locally top-J even when the
+            # full-sentence joint wants it (e.g. after "soup" the LM ranks "and" above "to", yet the joint
+            # prefers "...soup to the customers" -- the Gibbs move then picks the wrong word). Function-word
+            # omission is the dominant production/perception error, so a fixed closed-class insertion vocab is
+            # a principled channel prior (NOT battery tuning): it guarantees the targets are in the pool and
+            # lets the move's full-sentence conditional choose CORRECTLY among them. Added past the bd_pool_cap
+            # so they always survive.
+            if bd_funcword_ids is not None:
+                for tid in bd_funcword_ids:
+                    tid = int(tid)
+                    if tid in seen or tid < 0 or tid >= Vc:
+                        continue
                     row = np.full((T_max,), -1, np.int32); row[0] = tid
                     ct.append(row); cl_.append(1); cs.append(tid); seen.add(tid)
             # ``bd_mode="gibbs"`` (default, the EFFECTIVE indel rejuv) resamples the single edit from its full

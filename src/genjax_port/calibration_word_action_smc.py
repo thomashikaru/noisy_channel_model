@@ -70,6 +70,7 @@ BD_ATTEMPTS = int(os.environ.get("NC_BD_ATTEMPTS", "1"))   # MH moves per bd eve
 BD_P_STAY = float(os.environ.get("NC_BD_P_STAY", "0.0"))
 BD_BRIDGE_J = int(os.environ.get("NC_BD_BRIDGE_J", "0"))
 BD_POOL_CAP = int(os.environ["NC_BD_POOL_CAP"]) if os.environ.get("NC_BD_POOL_CAP") else None
+BD_FUNCWORDS = os.environ.get("NC_BD_FUNCWORDS", "1") not in ("0", "false", "")  # fixed function-word insert pool
 
 
 def _wellform(s):
@@ -95,7 +96,8 @@ def evaluate(item_id, P, seed, alpha, rejuv, dedup):
                              action_alpha=alpha, rejuv=rejuv, dedup=dedup, trace=trace,
                              channel=CHANNEL, align_slope=ALIGN_SLOPE,
                              bd_bridge_j=BD_BRIDGE_J, bd_pool_cap=BD_POOL_CAP,
-                             bd_p_stay=BD_P_STAY, bd_mode=BD_MODE, bd_attempts=BD_ATTEMPTS)
+                             bd_p_stay=BD_P_STAY, bd_mode=BD_MODE, bd_attempts=BD_ATTEMPTS,
+                             bd_funcwords=BD_FUNCWORDS)
     top = W.decode(st, lw, skip=sl, top=60)
     lit_n, cor_n = _norm(observed), _norm(intended)
     lit = sum(p for s, p in top if _norm(s) == lit_n)
