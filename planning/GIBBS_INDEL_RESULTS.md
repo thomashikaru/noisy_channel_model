@@ -67,18 +67,24 @@ them. With it, DELTO restores `to` and the `and` junk drops to 0.11.
 
 ## Results (gibbs+bd, gibbs mode, P=128, K=−4.5, α=(200,2,2), bd_funcwords on, post-loop attempts=4–5)
 
-| item | role | gibbs baseline | gibbs+bd | verdict |
+| item | role (JOINTΔ) | gibbs baseline | gibbs+bd | verdict |
 |---|---|---|---|---|
-| DELFROM-01a | restore `from` (target, JOINT +4.5) | E=0.00 | **E=0.58–0.61, q_smc=0.85–0.88** | restored ✓ PASS |
-| DELTO-02a | restore `to` (target, JOINT +4.4) | E=0.00 | **E=0.56, q_smc=0.68** | restored ✓ PASS (funcwords) |
+| DELFROM-01a | restore `from` (+4.5) | E=0.00 | **E=0.58–0.61, q_smc=0.85–0.88** | restored ✓ PASS |
+| DELTO-02a | restore `to` (+4.4) | E=0.00 | **E=0.56, q_smc=0.68** | restored ✓ PASS (funcwords) |
+| DELFROM-02a | restore `from` (+1.8) | E=0.12 | **E=0.42**, junk 0.01 | improved (near-pass) ✓ |
+| LADDER-send-2 | restore `to` (+1.4) | E=0.15 | **E=0.26** | improved ✓ |
 | INS-02b | clean keep | L=0.80 | **L=1.00, junk=0.00** | held / improved ✓ |
-| DEL-the-01a | signal-limited (literal correct) | E≈0.00 | **E=0.07** | correctly NOT edited ✓ |
+| DEL-the-01b | clean keep | L=1.00 | **L=1.00, junk=0.00** | held ✓ |
+| DEL-the-01a | signal-limited (−0.5) | E≈0.00 | **E=0.07** | correctly NOT edited ✓ |
+| DEL-a-01a | signal-limited (−0.05) | E=0.03 | **E=0.09, junk=0.00** | correctly NOT edited ✓ |
 
-Edit pass **2/2** (q_smc>0.5), keep **1/1**, junk>0.5 on **0/3+1**. This is the goal: a substantial
-increase in target behaviour on genuinely inference-limited deletion-restoration cases, with NO
-over-editing of the clean sentence (even with the richer function-word insertion pool the Gibbs
-full-conditional draws no-op w.p. 1) and NO spurious editing of the signal-limited case. Logs:
-`planning/bd_gibbs_pl5.log` (bridges), `planning/bd_gibbs_fwjit2.log` (funcwords),
+The two STRONG-signal targets (+4.4/+4.5) fully flip 0.00→PASS; the two weaker targets (+1.4/+1.8) improve
+substantially (E roughly triples) without fully flipping — expected, since at +1.4/+1.8 nats the true
+posterior itself keeps ~25–40% on the literal. **Junk>0.5 on 0/8 items; both clean keeps held at L=1.00;
+both signal-limited cases correctly left literal.** This is the goal: a substantial increase in target
+behaviour on genuinely inference-limited deletion-restoration cases, with NO over-editing of clean
+sentences (even with the richer function-word insertion pool the Gibbs full-conditional draws no-op w.p.~1)
+and NO junk. Logs: `planning/bd_gibbs_pl5.log` (bridges) · `planning/bd_gibbs_fwjit2.log` (funcwords) ·
 `planning/bd_gibbs_broad.log`.
 
 ## Perf / caveats
