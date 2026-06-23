@@ -813,24 +813,34 @@ def _ins_logq(score_fn, word_tok, word_len, word_surf, n_words, done, cand_tok, 
 
 
 def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
-                     score_fn, cand_tok, cand_len, cand_surf, p_stay=0.0):
-    """One SMCP3-weighted birth/death involution move per particle (plan §1-2). ``score_fn(word_tok,
-    word_len, word_surf, n_words, done) -> logπ [P]`` is the injected target (lm_temp*LM + channel).
-    ``cand_*`` is the fixed candidate pool: ``cand_tok [Kc, T]`` / ``cand_len [Kc]`` / ``cand_surf [Kc]``.
-    Returns ``((word_tok', word_len', word_surf', n_words'), move_logw [P])`` -- the move always applies;
-    fold ``move_logw`` into ``log_w`` before the next resample.
+                     score_fn, cand_tok, cand_len, cand_surf, p_stay=0.0, mh=False):
+    """One birth/death involution move per particle (plan §1-2). ``score_fn(word_tok, word_len, word_surf,
+    n_words, done) -> logπ [P]`` is the injected target (lm_temp*LM + channel). ``cand_*`` is the fixed
+    candidate pool: ``cand_tok [Kc, T]`` / ``cand_len [Kc]`` / ``cand_surf [Kc]``. Returns
+    ``((word_tok', word_len', word_surf', n_words'), move_logw [P])``.
 
-    ``p_stay`` (plan §11) adds a STAY direction to the {birth, death} mixture: with probability ``p_stay`` a
-    particle keeps its state with weight 0. The kernel becomes ``s·I + (1−s)·K_old``; the ``(1−s)`` factor
-    multiplies BOTH the forward and the reverse direction prob (the reverse of a birth/death is itself a
-    not-stay move), so it CANCELS in ``W`` -- the move weights are UNCHANGED and invariance holds for any ``s``.
-    Without a stay option EVERY particle is forced off its parse each event and the immediate resample locks in
-    the damage, so a clean/optimal parse cannot survive (the gate-5 INS-02b regression). ``p_stay=0.0`` is the
-    current always-move behavior, bit-identical."""
+    Two modes, selected by ``mh``:
+
+    * ``mh=False`` (SMCP3, legacy): the move ALWAYS applies; ``move_logw`` is the trans-dim reversible-jump
+      weight ``W = Δlogπ + log q_bwd − log q_fwd``, to be folded into ``log_w`` before the next resample.
+      This injects REAL weight every event, so on a converged/clean parse (W<0) the immediate resample
+      locks in the damage -- the gate-5 INS-02b collapse. ``p_stay`` (plan §11) only throttles that.
+
+    * ``mh=True`` (Metropolis-Hastings, the Gen.jl ``Gen.mh(..., involution_add_delete)`` design): ``W`` IS
+      the log MH acceptance ratio (Jacobian 1 for the discrete involution), so we ACCEPT the proposal with
+      probability ``min(1, e^W)`` and otherwise keep the old state. The move leaves π invariant and injects
+      NO importance weight (``move_logw ≡ 0``). A bad move on a clean parse (W<0) is simply rejected, so MH
+      CANNOT over-edit a clean sentence -- it only moves a stuck duplicate/dropped-word particle to a
+      higher-π reading. This is the robust rejuvenation mode; prefer it for production. ``p_stay`` is
+      unnecessary under MH (rejection already protects clean parses) and defaults to 0.
+
+    ``p_stay`` adds a STAY direction to the {birth, death} mixture: with probability ``p_stay`` a particle
+    keeps its state. Under SMCP3 the ``(1−p_stay)`` direction scaling cancels in ``W`` (so the weights are
+    unchanged and invariance holds for any s); under MH a stay is just an attempted no-op."""
     P, Wmax, T = word_tok.shape
     Kc = cand_surf.shape[0]
     parange = jnp.arange(P)
-    kdir, kbpos, kbword, kdpos, kstay = jax.random.split(key, 5)
+    kdir, kbpos, kbword, kdpos, kstay, kacc = jax.random.split(key, 6)
 
     D_y = _deletable_count(word_len, word_surf, cand_surf)
     feas_birth = n_words < Wmax
@@ -862,29 +872,30 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
     w_d = jax.random.categorical(kdpos, cat_logits)
     dstate, _aux = _delete_word(word_tok, word_len, word_surf, n_words, w_d)
 
-    # select branch; STAY particles (incl. the no-op none ones) keep their state
+    # PROPOSED state from the sampled direction (birth -> bstate, death -> dstate); the stay/accept handling
+    # is applied at the very end so the weight W below is the ratio of the PROPOSAL vs the source for every
+    # particle (its value on a stay particle is discarded). ``none`` particles propose a no-op death.
     sel, sel3 = d_birth[:, None], d_birth[:, None, None]
-    keep, keep2, keep3 = stay, stay[:, None], stay[:, None, None]
-    new_tok = jnp.where(keep3, word_tok, jnp.where(sel3, bstate[0], dstate[0]))
-    new_len = jnp.where(keep2, word_len, jnp.where(sel, bstate[1], dstate[1]))
-    new_surf = jnp.where(keep2, word_surf, jnp.where(sel, bstate[2], dstate[2]))
-    new_nw = jnp.where(keep, n_words, jnp.where(d_birth, bstate[3], dstate[3]))
+    prop_tok = jnp.where(sel3, bstate[0], dstate[0])
+    prop_len = jnp.where(sel, bstate[1], dstate[1])
+    prop_surf = jnp.where(sel, bstate[2], dstate[2])
+    prop_nw = jnp.where(d_birth, bstate[3], dstate[3])
 
     logp_y = score_fn(word_tok, word_len, word_surf, n_words, done)
-    logp_yp = score_fn(new_tok, new_len, new_surf, new_nw, done)
-    D_yp = _deletable_count(new_len, new_surf, cand_surf)
+    logp_yp = score_fn(prop_tok, prop_len, prop_surf, prop_nw, done)
+    D_yp = _deletable_count(prop_len, prop_surf, cand_surf)
 
     # Forward/reverse proposal log-densities for the SELECTED move, fed to the proposal-agnostic weight
     # (_bd_log_weight). A birth = direction · gap(uniform 1/(n+1)) · q_ins(near-conditional word); a death =
     # direction · q_del(near-conditional position). The REVERSE of a birth is a death at y' -- its density is
     # q_del RE-EVALUATED at y' (``del_logq_yp``) at the inserted slot w_b; the reverse of a death is a birth at
     # y' re-inserting the removed word at gap w_d -- density gap(1/(n'+1)) · q_ins RE-EVALUATED at y'/w_d.
-    nnwf = new_nw.astype(jnp.float32)
+    nnwf = prop_nw.astype(jnp.float32)
     qdel_fwd = del_logq_y[parange, w_d]                                            # death fwd: log q_del(w_d|y)
     qins_fwd = ins_logq_y[parange, ci]                                             # birth fwd: log q_ins(x|w_b,y)
-    del_logq_yp = _del_logq(score_fn, new_tok, new_len, new_surf, new_nw, done, cand_surf)
+    del_logq_yp = _del_logq(score_fn, prop_tok, prop_len, prop_surf, prop_nw, done, cand_surf)
     qdel_rev = del_logq_yp[parange, w_b]                                           # birth rev: log q_del(w_b|y')
-    ins_logq_yp = _ins_logq(score_fn, new_tok, new_len, new_surf, new_nw, done,
+    ins_logq_yp = _ins_logq(score_fn, prop_tok, prop_len, prop_surf, prop_nw, done,
                             cand_tok, cand_len, cand_surf, w_d)                     # q_ins at y', gap = w_d
     rem_surf = word_surf[parange, w_d]                                             # surface the death removed
     rem_ci = jnp.argmax(cand_surf[None, :] == rem_surf[:, None], axis=1)           # its pool index (in-pool)
@@ -892,7 +903,7 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
     # direction probabilities: p_dir_fwd = prob this direction was sampled at y; p_dir_rev = prob the move's
     # own direction rule picks the REVERSE direction at y'. Recompute the rule at y' (feasibility there).
     p_dir_fwd = jnp.where(d_birth, p_birth, 1.0 - p_birth)
-    fb_yp, fd_yp = new_nw < Wmax, D_yp > 0
+    fb_yp, fd_yp = prop_nw < Wmax, D_yp > 0
     both_yp = fb_yp & fd_yp
     p_birth_yp = jnp.where(both_yp, 0.5, jnp.where(fb_yp, 1.0, 0.0))
     p_death_yp = jnp.where(both_yp, 0.5, jnp.where(fd_yp, 1.0, 0.0))
@@ -906,6 +917,27 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
     # finite source moved to an impossible y') and all finite weights pass through unchanged; the toy
     # (band=None) never triggers this, so its results are bit-identical.
     W = jnp.where(jnp.isnan(W) | (W == jnp.inf), -jnp.inf, W)
+
+    if mh:
+        # Metropolis-Hastings accept/reject (Gen.jl ``Gen.mh`` design): accept the proposal w.p. min(1, e^W);
+        # rejected and stay/none particles keep their state. move_logw ≡ 0 -- MH leaves π invariant and does
+        # NOT reweight the SMC cloud, so a W<0 move on a clean parse is rejected rather than (as in SMCP3)
+        # applied-then-corrected-by-resampling, which is what collapsed clean sentences.
+        logu = jnp.log(jax.random.uniform(kacc, (P,)))
+        accept = (~stay) & (logu < W)
+        a, a2, a3 = accept, accept[:, None], accept[:, None, None]
+        new_tok = jnp.where(a3, prop_tok, word_tok)
+        new_len = jnp.where(a2, prop_len, word_len)
+        new_surf = jnp.where(a2, prop_surf, word_surf)
+        new_nw = jnp.where(a, prop_nw, n_words)
+        return (new_tok, new_len, new_surf, new_nw), jnp.zeros(P)
+
+    # SMCP3 (legacy): always apply the proposed move (STAY/none particles keep state), fold W as the weight.
+    keep, keep2, keep3 = stay, stay[:, None], stay[:, None, None]
+    new_tok = jnp.where(keep3, word_tok, prop_tok)
+    new_len = jnp.where(keep2, word_len, prop_len)
+    new_surf = jnp.where(keep2, word_surf, prop_surf)
+    new_nw = jnp.where(keep, n_words, prop_nw)
     move_logw = jnp.where(stay, 0.0, W)                              # STAY (incl. none): weight 0
     return (new_tok, new_len, new_surf, new_nw), move_logw
 
@@ -953,13 +985,14 @@ def _make_bd_score_fn(ctx):
     return score
 
 
-def make_bd_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=2, p_stay=0.0):
+def make_bd_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=2, p_stay=0.0, mh=False):
     """Build a reusable birth/death rejuvenation sweep over a fixed candidate pool ``cand_*`` (Phase 1 =
     observed surfaces). ``sweep(key, ctx_buf, ctx_len, word_len, word_surf, done, theta_costs) ->
     (state', move_logw)`` where ``state'`` is the filter's 7-tuple ``(ctx_buf, ctx_len, n_words, word_len,
     word_surf, log_alpha, done)``. Runs ``n_attempts`` moves (each adds/removes <=1 word) on DONE particles
-    only; folds every move's SMCP3 weight into ``move_logw`` for the caller to add to ``log_w``. ``p_stay``
-    (plan §11) is the per-move STAY probability passed through to :func:`birth_death_move` (0.0 = always move)."""
+    only. ``mh=True`` runs Metropolis-Hastings accept/reject (``move_logw ≡ 0``, the robust production mode);
+    ``mh=False`` folds every move's SMCP3 weight into ``move_logw`` for the caller to add to ``log_w``.
+    ``p_stay`` is the per-move STAY probability passed through to :func:`birth_death_move`."""
     sl, Wmax, T, M = ctx.seed_len, ctx.Wmax, ctx.t_max, ctx.M
     n_out = Wmax * T
     score = _make_bd_score_fn(ctx)
@@ -973,7 +1006,8 @@ def make_bd_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=2, p_stay=0.0):
         for _ in range(n_attempts):
             key, sub = jax.random.split(key)
             (nt, nl, ns, nnw), mlw = birth_death_move(sub, wt, wl, ws, nw, done,
-                                                      sfn, cand_tok, cand_len, cand_surf, p_stay=p_stay)
+                                                      sfn, cand_tok, cand_len, cand_surf,
+                                                      p_stay=p_stay, mh=mh)
             m, m2, m3 = done, done[:, None], done[:, None, None]            # done-only gate
             wt = jnp.where(m3, nt, wt); wl = jnp.where(m2, nl, wl)
             ws = jnp.where(m2, ns, ws); nw = jnp.where(m, nnw, nw)

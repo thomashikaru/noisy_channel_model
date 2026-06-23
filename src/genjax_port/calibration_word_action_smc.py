@@ -60,6 +60,15 @@ DEFAULT_ITEMS = ["SUBW-01a", "SUBW-01b", "SUBN-01a", "SUBN-02a", "DEL-to-05a", "
 # malformed test input, not the model. Idempotent on already-capitalized / 'I ...' sentences.
 CAP = os.environ.get("NC_NOCAP", "0") not in ("1", "true", "yes")
 
+# Birth/death rejuv knobs (only active when NC_REJUV=gibbs+bd). BD_MODE: "mh" (Metropolis-Hastings
+# accept/reject, the robust production mode -- a bad move is rejected so clean sentences cannot be
+# over-edited) or "smcp3" (legacy always-apply + weight-fold). BD_P_STAY is unnecessary under MH.
+BD_MODE = os.environ.get("NC_BD_MODE", "mh")
+BD_ATTEMPTS = int(os.environ.get("NC_BD_ATTEMPTS", "1"))   # MH moves per bd event (more = better mixing, slower)
+BD_P_STAY = float(os.environ.get("NC_BD_P_STAY", "0.0"))
+BD_BRIDGE_J = int(os.environ.get("NC_BD_BRIDGE_J", "0"))
+BD_POOL_CAP = int(os.environ["NC_BD_POOL_CAP"]) if os.environ.get("NC_BD_POOL_CAP") else None
+
 
 def _wellform(s):
     """Well-form the LM input: capitalize the initial letter AND ensure a terminal period (the user
@@ -82,7 +91,9 @@ def evaluate(item_id, P, seed, alpha, rejuv, dedup):
     trace = [] if rejuv != "off" else None    # capture the final posterior theta (rejuv_info.theta_mean)
     st, lw, logZ, sl = W.run(observed, jax.random.PRNGKey(seed), P=P, band=2,
                              action_alpha=alpha, rejuv=rejuv, dedup=dedup, trace=trace,
-                             channel=CHANNEL, align_slope=ALIGN_SLOPE)
+                             channel=CHANNEL, align_slope=ALIGN_SLOPE,
+                             bd_bridge_j=BD_BRIDGE_J, bd_pool_cap=BD_POOL_CAP,
+                             bd_p_stay=BD_P_STAY, bd_mode=BD_MODE, bd_attempts=BD_ATTEMPTS)
     top = W.decode(st, lw, skip=sl, top=60)
     lit_n, cor_n = _norm(observed), _norm(intended)
     lit = sum(p for s, p in top if _norm(s) == lit_n)
@@ -114,8 +125,10 @@ def main():
     if os.environ.get("NC_ALPHA"):                   # sweep concentrated/copy-favoured priors
         alpha = tuple(float(x) for x in os.environ["NC_ALPHA"].split(","))
     lm_penzai.load_model()
+    bd = f"  bd_mode={BD_MODE} bd_p_stay={BD_P_STAY} bd_bridge_j={BD_BRIDGE_J} bd_pool_cap={BD_POOL_CAP}" \
+        if rejuv == "gibbs+bd" else ""
     print(f"LM={lm_penzai.MODEL_NAME}  P={P}  seed={seed}  channel={CHANNEL}  alpha={alpha}  "
-          f"align_slope={ALIGN_SLOPE}  rejuv={rejuv}  dedup={dedup}  cap_initial={CAP}  "
+          f"align_slope={ALIGN_SLOPE}  rejuv={rejuv}  dedup={dedup}  cap_initial={CAP}{bd}  "
           f"items={len(items)}\n", flush=True)
     print(f"{'item':12s} {'exp':5s} {'metric':>6s} {'q_ref':>6s}  {'L':>4s} {'E':>4s} {'junk':>4s}  obs -> intended",
           flush=True)

@@ -369,6 +369,51 @@ def test_birth_death_move_smoke():
     assert np.all(np.isfinite(np.asarray(mlw))), "non-finite move weight"
 
 
+def test_mh_accept_reject_and_zero_weight():
+    """Metropolis-Hastings mode (``mh=True``, the Gen.jl ``Gen.mh`` design): the move must
+    (a) inject NO importance weight (``move_logw ≡ 0``); (b) ACCEPT a strictly-improving proposal;
+    (c) REJECT a strictly-worsening one -- the over-edit guard that lets a clean/optimal parse survive.
+    We drive it with monotone length score_fns so the forced-direction particles are deterministic: an
+    EMPTY particle can only birth, a FULL one can only die, so each has a single feasible move whose
+    sign is fixed by the score_fn."""
+    Wmax = _BD_WMAX
+    words = [[1, 2], [3], [], [4, 5, 1]]              # p2 empty (birth-only), p3 full (death-only)
+    P = len(words)
+    word_tok = np.zeros((P, Wmax, T), np.int32)
+    word_len = np.zeros((P, Wmax), np.int32)
+    word_surf = np.full((P, Wmax), _PAD_SURF, np.int32)
+    n_words = np.zeros((P,), np.int32)
+    for p, ws in enumerate(words):
+        n_words[p] = len(ws)
+        for i, s in enumerate(ws):
+            word_tok[p, i, 0] = s; word_len[p, i] = 1; word_surf[p, i] = s
+    state = tuple(jnp.asarray(a) for a in (word_tok, word_len, word_surf, n_words))
+    cand_surf = jnp.asarray(_BD_V, jnp.int32)
+    cand_tok = cand_surf[:, None].astype(jnp.int32)
+    cand_len = jnp.ones((_BD_KC,), jnp.int32)
+    done = jnp.ones((P,), bool)
+    n0 = np.asarray(n_words)
+
+    # score_short: FEWER words is better. A death improves pi (accept); a birth worsens it (reject).
+    score_short = lambda wt, wl, ws, nw, dn: -1e6 * nw.astype(jnp.float32)
+    (nt, nl, ns, nnw), mlw = birth_death_move(
+        jax.random.PRNGKey(1), *state, done, score_short, cand_tok, cand_len, cand_surf, mh=True)
+    _assert_canonical_pad(nt, nl, ns, nnw)
+    assert np.all(np.asarray(mlw) == 0.0), "MH must not reweight (move_logw must be 0)"
+    nnw = np.asarray(nnw)
+    assert nnw[2] == 0, "empty particle: worsening birth must be REJECTED (over-edit guard)"
+    assert nnw[3] == n0[3] - 1, "full particle: improving death must be ACCEPTED"
+
+    # score_long: MORE words is better. Now a birth improves pi (accept); a death worsens it (reject).
+    score_long = lambda wt, wl, ws, nw, dn: 1e6 * nw.astype(jnp.float32)
+    (_, _, _, nnwL), mlwL = birth_death_move(
+        jax.random.PRNGKey(1), *state, done, score_long, cand_tok, cand_len, cand_surf, mh=True)
+    assert np.all(np.asarray(mlwL) == 0.0), "MH must not reweight (move_logw must be 0)"
+    nnwL = np.asarray(nnwL)
+    assert nnwL[2] == 1, "empty particle: improving birth must be ACCEPTED"
+    assert nnwL[3] == n0[3], "full particle: worsening death must be REJECTED (over-edit guard)"
+
+
 def main():
     test_insert_delete_roundtrip()
     test_delete_insert_roundtrip()
@@ -377,7 +422,8 @@ def main():
     test_rj_weight_invariance_exact()
     test_rj_weight_invariance_informed()
     test_birth_death_move_smoke()
-    print("birth/death Phase-0 + Phase-1 + Phase-2 gates: 7/7 PASS")
+    test_mh_accept_reject_and_zero_weight()
+    print("birth/death Phase-0 + Phase-1 + Phase-2 + MH gates: 8/8 PASS")
 
 
 if __name__ == "__main__":

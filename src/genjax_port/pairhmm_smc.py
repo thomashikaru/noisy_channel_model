@@ -469,7 +469,7 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
         max_dist=2, Ke=6, J=4, cwin=1, proposal="caprop", enable_indel=True,
         rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False,
         lm_temp=1.0, action_alpha=None, channel=None, bd_min_done=0.0, bd_bridge_j=0, bd_pool_cap=None,
-        bd_p_stay=0.0):
+        bd_p_stay=0.0, bd_mode="mh", bd_attempts=1):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
@@ -694,7 +694,8 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
             # targeted move per resample event (not 2 random ones) -- also halves the O(Wmax^2) scoring cost.
             bd_sweep = RJ.make_bd_sweep(rj_ctx, jnp.asarray(np.array(ct), jnp.int32),
                                         jnp.asarray(np.array(cl_), jnp.int32),
-                                        jnp.asarray(np.array(cs), jnp.int32), n_attempts=1, p_stay=bd_p_stay)
+                                        jnp.asarray(np.array(cs), jnp.int32), n_attempts=bd_attempts,
+                                        p_stay=bd_p_stay, mh=(bd_mode == "mh"))
 
     word_mask = model.word_mask
     def _assemble(n_words, log_alpha, lmlog, mt_chain, lp_copy, lp_sub, wdel_p, wins_p):
