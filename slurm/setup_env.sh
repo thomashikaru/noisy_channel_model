@@ -24,12 +24,25 @@ GENJAX_SRC="${GENJAX_SRC:-$HOME/genjax}"   # existing checkout is reused; otherw
 OS="$(uname -s)"; ARCH="$(uname -m)"
 echo "Platform: $OS/$ARCH   env: $ENV_NAME"
 
-# ---- locate conda/mamba and load its shell hook ----------------------------------------------
-CONDA_EXE_BIN="$(command -v mamba || command -v conda || true)"
-[ -n "$CONDA_EXE_BIN" ] || { echo "ERROR: neither mamba nor conda on PATH. Install miniforge first." >&2; exit 1; }
-CONDA_BASE="${CONDA_BASE:-$("$CONDA_EXE_BIN" info --base)}"
+# ---- locate the conda base and load its shell hook -------------------------------------------
+# Resolve the base from `conda info --base` (just the path, on every conda version). Do NOT use
+# `mamba info --base`: mamba 2.x (recent miniforge) prints a full info banner there, not a path.
+if [ -z "${CONDA_BASE:-}" ]; then
+    if command -v conda >/dev/null 2>&1; then
+        CONDA_BASE="$(conda info --base)"
+    elif [ -n "${CONDA_EXE:-}" ]; then
+        CONDA_BASE="$(dirname "$(dirname "$CONDA_EXE")")"
+    else
+        echo "ERROR: conda not found on PATH. 'module load' your miniforge (or install it) first," >&2
+        echo "       or set CONDA_BASE to the dir that contains etc/profile.d/conda.sh." >&2
+        exit 1
+    fi
+fi
+[ -f "$CONDA_BASE/etc/profile.d/conda.sh" ] || {
+    echo "ERROR: no conda.sh under CONDA_BASE='$CONDA_BASE'. Set CONDA_BASE to your real conda base." >&2
+    exit 1; }
 source "$CONDA_BASE/etc/profile.d/conda.sh"
-PKG="$(command -v mamba || echo conda)"   # prefer mamba for env creation
+PKG="$(command -v mamba >/dev/null 2>&1 && echo mamba || echo conda)"   # prefer mamba for env creation
 
 # ---- create the env if missing ----------------------------------------------------------------
 if conda env list | awk '{print $1}' | grep -qx "$ENV_NAME"; then
