@@ -1020,3 +1020,107 @@ def make_bd_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=2, p_stay=0.0, 
         return (bufs, ctx_len2, nw, wl, ws, log_alpha, done), move_logw
 
     return sweep
+
+
+# ==================================================================================================
+# Gibbs insertion/deletion move (the EFFECTIVE indel rejuv -- supersedes the trans-dim birth/death move
+# for restoration). Instead of proposing ONE word at ONE gap and accept/rejecting (the birth_death_move,
+# whose uniform gap proposes spurious words at locally-fluent wrong positions -> junk), this resamples the
+# SINGLE EDIT directly from its full conditional over the move set
+#     S(y) = {no-op} ∪ {insert candidate c at gap g}_{g,c} ∪ {delete existing word i}_i
+# with probability ∝ π(resulting parse). Because ``no-op`` is in the set, the conditional self-regulates:
+#   * a CLEAN parse (every edit lowers π) draws no-op w.p. ~1  -> cannot over-edit;
+#   * a parse with a DROPPED word draws the restoring insertion w.p. ~1 (the conditional concentrates on the
+#     one high-π edit) -> AMPLIFIES to the posterior fraction in a SINGLE move, every particle independently;
+#   * a spurious π-LOWERING insertion (e.g. a content word at a fluent-but-wrong gap) gets ~0 conditional
+#     mass -> no junk, even though the birth_death_move's per-word MH accepts it.
+# It is a locally-balanced (Gibbs-block) rejuvenation: ``move_logw ≡ 0``, always applied. Cost = one score per
+# (gap,candidate) insertion + one per deletion + one no-op, all batched over P; no reverse densities, no
+# n_attempts loop (one move converges). ``temp`` sharpens (<1) / flattens (>1) the conditional; 1.0 = exact.
+# ==================================================================================================
+def gibbs_indel_move(key, word_tok, word_len, word_surf, n_words, done,
+                     score, theta_costs, cand_tok, cand_len, cand_surf, temp=1.0):
+    """Resample the single edit (insert / delete / no-op) from its full conditional ∝ π; always applied.
+    Returns ``((word_tok', word_len', word_surf', n_words'), move_logw=0)``. See the section header.
+
+    ``score(word_tok, word_len, word_surf, n_words, done, theta_costs) -> logπ`` is the RAW (theta-aware)
+    target; ``theta_costs`` are the per-particle channel costs (or None for char-copy). Each (gap,candidate)
+    insertion and each deletion is scored at the native P batch (``lax.map`` -- sequential, memory-bounded;
+    a full Kc*P batch materialises a Kc-times-larger vocab-logit tensor and thrashes). Cost O(Wmax*Kc) LM
+    forwards per move; the move runs once post-loop (``n_attempts`` sweeps) so the total stays bounded."""
+    P, Wmax, T = word_tok.shape
+    Kc = cand_surf.shape[0]
+    logp_cur = score(word_tok, word_len, word_surf, n_words, done, theta_costs)    # (P,) no-op score
+
+    def ins_at_gap(g):                                                            # logπ(insert c@g) for all c
+        gap = jnp.full((P,), g, jnp.int32)
+        def ins_cand(c):
+            it, il, is_, inw = _insert_word(word_tok, word_len, word_surf, n_words, gap,
+                                            jnp.broadcast_to(cand_tok[c], (P,) + cand_tok.shape[1:]),
+                                            jnp.broadcast_to(cand_len[c], (P,)),
+                                            jnp.broadcast_to(cand_surf[c], (P,)))
+            return score(it, il, is_, inw, done, theta_costs)                     # (P,)
+        return jax.lax.map(ins_cand, jnp.arange(Kc)).T                            # (P, Kc)
+    ins_scores = jnp.transpose(jax.lax.map(ins_at_gap, jnp.arange(Wmax)), (1, 0, 2))   # (P, Wmax, Kc)
+    g_idx = jnp.arange(Wmax)[None, :]
+    ins_valid = (g_idx <= n_words[:, None]) & (n_words[:, None] < Wmax)           # gap 0..n, room to grow
+    ins_scores = jnp.where(ins_valid[:, :, None], ins_scores, -jnp.inf)
+
+    def del_at(i):                                                               # logπ(delete word i)
+        wcol = jnp.full((P,), i, jnp.int32)
+        (dt, dl, ds, dnw), _ = _delete_word(word_tok, word_len, word_surf, n_words, wcol)
+        return score(dt, dl, ds, dnw, done, theta_costs)                          # (P,)
+    del_scores = jax.lax.map(del_at, jnp.arange(Wmax)).T                          # (P, Wmax)
+    del_scores = jnp.where(jnp.arange(Wmax)[None, :] < n_words[:, None], del_scores, -jnp.inf)
+
+    n_ins = Wmax * Kc
+    logits = jnp.concatenate([logp_cur[:, None], ins_scores.reshape(P, n_ins), del_scores], axis=1)
+    logits = jnp.where(jnp.isnan(logits), -jnp.inf, logits)                       # band-impossible -> never
+    idx = jax.random.categorical(key, logits / temp)                             # (P,) 0=no-op | ins | del
+
+    is_ins = (idx >= 1) & (idx <= n_ins)
+    is_del = idx > n_ins
+    ins_flat = jnp.clip(idx - 1, 0, n_ins - 1)
+    g_sel, c_sel = ins_flat // Kc, ins_flat % Kc
+    del_i = jnp.clip(idx - 1 - n_ins, 0, Wmax - 1)
+    it, il, is_, inw = _insert_word(word_tok, word_len, word_surf, n_words, g_sel,
+                                    cand_tok[c_sel], cand_len[c_sel], cand_surf[c_sel])
+    (dt, dl, ds, dnw), _ = _delete_word(word_tok, word_len, word_surf, n_words, del_i)
+    si, si2, si3 = is_ins, is_ins[:, None], is_ins[:, None, None]
+    sd, sd2, sd3 = is_del, is_del[:, None], is_del[:, None, None]
+    new_tok = jnp.where(si3, it, jnp.where(sd3, dt, word_tok))
+    new_len = jnp.where(si2, il, jnp.where(sd2, dl, word_len))
+    new_surf = jnp.where(si2, is_, jnp.where(sd2, ds, word_surf))
+    new_nw = jnp.where(si, inw, jnp.where(sd, dnw, n_words))
+    return (new_tok, new_len, new_surf, new_nw), jnp.zeros(P)
+
+
+def make_gibbs_indel_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=1, temp=1.0):
+    """Filter-shaped sweep wrapping :func:`gibbs_indel_move` (the effective indel rejuv). Same I/O contract
+    as :func:`make_bd_sweep`; ``move_logw`` is always 0 (the move is Gibbs, not importance-weighted). DONE
+    particles only. ``n_attempts`` extra sweeps allow >1 edit (a sentence with two dropped words); 1 usually
+    suffices since the conditional amplifies a single edit fully in one move."""
+    sl, Wmax, T, M = ctx.seed_len, ctx.Wmax, ctx.t_max, ctx.M
+    n_out = Wmax * T
+    score = _make_bd_score_fn(ctx)
+
+    def sweep(key, ctx_buf, ctx_len, word_len, word_surf, done, theta_costs=None):
+        P, LCTX = ctx_buf.shape
+        wt, nw = _unpack(ctx_buf, word_len, sl, Wmax, T)
+        wl, ws = word_len, word_surf
+        for _ in range(n_attempts):
+            key, sub = jax.random.split(key)
+            (nt, nl, ns, nnw), _ = gibbs_indel_move(sub, wt, wl, ws, nw, done,
+                                                    score, theta_costs, cand_tok, cand_len, cand_surf,
+                                                    temp=temp)
+            m, m2, m3 = done, done[:, None], done[:, None, None]
+            wt = jnp.where(m3, nt, wt); wl = jnp.where(m2, nl, wl)
+            ws = jnp.where(m2, ns, ws); nw = jnp.where(m, nnw, nw)
+        bufs, total = _flat_buffer(ctx, wt, wl, LCTX, n_out)
+        ctx_len2 = sl + total.astype(jnp.int32)
+        lp_copy, lp_sub, wdel_p, wins_p, a0p, copy_mask = _bd_costs(ctx, P, theta_costs)
+        log_alpha = channel_carry(a0p, ctx.emit_full, ctx.band, M, ws, wl,
+                                  lp_copy, lp_sub, wdel_p, wins_p, copy_mask)
+        return (bufs, ctx_len2, nw, wl, ws, log_alpha, done), jnp.zeros(P)
+
+    return sweep

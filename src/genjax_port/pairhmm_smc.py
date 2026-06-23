@@ -469,7 +469,7 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
         max_dist=2, Ke=6, J=4, cwin=1, proposal="caprop", enable_indel=True,
         rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False,
         lm_temp=1.0, action_alpha=None, channel=None, bd_min_done=0.0, bd_bridge_j=0, bd_pool_cap=None,
-        bd_p_stay=0.0, bd_mode="mh", bd_attempts=1):
+        bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
@@ -690,12 +690,16 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                 for tid, _v in ranked:
                     row = np.full((T_max,), -1, np.int32); row[0] = tid
                     ct.append(row); cl_.append(1); cs.append(tid); seen.add(tid)
-            # Phase 2: near-conditional q_del concentrates each move on the most-improving removal, so ONE
-            # targeted move per resample event (not 2 random ones) -- also halves the O(Wmax^2) scoring cost.
-            bd_sweep = RJ.make_bd_sweep(rj_ctx, jnp.asarray(np.array(ct), jnp.int32),
-                                        jnp.asarray(np.array(cl_), jnp.int32),
-                                        jnp.asarray(np.array(cs), jnp.int32), n_attempts=bd_attempts,
-                                        p_stay=bd_p_stay, mh=(bd_mode == "mh"))
+            # ``bd_mode="gibbs"`` (default, the EFFECTIVE indel rejuv) resamples the single edit from its full
+            # conditional -- amplifies a dropped-word restoration in one move, no junk, can't over-edit (see
+            # gibbs_indel_move). ``"mh"``/``"smcp3"`` use the per-word birth/death involution instead.
+            _cands = (jnp.asarray(np.array(ct), jnp.int32), jnp.asarray(np.array(cl_), jnp.int32),
+                      jnp.asarray(np.array(cs), jnp.int32))
+            if bd_mode == "gibbs":
+                bd_sweep = RJ.make_gibbs_indel_sweep(rj_ctx, *_cands, n_attempts=bd_attempts)
+            else:
+                bd_sweep = RJ.make_bd_sweep(rj_ctx, *_cands, n_attempts=bd_attempts,
+                                            p_stay=bd_p_stay, mh=(bd_mode == "mh"))
 
     word_mask = model.word_mask
     def _assemble(n_words, log_alpha, lmlog, mt_chain, lp_copy, lp_sub, wdel_p, wins_p):
@@ -829,7 +833,10 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                 # ≈0), so firing it at every resample event over-applies the move to already-converged particles
                 # and inflates logZ variance. ``bd_min_done`` gates it to NEAR-TERMINAL events -- run only once a
                 # fraction ≥ bd_min_done of particles are complete (0.0 = every event, the original behavior).
-                if bd_sweep is not None and float(jnp.mean(done.astype(jnp.float32))) >= bd_min_done:
+                # ``gibbs`` mode fires ONCE post-loop (one Gibbs sweep over the all-done cloud -- it amplifies
+                # in a single move, so per-event firing only multiplies cost); ``mh``/``smcp3`` fire in-loop.
+                if (bd_sweep is not None and bd_mode != "gibbs"
+                        and float(jnp.mean(done.astype(jnp.float32))) >= bd_min_done):
                     ctx_buf, ctx_len, n_words, word_len, word_surf, _, done = state
                     bd_theta = (lp_copy, lp_sub, wdel_p, wins_p, a0p, copy_mask) if ON else None
                     key, sub = jax.random.split(key)
@@ -841,6 +848,20 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
         if trace is not None:            # per-step snapshot of the cloud (post-extend/resample/rejuv)
             trace.append(_record_step(model, state, log_w, seed_len, s, ess_pre, resampled, logZ,
                                       rejuv_info))
+
+    # gibbs indel rejuv (the EFFECTIVE indel move): ONE Gibbs sweep over the final all-done cloud. move_logw
+    # is 0 (Gibbs preserves the target), so it runs post-loop on the resampled cloud and just relocates
+    # particles to higher-pi readings (restore a dropped word / remove a spurious one) before the terminal
+    # correction + decode. Fired once -- the conditional amplifies a single edit fully in one move.
+    if bd_sweep is not None and bd_mode == "gibbs":
+        ctx_buf, ctx_len, n_words, word_len, word_surf, _, done = state
+        bd_theta = None
+        if ON:
+            a0p = jax.vmap(lambda wn: band_mask(
+                jnp.concatenate([jnp.zeros((1,), wn.dtype), jnp.cumsum(wn)]), 0))(wins_p)
+            bd_theta = (lp_copy, lp_sub, wdel_p, wins_p, a0p, copy_mask)
+        key, sub = jax.random.split(key)
+        state, _ = bd_sweep(sub, ctx_buf, ctx_len, word_len, word_surf, done, theta_costs=bd_theta)
 
     # Terminal full-consumption correction: caprop folds alpha[M] into the EOS candidate, so EOS'd
     # particles already paid it; both proposals still need it for particles live at the budget (else

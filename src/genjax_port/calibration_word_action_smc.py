@@ -60,10 +60,12 @@ DEFAULT_ITEMS = ["SUBW-01a", "SUBW-01b", "SUBN-01a", "SUBN-02a", "DEL-to-05a", "
 # malformed test input, not the model. Idempotent on already-capitalized / 'I ...' sentences.
 CAP = os.environ.get("NC_NOCAP", "0") not in ("1", "true", "yes")
 
-# Birth/death rejuv knobs (only active when NC_REJUV=gibbs+bd). BD_MODE: "mh" (Metropolis-Hastings
-# accept/reject, the robust production mode -- a bad move is rejected so clean sentences cannot be
-# over-edited) or "smcp3" (legacy always-apply + weight-fold). BD_P_STAY is unnecessary under MH.
-BD_MODE = os.environ.get("NC_BD_MODE", "mh")
+# Indel rejuv knobs (only active when NC_REJUV=gibbs+bd). BD_MODE: "gibbs" (default, the effective indel
+# move -- resample the single edit from its full conditional: amplifies a dropped-word restoration in one
+# post-loop sweep, can't over-edit, no junk), "mh" (per-word Metropolis-Hastings accept/reject), or "smcp3"
+# (legacy always-apply + weight-fold). NC_BD_BRIDGE_J adds the LM-bridge candidates the move needs to insert
+# a word NOT in the observed sentence (restoration); 0 = observed surfaces only (dedup/duplicate removal).
+BD_MODE = os.environ.get("NC_BD_MODE", "gibbs")
 BD_ATTEMPTS = int(os.environ.get("NC_BD_ATTEMPTS", "1"))   # MH moves per bd event (more = better mixing, slower)
 BD_P_STAY = float(os.environ.get("NC_BD_P_STAY", "0.0"))
 BD_BRIDGE_J = int(os.environ.get("NC_BD_BRIDGE_J", "0"))

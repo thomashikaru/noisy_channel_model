@@ -414,6 +414,58 @@ def test_mh_accept_reject_and_zero_weight():
     assert nnwL[3] == n0[3], "full particle: worsening death must be REJECTED (over-edit guard)"
 
 
+def test_gibbs_indel_conditional_and_zero_weight():
+    """Gibbs indel move (``gibbs_indel_move``): resamples the single edit from its full conditional ∝ π over
+    {no-op, insert c@g, delete i}. Certifies (a) ``move_logw ≡ 0``; (b) under a peaked length score_fn the
+    move drives n_words toward the favored length while EMPTY/FULL boundary particles that can only move the
+    wrong way keep no-op; (c) the over-edit guard: a score_fn maximized AT the current parse leaves it
+    unchanged (every edit lowers π so the conditional concentrates on no-op)."""
+    from genjax_port.pairhmm_rejuv import gibbs_indel_move
+    Wmax = _BD_WMAX
+    words = [[1, 2], [3], [], [4, 5, 1]]              # p2 empty (insert-only), p3 full (delete-only)
+    P = len(words)
+    word_tok = np.zeros((P, Wmax, T), np.int32)
+    word_len = np.zeros((P, Wmax), np.int32)
+    word_surf = np.full((P, Wmax), _PAD_SURF, np.int32)
+    n_words = np.zeros((P,), np.int32)
+    for p, ws in enumerate(words):
+        n_words[p] = len(ws)
+        for i, s in enumerate(ws):
+            word_tok[p, i, 0] = s; word_len[p, i] = 1; word_surf[p, i] = s
+    state = tuple(jnp.asarray(a) for a in (word_tok, word_len, word_surf, n_words))
+    cand_surf = jnp.asarray(_BD_V, jnp.int32)
+    cand_tok = cand_surf[:, None].astype(jnp.int32)
+    cand_len = jnp.ones((_BD_KC,), jnp.int32)
+    done = jnp.ones((P,), bool)
+    n0 = np.asarray(n_words)
+
+    score_short = lambda wt, wl, ws, nw, dn, tc: -1e3 * nw.astype(jnp.float32)   # peaked: fewer words = higher pi
+    (nt, nl, ns, nnw), mlw = gibbs_indel_move(
+        jax.random.PRNGKey(2), *state, done, score_short, None, cand_tok, cand_len, cand_surf)
+    _assert_canonical_pad(nt, nl, ns, nnw)
+    assert np.all(np.asarray(mlw) == 0.0), "Gibbs move must not reweight"
+    nnw = np.asarray(nnw)
+    assert nnw[2] == 0, "empty particle cannot get shorter -> no-op (insertion would lengthen -> ~0 mass)"
+    assert np.all(nnw[[0, 1, 3]] == n0[[0, 1, 3]] - 1), "deletion strictly raises pi -> sampled w.p. ~1"
+
+    score_long = lambda wt, wl, ws, nw, dn, tc: 1e3 * nw.astype(jnp.float32)     # peaked: more words = higher pi
+    (_, _, _, nnwL), mlwL = gibbs_indel_move(
+        jax.random.PRNGKey(2), *state, done, score_long, None, cand_tok, cand_len, cand_surf)
+    assert np.all(np.asarray(mlwL) == 0.0)
+    nnwL = np.asarray(nnwL)
+    assert nnwL[3] == n0[3], "full particle cannot get longer -> no-op (over-edit guard at the boundary)"
+    assert np.all(nnwL[[0, 1, 2]] == n0[[0, 1, 2]] + 1), "insertion strictly raises pi -> sampled w.p. ~1"
+
+    # Over-edit guard: a score_fn peaked at a FIXED length (2) -> the particle already AT length 2 (p0) sees
+    # every edit lower pi, so the conditional concentrates on no-op and it stays put; the others step toward 2.
+    score_peak2 = lambda wt, wl, ws, nw, dn, tc: -1e3 * jnp.abs(nw - 2).astype(jnp.float32)
+    (_, _, _, nnwK), _ = gibbs_indel_move(
+        jax.random.PRNGKey(2), *state, done, score_peak2, None, cand_tok, cand_len, cand_surf)
+    nnwK = np.asarray(nnwK)
+    assert nnwK[0] == 2, "a parse at the pi-max (length 2) must stay put (no over-edit)"
+    assert nnwK[1] == 2 and nnwK[3] == 2, "length 1 inserts to 2; length 3 deletes to 2"
+
+
 def main():
     test_insert_delete_roundtrip()
     test_delete_insert_roundtrip()
@@ -423,7 +475,8 @@ def main():
     test_rj_weight_invariance_informed()
     test_birth_death_move_smoke()
     test_mh_accept_reject_and_zero_weight()
-    print("birth/death Phase-0 + Phase-1 + Phase-2 + MH gates: 8/8 PASS")
+    test_gibbs_indel_conditional_and_zero_weight()
+    print("birth/death Phase-0 + Phase-1 + Phase-2 + MH + Gibbs gates: 9/9 PASS")
 
 
 if __name__ == "__main__":
