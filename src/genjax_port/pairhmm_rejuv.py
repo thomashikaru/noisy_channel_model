@@ -1104,15 +1104,22 @@ def make_gibbs_indel_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=1, tem
     n_out = Wmax * T
     score = _make_bd_score_fn(ctx)
 
+    # JIT the per-MOVE (one candidate-grid scoring), not the whole n_attempts loop: the move fuses into one
+    # XLA program compiled ONCE and reused for every attempt / battery item (eager dispatch of ~Wmax*Kc ops
+    # is minutes/item; unrolling all n_attempts into one giant graph compiles for minutes). None vs tuple
+    # ``theta_costs`` trace as distinct structures.
+    @jax.jit
+    def _move(key, wt, wl, ws, nw, done, theta_costs):
+        return gibbs_indel_move(key, wt, wl, ws, nw, done, score, theta_costs,
+                                cand_tok, cand_len, cand_surf, temp=temp)
+
     def sweep(key, ctx_buf, ctx_len, word_len, word_surf, done, theta_costs=None):
         P, LCTX = ctx_buf.shape
         wt, nw = _unpack(ctx_buf, word_len, sl, Wmax, T)
         wl, ws = word_len, word_surf
         for _ in range(n_attempts):
             key, sub = jax.random.split(key)
-            (nt, nl, ns, nnw), _ = gibbs_indel_move(sub, wt, wl, ws, nw, done,
-                                                    score, theta_costs, cand_tok, cand_len, cand_surf,
-                                                    temp=temp)
+            (nt, nl, ns, nnw), _ = _move(sub, wt, wl, ws, nw, done, theta_costs)
             m, m2, m3 = done, done[:, None], done[:, None, None]
             wt = jnp.where(m3, nt, wt); wl = jnp.where(m2, nl, wl)
             ws = jnp.where(m2, ns, ws); nw = jnp.where(m, nnw, nw)
