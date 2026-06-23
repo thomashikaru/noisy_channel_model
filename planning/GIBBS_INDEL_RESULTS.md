@@ -53,36 +53,56 @@ importance weight; its weight-variance collapses the cloud and **over-edits clea
   `move_logw=0` (Gibbs preserves the target). Fired ONCE post-loop over the all-done cloud, `bd_attempts`
   sweeps (each sweep restores ~15% of the cloud → ~5 sweeps reach the posterior fraction).
 
-## Results (gibbs+bd, gibbs mode, P=128, K=−4.5, α=(200,2,2), bridges_j=4, post-loop attempts=5)
+## The function-word coverage fix (pool part 3)
+
+The top-J LM bridges are the LM's NEXT-token prediction at a gap, so a dropped function word is often NOT
+in the pool even when the full-sentence joint wants it. DELTO-02a: after "soup" the LM ranks `and` above
+`to`, so the move restored "served the soup AND the customers" (junk 0.40) instead of the target `to` —
+even though the joint prefers `to` by ~1.6 nats (`planning/delfrom_joint.py`-style LM check: TO −49.91 >
+AND −51.49 > literal −56.91). Fix: a fixed **closed-class function-word set** (articles / prepositions /
+conjunctions, single-token) ALWAYS in the insertion pool (`bd_funcwords`, default on). Function-word
+omission is the dominant production error, so this is a principled channel prior, NOT battery tuning — it
+guarantees the targets are in the pool and lets the move's full-sentence conditional pick CORRECTLY among
+them. With it, DELTO restores `to` and the `and` junk drops to 0.11.
+
+## Results (gibbs+bd, gibbs mode, P=128, K=−4.5, α=(200,2,2), bd_funcwords on, post-loop attempts=4–5)
 
 | item | role | gibbs baseline | gibbs+bd | verdict |
 |---|---|---|---|---|
-| DELFROM-01a | restore `from` (target) | E=0.00 | **E=0.61, q_smc=0.88 PASS** | restored ✓ |
-| INS-02b | clean keep | L=0.80 | **L=1.00, junk=0.00** | held (improved) ✓ |
+| DELFROM-01a | restore `from` (target, JOINT +4.5) | E=0.00 | **E=0.58–0.61, q_smc=0.85–0.88** | restored ✓ PASS |
+| DELTO-02a | restore `to` (target, JOINT +4.4) | E=0.00 | **E=0.56, q_smc=0.68** | restored ✓ PASS (funcwords) |
+| INS-02b | clean keep | L=0.80 | **L=1.00, junk=0.00** | held / improved ✓ |
 | DEL-the-01a | signal-limited (literal correct) | E≈0.00 | **E=0.07** | correctly NOT edited ✓ |
 
-This is the goal: a substantial increase in target behaviour on a genuinely inference-limited
-deletion-restoration case, with NO over-editing of the clean sentence and NO spurious editing of the
-signal-limited case. (Further confirmatory items in `planning/bd_gibbs_confirm.log`.)
+Edit pass **2/2** (q_smc>0.5), keep **1/1**, junk>0.5 on **0/3+1**. This is the goal: a substantial
+increase in target behaviour on genuinely inference-limited deletion-restoration cases, with NO
+over-editing of the clean sentence (even with the richer function-word insertion pool the Gibbs
+full-conditional draws no-op w.p. 1) and NO spurious editing of the signal-limited case. Logs:
+`planning/bd_gibbs_pl5.log` (bridges), `planning/bd_gibbs_fwjit2.log` (funcwords),
+`planning/bd_gibbs_broad.log`.
 
 ## Perf / caveats
 
 * The DEFAULT `rejuv=gibbs` is **unchanged / bit-identical** — `gibbs+bd` is opt-in. So the deployment
   default is not slowed.
-* `gibbs+bd` (gibbs mode) is ~250 s/item at P=128 (vs ~15–30 s for `gibbs`): the move scores a
-  `O(Wmax·Kc)` candidate grid per sweep × ~5 sweeps. Scoring is **sequential at the native P batch** — a
-  full `Kc·P` batch was tried and **thrashed 32 GB** (each forward materialises a `Kc×` larger vocab-logit
-  tensor), so it is reverted. A memory-bounded chunked-batch scorer is the obvious future perf win.
-* Restoration needs `NC_BD_BRIDGE_J>0`: the dropped word is not an observed surface, so the move needs the
-  LM-bridge candidates in its insertion pool. `bridge_j=0` only re-inserts observed words (duplicate
-  removal). `bridge_j=4` covers the function-word targets here; too small (j=3) drops `from`/`to`.
+* `gibbs+bd` (gibbs mode) is ~180 s/item at P=128 once warm (vs ~15–30 s for `gibbs`; first item pays a
+  ~175 s JIT compile): the move scores a `O(Wmax·Kc)` candidate grid per sweep × `bd_attempts` sweeps.
+  Scoring is **sequential at the native P batch** — a full `Kc·P` batch was tried and **thrashed 32 GB**
+  (each forward materialises a `Kc×` larger vocab-logit tensor), so it is reverted; the **per-move is
+  JIT'd** so the nested-`lax.map` grid fuses into one program compiled once. A memory-bounded chunked-batch
+  scorer is the obvious further perf win.
+* Restoration needs the word in the insertion pool. `bd_funcwords` (default on) covers the function-word
+  targets with NO per-gap bridge computation (`bd_bridge_j=0` suffices for the battery). `bd_bridge_j>0`
+  adds the LM's local top-J bridges (content-word restorations); but the local top-J often MISSES the
+  function-word target (the `to`/`and` case), which is exactly why the fixed funcword pool is needed.
 * Signal-limited items (DEL-the, INS-01a `handed handed`) are pythia-70m LM limits, not move defects — a
   better LM would flip them. The move correctly leaves them literal.
 
 ## Knobs (`NC_*` in `calibration_word_action_smc`; args in `pythia_word_caprop.run` / `pairhmm_smc.run`)
 
-`NC_BD_MODE` = gibbs (default) | mh | smcp3 · `NC_BD_BRIDGE_J` (LM-bridge insertion candidates, default 0)
-· `NC_BD_POOL_CAP` · `NC_BD_ATTEMPTS` (post-loop Gibbs sweeps, default 1; ~5 for full restoration).
+`NC_BD_MODE` = gibbs (default) | mh | smcp3 · `NC_BD_FUNCWORDS` (fixed closed-class insertion pool, default
+on) · `NC_BD_BRIDGE_J` (extra LM-bridge insertion candidates, default 0) · `NC_BD_POOL_CAP` ·
+`NC_BD_ATTEMPTS` (post-loop Gibbs sweeps, default 1; ~4–5 for full restoration).
 
 Throwaway harnesses: `planning/indel_signal_check.py`, `planning/delfrom_joint.py`,
 `planning/bd_gibbs_*.log`.
