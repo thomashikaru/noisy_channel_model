@@ -177,17 +177,44 @@ def _atomic_write_json(path, obj):
 
 
 def _config_dict(a):
-    """The full resolved config, embedded in every record and in the manifest (self-describing)."""
+    """The config exactly as passed on the CLI (import-free, used by the login-side manifest). A None
+    here (``wdel``/``wins``/``align_slope``/``action_alpha``) means "left at the model/channel default";
+    :func:`_resolved_config` substitutes the actual effective values for the per-item records.
+    ``wins_mode`` records HOW the spurious-word cost is computed, since ``wins`` (a scalar) is null
+    whenever the non-scalar frequency-aware / uniform defaults are in effect."""
     return {
         "lm": _lm_name(), "channel": a.channel, "rejuv": a.rejuv,
         "particles": a.particles, "band": a.band, "max_dist": a.max_dist,
         "rejuv_lookback": a.rejuv_lookback, "seed": a.seed,
         "lm_temp": a.lm_temp, "ins_rate": a.ins_rate, "uniform_ins": a.uniform_ins,
-        "wdel": a.wdel, "wins": a.wins, "align_slope": a.align_slope,
-        "action_alpha": a.action_alpha, "dedup": a.dedup,
+        "wdel": a.wdel, "wins": a.wins,
+        "wins_mode": ("scalar" if a.wins is not None else "uniform" if a.uniform_ins else "freq_aware"),
+        "align_slope": a.align_slope, "action_alpha": a.action_alpha, "dedup": a.dedup,
         "bd_p_stay": a.bd_p_stay, "bd_mode": a.bd_mode, "bd_attempts": a.bd_attempts,
         "bd_funcwords": not a.no_bd_funcwords, "top": a.top,
     }
+
+
+def _resolved_config(a, pwc, channel, action_alpha):
+    """:func:`_config_dict` with the model/channel defaults substituted for the knobs left at None, so
+    each per-item record is self-contained (no need to cross-reference the source at ``git_commit``).
+    Requires the model module (run path only) for the default constants. ``channel`` may differ from
+    ``a.channel`` (char_copy + an explicit alpha resolves to word_action), and ``action_alpha`` is the
+    already-parsed tuple (or None). align_slope/action_alpha are recorded as None for channels that do
+    not use them (so a null there means "not applicable", distinct from a defaulted value)."""
+    cfg = _config_dict(a)
+    cfg["channel"] = channel
+    cfg["wdel"] = a.wdel if a.wdel is not None else float(pwc.WDEL_DEFAULT)
+    if channel == "align":
+        cfg["align_slope"] = float(a.align_slope) if a.align_slope is not None else float(pwc.ALIGN_SLOPE)
+        cfg["action_alpha"] = list(action_alpha) if action_alpha is not None else list(pwc.ALIGN_ALPHA_DEFAULT)
+    elif channel == "word_action":
+        cfg["align_slope"] = None                                  # not used by this channel
+        cfg["action_alpha"] = list(action_alpha) if action_alpha is not None else list(pwc.ACTION_ALPHA_DEFAULT)
+    else:                                                          # char_copy: no align form, no action latent
+        cfg["align_slope"] = None
+        cfg["action_alpha"] = None
+    return cfg
 
 
 def _length_key(s):
@@ -274,6 +301,8 @@ def write_manifest(a):
                      "sort_by_length": a.sort_by_length},
         "n_shards": n_shards,
         "config": _config_dict(a),
+        "config_note": "as-passed; null wdel/wins/align_slope/action_alpha = channel default. "
+                       "Per-item records resolve these to effective values.",
         "config_slug": config_slug(a),
         "output_dir": od,
         "write_viz": not a.no_viz,
@@ -342,7 +371,7 @@ def do_run(a):
 
     git = _git_commit()
     slurm = _slurm_meta()
-    cfg = _config_dict(a)
+    cfg = _resolved_config(a, pwc, channel, action_alpha)   # effective values (defaults substituted)
     t_shard = time.time()
 
     for k, (idx, text) in enumerate(todo, 1):
