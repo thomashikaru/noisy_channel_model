@@ -525,10 +525,12 @@ def cli():
                          f"(emission = K*edit_distance; default ALIGN_SLOPE={ALIGN_SLOPE:.3f}, calibrated). "
                          "Less negative => cheaper near-misses (more correction); more negative => fewer. "
                          "The single over-editing knob, decoupled from --action_alpha. Only used by --channel align.")
-    ap.add_argument("--rejuv", choices=("off", "gibbs"), default="off",
+    ap.add_argument("--rejuv", choices=("off", "gibbs", "gibbs+bd"), default="off",
                     help="post-resample Gibbs/SMCP3 rejuvenation sweep (R3): 'gibbs' re-diversifies "
                          "the cloud and cures impoverishment collapses, at ~a few x the runtime "
-                         "(KV-cached suffix scorer). 'off' is the certified forward-only filter.")
+                         "(KV-cached suffix scorer). 'gibbs+bd' adds the Gibbs indel (birth/death) move "
+                         "that can restore dropped / remove spurious words (default bd_mode=gibbs, "
+                         "function-word insertion pool on). 'off' is the certified forward-only filter.")
     ap.add_argument("--rejuv_lookback", type=int, default=3,
                     help="rejuvenation window: how many recent words each sweep revisits (default 3)")
     ap.add_argument("--no_dedup", action="store_true",
