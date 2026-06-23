@@ -1,0 +1,19 @@
+# Base conda/mamba environment for the noisy-channel model.
+#
+# This file only creates Python + pip + git. The actual Python dependencies (jax, torch, the
+# pinned PyPI packages, and the editable genjax checkout) are installed by slurm/setup_env.sh,
+# because two of them are platform-specific:
+#   * jax   -- CPU/Metal wheels on arm64 macOS, CUDA 12 wheels on the x86 GPU nodes
+#   * torch -- CPU-only on BOTH (it is used only to load Pythia's weights; jax/penzai do the compute),
+#              but the linux CPU wheel must come from the pytorch CPU index
+# Keeping the version pins in one place (setup_env.sh) avoids them drifting between platforms.
+#
+# Usage:  mamba env create -f slurm/environment.yml      # or: conda env create -f ...
+#         bash slurm/setup_env.sh                        # installs the deps into it
+name: ncgenjax
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - git

@@ -1,5 +1,4 @@
 .vscode
-.gitignore
 
 # Python
 __pycache__/
@@ -17,3 +16,7 @@ planning/single_token_words.txt
 
 # Personal local demo runner (untracked; edit freely without touching the repo)
 run_example_native.sh
+
+# SLURM harness: private per-cluster settings (never commit) + batch outputs
+slurm/cluster.env
+results_nc/

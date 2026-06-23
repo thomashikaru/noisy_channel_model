@@ -1,0 +1,8 @@
+# One observed (noisy) sentence per line. Blank lines and lines starting with '#' are ignored.
+# The index of a sentence is its position among the kept lines; APPEND new sentences at the end
+# so re-runs resume cleanly (inserting in the middle shifts indices and recomputes the tail).
+teh cat sat on teh mat
+i want go home
+the boy was handed the ball
+she droev the car too the store
+the the patient recovered quickly
