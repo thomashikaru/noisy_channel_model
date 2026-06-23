@@ -74,6 +74,7 @@ RESULTS_ROOT="${RESULTS_ROOT:-results_nc}"
 SENTENCES_PER_SHARD="${SENTENCES_PER_SHARD:-8}"   # MAX sentences per array task (caps shard runtime; amortizes model load)
 MIN_SENTENCES_PER_SHARD="${MIN_SENTENCES_PER_SHARD:-4}"  # with SORT_BY_LENGTH, min before closing a shard at a length boundary
 SORT_BY_LENGTH="${SORT_BY_LENGTH:-1}"             # 1 -> group same-length sentences per shard so each shard JIT-compiles ~once
+N_SEEDS="${N_SEEDS:-1}"                            # >1 -> run N seeds/item + write an evidence-weighted merged posterior (own dir suffix)
 MAX_PARALLEL="${MAX_PARALLEL:-20}"                # array throttle: never more than this many tasks at once
 MEM="${MEM:-12G}"                 # host RAM. MEASURE with `seff` on the first shard and tighten (see README)
 SECONDS_PER_ITEM="${SECONDS_PER_ITEM:-240}"       # used to auto-size --time
@@ -97,7 +98,7 @@ case "$RESULTS_ROOT" in /*) RR_ABS="$RESULTS_ROOT";; *) RR_ABS="$REPO/$RESULTS_R
 # resolved output directory and the resume bookkeeping match exactly. All values are space-free.
 CFG="--channel $CHANNEL --particles $PARTICLES --band $BAND --max-dist $MAX_DIST"
 CFG="$CFG --rejuv $REJUV --rejuv-lookback $REJUV_LOOKBACK --seed $SEED"
-CFG="$CFG --lm-temp $LM_TEMP --ins-rate $INS_RATE --top $TOP"
+CFG="$CFG --lm-temp $LM_TEMP --ins-rate $INS_RATE --top $TOP --n-seeds $N_SEEDS"
 
 # Optional / behavior flags -- also shared by plan and run.
 EXTRA=""
@@ -143,7 +144,7 @@ ARRAY_SPEC="${SHARDS}%${MAX_PARALLEL}"
 
 # ---- Auto-size --time from the shard size, capped at MAX_TIME ----------------------------------
 to_secs() { awk -F: '{ if (NF==3) print $1*3600+$2*60+$3; else if (NF==2) print $1*60+$2; else print $1 }' <<<"$1"; }
-EST=$(( MODEL_OVERHEAD_S + SENTENCES_PER_SHARD * SECONDS_PER_ITEM ))
+EST=$(( MODEL_OVERHEAD_S + SENTENCES_PER_SHARD * N_SEEDS * SECONDS_PER_ITEM ))
 CAP=$(to_secs "$MAX_TIME")
 TSEC=$(( EST < CAP ? EST : CAP ))
 TIME_STR=$(printf '%d:%02d:%02d' $((TSEC/3600)) $(((TSEC%3600)/60)) $((TSEC%60)))

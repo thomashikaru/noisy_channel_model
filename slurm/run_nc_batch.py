@@ -38,6 +38,7 @@ penzai import) so the submit script can call them cheaply on a login node withou
 import argparse
 import glob
 import json
+import math
 import os
 import re
 import subprocess
@@ -87,6 +88,7 @@ def config_slug(a):
     if a.bd_attempts != 1:                 parts.append(f"bdatt{a.bd_attempts}")
     if a.no_bd_funcwords:                  parts.append("nofw")
     if not a.dedup:                        parts.append("nodedup")
+    if a.n_seeds > 1:                      parts.append(f"nseed{a.n_seeds}")
     return "__".join(parts)
 
 
@@ -109,6 +111,14 @@ def item_path(a, idx):
 
 def viz_path(a, idx):
     return os.path.join(results_dir(a), f"item_{idx:05d}.viz.json")
+
+
+def seed_item_path(a, idx, j):
+    return os.path.join(results_dir(a), f"item_{idx:05d}_s{j}.json")
+
+
+def seed_viz_path(a, idx, j):
+    return os.path.join(results_dir(a), f"item_{idx:05d}_s{j}.viz.json")
 
 
 def read_sentences(path):
@@ -191,7 +201,7 @@ def _config_dict(a):
         "wins_mode": ("scalar" if a.wins is not None else "uniform" if a.uniform_ins else "freq_aware"),
         "align_slope": a.align_slope, "action_alpha": a.action_alpha, "dedup": a.dedup,
         "bd_p_stay": a.bd_p_stay, "bd_mode": a.bd_mode, "bd_attempts": a.bd_attempts,
-        "bd_funcwords": not a.no_bd_funcwords, "top": a.top,
+        "bd_funcwords": not a.no_bd_funcwords, "top": a.top, "n_seeds": a.n_seeds,
     }
 
 
@@ -332,9 +342,67 @@ def do_plan(a):
     print("SHARDS_WITH_WORK=" + ",".join(str(s) for s in shards_with_work))
 
 
+def _run_one(pwc, a, text, key, channel, action_alpha, want_viz):
+    """Run the model for ONE (sentence, key). Returns (result, viz_or_None) where result has status
+    'ok' (map/hypotheses/logZ/runtime_s) or 'error' (traceback). Pure compute -- the caller owns file
+    IO so the multi-seed loop can load-or-compute each seed independently."""
+    import traceback
+    t0 = time.time()
+    try:
+        trace = [] if want_viz else None
+        st, lw, logZ, sl = pwc.run(
+            text, key, P=a.particles, band=a.band, max_dist=a.max_dist,
+            wdel=a.wdel, wins=a.wins, rejuv=a.rejuv, rejuv_lookback=a.rejuv_lookback,
+            trace=trace, dedup=a.dedup, lm_temp=a.lm_temp, ins_rate=a.ins_rate,
+            uniform_ins=a.uniform_ins, action_alpha=action_alpha, channel=channel,
+            align_slope=a.align_slope, bd_p_stay=a.bd_p_stay, bd_mode=a.bd_mode,
+            bd_attempts=a.bd_attempts, bd_funcwords=not a.no_bd_funcwords)
+        top = pwc.decode(st, lw, skip=sl, top=a.top)
+        hyps = [{"sentence": s, "prob": float(p)} for s, p in top]
+        res = {"status": "ok", "map": (hyps[0]["sentence"] if hyps else None),
+               "hypotheses": hyps, "logZ": float(logZ), "runtime_s": round(time.time() - t0, 1)}
+        viz = (pwc.structured_output(text, trace, float(logZ), P=a.particles, band=a.band,
+                                     max_dist=a.max_dist, rejuv=a.rejuv,
+                                     rejuv_lookback=a.rejuv_lookback, topk=a.viz_topk)
+               if want_viz else None)
+        return res, viz
+    except Exception:
+        return {"status": "error", "runtime_s": round(time.time() - t0, 1),
+                "error": traceback.format_exc()}, None
+
+
+def _merge_seeds(ok_recs):
+    """Evidence-weighted merge of the successful per-seed records (each with logZ + hypotheses). The
+    mixture weight of run r is proportional to Z_hat_r = exp(logZ_r), so merged P(sentence) =
+    sum_r w_r * P_r(sentence) over the per-seed top-k lists -- a collapsed run (low logZ) is auto-
+    down-weighted; the run(s) that found the high-evidence mode dominate. Returns (hypotheses_sorted,
+    seed_weights, merged_logZ, logZ_stats). merged_logZ = log((1/R) sum_r exp(logZ_r)) =
+    logsumexp(logZ_r) - log R (the unbiased combined evidence). NOTE: the merge over truncated top-k
+    lists is approximate in the tail; raise --top if hypotheses are close."""
+    import statistics
+    logZs = [r["logZ"] for r in ok_recs]
+    R = len(logZs)
+    mx = max(logZs)
+    w = [math.exp(lz - mx) for lz in logZs]
+    sw = sum(w)
+    weights = [x / sw for x in w]
+    merged = {}
+    for wt, r in zip(weights, ok_recs):
+        for h in r["hypotheses"]:
+            merged[h["sentence"]] = merged.get(h["sentence"], 0.0) + wt * h["prob"]
+    hyps = sorted(({"sentence": s, "prob": p} for s, p in merged.items()), key=lambda h: -h["prob"])
+    merged_logZ = mx + math.log(sw) - math.log(R)
+    stats = {"per_seed": [round(z, 3) for z in logZs], "min": round(min(logZs), 3),
+             "max": round(max(logZs), 3), "mean": round(statistics.fmean(logZs), 3),
+             "std": round(statistics.pstdev(logZs) if R > 1 else 0.0, 3),
+             "spread": round(max(logZs) - min(logZs), 3)}
+    return hyps, weights, merged_logZ, stats
+
+
 def do_run(a):
     """Process this task's shard. Loads the model once, then loops sentences with per-item resume,
-    atomic writes, and per-item error capture."""
+    atomic writes, and per-item error capture. With --n-seeds>1, each item runs that many independent
+    seeds (unique paths) and writes an evidence-weighted MERGED record as item_NNNNN.json."""
     sents = read_sentences(a.input)
     n = len(sents)
     if a.shard_index is None:
@@ -376,39 +444,67 @@ def do_run(a):
 
     for k, (idx, text) in enumerate(todo, 1):
         el = int(time.time() - t_shard)
-        print(f"[shard {a.shard_index}] [{el // 60:02d}:{el % 60:02d}] "
-              f"({k}/{len(todo)}) item {idx}: {text!r}", flush=True)
+        print(f"[shard {a.shard_index}] [{el // 60:02d}:{el % 60:02d}] ({k}/{len(todo)}) "
+              f"item {idx}: {text!r}" + (f"  ({a.n_seeds} seeds)" if a.n_seeds > 1 else ""), flush=True)
         t0 = time.time()
         base = {"idx": idx, "observed": text, "config": cfg, "lm": cfg["lm"],
                 "git_commit": git, "slurm": slurm, "timestamp": _now_iso()}
+        # The item's base RNG key (unchanged from the original single-seed path).
+        item_key = jax.random.fold_in(jax.random.PRNGKey(a.seed), idx)
         try:
-            key = jax.random.fold_in(jax.random.PRNGKey(a.seed), idx)
-            trace = [] if not a.no_viz else None
-            st, lw, logZ, sl = pwc.run(
-                text, key, P=a.particles, band=a.band, max_dist=a.max_dist,
-                wdel=a.wdel, wins=a.wins, rejuv=a.rejuv, rejuv_lookback=a.rejuv_lookback,
-                trace=trace, dedup=a.dedup, lm_temp=a.lm_temp, ins_rate=a.ins_rate,
-                uniform_ins=a.uniform_ins, action_alpha=action_alpha, channel=channel,
-                align_slope=a.align_slope, bd_p_stay=a.bd_p_stay, bd_mode=a.bd_mode,
-                bd_attempts=a.bd_attempts, bd_funcwords=not a.no_bd_funcwords)
-            top = pwc.decode(st, lw, skip=sl, top=a.top)
-            hyps = [{"sentence": s, "prob": float(p)} for s, p in top]
-            runtime = time.time() - t0
-            rec = dict(base, status="ok", map=(hyps[0]["sentence"] if hyps else None),
-                       hypotheses=hyps, logZ=float(logZ), runtime_s=round(runtime, 1))
-            # viz FIRST, compact LAST: the compact file's presence implies the viz file is complete.
-            if not a.no_viz:
-                viz = pwc.structured_output(text, trace, float(logZ), P=a.particles, band=a.band,
-                                            max_dist=a.max_dist, rejuv=a.rejuv,
-                                            rejuv_lookback=a.rejuv_lookback, topk=a.viz_topk)
-                _atomic_write_json(viz_path(a, idx), viz)
-            _atomic_write_json(item_path(a, idx), rec)
-            print(f"[shard {a.shard_index}]   ok in {runtime:.0f}s -> {rec['map']!r}", flush=True)
+            if a.n_seeds <= 1:
+                # Single seed: original RNG (item_key used directly) and original record schema.
+                res, viz = _run_one(pwc, a, text, item_key, channel, action_alpha, not a.no_viz)
+                if res["status"] == "ok" and viz is not None:   # viz FIRST, compact LAST
+                    _atomic_write_json(viz_path(a, idx), viz)
+                _atomic_write_json(item_path(a, idx), dict(base, **res))
+                tag = res["map"] if res["status"] == "ok" else "ERROR"
+                print(f"[shard {a.shard_index}]   {res['status']} in {res['runtime_s']:.0f}s "
+                      f"-> {tag!r}", flush=True)
+                continue
+
+            # Multi-seed: run/load N independent sub-seeds to unique paths, then evidence-merge.
+            per_seed = []
+            for j in range(a.n_seeds):
+                sp = seed_item_path(a, idx, j)
+                stj = _item_status(sp, text)
+                if not a.overwrite and (stj == "done" or (stj == "error" and a.skip_errors)):
+                    with open(sp) as fh:
+                        per_seed.append(json.load(fh))           # resume: reuse this seed's result
+                    continue
+                res, viz = _run_one(pwc, a, text, jax.random.fold_in(item_key, j),
+                                    channel, action_alpha, not a.no_viz)
+                if res["status"] == "ok" and viz is not None:
+                    _atomic_write_json(seed_viz_path(a, idx, j), viz)
+                rec_j = dict(base, seed_index=j, **res)
+                _atomic_write_json(sp, rec_j)                    # per-seed FIRST
+                per_seed.append(rec_j)
+            ok = [r for r in per_seed if r.get("status") == "ok"]
+            if ok:
+                hyps, weights, mlogZ, stats = _merge_seeds(ok)
+                merged = dict(base, status="ok", merge="evidence_weighted",
+                              n_seeds=len(ok), n_seeds_requested=a.n_seeds,
+                              map=(hyps[0]["sentence"] if hyps else None), hypotheses=hyps[:a.top],
+                              logZ=mlogZ, logZ_stats=stats,
+                              seed_weights=[round(w, 4) for w in weights],
+                              runtime_s=round(time.time() - t0, 1))
+            else:
+                merged = dict(base, status="error", n_seeds=0, n_seeds_requested=a.n_seeds,
+                              runtime_s=round(time.time() - t0, 1),
+                              error=f"all {a.n_seeds} seeds errored")
+            _atomic_write_json(item_path(a, idx), merged)        # merged LAST = completion marker
+            if merged["status"] == "ok":
+                print(f"[shard {a.shard_index}]   merged {len(ok)}/{a.n_seeds} seeds in "
+                      f"{merged['runtime_s']:.0f}s -> {merged['map']!r}  "
+                      f"(logZ {mlogZ:.2f}, spread {stats['spread']:.1f})", flush=True)
+            else:
+                print(f"[shard {a.shard_index}]   ERROR item {idx}: all seeds failed (continuing)",
+                      flush=True)
         except Exception:
             import traceback
             tb = traceback.format_exc()
-            rec = dict(base, status="error", runtime_s=round(time.time() - t0, 1), error=tb)
-            _atomic_write_json(item_path(a, idx), rec)       # keep going; this item retries next run
+            _atomic_write_json(item_path(a, idx),
+                               dict(base, status="error", runtime_s=round(time.time() - t0, 1), error=tb))
             print(f"[shard {a.shard_index}]   ERROR on item {idx} (continuing):\n{tb}", flush=True)
 
     el = int(time.time() - t_shard)
@@ -459,6 +555,11 @@ def build_parser():
     p.add_argument("--rejuv", choices=("off", "gibbs", "gibbs+bd"), default="gibbs+bd")
     p.add_argument("--rejuv-lookback", type=int, default=6)
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--n-seeds", type=int, default=1,
+                   help="run this many independent seeds per item (unique paths item_NNNNN_sJ.json) and "
+                        "write an evidence-weighted MERGED record as item_NNNNN.json (logZ stats + "
+                        "seed weights). 1 = original single-seed behavior. Each seed adds a config-dir "
+                        "suffix so it never collides with a smaller run.")
     p.add_argument("--lm-temp", type=float, default=1.0)
     p.add_argument("--ins-rate", type=float, default=0.02)
     p.add_argument("--uniform-ins", action="store_true")

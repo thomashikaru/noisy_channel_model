@@ -111,9 +111,19 @@ If a job fails immediately, it's almost always this block — check `logs/shard_
 `UNIFORM_INS`, `BD_P_STAY`, `BD_MODE`, `BD_ATTEMPTS`, `NO_BD_FUNCWORDS`.
 
 **Execution**: `RESULTS_ROOT` (default `results_nc`), `SENTENCES_PER_SHARD` (8, the **max** per shard),
-`MIN_SENTENCES_PER_SHARD` (4), `SORT_BY_LENGTH` (1), `MAX_PARALLEL` (20), `MEM` (12G), `MAX_TIME`
-(3:59:00), `WRITE_VIZ` (1), `OVERWRITE` (0), `SKIP_ERRORS` (0), `SECONDS_PER_ITEM` (240, only used to
-auto-size `--time`).
+`MIN_SENTENCES_PER_SHARD` (4), `SORT_BY_LENGTH` (1), `N_SEEDS` (1), `MAX_PARALLEL` (20), `MEM` (12G),
+`MAX_TIME` (3:59:00), `WRITE_VIZ` (1), `OVERWRITE` (0), `SKIP_ERRORS` (0), `SECONDS_PER_ITEM` (240, only
+used to auto-size `--time`).
+
+**Multi-seed merge** (`N_SEEDS=N`, N>1): runs N independent seeds per sentence (unique paths
+`item_NNNNN_sJ.json`) and writes an **evidence-weighted merged** posterior as `item_NNNNN.json` —
+mixture weight of seed r ∝ exp(logZ_r), so a seed that collapsed onto a low-evidence mode is
+auto-down-weighted and the seed(s) that found the high-evidence mode dominate. The merged record adds
+`logZ_stats` (per-seed logZ + `spread`, a per-item confidence flag — wide spread = inference-sensitive)
+and `seed_weights`. Seeds run in one process (same shape → one compile shared across all N), and the
+config dir gets a `nseedN` suffix so it never collides with a smaller run. `N_SEEDS=1` is byte-identical
+to the original single-seed behavior. `--time` is auto-scaled by N. Use this for items where one cloud
+is unreliable; pair it with enough particles that logZ is tight (see note below).
 
 **Placement**: `USE_GPU` (1). pythia-70m barely uses the GPU — a particle filter of a 70M model is a
 long sequence of tiny ops, so GPU ≈ CPU per item. Set `USE_GPU=0` to drop `--gres`, target
