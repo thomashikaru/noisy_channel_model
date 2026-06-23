@@ -2,9 +2,10 @@
 """Per-shard batch runner for the pair-HMM noisy-channel model (SLURM-friendly).
 
 This is the worker that every SLURM array task runs. One array task = one *shard* of the input
-file (a contiguous block of ``--shard-size`` sentences). The model (Pythia + the JIT-compiled SMC
-step) is loaded ONCE per shard and reused across that shard's sentences, so the ~minutes of fixed
-model-load + compile overhead is amortized instead of paid per sentence.
+file (up to ``--shard-size`` sentences; with ``--sort-by-length`` shards group same-length sentences
+rather than being contiguous in file order). The model (Pythia + the JIT-compiled SMC step) is
+loaded ONCE per shard and reused across that shard's sentences, so the model load is always
+amortized and -- when a shard is length-homogeneous -- the JAX trace/lower compile is too.
 
 It mirrors ``genjax_port.pythia_word_caprop.cli`` for the actual inference call, but instead of a
 single ``--sentence`` it processes a shard and writes, per sentence:
@@ -37,8 +38,8 @@ penzai import) so the submit script can call them cheaply on a login node withou
 import argparse
 import glob
 import json
-import math
 import os
+import re
 import subprocess
 import sys
 import time
@@ -189,10 +190,55 @@ def _config_dict(a):
     }
 
 
-def _shard_bounds(n, shard_size, shard_index):
-    lo = shard_index * shard_size
-    hi = min(lo + shard_size, n)
-    return lo, hi
+def _length_key(s):
+    """Cheap, stdlib-only proxy for the model's word-unit count ``M = len(obs_words)`` -- the dominant
+    XLA-compile shape axis (see pairhmm_smc ``_make_kernel(seed_len, M, band, T_max, LCTX, Wmax)``).
+    Counts word runs AND standalone punctuation, mirroring how the channel segments observed words.
+    Exact M needs the tokenizer; this proxy clusters same-shape sentences closely enough to group
+    them, and keeps ``--plan`` import-free (no transformers on the login node)."""
+    return len(re.findall(r"\w+|[^\w\s]", s))
+
+
+def _shard_plan(sentences, sort_by_length, min_size, max_size):
+    """Deterministic assignment of sentence indices to shards: returns a list of index-lists where
+    shard ``i`` -> the ORIGINAL indices it processes. Output files stay named by original index, so
+    this changes shard *membership* only, never item identity -- resume is unaffected, and you can
+    change the sharding knobs between runs without invalidating finished items.
+
+    ``sort_by_length`` groups same-length sentences so each shard's process pays the JAX trace/lower
+    compile ~once and same-shape items reuse the in-process jit cache (the persistent on-disk cache
+    does NOT help here -- the cost is tracing/lowering, not XLA backend compile). ``min_size`` /
+    ``max_size`` bound shard size: a shard is closed at a length boundary only once it has reached
+    ``min_size`` (so we don't spawn tiny shards), and never exceeds ``max_size`` (so no shard runs too
+    long). An undersized tail is merged back into the previous shard."""
+    n = len(sentences)
+    max_size = max(1, max_size)
+    min_size = max(1, min(min_size, max_size))
+    if n == 0:
+        return []
+    if not sort_by_length:                                   # original behaviour: contiguous blocks
+        return [list(range(i, min(i + max_size, n))) for i in range(0, n, max_size)]
+    # Group indices by length proxy (ascending length; original order within a length), then split
+    # each length group into <=max_size chunks -- so a length's sentences stay together.
+    by_len = {}
+    for i in sorted(range(n), key=lambda j: (_length_key(sentences[j]), j)):
+        by_len.setdefault(_length_key(sentences[i]), []).append(i)
+    chunks = []
+    for L in sorted(by_len):
+        g = by_len[L]
+        chunks.extend(g[j:j + max_size] for j in range(0, len(g), max_size))
+    # Fold an undersized shard into the next chunk (keeps full same-length chunks intact while
+    # merging only the small leftovers, so most shards land in [min_size, max_size]).
+    shards = []
+    for ch in chunks:
+        if shards and len(shards[-1]) < min_size and len(shards[-1]) + len(ch) <= max_size:
+            shards[-1].extend(ch)
+        else:
+            shards.append(list(ch))
+    if len(shards) >= 2 and len(shards[-1]) < min_size \
+            and len(shards[-2]) + len(shards[-1]) <= max_size + min_size:
+        shards[-2].extend(shards.pop())                      # fold a too-small final shard back
+    return shards
 
 
 def _slurm_meta():
@@ -215,7 +261,7 @@ def write_manifest(a):
     without parsing the directory name."""
     sents = read_sentences(a.input)
     n = len(sents)
-    n_shards = math.ceil(n / a.shard_size) if a.shard_size > 0 else 0
+    n_shards = len(_shard_plan(sents, a.sort_by_length, a.min_shard_size, a.shard_size))
     od = output_dir(a)
     os.makedirs(results_dir(a), exist_ok=True)
     os.makedirs(logs_dir(a), exist_ok=True)
@@ -224,7 +270,8 @@ def write_manifest(a):
         "git_commit": _git_commit(),
         "input_file": os.path.abspath(a.input),
         "n_sentences": n,
-        "shard_size": a.shard_size,
+        "sharding": {"max_size": a.shard_size, "min_size": a.min_shard_size,
+                     "sort_by_length": a.sort_by_length},
         "n_shards": n_shards,
         "config": _config_dict(a),
         "config_slug": config_slug(a),
@@ -241,18 +288,17 @@ def do_plan(a):
     write_manifest(a)
     sents = read_sentences(a.input)
     n = len(sents)
-    n_shards = math.ceil(n / a.shard_size) if a.shard_size > 0 else 0
+    plan = _shard_plan(sents, a.sort_by_length, a.min_shard_size, a.shard_size)
     shards_with_work, remaining = [], 0
-    for s in range(n_shards):
-        lo, hi = _shard_bounds(n, a.shard_size, s)
-        work = sum(1 for i in range(lo, hi)
+    for s, members in enumerate(plan):
+        work = sum(1 for i in members
                    if _needs_work(item_path(a, i), sents[i], a.overwrite, a.skip_errors))
         if work:
             shards_with_work.append(s)
             remaining += work
     print(f"OUTPUT_DIR={output_dir(a)}")
     print(f"TOTAL_ITEMS={n}")
-    print(f"NUM_SHARDS={n_shards}")
+    print(f"NUM_SHARDS={len(plan)}")
     print(f"REMAINING_ITEMS={remaining}")
     print("SHARDS_WITH_WORK=" + ",".join(str(s) for s in shards_with_work))
 
@@ -264,12 +310,15 @@ def do_run(a):
     n = len(sents)
     if a.shard_index is None:
         a.shard_index = int(os.environ.get("SLURM_ARRAY_TASK_ID", "0"))
-    lo, hi = _shard_bounds(n, a.shard_size, a.shard_index)
-    mine = [(i, sents[i]) for i in range(lo, hi)]
+    plan = _shard_plan(sents, a.sort_by_length, a.min_shard_size, a.shard_size)
+    members = plan[a.shard_index] if 0 <= a.shard_index < len(plan) else []
+    mine = [(i, sents[i]) for i in members]
     todo = [(i, t) for (i, t) in mine
             if _needs_work(item_path(a, i), t, a.overwrite, a.skip_errors)]
 
-    print(f"[shard {a.shard_index}] sentences {lo}..{hi - 1} of {n}; "
+    lens = sorted({_length_key(t) for _i, t in mine})
+    span = f"{lens[0]}" if len(lens) == 1 else (f"{lens[0]}..{lens[-1]}" if lens else "-")
+    print(f"[shard {a.shard_index}] {len(mine)} sentences (length-units {span}) of {n}; "
           f"{len(todo)}/{len(mine)} need work "
           f"(est ~{len(todo) * a.est_seconds_per_item // 60 + 1} min of inference + model load)",
           flush=True)
@@ -354,7 +403,15 @@ def build_parser():
     # batch / IO
     p.add_argument("--input", required=True, help="text file: one observed sentence per line")
     p.add_argument("--results-root", default="results_nc", help="root of the results tree")
-    p.add_argument("--shard-size", type=int, default=8, help="sentences per shard / array task")
+    p.add_argument("--shard-size", type=int, default=8,
+                   help="MAX sentences per shard / array task (a shard never exceeds this)")
+    p.add_argument("--min-shard-size", type=int, default=4,
+                   help="with --sort-by-length, the minimum sentences per shard before closing at a "
+                        "length boundary (avoids tiny shards / imbalance)")
+    p.add_argument("--sort-by-length", action="store_true",
+                   help="group same-length sentences into shards so each shard's process pays the JAX "
+                        "trace/lower compile ~once (same-shape items reuse the in-process jit cache). "
+                        "Changes shard membership only; outputs are still keyed by original index.")
     p.add_argument("--shard-index", type=int, default=None,
                    help="which shard to run (default: $SLURM_ARRAY_TASK_ID, else 0)")
     p.add_argument("--overwrite", action="store_true", help="recompute even if outputs exist")

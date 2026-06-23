@@ -110,9 +110,24 @@ If a job fails immediately, it's almost always this block — check `logs/shard_
 `SEED`, `LM_TEMP`, `INS_RATE`, and optional overrides `WDEL`, `ALIGN_SLOPE`, `ACTION_ALPHA`, `WINS`,
 `UNIFORM_INS`, `BD_P_STAY`, `BD_MODE`, `BD_ATTEMPTS`, `NO_BD_FUNCWORDS`.
 
-**Execution**: `RESULTS_ROOT` (default `results_nc`), `SENTENCES_PER_SHARD` (8), `MAX_PARALLEL` (20),
-`MEM` (12G), `MAX_TIME` (3:59:00), `WRITE_VIZ` (1), `OVERWRITE` (0), `SKIP_ERRORS` (0),
-`SECONDS_PER_ITEM` (240, only used to auto-size `--time`).
+**Execution**: `RESULTS_ROOT` (default `results_nc`), `SENTENCES_PER_SHARD` (8, the **max** per shard),
+`MIN_SENTENCES_PER_SHARD` (4), `SORT_BY_LENGTH` (1), `MAX_PARALLEL` (20), `MEM` (12G), `MAX_TIME`
+(3:59:00), `WRITE_VIZ` (1), `OVERWRITE` (0), `SKIP_ERRORS` (0), `SECONDS_PER_ITEM` (240, only used to
+auto-size `--time`).
+
+**Placement**: `USE_GPU` (1). pythia-70m barely uses the GPU — a particle filter of a 70M model is a
+long sequence of tiny ops, so GPU ≈ CPU per item. Set `USE_GPU=0` to drop `--gres`, target
+`CPU_PARTITIONS` (falls back to `PARTITIONS`), and force `JAX_PLATFORMS=cpu`; CPU partitions often
+queue faster and are lighter on priority, so a batch can finish *sooner* on CPU. Bump `CPUS` for CPU.
+
+**Length-bucketed sharding** (`SORT_BY_LENGTH=1`): the compiled SMC kernel is keyed by sentence shape
+(word count, mainly), and the in-process JIT cache reuses it only for same-shape sentences — so each
+shard is filled with same-length sentences and pays the JAX trace/lower compile ~once instead of
+per-distinct-length. `SENTENCES_PER_SHARD`/`MIN_SENTENCES_PER_SHARD` bound shard size (max is a hard
+cap to protect `--time`; min is best-effort). This only changes shard *membership* — outputs stay keyed
+by original line index, so resume is unaffected and you can change these knobs between runs.
+(Note: the JAX *persistent on-disk* compilation cache does **not** help here — the cost is
+tracing/lowering, not XLA backend compile — so the in-process reuse from bucketing is the lever.)
 
 ---
 

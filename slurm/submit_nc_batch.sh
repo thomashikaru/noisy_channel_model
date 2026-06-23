@@ -29,9 +29,12 @@ RUNNER="$SLURM_DIR/run_nc_batch.py"
 #    Nothing is preinstalled, so this is the part most likely to need tweaking. The defaults assume a
 #    conda/mamba env named $CONDA_ENV created by slurm/setup_env.sh.
 # ============================================================================================
-PARTITIONS="${PARTITIONS:?set PARTITIONS in slurm/cluster.env to your GPU partition names, comma-separated, or pass PARTITIONS=...}"
-GRES="${GRES:-gpu:1}"                 # pythia-70m is tiny: any single GPU. Pin a type only if required, e.g. gpu:a100:1
-CPUS="${CPUS:-4}"
+PARTITIONS="${PARTITIONS:?set PARTITIONS in slurm/cluster.env to your partition names, comma-separated, or pass PARTITIONS=...}"
+USE_GPU="${USE_GPU:-1}"               # 1 -> request a GPU; 0 -> CPU-only. pythia-70m barely uses the GPU, so CPU
+                                      # often finishes a batch sooner (shorter queues, lighter on priority).
+GRES="${GRES:-gpu:1}"                 # only when USE_GPU=1. Any single GPU; pin a type only if required, e.g. gpu:a100:1
+CPU_PARTITIONS="${CPU_PARTITIONS:-}"  # partitions used when USE_GPU=0 (empty -> reuse PARTITIONS)
+CPUS="${CPUS:-4}"                     # cores/task; jax-on-CPU uses these as compute threads (consider raising for USE_GPU=0)
 CONDA_ENV="${CONDA_ENV:-ncgenjax}"    # the CLUSTER-side env name (NOT the local arm64 env, which won't exist on x86 nodes)
 CONDA_BASE="${CONDA_BASE:-}"          # e.g. $HOME/miniforge3 ; empty -> discovered via `conda info --base`
 MODULE_PURGE="${MODULE_PURGE:-module purge}"          # set to ':' to disable
@@ -68,7 +71,9 @@ NO_BD_FUNCWORDS="${NO_BD_FUNCWORDS:-0}"
 # 3. BATCH / SLURM EXECUTION
 # ============================================================================================
 RESULTS_ROOT="${RESULTS_ROOT:-results_nc}"
-SENTENCES_PER_SHARD="${SENTENCES_PER_SHARD:-8}"   # sentences per array task (amortizes model load)
+SENTENCES_PER_SHARD="${SENTENCES_PER_SHARD:-8}"   # MAX sentences per array task (caps shard runtime; amortizes model load)
+MIN_SENTENCES_PER_SHARD="${MIN_SENTENCES_PER_SHARD:-4}"  # with SORT_BY_LENGTH, min before closing a shard at a length boundary
+SORT_BY_LENGTH="${SORT_BY_LENGTH:-1}"             # 1 -> group same-length sentences per shard so each shard JIT-compiles ~once
 MAX_PARALLEL="${MAX_PARALLEL:-20}"                # array throttle: never more than this many tasks at once
 MEM="${MEM:-12G}"                 # host RAM. MEASURE with `seff` on the first shard and tighten (see README)
 SECONDS_PER_ITEM="${SECONDS_PER_ITEM:-240}"       # used to auto-size --time
@@ -110,10 +115,14 @@ EXTRA=""
 [ "$OVERWRITE" = 1 ]    && EXTRA="$EXTRA --overwrite"
 [ "$SKIP_ERRORS" = 1 ]  && EXTRA="$EXTRA --skip-errors"
 
+# Sharding args -- IDENTICAL for --plan and the run so shard membership (the index->shard mapping) matches.
+SHARDING="--shard-size $SENTENCES_PER_SHARD --min-shard-size $MIN_SENTENCES_PER_SHARD"
+[ "$SORT_BY_LENGTH" = 1 ] && SHARDING="$SHARDING --sort-by-length"
+
 # ---- Preflight: write the manifest + find which shards still have work (resume-aware) ----------
 echo "Preflight (resume-aware plan)..."
 PLAN="$("$PREFLIGHT_PYTHON" "$RUNNER" --plan \
-        --input "$INPUT_ABS" --results-root "$RR_ABS" --shard-size "$SENTENCES_PER_SHARD" \
+        --input "$INPUT_ABS" --results-root "$RR_ABS" $SHARDING \
         $CFG $EXTRA)"
 echo "$PLAN" | sed 's/^/  /'
 OUTPUT_DIR="$(sed -n 's/^OUTPUT_DIR=//p'    <<<"$PLAN")"
@@ -146,14 +155,24 @@ fi
 INPUT_STEM="$(basename "$INPUT_ABS")"; INPUT_STEM="${INPUT_STEM%.*}"
 JOB_NAME="nc_${INPUT_STEM}_${CHANNEL}_${REJUV//+/}"
 
+# ---- GPU vs CPU placement --------------------------------------------------------------------
+if [ "$USE_GPU" = 1 ]; then
+    EFF_PARTITIONS="$PARTITIONS"; GRES_LINE="#SBATCH --gres=$GRES"; PLATFORM_EXPORTS=""
+    ACCEL_DESC="gpu($GRES)"
+else
+    EFF_PARTITIONS="${CPU_PARTITIONS:-$PARTITIONS}"; GRES_LINE="# CPU-only: no --gres"
+    PLATFORM_EXPORTS="export JAX_PLATFORMS=cpu   # force CPU (skip the CUDA probe + 'no GPU found' warning)"
+    ACCEL_DESC="cpu"
+fi
+
 JOB_SCRIPT="$LOGS_DIR/submit.sbatch"
 cat > "$JOB_SCRIPT" <<EOF
 #!/bin/bash
 #SBATCH --job-name=$JOB_NAME
 #SBATCH --output=$LOGS_DIR/shard_%a_%A.out
 #SBATCH --error=$LOGS_DIR/shard_%a_%A.err
-#SBATCH --partition=$PARTITIONS
-#SBATCH --gres=$GRES
+#SBATCH --partition=$EFF_PARTITIONS
+$GRES_LINE
 #SBATCH --cpus-per-task=$CPUS
 #SBATCH --mem=$MEM
 #SBATCH --time=$TIME_STR
@@ -175,14 +194,15 @@ conda activate "$CONDA_ENV"
 export NC_LM="$NC_LM"
 export PYTHONPATH="$REPO/src"
 export TOKENIZERS_PARALLELISM=false
-export XLA_PYTHON_CLIENT_PREALLOCATE=false   # grow GPU memory on demand (kinder to the node, lower host RSS)
+export XLA_PYTHON_CLIENT_PREALLOCATE=false   # (GPU) grow memory on demand; harmless on CPU
+$PLATFORM_EXPORTS
 
-echo "host=\$(hostname) task=\$SLURM_ARRAY_TASK_ID job=\$SLURM_JOB_ID gpu=\${CUDA_VISIBLE_DEVICES:-?}"
-nvidia-smi -L 2>/dev/null || true
+echo "host=\$(hostname) task=\$SLURM_ARRAY_TASK_ID job=\$SLURM_JOB_ID accel=$ACCEL_DESC"
+[ "$USE_GPU" = 1 ] && { nvidia-smi -L 2>/dev/null || true; }
 
 python "$RUNNER" \\
     --shard-index "\$SLURM_ARRAY_TASK_ID" \\
-    --input "$INPUT_ABS" --results-root "$RR_ABS" --shard-size "$SENTENCES_PER_SHARD" \\
+    --input "$INPUT_ABS" --results-root "$RR_ABS" $SHARDING \\
     --est-seconds-per-item "$SECONDS_PER_ITEM" \\
     $CFG $EXTRA
 EOF
@@ -192,7 +212,8 @@ echo "Config dir : $OUTPUT_DIR"
 echo "Logs       : $LOGS_DIR/shard_<task>_<jobid>.{out,err}"
 echo "Shards     : ${NUM_SHARDS} total, $(wc -w <<<"${SHARDS//,/ }" | tr -d ' ') with work -> array=$ARRAY_SPEC"
 echo "Remaining  : $REMAINING items"
-echo "Per task   : --time=$TIME_STR --mem=$MEM --gres=$GRES --cpus-per-task=$CPUS"
+echo "Per task   : --time=$TIME_STR --mem=$MEM --cpus-per-task=$CPUS  accel=$ACCEL_DESC  partition=$EFF_PARTITIONS"
+echo "Sharding   : $SHARDING"
 echo "Sbatch     : $JOB_SCRIPT"
 
 if [ "$DRYRUN" = 1 ]; then
