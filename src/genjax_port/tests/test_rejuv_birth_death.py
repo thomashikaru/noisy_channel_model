@@ -466,6 +466,46 @@ def test_gibbs_indel_conditional_and_zero_weight():
     assert nnwK[1] == 2 and nnwK[3] == 2, "length 1 inserts to 2; length 3 deletes to 2"
 
 
+def test_gibbs_indel_dedup_equivalence():
+    """The dedup-over-unique-particles path (``_dedup_indel_logits``) is EXACT: on a cloud with duplicate
+    particle states it yields logits identical to scoring every particle, so the sampled move matches
+    ``gibbs_indel_move`` on the full batch. This is the OOM/timeout fix -- the (LM-bound) ``_indel_logits``
+    cost scales with the UNIQUE-particle count, not P (the gibbs+bd cloud is heavily degenerate
+    post-resample), reusing the dedup trick the substitution sweep already applies."""
+    from genjax_port.pairhmm_rejuv import (_indel_logits, _indel_apply, _dedup_indel_logits,
+                                           gibbs_indel_move)
+    Wmax = _BD_WMAX
+    words = [[1, 2], [3], [], [4, 5, 1]] * 3          # 12 particles, 4 unique states -> exercises dedup
+    P = len(words)
+    word_tok = np.zeros((P, Wmax, T), np.int32)
+    word_len = np.zeros((P, Wmax), np.int32)
+    word_surf = np.full((P, Wmax), _PAD_SURF, np.int32)
+    n_words = np.zeros((P,), np.int32)
+    for p, ws in enumerate(words):
+        n_words[p] = len(ws)
+        for i, s in enumerate(ws):
+            word_tok[p, i, 0] = s; word_len[p, i] = 1; word_surf[p, i] = s
+    state = tuple(jnp.asarray(a) for a in (word_tok, word_len, word_surf, n_words))
+    cand_surf = jnp.asarray(_BD_V, jnp.int32)
+    cand_tok = cand_surf[:, None].astype(jnp.int32)
+    cand_len = jnp.ones((_BD_KC,), jnp.int32)
+    done = jnp.ones((P,), bool)
+    score = lambda wt, wl, ws, nw, dn, tc: -1e3 * jnp.abs(nw - 2).astype(jnp.float32)   # peaked at length 2
+
+    full = _indel_logits(*state, done, score, None, cand_tok, cand_len, cand_surf)
+    logits_fn = lambda wt, wl, ws, nw, dn, tc: _indel_logits(
+        wt, wl, ws, nw, dn, score, tc, cand_tok, cand_len, cand_surf)
+    dedup = _dedup_indel_logits(logits_fn, *state, done, None)
+    assert np.allclose(np.asarray(full), np.asarray(dedup)), "deduped logits must match scoring every particle"
+
+    key = jax.random.PRNGKey(7)                                  # same key -> identical sampled edit
+    (ft, _, _, fnw), _ = gibbs_indel_move(key, *state, done, score, None, cand_tok, cand_len, cand_surf)
+    (dt, _, _, dnw), mlw = _indel_apply(key, dedup, *state, cand_tok, cand_len, cand_surf)
+    assert np.array_equal(np.asarray(fnw), np.asarray(dnw)), "dedup path must sample the identical move"
+    assert np.array_equal(np.asarray(ft), np.asarray(dt))
+    assert np.all(np.asarray(mlw) == 0.0), "Gibbs move must not reweight"
+
+
 def main():
     test_insert_delete_roundtrip()
     test_delete_insert_roundtrip()
@@ -476,7 +516,8 @@ def main():
     test_birth_death_move_smoke()
     test_mh_accept_reject_and_zero_weight()
     test_gibbs_indel_conditional_and_zero_weight()
-    print("birth/death Phase-0 + Phase-1 + Phase-2 + MH + Gibbs gates: 9/9 PASS")
+    test_gibbs_indel_dedup_equivalence()
+    print("birth/death Phase-0 + Phase-1 + Phase-2 + MH + Gibbs gates: 10/10 PASS")
 
 
 if __name__ == "__main__":

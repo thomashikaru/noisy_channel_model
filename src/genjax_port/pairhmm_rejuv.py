@@ -1038,19 +1038,18 @@ def make_bd_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=2, p_stay=0.0, 
 # (gap,candidate) insertion + one per deletion + one no-op, all batched over P; no reverse densities, no
 # n_attempts loop (one move converges). ``temp`` sharpens (<1) / flattens (>1) the conditional; 1.0 = exact.
 # ==================================================================================================
-def gibbs_indel_move(key, word_tok, word_len, word_surf, n_words, done,
-                     score, theta_costs, cand_tok, cand_len, cand_surf, temp=1.0):
-    """Resample the single edit (insert / delete / no-op) from its full conditional ∝ π; always applied.
-    Returns ``((word_tok', word_len', word_surf', n_words'), move_logw=0)``. See the section header.
-
-    ``score(word_tok, word_len, word_surf, n_words, done, theta_costs) -> logπ`` is the RAW (theta-aware)
-    target; ``theta_costs`` are the per-particle channel costs (or None for char-copy). Each (gap,candidate)
-    insertion and each deletion is scored at the native P batch (``lax.map`` -- sequential, memory-bounded;
-    a full Kc*P batch materialises a Kc-times-larger vocab-logit tensor and thrashes). Cost O(Wmax*Kc) LM
-    forwards per move; the move runs once post-loop (``n_attempts`` sweeps) so the total stays bounded."""
+def _indel_logits(word_tok, word_len, word_surf, n_words, done,
+                  score, theta_costs, cand_tok, cand_len, cand_surf):
+    """The DETERMINISTIC move-conditional logits ``(N, 1 + Wmax*Kc + Wmax)`` over the move set
+    ``{no-op} ∪ {insert c@g}_{g,c} ∪ {delete i}_i`` -- column 0 = no-op, then the Wmax*Kc insertions
+    (gap-major), then the Wmax deletions. Split out of :func:`gibbs_indel_move` so this (LM-bound) scoring
+    can be DEDUPED over the degenerate post-resample cloud (:func:`_dedup_indel_logits`): the logits are a
+    pure function of the per-particle inputs, so identical particles share one computation. ``score`` is
+    the theta-aware target ``lm_temp*LM + channel``. The O(Wmax*Kc) ``lax.map`` is sequential
+    (memory-bounded; a full Kc*N batch would materialise a Kc-times-larger vocab-logit tensor)."""
     P, Wmax, T = word_tok.shape
     Kc = cand_surf.shape[0]
-    logp_cur = score(word_tok, word_len, word_surf, n_words, done, theta_costs)    # (P,) no-op score
+    logp_cur = score(word_tok, word_len, word_surf, n_words, done, theta_costs)    # (N,) no-op score
 
     def ins_at_gap(g):                                                            # logπ(insert c@g) for all c
         gap = jnp.full((P,), g, jnp.int32)
@@ -1059,9 +1058,9 @@ def gibbs_indel_move(key, word_tok, word_len, word_surf, n_words, done,
                                             jnp.broadcast_to(cand_tok[c], (P,) + cand_tok.shape[1:]),
                                             jnp.broadcast_to(cand_len[c], (P,)),
                                             jnp.broadcast_to(cand_surf[c], (P,)))
-            return score(it, il, is_, inw, done, theta_costs)                     # (P,)
-        return jax.lax.map(ins_cand, jnp.arange(Kc)).T                            # (P, Kc)
-    ins_scores = jnp.transpose(jax.lax.map(ins_at_gap, jnp.arange(Wmax)), (1, 0, 2))   # (P, Wmax, Kc)
+            return score(it, il, is_, inw, done, theta_costs)                     # (N,)
+        return jax.lax.map(ins_cand, jnp.arange(Kc)).T                            # (N, Kc)
+    ins_scores = jnp.transpose(jax.lax.map(ins_at_gap, jnp.arange(Wmax)), (1, 0, 2))   # (N, Wmax, Kc)
     g_idx = jnp.arange(Wmax)[None, :]
     ins_valid = (g_idx <= n_words[:, None]) & (n_words[:, None] < Wmax)           # gap 0..n, room to grow
     ins_scores = jnp.where(ins_valid[:, :, None], ins_scores, -jnp.inf)
@@ -1069,14 +1068,24 @@ def gibbs_indel_move(key, word_tok, word_len, word_surf, n_words, done,
     def del_at(i):                                                               # logπ(delete word i)
         wcol = jnp.full((P,), i, jnp.int32)
         (dt, dl, ds, dnw), _ = _delete_word(word_tok, word_len, word_surf, n_words, wcol)
-        return score(dt, dl, ds, dnw, done, theta_costs)                          # (P,)
-    del_scores = jax.lax.map(del_at, jnp.arange(Wmax)).T                          # (P, Wmax)
+        return score(dt, dl, ds, dnw, done, theta_costs)                          # (N,)
+    del_scores = jax.lax.map(del_at, jnp.arange(Wmax)).T                          # (N, Wmax)
     del_scores = jnp.where(jnp.arange(Wmax)[None, :] < n_words[:, None], del_scores, -jnp.inf)
 
     n_ins = Wmax * Kc
     logits = jnp.concatenate([logp_cur[:, None], ins_scores.reshape(P, n_ins), del_scores], axis=1)
-    logits = jnp.where(jnp.isnan(logits), -jnp.inf, logits)                       # band-impossible -> never
-    idx = jax.random.categorical(key, logits / temp)                             # (P,) 0=no-op | ins | del
+    return jnp.where(jnp.isnan(logits), -jnp.inf, logits)                         # band-impossible -> never
+
+
+def _indel_apply(key, logits, word_tok, word_len, word_surf, n_words,
+                 cand_tok, cand_len, cand_surf, temp=1.0):
+    """Sample the single edit from the move-conditional ``logits`` (categorical, per particle) and splice
+    it into the state. Returns ``((word_tok', word_len', word_surf', n_words'), move_logw=0)``. ``key`` seeds
+    the whole ``(N, n_cands)`` Gumbel draw, so duplicate particles (identical logit rows) still DIVERGE."""
+    P, Wmax, T = word_tok.shape
+    Kc = cand_surf.shape[0]
+    n_ins = Wmax * Kc
+    idx = jax.random.categorical(key, logits / temp)                             # (N,) 0=no-op | ins | del
 
     is_ins = (idx >= 1) & (idx <= n_ins)
     is_del = idx > n_ins
@@ -1095,23 +1104,84 @@ def gibbs_indel_move(key, word_tok, word_len, word_surf, n_words, done,
     return (new_tok, new_len, new_surf, new_nw), jnp.zeros(P)
 
 
+def gibbs_indel_move(key, word_tok, word_len, word_surf, n_words, done,
+                     score, theta_costs, cand_tok, cand_len, cand_surf, temp=1.0):
+    """Resample the single edit (insert / delete / no-op) from its full conditional ∝ π; always applied.
+    Returns ``((word_tok', word_len', word_surf', n_words'), move_logw=0)``. See the section header.
+
+    ``score(word_tok, word_len, word_surf, n_words, done, theta_costs) -> logπ`` is the RAW (theta-aware)
+    target; ``theta_costs`` are the per-particle channel costs (or None for char-copy). Thin wrapper over
+    :func:`_indel_logits` (the deterministic move-conditional -- the O(Wmax*Kc) LM-bound part) +
+    :func:`_indel_apply` (the per-particle categorical sample). The sweep DEDUPLICATES the ``_indel_logits``
+    call over the degenerate post-resample cloud (:func:`_dedup_indel_logits`); calling this directly scores
+    all N at the native batch (the toy / test path)."""
+    logits = _indel_logits(word_tok, word_len, word_surf, n_words, done, score, theta_costs,
+                           cand_tok, cand_len, cand_surf)
+    return _indel_apply(key, logits, word_tok, word_len, word_surf, n_words,
+                        cand_tok, cand_len, cand_surf, temp=temp)
+
+
+def _dedup_indel_logits(logits_fn, word_tok, word_len, word_surf, n_words, done, theta_costs):
+    """Run :func:`_indel_logits` over only the UNIQUE particle states and scatter the ``(P, n_cands)`` logits
+    back. The gibbs+bd move fires on the post-resample cloud, which is DEGENERATE (measured U/P ~ 0.02-0.06),
+    so this collapses the dominant O(Wmax*Kc) LM forwards -- and their ``[U,LCTX,V]`` vocab-logit tensors --
+    by P/U (peak memory becomes ~independent of P). EXACT: the logits are a pure function of the per-particle
+    inputs keyed here, so a duplicate gets the identical row and the per-particle categorical sample
+    (:func:`_indel_apply`) is untouched -- bit-identical given the RNG. Host-side dict over bytes (same pattern
+    as :func:`_dedup_tail`); unique rows padded to a fixed bucket ladder so ``logits_fn`` recompiles at only a
+    few batch sizes. ``theta_costs`` per-particle slots are in the key + gathered; the shared ``copy_mask``
+    (slot 5) passes through."""
+    from genjax_port import cache_dedup
+    P = word_tok.shape[0]
+    cols = [np.asarray(word_tok).reshape(P, -1), np.asarray(word_len).reshape(P, -1),
+            np.asarray(word_surf).reshape(P, -1), np.asarray(n_words).reshape(P, 1),
+            np.asarray(done).reshape(P, 1)]
+    if theta_costs is not None:
+        lp_copy, lp_sub, wdel_p, wins_p, a0p, _cm = theta_costs
+        cols += [np.asarray(lp_copy).reshape(P, 1), np.asarray(lp_sub).reshape(P, 1),
+                 np.asarray(wdel_p).reshape(P, 1), np.asarray(wins_p).reshape(P, -1),
+                 np.asarray(a0p).reshape(P, -1)]
+    slot_of, reps, inverse = {}, [], np.empty(P, np.int64)
+    for r in range(P):
+        key = b"|".join(c[r].tobytes() for c in cols)
+        s = slot_of.get(key)
+        if s is None:
+            s = len(reps); slot_of[key] = s; reps.append(r)
+        inverse[r] = s
+    U = len(reps)
+    Ub = cache_dedup._bucket_size(U, P)                                  # pad to a fixed rung (compiles)
+    rep_idx = jnp.asarray(np.array(reps + [reps[0]] * (Ub - U), np.int64))
+    g = lambda a: a[rep_idx]
+    tc_u = None if theta_costs is None else (g(theta_costs[0]), g(theta_costs[1]), g(theta_costs[2]),
+                                             g(theta_costs[3]), g(theta_costs[4]), theta_costs[5])
+    logits_u = logits_fn(g(word_tok), g(word_len), g(word_surf), g(n_words), g(done), tc_u)  # (Ub, ncands)
+    return logits_u[jnp.asarray(inverse)]                                # (P, ncands)
+
+
 def make_gibbs_indel_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=1, temp=1.0):
     """Filter-shaped sweep wrapping :func:`gibbs_indel_move` (the effective indel rejuv). Same I/O contract
     as :func:`make_bd_sweep`; ``move_logw`` is always 0 (the move is Gibbs, not importance-weighted). DONE
     particles only. ``n_attempts`` extra sweeps allow >1 edit (a sentence with two dropped words); 1 usually
-    suffices since the conditional amplifies a single edit fully in one move."""
+    suffices since the conditional amplifies a single edit fully in one move.
+
+    The per-move logit scoring is split at the LM-forward seam (``_logits`` jitted, no key) and DEDUPED over
+    the degenerate post-resample cloud (:func:`_dedup_indel_logits`): the dominant O(Wmax*Kc) LM forwards (and
+    their ``[U,LCTX,V]`` vocab tensors) scale with the UNIQUE-particle count, not P -- the fix for the
+    per-candidate full-sentence re-score that OOM'd / timed out at scale (it reuses the same dedup trick
+    ``make_sweep`` already applies to the substitution sweep). ``_apply`` (jitted) does the per-particle
+    categorical sample + splice on all P. EXACT given the RNG (logits are a pure function of the deduped
+    inputs). None vs tuple ``theta_costs`` trace as distinct structures."""
     sl, Wmax, T, M = ctx.seed_len, ctx.Wmax, ctx.t_max, ctx.M
     n_out = Wmax * T
     score = _make_bd_score_fn(ctx)
 
-    # JIT the per-MOVE (one candidate-grid scoring), not the whole n_attempts loop: the move fuses into one
-    # XLA program compiled ONCE and reused for every attempt / battery item (eager dispatch of ~Wmax*Kc ops
-    # is minutes/item; unrolling all n_attempts into one giant graph compiles for minutes). None vs tuple
-    # ``theta_costs`` trace as distinct structures.
     @jax.jit
-    def _move(key, wt, wl, ws, nw, done, theta_costs):
-        return gibbs_indel_move(key, wt, wl, ws, nw, done, score, theta_costs,
-                                cand_tok, cand_len, cand_surf, temp=temp)
+    def _logits(wt, wl, ws, nw, done, theta_costs):
+        return _indel_logits(wt, wl, ws, nw, done, score, theta_costs, cand_tok, cand_len, cand_surf)
+
+    @jax.jit
+    def _apply(key, logits, wt, wl, ws, nw):
+        return _indel_apply(key, logits, wt, wl, ws, nw, cand_tok, cand_len, cand_surf, temp=temp)
 
     def sweep(key, ctx_buf, ctx_len, word_len, word_surf, done, theta_costs=None):
         P, LCTX = ctx_buf.shape
@@ -1119,7 +1189,8 @@ def make_gibbs_indel_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=1, tem
         wl, ws = word_len, word_surf
         for _ in range(n_attempts):
             key, sub = jax.random.split(key)
-            (nt, nl, ns, nnw), _ = _move(sub, wt, wl, ws, nw, done, theta_costs)
+            logits = _dedup_indel_logits(_logits, wt, wl, ws, nw, done, theta_costs)
+            (nt, nl, ns, nnw), _ = _apply(sub, logits, wt, wl, ws, nw)
             m, m2, m3 = done, done[:, None], done[:, None, None]
             wt = jnp.where(m3, nt, wt); wl = jnp.where(m2, nl, wl)
             ws = jnp.where(m2, ns, ws); nw = jnp.where(m, nnw, nw)
