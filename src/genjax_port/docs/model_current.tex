@@ -67,8 +67,9 @@ latents are the intended sentence and a low-dimensional vector of word-level \em
 (copy / substitute / insert / delete) drawn from a Dirichlet \emph{action} prior; the alignment
 itself is never instantiated. Inference is then a Rao--Blackwellized sequential Monte Carlo
 (SMC) filter over intended words, with a fully-adapted (channel-aware) proposal whose incremental
-weight is a marginal step-likelihood, and a rejuvenation kernel that revisits earlier words---and
-refreshes the edit rates from their conjugate posterior---as later context disambiguates them.
+weight is a marginal step-likelihood, and a rejuvenation kernel that revisits earlier words---substituting
+them, and optionally inserting or deleting to repair length errors---and refreshes the edit rates from
+their conjugate posterior as later context disambiguates them.
 
 The document is in two parts. \textbf{Part~I} is the theoretical framework: the LM prior, the
 two-level pair-HMM channel, the Dirichlet action prior over edit rates, the Rao--Blackwellized SMC
@@ -76,9 +77,9 @@ filter, and reanalysis by rejuvenation (word moves and the conjugate edit-rate r
 together with the correctness statements (proper weighting, unbiased evidence, posterior
 invariance of the moves). \textbf{Part~II} is the engineering that makes it run: vectorization over
 particles under GenJAX \code{vmap}/\code{jit}, multi-token intended words, the key/value (KV) cache
-that powers rejuvenation, deduplication over the redundant post-resample particle set, candidate
-generation, and the calibration of the action prior against a battery of plausible/implausible
-sentence pairs.
+that powers the substitution rejuvenation move, deduplication over the redundant post-resample particle
+set (which is also what makes the insertion/deletion move affordable), candidate generation, and the
+calibration of the action prior against a battery of plausible/implausible sentence pairs.
 Part~I is meant to read independently of Part~II.
 \end{abstract}
 
@@ -565,7 +566,9 @@ garden-path situation. Rejuvenation interleaves, after a resampling step, Markov
 (MCMC) moves that revisit recent words within a lookback window. These moves target the \emph{same}
 posterior; they do not change the target, they let the chain reach high-posterior reanalyses and
 restore diversity to a particle set that resampling has collapsed onto a few distinct hypotheses
-(\code{pairhmm\_rejuv.py}).
+(\code{pairhmm\_rejuv.py}). The word move (\S\ref{sec:rejuv-move}) substitutes in place; a companion
+indel move (\S\ref{sec:rejuv-indel}) additionally restores dropped words and removes spurious ones by
+changing the sentence length.
 
 \subsection{The full-conditional (Gibbs / SMCP3) word move}
 \label{sec:rejuv-move}
@@ -619,6 +622,56 @@ and changing variables $(x,\zeta)\mapsto x'$ cancels the $Q$ factors and preserv
 $\sum f\,\bar\gamma$. The schedule invariance is immediate: a composition of $\bar\gamma$-invariant
 kernels is $\bar\gamma$-invariant regardless of how the (data-dependent) schedule chooses them. \qed
 \end{proof}
+
+\subsection{Restoring insertions and deletions: the Gibbs indel move}
+\label{sec:rejuv-indel}
+
+The word move of \S\ref{sec:rejuv-move} resamples a word \emph{in place}: it holds the sentence length
+$n$ fixed and can only substitute. It therefore cannot repair the two length-changing errors---a
+dropped word the filter never inserted, or a spurious word it committed to---since those require
+changing $n$. The \emph{indel move} (\code{rejuv="gibbs+bd"}) adds that trans-dimensional capability. It
+is off by default (\code{rejuv="off"}) and composes with the word move: \code{"gibbs"} runs the word
+move alone, \code{"gibbs+bd"} runs the word move \emph{and} the indel move.
+
+\paragraph{The move as a full conditional over one edit.} In its effective form (\code{bd\_mode="gibbs"},
+the default) the move is again a Gibbs step: for each particle, resample the single edit that best
+explains the parse from the full conditional over the move set
+\begin{equation}\label{eq:indel-set}
+  \mathcal S \;=\; \{\text{no-op}\}\;\cup\;\{\text{insert } c \text{ at gap } g\}_{g,c}\;\cup\;
+                    \{\text{delete word } i\}_i,
+\end{equation}
+with probability $\propto \pi(\text{resulting parse})$, where $\pi = \pLM^{\lambda}\,p_{\mathrm{chan}}$ is
+the same tempered target the filter uses (\code{gibbs\_indel\_move}). Every candidate parse---the no-op,
+each single insertion, each single deletion---is scored by $\pi$ and one categorical draw picks the edit.
+Because \emph{no-op} is always in the set the move self-regulates and cannot over-edit: on a clean parse
+every edit lowers $\pi$, so no-op is drawn with probability $\approx 1$; on a parse with one dropped
+word the conditional concentrates on the restoring insertion and amplifies it to its posterior fraction
+in a single move; and a spurious, $\pi$-lowering insertion at a locally fluent but wrong gap gets
+$\approx 0$ mass. Being a Gibbs step its SMCP3 weight is identically zero---it is always applied and
+preserves the target (Theorem~\ref{thm:rejuv})---so unlike the earlier Metropolis--Hastings birth/death
+move (\code{bd\_mode="mh"}, retained but not the default) it needs no accept/reject and no
+reverse-density bookkeeping.
+
+\paragraph{The insertion pool.} A deletion candidate is just an existing word, but an insertion needs a
+\emph{vocabulary} to propose at each gap. The pool is built once per sentence from three sources
+(\code{pairhmm\_smc.run}): (i) the observed COPY surfaces---so a doubled observed word is removable and
+any observed word is re-insertable; (ii) an \emph{LM-bridge} pool, the top-$J$ next-token words under the
+LM at each inter-word gap (the same fluency candidates the forward proposal uses, precomputed statically
+over the observed prefixes), which lets the move restore a dropped word that never appears in the input;
+and (iii) a fixed closed-class \emph{function-word} set---articles, prepositions, conjunctions
+(\code{bd\_funcword\_ids}). The function-word pool exists because a dropped function word is often
+\emph{not} locally top-$J$ even when the full-sentence joint wants it---after ``soup'' the LM ranks
+``and'' above ``to,'' yet the joint prefers ``\dots soup to the customers''---so guaranteeing the closed
+class is in the pool lets the move's full-sentence conditional choose among the alternatives correctly.
+Function-word omission is the dominant edit, so this is a channel prior, not battery tuning.
+
+\paragraph{Schedule.} The indel move is \emph{not} interleaved after every resample like the word move.
+In its default Gibbs form it fires \emph{once}, after the filtering loop, over the final all-done
+particle cloud: one sweep suffices because the conditional amplifies the needed edit fully in a single
+move, and running it on the completed cloud lets it relocate particles to higher-$\pi$ readings (restore
+a dropped word, remove a spurious one) just before the terminal correction and decode. (The
+Metropolis--Hastings variant instead fires in-loop, gated to near-terminal resampling events by
+\code{bd\_min\_done}.)
 
 \subsection{Refreshing the edit rates: a conjugate sweep-then-refresh}
 \label{sec:rejuv-theta}
@@ -691,6 +744,17 @@ the \emph{prefix cancels} in the softmax (it is identical across candidates). A 
 $\ell$ words bounds the suffix at $O(\ell)$ LM evaluations per candidate per move---and re-scoring
 the suffix is exactly what lets later context vote on the earlier word. Computing that suffix
 efficiently is the central engineering problem of Part~II (\S\ref{sec:kv}).
+
+\paragraph{The indel move does not share the suffix-tail cache.} That suffix trick applies only to the
+word move. Inserting or deleting a word shifts every later word, so there is no fixed shared prefix to
+cache, and each candidate parse in \eqref{eq:indel-set} is scored by an independent whole-sentence LM
+forward. An exact suffix-tail KV version of the indel move was built and measured $\approx 3.6\times$
+\emph{slower} on CPU---the KV transformer's per-call overhead dominates a full-length exact tail, which
+the indel move, unlike the windowed word move, cannot shorten---and was reverted. What makes the move
+affordable at scale is instead deduplication (\S\ref{sec:dedup}): the post-resample cloud is highly
+degenerate ($\sim\!2$--$6\%$ unique), so the dominant per-candidate scoring is run on the unique particle
+states only and scattered back (\code{\_dedup\_indel\_logits}), which fixed the out-of-memory the naive
+per-candidate re-score hit at scale.
 
 \part{Engineering and implementation}
 \label{part:eng}
