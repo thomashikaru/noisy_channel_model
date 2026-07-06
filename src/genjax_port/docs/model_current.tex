@@ -105,7 +105,8 @@ deterministically into $M$ word/punctuation units), the joint is
 \end{equation}
 where $\actdist = (\pcopy,\psub,\pins,\pdel)$ is a word-level \emph{edit-rate} vector---a
 copy/substitute/insert/delete distribution---drawn from a Dirichlet prior that parameterizes the
-channel (the \emph{word-action} channel of \S\ref{sec:word-action}). Comprehension/correction is the
+channel (the \emph{word-action} channel of \S\ref{sec:word-action}, or its deployed-default
+\emph{align} variant of \S\ref{sec:align}). Comprehension/correction is the
 posterior over intended sentences $p(x \given o)$, with the edit rates $\actdist$ a nuisance latent
 the particle cloud integrates out; the most probable intended sentence is the model's reconstruction
 of what the speaker meant.
@@ -338,11 +339,14 @@ case-insensitive---a sentence-initial capitalization (``she''$\to$``She'') is a 
 substitution---matching the case-insensitive character DP of the original channel.
 
 \paragraph{The channel selector.} The implementation exposes the noise model as a named
-\code{channel} argument with two values (\code{pythia\_word\_caprop.run}):
-\code{"word\_action"} is the model just described; \code{"char\_copy"} is the original bundled
+\code{channel} argument with three values (\code{pythia\_word\_caprop.run}):
+\code{"align"} (\S\ref{sec:align}) is the deployed default; \code{"word\_action"} is the four-way
+model just described; and \code{"char\_copy"} is the original bundled
 character channel of \S\ref{sec:char-channel}--\S\ref{sec:word-channel}, retained only as the
-exact-enumeration certification anchor (\S\ref{sec:certification}). The two are not independent
-codepaths: \code{char\_copy} is exactly the \emph{zero-action degenerate} of \eqref{eq:wa-emit}, with
+exact-enumeration certification anchor (\S\ref{sec:certification}). None of the three is an independent
+codepath. \code{align} sets $\log\pcopy=\log\psub$ and so reuses the word-action emission and machinery
+verbatim (\S\ref{sec:align}); \code{char\_copy} is exactly the \emph{zero-action degenerate} of
+\eqref{eq:wa-emit}, with
 $\log\pcopy = \log\psub = 0$ (the action offset vanishes, leaving the bundled character emission) and
 the global constants $\wdel,\wins$ broadcast across particles in place of the per-particle rates. With
 the action prior absent the word-action code is therefore bit-identical to the certified path, so the
@@ -355,6 +359,42 @@ the more concentration on copy, the less the channel edits. The SMC targets of \
 thus understood as conditioned on the particle's current $\actdist$ (a prior draw here; refreshed by
 \S\ref{sec:rejuv-theta} once rejuvenation is on). Tuning $\bm\alpha$ to a target editing behaviour is
 the calibration of \S\ref{sec:calibration}.
+
+\subsection{The align channel: a smooth, single-knob over-editing control}
+\label{sec:align}
+
+The word-action emission \eqref{eq:wa-emit} draws a hard categorical line: a copy pays $\log\pcopy$
+and \emph{any} substitution pays $\log\psub$, a discontinuous jump between a verbatim match and a
+one-character typo. The \emph{align channel} replaces that jump with a smooth function of edit
+distance. It is the deployed default (\code{channel="align"}), and it is what lets the filter correct
+near-miss real-word typos (\emph{garage}$\to$\emph{garbage}) that the hard copy/substitute split
+tends to miss.
+
+\paragraph{Merging copy and substitute.} The align channel collapses copy and substitute into a single
+\textsf{align} action, so the per-word action vector is three-way,
+$\actdist = (\pi_{\mathrm{align}}, \pins, \pdel) \sim \Dir(\bm\alpha)$, with calibrated default
+$\bm\alpha = (200, 2, 2)$ (\code{ALIGN\_ALPHA\_DEFAULT}). There is no longer a copy-vs-substitute
+decision to score; \emph{how good} a match is lives entirely in the form emission. Concretely, the
+emission offset of \eqref{eq:wa-emit} is evaluated with $\log\pcopy = \log\psub = \log\pi_{\mathrm{align}}$,
+so the copy indicator's coefficient vanishes and every aligned cell pays the same action rate
+$\log\pi_{\mathrm{align}}$ (\code{\_theta\_to\_costs\_align}); the missing-word and spurious-word arcs
+stay $\wdel = \log\pdel$ and $\wins[k] = \log\pins - \mathrm{surp}_{\mathrm{uni}}(o_k)$ exactly as
+before. Because the two channels differ only in setting $\log\pcopy = \log\psub$, align reuses the
+entire word-action forward DP, proposal, sweep, and conjugate refresh unchanged---the refresh just
+counts three-way actions $(n_{\mathrm{align}}, n_{\insact}, n_{\delact})$ (\code{\_action\_counts\_align})
+instead of four.
+
+\paragraph{The slope $K$ as the edit-distance cost.} With the copy/substitute jump gone, the form
+table \eqref{eq:char-dp} is run with a single sweepable per-edit cost $K$ (\code{align\_form\_logpdf}$(K)$):
+a matched character is free and every character edit---substitution, insertion, deletion, adjacent
+transposition---pays $K$, so a surface at Damerau--Levenshtein distance $d$ scores $\approx K\cdot d$.
+This is the smooth emission the hard channel lacked, and $K$ is a single continuous over-editing knob:
+a less negative $K$ makes near-miss real-word substitutions cheap enough to correct, a more negative
+$K$ suppresses them. The calibrated default is $K = -4.5$ (\code{ALIGN\_SLOPE}); at
+$K = \mathrm{SUB\_FORM\_LP} = \log(1/26)$ the align form table is byte-identical to the word-action
+form table, so align is a strict generalization of it. The two knobs $K$ and $\bm\alpha$ are
+independent---$K$ governs substitution, $\bm\alpha$ governs insertion/deletion---and are calibrated
+jointly in \S\ref{sec:calibration}.
 
 \section{Rao--Blackwellized sequential Monte Carlo}
 \label{sec:smc}
@@ -852,11 +892,25 @@ $\actdist$ posterior of \S\ref{sec:rejuv-theta}) before being promoted to the de
 pythia-70m battery this knee is $\alpha_{\copyact}=200$ (a concentration of $\sim\!500$ finally craters
 the correction rate): there prior-only retention is $L\approx0.91$ at zero over-edit junk, and the
 \code{rejuv="gibbs"} confirmation \emph{raises} retention to $L\approx0.99$ without collapsing
-correction---so $(200,1,1,1)$ is the deployed \code{ACTION\_ALPHA\_DEFAULT}. Two effects the
-prior cannot fix---and must not be chased with $\alpha$---are the language model's own
+correction---so $(200,1,1,1)$ is the \code{word\_action} default \code{ACTION\_ALPHA\_DEFAULT}. Two
+effects the prior cannot fix---and must not be chased with $\alpha$---are the language model's own
 semantic/structural ceiling (small models miss argument-structure and content-word edits at every
 $\alpha$) and particle-count noise (sharp single-point wobbles that the rejuvenation sweep, not a
 different prior, is meant to cure).
+
+\paragraph{Calibrating the align channel.} The deployed channel (\S\ref{sec:align}) is calibrated the
+same way but has \emph{two} knobs, and they turn out to move orthogonal failures. The slope $K$
+(\code{ALIGN\_SLOPE}) is the substitution knob: it sets how cheaply a near-miss real-word typo is
+corrected, with no effect on insertions or deletions. The concentration
+$\bm\alpha = (\alpha_{\mathrm{align}}, \alpha_{\insact}, \alpha_{\delact})$ is the insert/delete knob,
+exactly as $\alpha_{\copyact}$ was for word-action. The battery failure was bimodal---substitution
+under-editing and indel over-editing traded against each other whenever a single word-action knob tried
+to fix both---so decoupling them is what let both improve at once. On the pythia-70m battery, $K=-4.5$
+with $\bm\alpha=(200,2,2)$ roughly doubles the correction mass and lifts retention together
+($E\!:\,0.14\!\to\!0.29$, $L\!:\,0.77\!\to\!0.93$, over-edit junk $9/40\!\to\!\sim\!0$), and these are
+the promoted defaults (\code{ALIGN\_ALPHA\_DEFAULT}, \code{ALIGN\_SLOPE}). The word-action sweep just
+described backs the \code{word\_action} alternative, which retains slightly more literal readings but
+misses the real-word substitutions the smooth slope catches.
 
 \section{Reference parameters}
 \label{sec:params}
@@ -879,10 +933,14 @@ $K_e$ & candidate words per observed word & $12$ & \code{Ke} \\
 $\ell$ & rejuvenation lookback window & $3$ words & \code{rejuv\_lookback} \\
 $P$ & particle count (Pythia) & $64$--$256$ & \code{P} \\
 \midrule
-\multicolumn{4}{@{}l}{\emph{word-action channel} (\S\ref{sec:word-action}; supersedes $\wdel,\rho_{\insact}$)} \\
+\multicolumn{4}{@{}l}{\emph{align channel} (\S\ref{sec:align}; the deployed default; supersedes $\wdel,\rho_{\insact}$)} \\
+$\bm\alpha$ & align-rate Dirichlet concentration & $(200,2,2)$ & \code{ALIGN\_ALPHA\_DEFAULT} \\
+$K$ & align per-edit form cost (slope) & $-4.5$ & \code{ALIGN\_SLOPE} \\
+\code{channel} & noise-model selector & \code{align}\,/\,\code{word\_action}\,/\,\code{char\_copy} & \code{channel} \\
+\midrule
+\multicolumn{4}{@{}l}{\emph{word-action channel} (\S\ref{sec:word-action}; the four-way alternative)} \\
 $\bm\alpha$ & action-rate Dirichlet concentration & $(200,1,1,1)$ & \code{ACTION\_ALPHA\_DEFAULT} \\
 $\mathrm{SUB\_FORM\_LP}$ & char form-edit cost (copy free) & $\log(1/26)$ & \code{pythia\_word\_caprop} \\
-\code{channel} & noise-model selector & \code{word\_action}\,/\,\code{char\_copy} & \code{channel} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -892,9 +950,9 @@ co-tuned on a gold set: $\lambda<1$ trades substitution over-editing for word de
 alongside $\wdel$. In the word-action channel $\wdel$ and $\rho_{\insact}$ are not free constants but
 read off the sampled rate vector ($\wdel=\log\pdel$, insertion rate $\log\pins$); the editing budget is
 then controlled by the single Dirichlet concentration $\bm\alpha$, tuned in \S\ref{sec:calibration}.
-The action prior's default $(200,1,1,1)$ is the value the \S\ref{sec:calibration} sweep selected; with it
-in place, \code{word\_action} is the default \code{channel} (\code{char\_copy} remaining only as the
-certification anchor).
+The deployed \code{channel} is \code{align} (\S\ref{sec:align}), calibrated to $\bm\alpha=(200,2,2)$
+and slope $K=-4.5$; \code{word\_action} at $\bm\alpha=(200,1,1,1)$ is the higher-retention four-way
+alternative, and \code{char\_copy} remains only as the certification anchor.
 
 \appendix
 
