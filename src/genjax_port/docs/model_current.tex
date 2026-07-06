@@ -55,32 +55,9 @@ Language Comprehension and Correction}
 \maketitle
 
 \begin{abstract}
-We describe the current noisy-channel model implemented in \code{src/genjax\_port/}. A speaker
-draws an \emph{intended} sentence word-by-word from an autoregressive language-model (LM) prior; a
-\emph{word-level noisy channel} corrupts it---substituting mistyped words, inserting spurious
-words, and deleting intended ones---into the \emph{observed} sentence; comprehension is the
-posterior over intended sentences. The central modelling decision is that \emph{the edit alignment
-between intended and observed words is never sampled}: it is marginalized analytically by a forward
-dynamic program (a pair-HMM run at
-the word level, whose per-cell emission is itself a character-level pair-HMM). The sampled
-latents are the intended sentence and a low-dimensional vector of word-level \emph{edit rates}
-(copy / substitute / insert / delete) drawn from a Dirichlet \emph{action} prior; the alignment
-itself is never instantiated. Inference is then a Rao--Blackwellized sequential Monte Carlo
-(SMC) filter over intended words, with a fully-adapted (channel-aware) proposal whose incremental
-weight is a marginal step-likelihood, and a rejuvenation kernel that revisits earlier words---substituting
-them, and optionally inserting or deleting to repair length errors---and refreshes the edit rates from
-their conjugate posterior as later context disambiguates them.
+We describe the current noisy-channel model implemented in \code{src/genjax\_port/}. A speaker draws an \emph{intended} sentence word-by-word from an autoregressive language-model (LM) prior; a \emph{word-level noisy channel} corrupts it---substituting mistyped words, inserting spurious words, and deleting intended ones---into the \emph{observed} sentence; comprehension is the posterior over intended sentences. The central modelling decision is that \emph{the edit alignment between intended and observed words is never sampled}: it is marginalized analytically by a forward dynamic program (a pair-HMM run at the word level, whose per-cell emission is itself a character-level pair-HMM). The sampled latents are the intended sentence and a low-dimensional vector of word-level \emph{edit rates} (copy / substitute / insert / delete) drawn from a Dirichlet \emph{action} prior; the alignment itself is never instantiated. Inference is then a Rao--Blackwellized sequential Monte Carlo (SMC) filter over intended words, with a fully-adapted (channel-aware) proposal whose incremental weight is a marginal step-likelihood, and a rejuvenation kernel that revisits earlier words---substituting them, and optionally inserting or deleting to repair length errors---and refreshes the edit rates from their conjugate posterior as later context disambiguates them.
 
-The document is in two parts. \textbf{Part~I} is the theoretical framework: the LM prior, the
-two-level pair-HMM channel, the Dirichlet action prior over edit rates, the Rao--Blackwellized SMC
-filter, and reanalysis by rejuvenation (word moves and the conjugate edit-rate refresh),
-together with the correctness statements (proper weighting, unbiased evidence, posterior
-invariance of the moves). \textbf{Part~II} is the engineering that makes it run: vectorization over
-particles under GenJAX \code{vmap}/\code{jit}, multi-token intended words, the key/value (KV) cache
-that powers the substitution rejuvenation move, deduplication over the redundant post-resample particle
-set (which is also what makes the insertion/deletion move affordable), candidate generation, and the
-calibration of the action prior against a battery of plausible/implausible sentence pairs.
-Part~I is meant to read independently of Part~II.
+The document is in two parts. \textbf{Part~I} is the theoretical framework: the LM prior, the two-level pair-HMM channel, the Dirichlet action prior over edit rates, the Rao--Blackwellized SMC filter, and reanalysis by rejuvenation (word moves and the conjugate edit-rate refresh), together with the correctness statements (proper weighting, unbiased evidence, posterior invariance of the moves). \textbf{Part~II} is the engineering that makes it run: vectorization over particles under GenJAX \code{vmap}/\code{jit}, multi-token intended words, the key/value (KV) cache that powers the substitution rejuvenation move, deduplication over the redundant post-resample particle set (which is also what makes the insertion/deletion move affordable), candidate generation, and the calibration of the action prior against a battery of plausible/implausible sentence pairs. Part~I is meant to read independently of Part~II.
 \end{abstract}
 
 \tableofcontents
@@ -91,147 +68,74 @@ Part~I is meant to read independently of Part~II.
 \section{The generative story and the inference target}
 \label{sec:overview}
 
-\paragraph{Two levels.} The model is a hierarchy of two sources of structure. At the \emph{sentence}
-level, a language model emits a sequence of intended words; at the \emph{character} level, each
-intended word may be corrupted into the surface string the reader actually sees. Between them sits
-the channel's combinatorial freedom: an intended word may be dropped, and a spurious word may
-appear. Writing $x = (x_1,\dots,x_n)$ for the intended sentence (a sequence of \emph{words}, each a
-span of one or more subword tokens; see \S\ref{sec:lm}) and $o = (o_1,\dots,o_M)$ for the observed
-sentence (segmented
-deterministically into $M$ word/punctuation units), the joint is
+\paragraph{Two levels.} The model is a hierarchy of two sources of structure. At the \emph{sentence} level, a language model emits a sequence of intended words; at the \emph{character} level, each intended word may be corrupted into the surface string the reader actually sees. Between them sits the channel's combinatorial freedom: an intended word may be dropped, and a spurious word may appear. Writing $x = (x_1,\dots,x_n)$ for the intended sentence (a sequence of \emph{words}, each a span of one or more subword tokens; see \S\ref{sec:lm}) and $o = (o_1,\dots,o_M)$ for the observed sentence (segmented deterministically into $M$ word/punctuation units), the joint is
 \begin{equation}\label{eq:joint-abstract}
   p(\actdist, x, o) \;=\; \underbrace{p_{\mathrm{act}}(\actdist)}_{\text{Dirichlet edit-rate prior}}
               \;\cdot\; \underbrace{p_{\mathrm{prior}}(x)}_{\text{LM over intended sentences}}
               \;\cdot\; \underbrace{p_{\mathrm{chan}}(o \given x, \actdist)}_{\text{word-level noisy channel}} ,
 \end{equation}
-where $\actdist = (\pcopy,\psub,\pins,\pdel)$ is a word-level \emph{edit-rate} vector---a
-copy/substitute/insert/delete distribution---drawn from a Dirichlet prior that parameterizes the
-channel (the \emph{word-action} channel of \S\ref{sec:word-action}, or its deployed-default
-\emph{align} variant of \S\ref{sec:align}). Comprehension/correction is the
-posterior over intended sentences $p(x \given o)$, with the edit rates $\actdist$ a nuisance latent
-the particle cloud integrates out; the most probable intended sentence is the model's reconstruction
-of what the speaker meant.
+where $\actdist = (\pcopy,\psub,\pins,\pdel)$ is a word-level \emph{edit-rate} vector---a copy/substitute/insert/delete distribution---drawn from a Dirichlet prior that parameterizes the channel (the \emph{word-action} channel of \S\ref{sec:word-action}, or its deployed-default \emph{align} variant of \S\ref{sec:align}). Comprehension/correction is the posterior over intended sentences $p(x \given o)$, with the edit rates $\actdist$ a nuisance latent the particle cloud integrates out; the most probable intended sentence is the model's reconstruction of what the speaker meant.
 
-\paragraph{What is and is not latent.} The intended sentence $x$ is latent. The segmentation of $o$
-into units is a deterministic function of $o$ (\code{noise\_word.segment\_words}), so it is
-\emph{indexing data}, not a latent variable---every particle consumes the same observed units in
-the same order. The \emph{alignment} between intended and observed words---which intended word
-produced which observed unit, which observed unit is spurious, which intended word was
-dropped---\emph{is} a latent object, but it is one we will never instantiate: Section~\ref{sec:channel}
-marginalizes it in closed form. This is the Rao--Blackwellization at the heart of the model. A
-second, low-dimensional latent---the edit-rate vector $\actdist$---\emph{is} genuinely sampled (one
-draw per particle, shared across the whole sentence); it is the channel's only stochastic parameter,
-and \S\ref{sec:word-action} gives its prior while \S\ref{sec:rejuv-theta} gives its conjugate
-posterior refresh during inference.
+\paragraph{What is and is not latent.} The intended sentence $x$ is latent. The segmentation of $o$ into units is a deterministic function of $o$ (\code{noise\_word.segment\_words}), so it is \emph{indexing data}, not a latent variable---every particle consumes the same observed units in the same order. The \emph{alignment} between intended and observed words---which intended word produced which observed unit, which observed unit is spurious, which intended word was dropped---\emph{is} a latent object, but it is one we will never instantiate: Section~\ref{sec:channel} marginalizes it in closed form. This is the Rao--Blackwellization at the heart of the model. A second, low-dimensional latent---the edit-rate vector $\actdist$---\emph{is} genuinely sampled (one draw per particle, shared across the whole sentence); it is the channel's only stochastic parameter, and \S\ref{sec:word-action} gives its prior while \S\ref{sec:rejuv-theta} gives its conjugate posterior refresh during inference.
 
 \section{The language-model prior}
 \label{sec:lm}
 
-Let $\Vocab$ be the subword vocabulary of a fixed autoregressive LM with next-token distribution
-$\pLM(\cdot \given u)$ for context $u \in \Vocab^{*}$ (the implementation uses Pythia / GPT-NeoX via
-penzai; see \S\ref{sec:lm-engine}). The LM works in byte-pair-encoding (BPE) tokens, which split text
-into subword pieces, so a single written word may be one token or several. An intended sentence is a
-sequence of words $x = (x_1,\dots,x_n)$, where each word $x_j = (t_{j,1},\dots,t_{j,m_j}) \in
-\Vocab^{m_j}$ is a span of $m_j \ge 1$ BPE tokens. Concatenating the spans and prefixing a fixed seed $s$ (a
-$\bos=\eos$ token, optionally followed by a content-neutral prime; \S\ref{sec:lm-engine}) yields the
-token stream the LM scores. The prior factorizes autoregressively over \emph{tokens}, and a complete
-sentence is terminated by $\eos$:
+Let $\Vocab$ be the subword vocabulary of a fixed autoregressive LM with next-token distribution $\pLM(\cdot \given u)$ for context $u \in \Vocab^{*}$ (the implementation uses Pythia / GPT-NeoX via penzai; see \S\ref{sec:lm-engine}). The LM works in byte-pair-encoding (BPE) tokens, which split text into subword pieces, so a single written word may be one token or several. An intended sentence is a sequence of words $x = (x_1,\dots,x_n)$, where each word $x_j = (t_{j,1},\dots,t_{j,m_j}) \in \Vocab^{m_j}$ is a span of $m_j \ge 1$ BPE tokens. Concatenating the spans and prefixing a fixed seed $s$ (a $\bos=\eos$ token, optionally followed by a content-neutral prime; \S\ref{sec:lm-engine}) yields the token stream the LM scores. The prior factorizes autoregressively over \emph{tokens}, and a complete sentence is terminated by $\eos$:
 \begin{equation}\label{eq:lm-prior}
   p_{\mathrm{prior}}(x)
   \;=\; \Bigg[\prod_{j=1}^{n} \prod_{r=1}^{m_j}
         \pLM\!\big(t_{j,r} \given s, t_{<(j,r)}\big)\Bigg]\;
         \pLM\!\big(\eos \given s, t_{1:n}\big),
 \end{equation}
-where $t_{<(j,r)}$ is the token prefix preceding the $r$-th token of word $j$. We write the
-\emph{word}-level chain-rule factor
+where $t_{<(j,r)}$ is the token prefix preceding the $r$-th token of word $j$. We write the \emph{word}-level chain-rule factor
 \begin{equation}\label{eq:lm-word}
   \ell(x_j \given x_{<j}) \;=\; \sum_{r=1}^{m_j} \log \pLM\!\big(t_{j,r}\given s, x_{<j}, t_{j,1:r-1}\big)
 \end{equation}
-for the log-probability of emitting word $x_j$ after the words $x_{<j}$. For a single-token word
-($m_j = 1$) this is one LM evaluation; multi-token words are the subject of \S\ref{sec:multitoken}.
-The sentence length $n$ is itself latent---the model emits words until it draws $\eos$---so the
-prior is a distribution over variable-length intended sentences. An intended sentence shorter than
-$o$ is the prior's way of positing spurious (inserted) observed words; one longer than $o$ posits
-dropped (deleted) intended words. \emph{Tempering.} It is sometimes useful to flatten the LM's
-(over-confident) preferences. We therefore allow a temperature $\lambda \in (0,1]$ on the prior,
-targeting $p_{\mathrm{prior}}^{\lambda}\,p_{\mathrm{chan}}$; $\lambda = 1$ is the untempered model
-(\S\ref{sec:smc} treats $\lambda$ as a target choice).
+for the log-probability of emitting word $x_j$ after the words $x_{<j}$. For a single-token word ($m_j = 1$) this is one LM evaluation; multi-token words are the subject of \S\ref{sec:multitoken}. The sentence length $n$ is itself latent---the model emits words until it draws $\eos$---so the prior is a distribution over variable-length intended sentences. An intended sentence shorter than $o$ is the prior's way of positing spurious (inserted) observed words; one longer than $o$ posits dropped (deleted) intended words. \emph{Tempering.} It is sometimes useful to flatten the LM's (over-confident) preferences. We therefore allow a temperature $\lambda \in (0,1]$ on the prior, targeting $p_{\mathrm{prior}}^{\lambda}\,p_{\mathrm{chan}}$; $\lambda = 1$ is the untempered model (\S\ref{sec:smc} treats $\lambda$ as a target choice).
 
 \section{The noisy channel as a two-level pair-HMM}
 \label{sec:channel}
 
-The channel likelihood $p_{\mathrm{chan}}(o \given x)$ must account for three edit types between the
-intended word sequence $x_{1:n}$ and the observed unit sequence $o_{1:M}$:
+The channel likelihood $p_{\mathrm{chan}}(o \given x)$ must account for three edit types between the intended word sequence $x_{1:n}$ and the observed unit sequence $o_{1:M}$:
 \begin{itemize}[leftmargin=1.6em,itemsep=1pt]
-  \item \textbf{copy / substitute} --- an intended word $x_j$ is realized as an observed unit
-        $o_k$, exactly (copy) or with character-level corruption (substitution);
-  \item \textbf{insertion} --- an observed unit $o_k$ is \emph{spurious}: it corresponds to no
-        intended word;
-  \item \textbf{deletion} --- an intended word $x_j$ is \emph{missing}: it produces no observed
-        unit.
+\item \textbf{copy / substitute} --- an intended word $x_j$ is realized as an observed unit $o_k$, exactly (copy) or with character-level corruption (substitution);
+\item \textbf{insertion} --- an observed unit $o_k$ is \emph{spurious}: it corresponds to no intended word;
+\item \textbf{deletion} --- an intended word $x_j$ is \emph{missing}: it produces no observed unit.
 \end{itemize}
-A particular assignment of these operations is an \emph{alignment} $\mathcal A$. The channel
-likelihood marginalizes over all alignments,
+A particular assignment of these operations is an \emph{alignment} $\mathcal A$. The channel likelihood marginalizes over all alignments,
 \begin{equation}\label{eq:chan-marginal}
   p_{\mathrm{chan}}(o \given x) \;=\; \sum_{\mathcal A} p(o, \mathcal A \given x),
 \end{equation}
-and the contribution of an alignment is a product of local factors: a character-level emission score
-for each copy/substitute pairing, a cost $\wins$ for each spurious unit, and a cost $\wdel$ for each
-missing word. The key structural fact is that \eqref{eq:chan-marginal} is computed by a forward
-dynamic program---a pair-HMM at the word level---so it never enumerates alignments explicitly.
+and the contribution of an alignment is a product of local factors: a character-level emission score for each copy/substitute pairing, a cost $\wins$ for each spurious unit, and a cost $\wdel$ for each missing word. The key structural fact is that \eqref{eq:chan-marginal} is computed by a forward dynamic program---a pair-HMM at the word level---so it never enumerates alignments explicitly.
 
 \subsection{Inner level: the character channel}
 \label{sec:char-channel}
 
-The emission score of explaining an observed unit $o_k$ by an intended word $x$ is the
-log-likelihood of a character-level edit channel between their \emph{surface forms}---the written
-character strings $\mathrm{surf}(\cdot)$ of the two words:
+The emission score of explaining an observed unit $o_k$ by an intended word $x$ is the log-likelihood of a character-level edit channel between their \emph{surface forms}---the written character strings $\mathrm{surf}(\cdot)$ of the two words:
 \begin{equation}\label{eq:char-channel}
   \chan(o_k \given x) \;=\; \log P_{\mathrm{char}}\!\big(\mathrm{surf}(o_k) \given \mathrm{surf}(x)\big).
 \end{equation}
-This is itself a forward pair-HMM over characters with copy, substitute, insert, delete, and
-adjacent-transposition edges (\code{channel\_logpdf}). Writing
-$G[i][j] = \log P(\mathrm{obs}[:j]\given \text{first } i \text{ intended chars})$, the recurrence
-combines four arcs at each cell---copy-or-substitute a character, delete a character (the intended
-character produces nothing), insert a character (an observed character with no intended source), and
-transpose a pair of adjacent characters:
+This is itself a forward pair-HMM over characters with copy, substitute, insert, delete, and adjacent-transposition edges (\code{channel\_logpdf}). Writing $G[i][j] = \log P(\mathrm{obs}[:j]\given \text{first } i \text{ intended chars})$, the recurrence combines four arcs at each cell---copy-or-substitute a character, delete a character (the intended character produces nothing), insert a character (an observed character with no intended source), and transpose a pair of adjacent characters:
 \begin{equation}\label{eq:char-dp}
 \begin{split}
   G[i][j] = \lse\big(\, & G[i{-}1][j{-}1] + c_{ij},\ \ G[i{-}1][j] + \log\theta_{\delact}, \\
                         & G[i][j{-}1] + \log\theta_{\insact},\ \ G[i{-}2][j{-}2] + \log\theta_{\mathrm{tr}}\,\big),
 \end{split}
 \end{equation}
-where $c_{ij} = \log\theta_{\copyact}$ if the two characters match and $\log\theta_{\subact}$
-otherwise, and the transposition arc fires only when the trailing two characters are swapped. The
-default character rates are $\theta_{\copyact} = 0.9$, $\theta_{\subact} = (1-0.9)/26$,
-$\theta_{\insact}=\theta_{\delact}=0.05$, $\theta_{\mathrm{tr}}=\theta_{\subact}$. Reading
-$G[n_x][n_o]$ (all characters consumed on both sides) gives \eqref{eq:char-channel}. A \emph{copy}
-($x$ has the same surface form as $o_k$) scores near $0$; a substitution whose surface forms differ by
-$d$ character edits scores roughly $d\cdot\log\theta_{\subact}$. Here ``$d$ character edits'' is the
-Damerau--Levenshtein distance---the smallest number of single-character insertions, deletions,
-substitutions, and adjacent transpositions that turns one string into the other---the same metric the
-candidate generator uses (\S\ref{sec:candidates}). We write $\chan(o_k\given x)$ for the resulting per-pairing
-emission score and assemble, for a sentence, the emission table
-$\mathrm{EMIT}[k, c] = \chan(o_k \given c)$ over the candidate intended words $c$.
+where $c_{ij} = \log\theta_{\copyact}$ if the two characters match and $\log\theta_{\subact}$ otherwise, and the transposition arc fires only when the trailing two characters are swapped. The default character rates are $\theta_{\copyact} = 0.9$, $\theta_{\subact} = (1-0.9)/26$, $\theta_{\insact}=\theta_{\delact}=0.05$, $\theta_{\mathrm{tr}}=\theta_{\subact}$. Reading $G[n_x][n_o]$ (all characters consumed on both sides) gives \eqref{eq:char-channel}. A \emph{copy} ($x$ has the same surface form as $o_k$) scores near $0$; a substitution whose surface forms differ by $d$ character edits scores roughly $d\cdot\log\theta_{\subact}$. Here ``$d$ character edits'' is the Damerau--Levenshtein distance---the smallest number of single-character insertions, deletions, substitutions, and adjacent transpositions that turns one string into the other---the same metric the candidate generator uses (\S\ref{sec:candidates}). We write $\chan(o_k\given x)$ for the resulting per-pairing emission score and assemble, for a sentence, the emission table $\mathrm{EMIT}[k, c] = \chan(o_k \given c)$ over the candidate intended words $c$.
 
 \subsection{Outer level: the word channel as a forward DP}
 \label{sec:word-channel}
 
-Lift the same three-way recurrence one level, from characters to words. A particle that has emitted
-intended words $x_{1:n}$ carries a \emph{forward vector} $\alpha^{(n)} \in (\Real\cup\{-\infty\})^{M+1}$,
+Lift the same three-way recurrence one level, from characters to words. A particle that has emitted intended words $x_{1:n}$ carries a \emph{forward vector} $\alpha^{(n)} \in (\Real\cup\{-\infty\})^{M+1}$,
 \begin{equation}\label{eq:alpha-def}
   \alpha^{(n)}[k] \;=\; \log P\big(o_{1:k},\ \text{exactly } k \text{ observed units consumed}
                                    \;\big|\; x_{1:n}\big),
 \end{equation}
-i.e.\ the total channel mass (summed over alignments) for the hypothesis that the first $n$ intended
-words have produced exactly the first $k$ observed units. This vector \emph{is} the
-Rao--Blackwellized alignment: it is a fixed-length ($M{+}1$) sufficient statistic, deterministic
-given $x_{1:n}$ and $o$, that replaces an explicit sampled alignment.
+i.e.\ the total channel mass (summed over alignments) for the hypothesis that the first $n$ intended words have produced exactly the first $k$ observed units. This vector \emph{is} the Rao--Blackwellized alignment: it is a fixed-length ($M{+}1$) sufficient statistic, deterministic given $x_{1:n}$ and $o$, that replaces an explicit sampled alignment.
 
-Emitting one more intended word $x_{n+1}$ updates the vector by one pair-HMM row
-(\code{\_word\_row\_update}). With emission column
-$\mathrm{e}[k] = \chan(o_{k}\given x_{n+1})$ and using $\beta$ as the intermediate after the
-copy/substitute and missing-word arcs,
+Emitting one more intended word $x_{n+1}$ updates the vector by one pair-HMM row (\code{\_word\_row\_update}). With emission column $\mathrm{e}[k] = \chan(o_{k}\given x_{n+1})$ and using $\beta$ as the intermediate after the copy/substitute and missing-word arcs,
 \begin{align}
   \beta[0]   &= \alpha^{(n)}[0] + \wdel, \label{eq:row-beta0}\\
   \beta[k]   &= \lse\big(\underbrace{\alpha^{(n)}[k{-}1] + \mathrm{e}[k]}_{\text{align } x_{n+1}\to o_k},\;
@@ -240,186 +144,72 @@ copy/substitute and missing-word arcs,
   \alpha^{(n+1)}[k] &= \lse\big(\beta[k],\;\alpha^{(n+1)}[k{-}1] + \wins[k]\big),
                           \quad (\text{$o_k$ spurious}) . \label{eq:row-ins}
 \end{align}
-Equation~\eqref{eq:row-beta} combines the diagonal arc (align $x_{n+1}$ to $o_k$: substitute or copy)
-and the up arc (the intended word $x_{n+1}$ is missing, cost $\wdel$). Equation~\eqref{eq:row-ins} is
-a left-to-right pass that lets a spurious observed unit $o_k$ advance the consumption count at cost
-$\wins[k]$ without consuming any intended word. The vector is initialized at $\alpha^{(0)}[k] = \sum_{j\le k}
-\wins[j]$ (the first $k$ observed units are all spurious, i.e.\ leading insertions), and the
-\emph{channel marginal} of a completed intended sentence is the full-consumption entry
+Equation~\eqref{eq:row-beta} combines the diagonal arc (align $x_{n+1}$ to $o_k$: substitute or copy) and the up arc (the intended word $x_{n+1}$ is missing, cost $\wdel$). Equation~\eqref{eq:row-ins} is a left-to-right pass that lets a spurious observed unit $o_k$ advance the consumption count at cost $\wins[k]$ without consuming any intended word. The vector is initialized at $\alpha^{(0)}[k] = \sum_{j\le k} \wins[j]$ (the first $k$ observed units are all spurious, i.e.\ leading insertions), and the \emph{channel marginal} of a completed intended sentence is the full-consumption entry
 \begin{equation}\label{eq:chan-from-alpha}
   p_{\mathrm{chan}}(o \given x_{1:n}) \;=\; \exp\,\alpha^{(n)}[M].
 \end{equation}
-The partial forward mass $\lse_k \alpha^{(n)}[k]$ is the likelihood of the \emph{observed-prefix-so-far}
-under the partial intended sentence---the quantity the SMC filter tracks before the sentence is
-complete (\S\ref{sec:smc}).
+The partial forward mass $\lse_k \alpha^{(n)}[k]$ is the likelihood of the \emph{observed-prefix-so-far} under the partial intended sentence---the quantity the SMC filter tracks before the sentence is complete (\S\ref{sec:smc}).
 
-\paragraph{Edit costs.} $\wdel$ (missing-word, the \emph{over-editing} knob; default $-9$ nats) is
-the price of adding a word to the reconstruction that the observation does not support; too cheap and
-the filter hallucinates fluent words, too steep and it stops restoring genuinely dropped words.
-$\wins[k]$ (spurious-word) is by default \emph{frequency-aware}: $\wins[k] = \log\rho_{\insact} -
-\mathrm{surp}_{\mathrm{uni}}(o_k)$, a per-unit decomposition into an insertion rate $\rho_{\insact}$
-(default $0.02$) times the out-of-context unigram content distribution. Making the cost depend on the
-word's base frequency keeps a rare-but-correct word from being dropped as spurious: under a flat cost
-(say $-\log V$, uniform over the vocabulary), any word rarer than uniform would be cheaper to discard
-than to keep, whereas here a rare word is expensive to explain away (\code{unigram.py}; the cost
-enters \eqref{eq:row-ins} as a per-observed-word vector). In the \emph{word-action} channel
-(\S\ref{sec:word-action}) neither cost is a free constant: $\wdel = \log\pdel$ and the insertion
-\emph{rate} $\log\pins$ (replacing $\rho_{\insact}$) are both read off the sampled edit-rate vector
-$\actdist$, so the entire edit budget is set by one Dirichlet draw while the content term
-$-\mathrm{surp}_{\mathrm{uni}}(o_k)$ is retained.
+\paragraph{Edit costs.} $\wdel$ (missing-word, the \emph{over-editing} knob; default $-9$ nats) is the price of adding a word to the reconstruction that the observation does not support; too cheap and the filter hallucinates fluent words, too steep and it stops restoring genuinely dropped words. $\wins[k]$ (spurious-word) is by default \emph{frequency-aware}: $\wins[k] = \log\rho_{\insact} - \mathrm{surp}_{\mathrm{uni}}(o_k)$, a per-unit decomposition into an insertion rate $\rho_{\insact}$ (default $0.02$) times the out-of-context unigram content distribution. Making the cost depend on the word's base frequency keeps a rare-but-correct word from being dropped as spurious: under a flat cost (say $-\log V$, uniform over the vocabulary), any word rarer than uniform would be cheaper to discard than to keep, whereas here a rare word is expensive to explain away (\code{unigram.py}; the cost enters \eqref{eq:row-ins} as a per-observed-word vector). In the \emph{word-action} channel (\S\ref{sec:word-action}) neither cost is a free constant: $\wdel = \log\pdel$ and the insertion \emph{rate} $\log\pins$ (replacing $\rho_{\insact}$) are both read off the sampled edit-rate vector $\actdist$, so the entire edit budget is set by one Dirichlet draw while the content term $-\mathrm{surp}_{\mathrm{uni}}(o_k)$ is retained.
 
-\paragraph{The band: bounded reach for insertions and deletions.} Insertions and deletions let the
-intended-word count $n$ and
-the consumed-unit count $k$ drift apart. To keep the DP from positing arbitrarily many consecutive
-spurious or missing words, the forward vector is masked to a diagonal band
-$|k - t| \le b$ after the $t$-th word step (default $b = 2$; \code{band\_mask}). The band is what
-gives insertions and deletions their bounded reach; it is the only approximation in the otherwise
-exact channel marginal, and at $b \ge M$ it is vacuous.
+\paragraph{The band: bounded reach for insertions and deletions.} Insertions and deletions let the intended-word count $n$ and the consumed-unit count $k$ drift apart. To keep the DP from positing arbitrarily many consecutive spurious or missing words, the forward vector is masked to a diagonal band $|k - t| \le b$ after the $t$-th word step (default $b = 2$; \code{band\_mask}). The band is what gives insertions and deletions their bounded reach; it is the only approximation in the otherwise exact channel marginal, and at $b \ge M$ it is vacuous.
 
 \begin{remark}[No explicit edit action]
-There is deliberately \emph{no} sampled ``edit type.'' Substitution and deletion are the diagonal and
-up arcs of \eqref{eq:row-beta}; insertion is the left-to-right pass of \eqref{eq:row-ins}. Scoring a
-spurious word as if it were a word the LM chose to emit would be a category error---a spurious word is
-a channel event, not an LM emission---and would double-count its probability mass, biasing the
-evidence by $\approx 0.2$ nats against exact enumeration. Every SMC step is thus a clean choice of the
-next intended word (or $\eos$); the edits live entirely inside the marginalized channel. The
-word-action channel (\S\ref{sec:word-action}) does not change this: it makes the channel's edit
-\emph{rates} $\actdist$ a latent, but the per-word edit \emph{type} stays summed out inside the same
-forward DP. The latent is a distribution over the arcs, never a sampled per-word action.
+There is deliberately \emph{no} sampled ``edit type.'' Substitution and deletion are the diagonal and up arcs of \eqref{eq:row-beta}; insertion is the left-to-right pass of \eqref{eq:row-ins}. Scoring a spurious word as if it were a word the LM chose to emit would be a category error---a spurious word is a channel event, not an LM emission---and would double-count its probability mass, biasing the evidence by $\approx 0.2$ nats against exact enumeration. Every SMC step is thus a clean choice of the next intended word (or $\eos$); the edits live entirely inside the marginalized channel. The word-action channel (\S\ref{sec:word-action}) does not change this: it makes the channel's edit \emph{rates} $\actdist$ a latent, but the per-word edit \emph{type} stays summed out inside the same forward DP. The latent is a distribution over the arcs, never a sampled per-word action.
 \end{remark}
 
 \subsection{The word-action parameterization: a Dirichlet prior over edit rates}
 \label{sec:word-action}
 
-So far the edit costs have been fixed constants: the character-level copy/substitution rates
-$\theta_{\copyact},\theta_{\subact}$ of \eqref{eq:char-dp} and the word-level
-$\wdel,\wins$ of \S\ref{sec:word-channel}. This bundles two conceptually distinct quantities into one
-number---\emph{how often} the channel edits at all (a base rate) and \emph{what shape} an edit takes
-(a substitution of one character vs.\ several). The \emph{word-action channel} decouples them and
-makes the base rate a latent.
+So far the edit costs have been fixed constants: the character-level copy/substitution rates $\theta_{\copyact},\theta_{\subact}$ of \eqref{eq:char-dp} and the word-level $\wdel,\wins$ of \S\ref{sec:word-channel}. This bundles two conceptually distinct quantities into one number---\emph{how often} the channel edits at all (a base rate) and \emph{what shape} an edit takes (a substitution of one character vs.\ several). The \emph{word-action channel} decouples them and makes the base rate a latent.
 
-\paragraph{The form channel and the action rates.} Split each edit cost into a \emph{form} term and
-an \emph{action-rate} term:
+\paragraph{The form channel and the action rates.} Split each edit cost into a \emph{form} term and an \emph{action-rate} term:
 \begin{itemize}[leftmargin=1.6em,itemsep=1pt]
-  \item \textbf{Form} (fixed). The inner character pair-HMM \eqref{eq:char-dp} is run with a
-        \emph{base-rate-free} parameterization (\code{channel\_form\_logpdf}): a matched character is
-        free ($\log\theta_{\copyact}=0$) and every character-level edit---substitution, insertion,
-        deletion, and adjacent transposition---pays a single sharpness
-        $\mathrm{SUB\_FORM\_LP} = \log(1/26)$. A transposition is one Damerau edit, so it pays the same
-        sharpness as a substitution ($\theta_{\mathrm{tr}}=\theta_{\subact}$); charging it zero (the
-        earlier behaviour) would make co-anagram word pairs---\emph{cat}/\emph{act},
-        \emph{form}/\emph{from}, \emph{calm}/\emph{clam}---channel-indistinguishable on form, contradicting
-        that calibrated operating point. The emission \eqref{eq:char-channel} now scores only the \emph{shape}
-        of a word-level substitution---roughly $d\cdot\log(1/26)$ for a $d$-character edit---with the
-        ``did it edit at all'' decision removed.
-  \item \textbf{Action rates} (latent). A single vector
-        $\actdist = (\pcopy,\psub,\pins,\pdel)$, a distribution over the four word-level actions
-        \{copy, substitute, insert, delete\}, supplies the base rates, drawn once per particle from a
-        Dirichlet prior
+\item \textbf{Form} (fixed). The inner character pair-HMM \eqref{eq:char-dp} is run with a \emph{base-rate-free} parameterization (\code{channel\_form\_logpdf}): a matched character is free ($\log\theta_{\copyact}=0$) and every character-level edit---substitution, insertion, deletion, and adjacent transposition---pays a single sharpness $\mathrm{SUB\_FORM\_LP} = \log(1/26)$. A transposition is one Damerau edit, so it pays the same sharpness as a substitution ($\theta_{\mathrm{tr}}=\theta_{\subact}$); charging it zero (the earlier behaviour) would make co-anagram word pairs---\emph{cat}/\emph{act}, \emph{form}/\emph{from}, \emph{calm}/\emph{clam}---channel-indistinguishable on form, contradicting that calibrated operating point. The emission \eqref{eq:char-channel} now scores only the \emph{shape} of a word-level substitution---roughly $d\cdot\log(1/26)$ for a $d$-character edit---with the ``did it edit at all'' decision removed.
+\item \textbf{Action rates} (latent). A single vector $\actdist = (\pcopy,\psub,\pins,\pdel)$, a distribution over the four word-level actions \{copy, substitute, insert, delete\}, supplies the base rates, drawn once per particle from a Dirichlet prior
         \begin{equation}\label{eq:action-prior}
           \actdist \;\sim\; \Dir(\bm\alpha), \qquad
           \bm\alpha = (\alpha_{\copyact},\alpha_{\subact},\alpha_{\insact},\alpha_{\delact})
                     \;=\; (200,1,1,1).
         \end{equation}
-        The copy concentration $\alpha_{\copyact}=200$ (the calibrated default \code{ACTION\_ALPHA\_DEFAULT})
-        is not arbitrary: it is the value selected by the calibration of \S\ref{sec:calibration}, the
-        others held at $1$.
+The copy concentration $\alpha_{\copyact}=200$ (the calibrated default \code{ACTION\_ALPHA\_DEFAULT}) is not arbitrary: it is the value selected by the calibration of \S\ref{sec:calibration}, the others held at $1$.
 \end{itemize}
-The word-level forward recurrence \eqref{eq:row-beta0}--\eqref{eq:row-ins} is unchanged in form; only
-its costs are now read off $\actdist$. The emission of aligning intended word $x$ to observed unit
-$o_k$ (the diagonal arc) is the form score offset by the action log-rate,
+The word-level forward recurrence \eqref{eq:row-beta0}--\eqref{eq:row-ins} is unchanged in form; only its costs are now read off $\actdist$. The emission of aligning intended word $x$ to observed unit $o_k$ (the diagonal arc) is the form score offset by the action log-rate,
 \begin{equation}\label{eq:wa-emit}
   \mathrm{e}[k] \;=\; \underbrace{\chan_{\mathrm{form}}(o_k\given x)}_{\text{shape}}
      \;+\; \log\psub \;+\; \big(\log\pcopy - \log\psub\big)\,\Ind[\,x \text{ is a copy of } o_k\,],
 \end{equation}
-i.e.\ a (case-insensitive) copy pays $\log\pcopy$ and a substitution pays $\log\psub$ on top of its
-form cost; the missing-word arc pays $\wdel = \log\pdel$; and the spurious-word pass pays
-$\wins[k] = \log\pins - \mathrm{surp}_{\mathrm{uni}}(o_k)$ (the insertion \emph{rate} $\log\pins$
-times the same frequency-aware content term as before). The copy test is deliberately
-case-insensitive---a sentence-initial capitalization (``she''$\to$``She'') is a faithful copy, not a
-substitution---matching the case-insensitive character DP of the original channel.
+i.e.\ a (case-insensitive) copy pays $\log\pcopy$ and a substitution pays $\log\psub$ on top of its form cost; the missing-word arc pays $\wdel = \log\pdel$; and the spurious-word pass pays $\wins[k] = \log\pins - \mathrm{surp}_{\mathrm{uni}}(o_k)$ (the insertion \emph{rate} $\log\pins$ times the same frequency-aware content term as before). The copy test is deliberately case-insensitive---a sentence-initial capitalization (``she''$\to$``She'') is a faithful copy, not a substitution---matching the case-insensitive character DP of the original channel.
 
-\paragraph{The channel selector.} The implementation exposes the noise model as a named
-\code{channel} argument with three values (\code{pythia\_word\_caprop.run}):
-\code{"align"} (\S\ref{sec:align}) is the deployed default; \code{"word\_action"} is the four-way
-model just described; and \code{"char\_copy"} is the original bundled
-character channel of \S\ref{sec:char-channel}--\S\ref{sec:word-channel}, retained only as the
-exact-enumeration certification anchor (\S\ref{sec:certification}). None of the three is an independent
-codepath. \code{align} sets $\log\pcopy=\log\psub$ and so reuses the word-action emission and machinery
-verbatim (\S\ref{sec:align}); \code{char\_copy} is exactly the \emph{zero-action degenerate} of
-\eqref{eq:wa-emit}, with
-$\log\pcopy = \log\psub = 0$ (the action offset vanishes, leaving the bundled character emission) and
-the global constants $\wdel,\wins$ broadcast across particles in place of the per-particle rates. With
-the action prior absent the word-action code is therefore bit-identical to the certified path, so the
-brute-force gates of \S\ref{sec:certification} continue to certify it.
+\paragraph{The channel selector.} The implementation exposes the noise model as a named \code{channel} argument with three values (\code{pythia\_word\_caprop.run}): \code{"align"} (\S\ref{sec:align}) is the deployed default; \code{"word\_action"} is the four-way model just described; and \code{"char\_copy"} is the original bundled character channel of \S\ref{sec:char-channel}--\S\ref{sec:word-channel}, retained only as the exact-enumeration certification anchor (\S\ref{sec:certification}). None of the three is an independent codepath. \code{align} sets $\log\pcopy=\log\psub$ and so reuses the word-action emission and machinery verbatim (\S\ref{sec:align}); \code{char\_copy} is exactly the \emph{zero-action degenerate} of \eqref{eq:wa-emit}, with $\log\pcopy = \log\psub = 0$ (the action offset vanishes, leaving the bundled character emission) and the global constants $\wdel,\wins$ broadcast across particles in place of the per-particle rates. With the action prior absent the word-action code is therefore bit-identical to the certified path, so the brute-force gates of \S\ref{sec:certification} continue to certify it.
 
-\paragraph{Concentration as the over-editing knob.} Absent rejuvenation (\S\ref{sec:rejuv}) each
-particle's $\actdist$ is a \emph{prior draw}, fixed for the whole run, so the prior mean
-$\bar p_{\copyact} = \alpha_{\copyact}/\!\sum_a \alpha_a$ directly sets that particle's edit budget:
-the more concentration on copy, the less the channel edits. The SMC targets of \S\ref{sec:smc} are
-thus understood as conditioned on the particle's current $\actdist$ (a prior draw here; refreshed by
-\S\ref{sec:rejuv-theta} once rejuvenation is on). Tuning $\bm\alpha$ to a target editing behaviour is
-the calibration of \S\ref{sec:calibration}.
+\paragraph{Concentration as the over-editing knob.} Absent rejuvenation (\S\ref{sec:rejuv}) each particle's $\actdist$ is a \emph{prior draw}, fixed for the whole run, so the prior mean $\bar p_{\copyact} = \alpha_{\copyact}/\!\sum_a \alpha_a$ directly sets that particle's edit budget: the more concentration on copy, the less the channel edits. The SMC targets of \S\ref{sec:smc} are thus understood as conditioned on the particle's current $\actdist$ (a prior draw here; refreshed by \S\ref{sec:rejuv-theta} once rejuvenation is on). Tuning $\bm\alpha$ to a target editing behaviour is the calibration of \S\ref{sec:calibration}.
 
 \subsection{The align channel: a smooth, single-knob over-editing control}
 \label{sec:align}
 
-The word-action emission \eqref{eq:wa-emit} draws a hard categorical line: a copy pays $\log\pcopy$
-and \emph{any} substitution pays $\log\psub$, a discontinuous jump between a verbatim match and a
-one-character typo. The \emph{align channel} replaces that jump with a smooth function of edit
-distance. It is the deployed default (\code{channel="align"}), and it is what lets the filter correct
-near-miss real-word typos (\emph{garage}$\to$\emph{garbage}) that the hard copy/substitute split
-tends to miss.
+The word-action emission \eqref{eq:wa-emit} draws a hard categorical line: a copy pays $\log\pcopy$ and \emph{any} substitution pays $\log\psub$, a discontinuous jump between a verbatim match and a one-character typo. The \emph{align channel} replaces that jump with a smooth function of edit distance. It is the deployed default (\code{channel="align"}), and it is what lets the filter correct near-miss real-word typos (\emph{garage}$\to$\emph{garbage}) that the hard copy/substitute split tends to miss.
 
-\paragraph{Merging copy and substitute.} The align channel collapses copy and substitute into a single
-\textsf{align} action, so the per-word action vector is three-way,
-$\actdist = (\pi_{\mathrm{align}}, \pins, \pdel) \sim \Dir(\bm\alpha)$, with calibrated default
-$\bm\alpha = (200, 2, 2)$ (\code{ALIGN\_ALPHA\_DEFAULT}). There is no longer a copy-vs-substitute
-decision to score; \emph{how good} a match is lives entirely in the form emission. Concretely, the
-emission offset of \eqref{eq:wa-emit} is evaluated with $\log\pcopy = \log\psub = \log\pi_{\mathrm{align}}$,
-so the copy indicator's coefficient vanishes and every aligned cell pays the same action rate
-$\log\pi_{\mathrm{align}}$ (\code{\_theta\_to\_costs\_align}); the missing-word and spurious-word arcs
-stay $\wdel = \log\pdel$ and $\wins[k] = \log\pins - \mathrm{surp}_{\mathrm{uni}}(o_k)$ exactly as
-before. Because the two channels differ only in setting $\log\pcopy = \log\psub$, align reuses the
-entire word-action forward DP, proposal, sweep, and conjugate refresh unchanged---the refresh just
-counts three-way actions $(n_{\mathrm{align}}, n_{\insact}, n_{\delact})$ (\code{\_action\_counts\_align})
-instead of four.
+\paragraph{Merging copy and substitute.} The align channel collapses copy and substitute into a single \textsf{align} action, so the per-word action vector is three-way, $\actdist = (\pi_{\mathrm{align}}, \pins, \pdel) \sim \Dir(\bm\alpha)$, with calibrated default $\bm\alpha = (200, 2, 2)$ (\code{ALIGN\_ALPHA\_DEFAULT}). There is no longer a copy-vs-substitute decision to score; \emph{how good} a match is lives entirely in the form emission. Concretely, the emission offset of \eqref{eq:wa-emit} is evaluated with $\log\pcopy = \log\psub = \log\pi_{\mathrm{align}}$, so the copy indicator's coefficient vanishes and every aligned cell pays the same action rate $\log\pi_{\mathrm{align}}$ (\code{\_theta\_to\_costs\_align}); the missing-word and spurious-word arcs stay $\wdel = \log\pdel$ and $\wins[k] = \log\pins - \mathrm{surp}_{\mathrm{uni}}(o_k)$ exactly as before. Because the two channels differ only in setting $\log\pcopy = \log\psub$, align reuses the entire word-action forward DP, proposal, sweep, and conjugate refresh unchanged---the refresh just counts three-way actions $(n_{\mathrm{align}}, n_{\insact}, n_{\delact})$ (\code{\_action\_counts\_align}) instead of four.
 
-\paragraph{The slope $K$ as the edit-distance cost.} With the copy/substitute jump gone, the form
-table \eqref{eq:char-dp} is run with a single sweepable per-edit cost $K$ (\code{align\_form\_logpdf}$(K)$):
-a matched character is free and every character edit---substitution, insertion, deletion, adjacent
-transposition---pays $K$, so a surface at Damerau--Levenshtein distance $d$ scores $\approx K\cdot d$.
-This is the smooth emission the hard channel lacked, and $K$ is a single continuous over-editing knob:
-a less negative $K$ makes near-miss real-word substitutions cheap enough to correct, a more negative
-$K$ suppresses them. The calibrated default is $K = -4.5$ (\code{ALIGN\_SLOPE}); at
-$K = \mathrm{SUB\_FORM\_LP} = \log(1/26)$ the align form table is byte-identical to the word-action
-form table, so align is a strict generalization of it. The two knobs $K$ and $\bm\alpha$ are
-independent---$K$ governs substitution, $\bm\alpha$ governs insertion/deletion---and are calibrated
-jointly in \S\ref{sec:calibration}.
+\paragraph{The slope $K$ as the edit-distance cost.} With the copy/substitute jump gone, the form table \eqref{eq:char-dp} is run with a single sweepable per-edit cost $K$ (\code{align\_form\_logpdf}$(K)$): a matched character is free and every character edit---substitution, insertion, deletion, adjacent transposition---pays $K$, so a surface at Damerau--Levenshtein distance $d$ scores $\approx K\cdot d$. This is the smooth emission the hard channel lacked, and $K$ is a single continuous over-editing knob: a less negative $K$ makes near-miss real-word substitutions cheap enough to correct, a more negative $K$ suppresses them. The calibrated default is $K = -4.5$ (\code{ALIGN\_SLOPE}); at $K = \mathrm{SUB\_FORM\_LP} = \log(1/26)$ the align form table is byte-identical to the word-action form table, so align is a strict generalization of it. The two knobs $K$ and $\bm\alpha$ are independent---$K$ governs substitution, $\bm\alpha$ governs insertion/deletion---and are calibrated jointly in \S\ref{sec:calibration}.
 
 \section{Rao--Blackwellized sequential Monte Carlo}
 \label{sec:smc}
 
 \subsection{Sequence of targets}
 
-Combining \eqref{eq:lm-prior} and \eqref{eq:chan-from-alpha}, the (tempered) unnormalized posterior
-over \emph{complete} intended sentences is
+Combining \eqref{eq:lm-prior} and \eqref{eq:chan-from-alpha}, the (tempered) unnormalized posterior over \emph{complete} intended sentences is
 \begin{equation}\label{eq:final-target}
   \gamma(x_{1:n}) \;=\; \Big[\textstyle\prod_{j} \pLM^{\lambda}(x_j\given x_{<j})\Big]\,
                         \pLM^{\lambda}(\eos\given x_{1:n})\;\exp\alpha^{(n)}[M],
 \end{equation}
-with normalizer $Z = \sum_{x} \gamma(x) = p(o)$ (up to the deterministic constant
-$\lse_k\alpha^{(0)}[k]$ folded out by the implementation). The filter realizes this as a sequence of
-intermediate targets indexed by the number of emitted intended words. After $n$ words the
-\emph{partial} unnormalized target is
+with normalizer $Z = \sum_{x} \gamma(x) = p(o)$ (up to the deterministic constant $\lse_k\alpha^{(0)}[k]$ folded out by the implementation). The filter realizes this as a sequence of intermediate targets indexed by the number of emitted intended words. After $n$ words the \emph{partial} unnormalized target is
 \begin{equation}\label{eq:interm-target}
   \tilde\gamma_n(x_{1:n}) \;=\; \Big[\textstyle\prod_{j\le n} \pLM^{\lambda}(x_j\given x_{<j})\Big]\;
                         \exp\Big(\lse_k \alpha^{(n)}[k]\Big),
 \end{equation}
-the prior of the first $n$ words times the likelihood of the observed-prefix-so-far. A particle is
-extended word-by-word under \eqref{eq:interm-target}; when it draws $\eos$ it commits, and a
-\emph{terminal correction} converts the partial mass into the full-consumption marginal
-\eqref{eq:chan-from-alpha}:
+the prior of the first $n$ words times the likelihood of the observed-prefix-so-far. A particle is extended word-by-word under \eqref{eq:interm-target}; when it draws $\eos$ it commits, and a \emph{terminal correction} converts the partial mass into the full-consumption marginal \eqref{eq:chan-from-alpha}:
 \begin{equation}\label{eq:term-correction}
   \Delta^{\mathrm{term}} \;=\; \alpha^{(n)}[M] - \lse_k \alpha^{(n)}[k].
 \end{equation}
@@ -427,70 +217,43 @@ extended word-by-word under \eqref{eq:interm-target}; when it draws $\eos$ it co
 \subsection{The channel-aware (fully-adapted) proposal}
 \label{sec:proposal}
 
-At each step a live particle proposes its next intended word from a finite \emph{candidate set}
-$\mathcal C$ assembled from two sources (\code{\_caprop\_scores}):
+At each step a live particle proposes its next intended word from a finite \emph{candidate set} $\mathcal C$ assembled from two sources (\code{\_caprop\_scores}):
 \begin{enumerate}[leftmargin=1.8em,itemsep=1pt]
-  \item \textbf{channel-compatible words}: the emission candidates of the observed units in a small
-        window around the current alignment frontier $\arg\max_k\alpha^{(n)}[k]$---the words that
-        could plausibly have produced the next observed unit (a copy of it, or a near substitution);
-  \item \textbf{fluency words}: the top-$J$ words under the live LM $\pLM(\cdot\given x_{\le n})$.
-        These supply candidates for deletions (a dropped word the LM expects to see) and ensure the
-        proposal always has plausible options even when the observation is uninformative.
+\item \textbf{channel-compatible words}: the emission candidates of the observed units in a small window around the current alignment frontier $\arg\max_k\alpha^{(n)}[k]$---the words that could plausibly have produced the next observed unit (a copy of it, or a near substitution);
+\item \textbf{fluency words}: the top-$J$ words under the live LM $\pLM(\cdot\given x_{\le n})$. These supply candidates for deletions (a dropped word the LM expects to see) and ensure the proposal always has plausible options even when the observation is uninformative.
 \end{enumerate}
-Candidates that share a surface form are merged (kept once), and $\eos$ is always a candidate. Each
-candidate word $c$ is scored by the increment it would add to the intermediate log-target
-\eqref{eq:interm-target}:
+Candidates that share a surface form are merged (kept once), and $\eos$ is always a candidate. Each candidate word $c$ is scored by the increment it would add to the intermediate log-target \eqref{eq:interm-target}:
 \begin{align}
   S(c)    &\;=\; \lambda\,\ell(c\given x_{\le n})
             \;+\; \underbrace{\Big[\lse_k \alpha'_c[k] - \lse_k\alpha^{(n)}[k]\Big]}_{
                   \Delta_n(c):\ \text{gain in channel forward mass}}, \label{eq:cand-score}\\
   S(\eos) &\;=\; \lambda\log\pLM(\eos\given x_{\le n}) + \Delta^{\mathrm{term}}, \label{eq:cand-score-eos}
 \end{align}
-where $\alpha'_c = \texttt{band\_mask}(\texttt{row\_update}(\alpha^{(n)}, \mathrm{EMIT}[:,c]))$ is the
-forward vector after emitting $c$. The proposal is the softmax of these scores,
+where $\alpha'_c = \texttt{band\_mask}(\texttt{row\_update}(\alpha^{(n)}, \mathrm{EMIT}[:,c]))$ is the forward vector after emitting $c$. The proposal is the softmax of these scores,
 \begin{equation}\label{eq:proposal}
   q_n(c) \;=\; \softmax_{c\in\mathcal C\cup\{\eos\}} S(c),
 \end{equation}
-and the next word is drawn $x_{n+1} \sim q_n$. This is the locally optimal (``fully-adapted'')
-proposal: it scores each candidate by exactly its contribution to the next target, so the
-information from \emph{both} the LM and the channel shapes the draw.
+and the next word is drawn $x_{n+1} \sim q_n$. This is the locally optimal (``fully-adapted'') proposal: it scores each candidate by exactly its contribution to the next target, so the information from \emph{both} the LM and the channel shapes the draw.
 
 \begin{lemma}[Incremental weight collapse]\label{lem:collapse}
-Under the proposal \eqref{eq:proposal}, the incremental SMC importance weight is independent of the
-sampled word and equals the log-sum of candidate scores:
+Under the proposal \eqref{eq:proposal}, the incremental SMC importance weight is independent of the sampled word and equals the log-sum of candidate scores:
 \begin{equation}\label{eq:wstep}
   \log w_{n+1} \;=\; \frac{\tilde\gamma_{n+1}(x_{1:n+1})}{\tilde\gamma_n(x_{1:n})\,q_n(x_{n+1})}
                \;=\; \lse_{c\in\mathcal C\cup\{\eos\}} S(c).
 \end{equation}
 \end{lemma}
 \begin{proof}
-The target increment for choosing word $c$ is exactly $\exp S(c)$ by construction
-(\eqref{eq:cand-score} is the log-ratio $\tilde\gamma_{n+1}/\tilde\gamma_n$ at $x_{n+1}=c$). With
-$q_n(c) = \exp S(c)/\sum_{c'}\exp S(c')$, the ratio in \eqref{eq:wstep} is
-$\exp S(c)\big/\!\big(\exp S(c)/\sum_{c'}\exp S(c')\big) = \sum_{c'}\exp S(c')$. The chosen-word
-factor cancels; taking logs gives the $\lse$. \qed
+The target increment for choosing word $c$ is exactly $\exp S(c)$ by construction (\eqref{eq:cand-score} is the log-ratio $\tilde\gamma_{n+1}/\tilde\gamma_n$ at $x_{n+1}=c$). With $q_n(c) = \exp S(c)/\sum_{c'}\exp S(c')$, the ratio in \eqref{eq:wstep} is $\exp S(c)\big/\!\big(\exp S(c)/\sum_{c'}\exp S(c')\big) = \sum_{c'}\exp S(c')$. The chosen-word factor cancels; taking logs gives the $\lse$. \qed
 \end{proof}
-This is the line \code{incr = logsumexp(scores)} in \code{\_make\_kernel}; the weight is the marginal
-step-likelihood under the candidate set, and it is folded into the running log-evidence.
+This is the line \code{incr = logsumexp(scores)} in \code{\_make\_kernel}; the weight is the marginal step-likelihood under the candidate set, and it is folded into the running log-evidence.
 
 \begin{remark}[Candidate-restricted support]
-The candidate set $\mathcal C$ is finite and data-driven, so the filter targets the posterior
-\emph{restricted to reachable intended sentences} (those expressible from window + top-$J$ + COPY
-candidates). On the toy bigram model the candidate set is the entire vocabulary, so the restriction
-is vacuous and the filter is exact---this is what the brute-force certification in
-\code{tests/test\_pairhmm\_exact.py} checks (\S\ref{sec:certification}). On Pythia the set is a
-high-recall pool; words outside it are unreachable, which is the intended behaviour (a correction
-must be a near neighbour or an LM-plausible bridge).
+The candidate set $\mathcal C$ is finite and data-driven, so the filter targets the posterior \emph{restricted to reachable intended sentences} (those expressible from window + top-$J$ + COPY candidates). On the toy bigram model the candidate set is the entire vocabulary, so the restriction is vacuous and the filter is exact---this is what the brute-force certification in \code{tests/test\_pairhmm\_exact.py} checks (\S\ref{sec:certification}). On Pythia the set is a high-recall pool; words outside it are unreachable, which is the intended behaviour (a correction must be a near neighbour or an LM-plausible bridge).
 \end{remark}
 
 \subsection{Resampling and the algorithm}
 
-Particle weights are accumulated in log space and resampling is triggered adaptively when the
-effective sample size---a standard measure of how many particles carry non-negligible
-weight---falls below $P/2$ (multinomial resampling via \code{jax.random.categorical} on the
-normalized log-weights). Algorithm~\ref{alg:smc} is one run; ``slack'' is a small number of extra word
-steps beyond $M$, which give inferred deletions room to make the intended sentence longer than the
-observed one.
+Particle weights are accumulated in log space and resampling is triggered adaptively when the effective sample size---a standard measure of how many particles carry non-negligible weight---falls below $P/2$ (multinomial resampling via \code{jax.random.categorical} on the normalized log-weights). Algorithm~\ref{alg:smc} is one run; ``slack'' is a small number of extra word steps beyond $M$, which give inferred deletions room to make the intended sentence longer than the observed one.
 
 \begin{figure}[t]
 \hrule\vspace{3pt}
@@ -521,467 +284,174 @@ observed one.
 \subsection{Correctness}
 
 \begin{definition}[Proper weighting]
-A weighted set $\{(x^{(p)}, w^{(p)})\}_{p=1}^P$ is \emph{properly weighted} for an unnormalized
-target $\gamma$ with $Z=\sum\gamma$ if $\mathbb E[\tfrac1P\sum_p w^{(p)} f(x^{(p)})] = \sum f\,\gamma
-= Z\,\mathbb E_{\bar\gamma}[f]$ for all integrable $f$.
+A weighted set $\{(x^{(p)}, w^{(p)})\}_{p=1}^P$ is \emph{properly weighted} for an unnormalized target $\gamma$ with $Z=\sum\gamma$ if $\mathbb E[\tfrac1P\sum_p w^{(p)} f(x^{(p)})] = \sum f\,\gamma = Z\,\mathbb E_{\bar\gamma}[f]$ for all integrable $f$.
 \end{definition}
 
 \begin{theorem}[Properly weighted filter; unbiased evidence]\label{thm:smc}
-For every $n$, the weighted particles after step $n$ of Algorithm~\ref{alg:smc} are properly weighted
-for $\tilde\gamma_n$ \eqref{eq:interm-target}; after the terminal correction they are properly
-weighted for $\gamma$ \eqref{eq:final-target}. Consequently $\widehat Z = \prod (\tfrac1P\sum_p
-w^{(p)})$ is unbiased for the marginal likelihood, $\mathbb E[\widehat Z] = Z = p(o)$.
+For every $n$, the weighted particles after step $n$ of Algorithm~\ref{alg:smc} are properly weighted for $\tilde\gamma_n$ \eqref{eq:interm-target}; after the terminal correction they are properly weighted for $\gamma$ \eqref{eq:final-target}. Consequently $\widehat Z = \prod (\tfrac1P\sum_p w^{(p)})$ is unbiased for the marginal likelihood, $\mathbb E[\widehat Z] = Z = p(o)$.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Induction on $n$, identical in structure to standard sequential importance sampling with resampling.
-The base case is the seeded particle set (weight $1$, $\alpha^{(0)}$). The inductive step is one
-importance-sampling extension with proposal $q_n$ \eqref{eq:proposal} and target increment
-$\exp S(\cdot)$: because $q_n>0$ on the
-support of the increment (the proposal is the softmax of the same scores), the importance-sampling
-identity gives proper weighting for $\tilde\gamma_{n+1}$, with incremental weight \eqref{eq:wstep}. Multinomial
-resampling replaces weights by their mean and is unbiased, and folding the mean into $\widehat Z$
-keeps the product unbiased by the tower rule. The terminal correction multiplies each live particle's
-weight by $\exp\Delta^{\mathrm{term}}$, converting $\tilde\gamma_n \to \gamma$ pointwise. The
-Rao--Blackwellization is exact: $\alpha^{(n)}$ in \eqref{eq:alpha-def} equals the channel mass
-summed over all alignments \eqref{eq:chan-marginal}, so replacing a sampled alignment by $\alpha$
-loses no target mass and (strictly) reduces weight variance. \qed
+Induction on $n$, identical in structure to standard sequential importance sampling with resampling. The base case is the seeded particle set (weight $1$, $\alpha^{(0)}$). The inductive step is one importance-sampling extension with proposal $q_n$ \eqref{eq:proposal} and target increment $\exp S(\cdot)$: because $q_n>0$ on the support of the increment (the proposal is the softmax of the same scores), the importance-sampling identity gives proper weighting for $\tilde\gamma_{n+1}$, with incremental weight \eqref{eq:wstep}. Multinomial resampling replaces weights by their mean and is unbiased, and folding the mean into $\widehat Z$ keeps the product unbiased by the tower rule. The terminal correction multiplies each live particle's weight by $\exp\Delta^{\mathrm{term}}$, converting $\tilde\gamma_n \to \gamma$ pointwise. The Rao--Blackwellization is exact: $\alpha^{(n)}$ in \eqref{eq:alpha-def} equals the channel mass summed over all alignments \eqref{eq:chan-marginal}, so replacing a sampled alignment by $\alpha$ loses no target mass and (strictly) reduces weight variance. \qed
 \end{proof}
 
 \begin{remark}[Why Rao--Blackwellize]
-Sampling the alignment would make each particle a guess at both the intended sentence and its
-edit structure; the weights would carry the variance of that second guess. Summing the alignment out
-means a particle is judged only on its intended sentence, with the channel's verdict computed
-exactly. The fully-adapted proposal then makes the per-step weight a near-deterministic marginal
-likelihood (Lemma~\ref{lem:collapse}), so small particle counts suffice ($P\!\approx\!64$--$256$ on
-Pythia).
+Sampling the alignment would make each particle a guess at both the intended sentence and its edit structure; the weights would carry the variance of that second guess. Summing the alignment out means a particle is judged only on its intended sentence, with the channel's verdict computed exactly. The fully-adapted proposal then makes the per-step weight a near-deterministic marginal likelihood (Lemma~\ref{lem:collapse}), so small particle counts suffice ($P\!\approx\!64$--$256$ on Pythia).
 \end{remark}
 
 \section{Reanalysis by rejuvenation}
 \label{sec:rejuv}
 
 \subsection{Why}
-Resampling repeatedly prunes alternatives. A word committed under local information early in the
-filtering pass can never be revised once \emph{later} context disambiguates it---the classic
-garden-path situation. Rejuvenation interleaves, after a resampling step, Markov-chain Monte Carlo
-(MCMC) moves that revisit recent words within a lookback window. These moves target the \emph{same}
-posterior; they do not change the target, they let the chain reach high-posterior reanalyses and
-restore diversity to a particle set that resampling has collapsed onto a few distinct hypotheses
-(\code{pairhmm\_rejuv.py}). The word move (\S\ref{sec:rejuv-move}) substitutes in place; a companion
-indel move (\S\ref{sec:rejuv-indel}) additionally restores dropped words and removes spurious ones by
-changing the sentence length.
+Resampling repeatedly prunes alternatives. A word committed under local information early in the filtering pass can never be revised once \emph{later} context disambiguates it---the classic garden-path situation. Rejuvenation interleaves, after a resampling step, Markov-chain Monte Carlo (MCMC) moves that revisit recent words within a lookback window. These moves target the \emph{same} posterior; they do not change the target, they let the chain reach high-posterior reanalyses and restore diversity to a particle set that resampling has collapsed onto a few distinct hypotheses (\code{pairhmm\_rejuv.py}). The word move (\S\ref{sec:rejuv-move}) substitutes in place; a companion indel move (\S\ref{sec:rejuv-indel}) additionally restores dropped words and removes spurious ones by changing the sentence length.
 
 \subsection{The full-conditional (Gibbs / SMCP3) word move}
 \label{sec:rejuv-move}
 
-A sweep resamples one intended word at a time, in place, from its full conditional. For word slot
-$w$ in the window, holding the other words fixed, the conditional is
+A sweep resamples one intended word at a time, in place, from its full conditional. For word slot $w$ in the window, holding the other words fixed, the conditional is
 \begin{equation}\label{eq:full-cond}
   P(x_w = c \given x_{\setminus w}, o)
   \;\propto\; \underbrace{p_{\mathrm{prior}}^{\lambda}(x_{1:n}\text{ with } x_w{=}c)}_{\text{LM of the spliced sentence}}
               \;\cdot\; \underbrace{\exp\alpha[M]\ \text{(or }\lse_k\alpha[k])}_{\text{channel marginal, recomputed}},
 \end{equation}
-over a candidate set $\mathcal C_w = \{\copyact\}\cup \mathcal P_w$ (keep the current word, or a
-SymSpell pool entry; \S\ref{sec:candidates}). Both factors are scored by exactly the pieces the
-forward filter uses---the autoregressive LM for the prior, the word-level DP for the channel
-marginal---so sampling from $\softmax_{c} \log[\,\cdot\,]$ \emph{is} a draw from the conditional.
-``Done'' (complete-hypothesis) particles score the terminal channel marginal $\alpha[M]$ plus an
-$\eos$ term; mid-loop particles score the partial forward mass $\lse_k\alpha[k]$.
+over a candidate set $\mathcal C_w = \{\copyact\}\cup \mathcal P_w$ (keep the current word, or a SymSpell pool entry; \S\ref{sec:candidates}). Both factors are scored by exactly the pieces the forward filter uses---the autoregressive LM for the prior, the word-level DP for the channel marginal---so sampling from $\softmax_{c} \log[\,\cdot\,]$ \emph{is} a draw from the conditional. ``Done'' (complete-hypothesis) particles score the terminal channel marginal $\alpha[M]$ plus an $\eos$ term; mid-loop particles score the partial forward mass $\lse_k\alpha[k]$.
 
-The move is consumed in either of two equivalent ways, both built on GenJAX's \code{Rejuvenate}
-SMCP3 recipe (\code{inference/requests/rejuvenate.py}; the move proposes from the conditional,
-\code{Update}s the trace, and assesses the reverse, returning the SMCP3 weight
-$\mathcal W = w_{\mathrm{upd}} + s_{\mathrm{bwd}} - s_{\mathrm{fwd}}$; the algebra is recalled in
-Appendix~\ref{app:gfi}):
+The move is consumed in either of two equivalent ways, both built on GenJAX's \code{Rejuvenate} SMCP3 recipe (\code{inference/requests/rejuvenate.py}; the move proposes from the conditional, \code{Update}s the trace, and assesses the reverse, returning the SMCP3 weight $\mathcal W = w_{\mathrm{upd}} + s_{\mathrm{bwd}} - s_{\mathrm{fwd}}$; the algebra is recalled in Appendix~\ref{app:gfi}):
 \begin{description}[leftmargin=1.4em]
-  \item[(A) Metropolis--Hastings.] Accept the move with probability $\min(1, e^{\mathcal W})$;
-        weights untouched.
-  \item[(B) SMCP3 reweighting.] Move deterministically and multiply the particle weight by
-        $e^{\mathcal W}$. The implementation uses (B): it applies the sweep to the equal-weight
-        post-resample cloud and folds $\mathcal W$ into $\log w$ \emph{before} the next resample, so
-        an asymmetric candidate set carries real mass into the resample.
+\item[(A) Metropolis--Hastings.] Accept the move with probability $\min(1, e^{\mathcal W})$; weights untouched.
+\item[(B) SMCP3 reweighting.] Move deterministically and multiply the particle weight by $e^{\mathcal W}$. The implementation uses (B): it applies the sweep to the equal-weight post-resample cloud and folds $\mathcal W$ into $\log w$ \emph{before} the next resample, so an asymmetric candidate set carries real mass into the resample.
 \end{description}
-For a true full-conditional proposal the SMCP3 weight is $\mathcal W \approx 0$ (asserted as a
-built-it-right check); the weight becomes informative exactly when the candidate set is asymmetric
-(e.g.\ COPY plus a one-sided neighbour pool).
+For a true full-conditional proposal the SMCP3 weight is $\mathcal W \approx 0$ (asserted as a built-it-right check); the weight becomes informative exactly when the candidate set is asymmetric (e.g.\ COPY plus a one-sided neighbour pool).
 
 \begin{theorem}[Invariance]\label{thm:rejuv}
-Each word move leaves the posterior $\bar\gamma\propto p(x\given o)$ invariant: consumed as (A) it
-satisfies detailed balance w.r.t.\ $\bar\gamma$; consumed as (B) it preserves proper weighting for
-$\bar\gamma$. A windowed sweep---any data-dependent but state-independent schedule of such moves---is
-therefore also $\bar\gamma$-invariant.
+Each word move leaves the posterior $\bar\gamma\propto p(x\given o)$ invariant: consumed as (A) it satisfies detailed balance w.r.t.\ $\bar\gamma$; consumed as (B) it preserves proper weighting for $\bar\gamma$. A windowed sweep---any data-dependent but state-independent schedule of such moves---is therefore also $\bar\gamma$-invariant.
 \end{theorem}
 \begin{proof}[Proof sketch]
-The move overwrites slot $w$ and leaves all other addresses fixed, so the forward proposal of the
-new word and the reverse proposal of the old word are both scored by the same conditional kernel
-evaluated at the respective points. (A) is then the standard Metropolis--Hastings acceptance for
-proposal $Q$ and target $\bar\gamma$, with $\mathcal W$ the log of the MH ratio (the \code{Update}
-weight supplies the target ratio, the backward request supplies the addresses the reverse kernel
-scores); detailed balance is the textbook identity. (B) is the SMCP3 theorem specialized to a
-deterministic overwrite with auxiliary randomness from $Q$: replacing the proper-weighting integral
-and changing variables $(x,\zeta)\mapsto x'$ cancels the $Q$ factors and preserves
-$\sum f\,\bar\gamma$. The schedule invariance is immediate: a composition of $\bar\gamma$-invariant
-kernels is $\bar\gamma$-invariant regardless of how the (data-dependent) schedule chooses them. \qed
+The move overwrites slot $w$ and leaves all other addresses fixed, so the forward proposal of the new word and the reverse proposal of the old word are both scored by the same conditional kernel evaluated at the respective points. (A) is then the standard Metropolis--Hastings acceptance for proposal $Q$ and target $\bar\gamma$, with $\mathcal W$ the log of the MH ratio (the \code{Update} weight supplies the target ratio, the backward request supplies the addresses the reverse kernel scores); detailed balance is the textbook identity. (B) is the SMCP3 theorem specialized to a deterministic overwrite with auxiliary randomness from $Q$: replacing the proper-weighting integral and changing variables $(x,\zeta)\mapsto x'$ cancels the $Q$ factors and preserves $\sum f\,\bar\gamma$. The schedule invariance is immediate: a composition of $\bar\gamma$-invariant kernels is $\bar\gamma$-invariant regardless of how the (data-dependent) schedule chooses them. \qed
 \end{proof}
 
 \subsection{Restoring insertions and deletions: the Gibbs indel move}
 \label{sec:rejuv-indel}
 
-The word move of \S\ref{sec:rejuv-move} resamples a word \emph{in place}: it holds the sentence length
-$n$ fixed and can only substitute. It therefore cannot repair the two length-changing errors---a
-dropped word the filter never inserted, or a spurious word it committed to---since those require
-changing $n$. The \emph{indel move} (\code{rejuv="gibbs+bd"}) adds that trans-dimensional capability. It
-is off by default (\code{rejuv="off"}) and composes with the word move: \code{"gibbs"} runs the word
-move alone, \code{"gibbs+bd"} runs the word move \emph{and} the indel move.
+The word move of \S\ref{sec:rejuv-move} resamples a word \emph{in place}: it holds the sentence length $n$ fixed and can only substitute. It therefore cannot repair the two length-changing errors---a dropped word the filter never inserted, or a spurious word it committed to---since those require changing $n$. The \emph{indel move} (\code{rejuv="gibbs+bd"}) adds that trans-dimensional capability. It is off by default (\code{rejuv="off"}) and composes with the word move: \code{"gibbs"} runs the word move alone, \code{"gibbs+bd"} runs the word move \emph{and} the indel move.
 
-\paragraph{The move as a full conditional over one edit.} In its effective form (\code{bd\_mode="gibbs"},
-the default) the move is again a Gibbs step: for each particle, resample the single edit that best
-explains the parse from the full conditional over the move set
+\paragraph{The move as a full conditional over one edit.} In its effective form (\code{bd\_mode="gibbs"}, the default) the move is again a Gibbs step: for each particle, resample the single edit that best explains the parse from the full conditional over the move set
 \begin{equation}\label{eq:indel-set}
   \mathcal S \;=\; \{\text{no-op}\}\;\cup\;\{\text{insert } c \text{ at gap } g\}_{g,c}\;\cup\;
                     \{\text{delete word } i\}_i,
 \end{equation}
-with probability $\propto \pi(\text{resulting parse})$, where $\pi = \pLM^{\lambda}\,p_{\mathrm{chan}}$ is
-the same tempered target the filter uses (\code{gibbs\_indel\_move}). Every candidate parse---the no-op,
-each single insertion, each single deletion---is scored by $\pi$ and one categorical draw picks the edit.
-Because \emph{no-op} is always in the set the move self-regulates and cannot over-edit: on a clean parse
-every edit lowers $\pi$, so no-op is drawn with probability $\approx 1$; on a parse with one dropped
-word the conditional concentrates on the restoring insertion and amplifies it to its posterior fraction
-in a single move; and a spurious, $\pi$-lowering insertion at a locally fluent but wrong gap gets
-$\approx 0$ mass. Being a Gibbs step its SMCP3 weight is identically zero---it is always applied and
-preserves the target (Theorem~\ref{thm:rejuv})---so unlike the earlier Metropolis--Hastings birth/death
-move (\code{bd\_mode="mh"}, retained but not the default) it needs no accept/reject and no
-reverse-density bookkeeping.
+with probability $\propto \pi(\text{resulting parse})$, where $\pi = \pLM^{\lambda}\,p_{\mathrm{chan}}$ is the same tempered target the filter uses (\code{gibbs\_indel\_move}). Every candidate parse---the no-op, each single insertion, each single deletion---is scored by $\pi$ and one categorical draw picks the edit. Because \emph{no-op} is always in the set the move self-regulates and cannot over-edit: on a clean parse every edit lowers $\pi$, so no-op is drawn with probability $\approx 1$; on a parse with one dropped word the conditional concentrates on the restoring insertion and amplifies it to its posterior fraction in a single move; and a spurious, $\pi$-lowering insertion at a locally fluent but wrong gap gets $\approx 0$ mass. Being a Gibbs step its SMCP3 weight is identically zero---it is always applied and preserves the target (Theorem~\ref{thm:rejuv})---so unlike the earlier Metropolis--Hastings birth/death move (\code{bd\_mode="mh"}, retained but not the default) it needs no accept/reject and no reverse-density bookkeeping.
 
-\paragraph{The insertion pool.} A deletion candidate is just an existing word, but an insertion needs a
-\emph{vocabulary} to propose at each gap. The pool is built once per sentence from three sources
-(\code{pairhmm\_smc.run}): (i) the observed COPY surfaces---so a doubled observed word is removable and
-any observed word is re-insertable; (ii) an \emph{LM-bridge} pool, the top-$J$ next-token words under the
-LM at each inter-word gap (the same fluency candidates the forward proposal uses, precomputed statically
-over the observed prefixes), which lets the move restore a dropped word that never appears in the input;
-and (iii) a fixed closed-class \emph{function-word} set---articles, prepositions, conjunctions
-(\code{bd\_funcword\_ids}). The function-word pool exists because a dropped function word is often
-\emph{not} locally top-$J$ even when the full-sentence joint wants it---after ``soup'' the LM ranks
-``and'' above ``to,'' yet the joint prefers ``\dots soup to the customers''---so guaranteeing the closed
-class is in the pool lets the move's full-sentence conditional choose among the alternatives correctly.
-Function-word omission is the dominant edit, so this is a channel prior, not battery tuning.
+\paragraph{The insertion pool.} A deletion candidate is just an existing word, but an insertion needs a \emph{vocabulary} to propose at each gap. The pool is built once per sentence from three sources (\code{pairhmm\_smc.run}): (i) the observed COPY surfaces---so a doubled observed word is removable and any observed word is re-insertable; (ii) an \emph{LM-bridge} pool, the top-$J$ next-token words under the LM at each inter-word gap (the same fluency candidates the forward proposal uses, precomputed statically over the observed prefixes), which lets the move restore a dropped word that never appears in the input; and (iii) a fixed closed-class \emph{function-word} set---articles, prepositions, conjunctions (\code{bd\_funcword\_ids}). The function-word pool exists because a dropped function word is often \emph{not} locally top-$J$ even when the full-sentence joint wants it---after ``soup'' the LM ranks ``and'' above ``to,'' yet the joint prefers ``\dots soup to the customers''---so guaranteeing the closed class is in the pool lets the move's full-sentence conditional choose among the alternatives correctly. Function-word omission is the dominant edit, so this is a channel prior, not battery tuning.
 
-\paragraph{Schedule.} The indel move is \emph{not} interleaved after every resample like the word move.
-In its default Gibbs form it fires \emph{once}, after the filtering loop, over the final all-done
-particle cloud: one sweep suffices because the conditional amplifies the needed edit fully in a single
-move, and running it on the completed cloud lets it relocate particles to higher-$\pi$ readings (restore
-a dropped word, remove a spurious one) just before the terminal correction and decode. (The
-Metropolis--Hastings variant instead fires in-loop, gated to near-terminal resampling events by
-\code{bd\_min\_done}.)
+\paragraph{Schedule.} The indel move is \emph{not} interleaved after every resample like the word move. In its default Gibbs form it fires \emph{once}, after the filtering loop, over the final all-done particle cloud: one sweep suffices because the conditional amplifies the needed edit fully in a single move, and running it on the completed cloud lets it relocate particles to higher-$\pi$ readings (restore a dropped word, remove a spurious one) just before the terminal correction and decode. (The Metropolis--Hastings variant instead fires in-loop, gated to near-terminal resampling events by \code{bd\_min\_done}.)
 
 \subsection{Refreshing the edit rates: a conjugate sweep-then-refresh}
 \label{sec:rejuv-theta}
 
-In the word-action channel (\S\ref{sec:word-action}) the edit rates $\actdist$ are themselves latent,
-so rejuvenation resamples them too. After a resampling step the kernel runs \emph{sweep-then-refresh}:
+In the word-action channel (\S\ref{sec:word-action}) the edit rates $\actdist$ are themselves latent, so rejuvenation resamples them too. After a resampling step the kernel runs \emph{sweep-then-refresh}:
 
 \begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
-  \item \textbf{Sweep (words).} Run the full-conditional word move of \S\ref{sec:rejuv-move} over the
-        lookback window, scoring every candidate against the particle's \emph{current} per-particle
-        channel (the move is $\actdist$-aware: the same $\log\pcopy/\log\psub/\log\pdel/\log\pins$
-        costs and the form table that the forward filter uses). This can restore a dropped word or
-        revise a substitution.
-  \item \textbf{Refresh (rates).} On the just-corrected parse, resample $\actdist$ from its
-        Dirichlet--multinomial conjugate posterior. Counting the actions realized by the parse,
-        $\bm n = (n_{\copyact}, n_{\subact}, n_{\insact}, n_{\delact})$, the posterior over the
-        rate vector is
+\item \textbf{Sweep (words).} Run the full-conditional word move of \S\ref{sec:rejuv-move} over the lookback window, scoring every candidate against the particle's \emph{current} per-particle channel (the move is $\actdist$-aware: the same $\log\pcopy/\log\psub/\log\pdel/\log\pins$ costs and the form table that the forward filter uses). This can restore a dropped word or revise a substitution.
+\item \textbf{Refresh (rates).} On the just-corrected parse, resample $\actdist$ from its Dirichlet--multinomial conjugate posterior. Counting the actions realized by the parse, $\bm n = (n_{\copyact}, n_{\subact}, n_{\insact}, n_{\delact})$, the posterior over the rate vector is
         \begin{equation}\label{eq:theta-refresh}
           \actdist \given \bm n \;\sim\; \Dir(\bm\alpha + \bm n),
         \end{equation}
-        the standard conjugacy: a Dirichlet prior \eqref{eq:action-prior} updated by multinomial
-        action counts is Dirichlet with concentration $\bm\alpha + \bm n$. The new $\actdist$ is
-        converted back to per-particle costs and the forward vector $\alpha^{(\cdot)}$ is recomputed
-        from it, so the particle's channel and its rates stay consistent
-        (\code{\_theta\_to\_costs}, \code{channel\_carry}).
+the standard conjugacy: a Dirichlet prior \eqref{eq:action-prior} updated by multinomial action counts is Dirichlet with concentration $\bm\alpha + \bm n$. The new $\actdist$ is converted back to per-particle costs and the forward vector $\alpha^{(\cdot)}$ is recomputed from it, so the particle's channel and its rates stay consistent (\code{\_theta\_to\_costs}, \code{channel\_carry}).
 \end{enumerate}
 
-\paragraph{Why sweep \emph{then} refresh.} The order is what makes the move useful. Refreshing the
-rates \emph{alone}, on an over-edited parse, merely re-estimates a high edit rate and entrenches the
-over-editing---the parse looks like one a high-$\psub$/$\pdel$ channel would produce, so the conjugate
-update keeps those rates high. Restoring the word \emph{first} lets the conjugate update see a clean
-(copy-dominated) parse and pull $\pcopy$ up, which in turn makes the next words harder to over-edit.
-The word move is the escape route the refresh-alone path lacked; together they close the loop between
-the parse and the rates that explain it.
+\paragraph{Why sweep \emph{then} refresh.} The order is what makes the move useful. Refreshing the rates \emph{alone}, on an over-edited parse, merely re-estimates a high edit rate and entrenches the over-editing---the parse looks like one a high-$\psub$/$\pdel$ channel would produce, so the conjugate update keeps those rates high. Restoring the word \emph{first} lets the conjugate update see a clean (copy-dominated) parse and pull $\pcopy$ up, which in turn makes the next words harder to over-edit. The word move is the escape route the refresh-alone path lacked; together they close the loop between the parse and the rates that explain it.
 
-\paragraph{Counts and the approximation.} The action counts $\bm n$ are read from a \emph{positional}
-$1{:}1$ alignment (intended word $i$ against observed unit $i$; \code{\_action\_counts}): a word that
-matches its observed unit up to case is a copy, a non-matching one a substitution, an intended word
-past the observed length a deletion, an observed unit past the intended length an insertion. This is
-\emph{exact} for the substitution-dominated, near-deterministic alignments of the calibration battery
-(\S\ref{sec:calibration})---its items carry a single edit---and \emph{approximate} when an insertion
-or deletion shifts the alignment mid-sentence, where the exact counts would need the MAP or sampled
-alignment (a documented general-text refinement). The word move \eqref{eq:full-cond} is
-exactly $\bar\gamma$-invariant (Theorem~\ref{thm:rejuv}); the rate refresh is a Gibbs step on the
-augmented posterior $p(x,\actdist\given o)$, exact in the regime where the positional alignment
-matches the true one.
+\paragraph{Counts and the approximation.} The action counts $\bm n$ are read from a \emph{positional} $1{:}1$ alignment (intended word $i$ against observed unit $i$; \code{\_action\_counts}): a word that matches its observed unit up to case is a copy, a non-matching one a substitution, an intended word past the observed length a deletion, an observed unit past the intended length an insertion. This is \emph{exact} for the substitution-dominated, near-deterministic alignments of the calibration battery (\S\ref{sec:calibration})---its items carry a single edit---and \emph{approximate} when an insertion or deletion shifts the alignment mid-sentence, where the exact counts would need the MAP or sampled alignment (a documented general-text refinement). The word move \eqref{eq:full-cond} is exactly $\bar\gamma$-invariant (Theorem~\ref{thm:rejuv}); the rate refresh is a Gibbs step on the augmented posterior $p(x,\actdist\given o)$, exact in the regime where the positional alignment matches the true one.
 
 \subsection{Scheduling: where rejuvenation is spent}
 \label{sec:gate}
 
-The word move runs on a fixed \emph{lookback window}: after a resampling step it revisits the last
-$\ell$ intended words ($\code{lo} = \max(0,\,\text{frontier} - \ell)$; \code{rejuv\_lookback}, default
-$3$). This is a data-dependent but state-independent schedule, so Theorem~\ref{thm:rejuv} guarantees it
-changes only mixing, not the stationary distribution. The Gibbs indel move (\S\ref{sec:rejuv-indel}) is
-scheduled separately, as described there---one sweep after the loop in its default form.
+The word move runs on a fixed \emph{lookback window}: after a resampling step it revisits the last $\ell$ intended words ($\code{lo} = \max(0,\,\text{frontier} - \ell)$; \code{rejuv\_lookback}, default $3$). This is a data-dependent but state-independent schedule, so Theorem~\ref{thm:rejuv} guarantees it changes only mixing, not the stationary distribution. The Gibbs indel move (\S\ref{sec:rejuv-indel}) is scheduled separately, as described there---one sweep after the loop in its default form.
 
-\paragraph{A surprisal-relative gate (designed, not yet wired).} A finer schedule would spend
-rejuvenation only \emph{where} a reanalysis is likely, by gating each word on its surprisal (its negative
-log-probability). Gating on raw contextual surprisal would fire on any word improbable in
-context---including words that are merely \emph{rare} (a rare word is \emph{expected} to be surprising, so
-revisiting it wastes effort and can pull a legitimately rare literal toward a common substitute). The
-intended gate instead fires on contextual surprisal \emph{relative to} the word's out-of-context
-(unigram) surprisal,
+\paragraph{A surprisal-relative gate (designed, not yet wired).} A finer schedule would spend rejuvenation only \emph{where} a reanalysis is likely, by gating each word on its surprisal (its negative log-probability). Gating on raw contextual surprisal would fire on any word improbable in context---including words that are merely \emph{rare} (a rare word is \emph{expected} to be surprising, so revisiting it wastes effort and can pull a legitimately rare literal toward a common substitute). The intended gate instead fires on contextual surprisal \emph{relative to} the word's out-of-context (unigram) surprisal,
 \begin{equation}\label{eq:gate}
   p_{\mathrm{rejuv}}(o_k) \;=\; \sigma\!\big(\beta\,[\,\mathrm{surp}_{\mathrm{ctx}}(o_k)
                                               - \mathrm{surp}_{\mathrm{uni}}(o_k) - \tau\,]\big),
 \end{equation}
-so it fires only when a word is \emph{more} surprising in context than its base rate predicts---the
-signature of a genuine garden-path reanalysis rather than a rare word. The gate function is implemented
-(\code{unigram.py}) but is not currently wired into the filter, which uses the fixed window above; because
-any such gate is state-independent, adopting it would again change only mixing, not the target.
+so it fires only when a word is \emph{more} surprising in context than its base rate predicts---the signature of a genuine garden-path reanalysis rather than a rare word. The gate function is implemented (\code{unigram.py}) but is not currently wired into the filter, which uses the fixed window above; because any such gate is state-independent, adopting it would again change only mixing, not the target.
 
 \subsection{The cost of reanalysis}
-The LM is causal: overwriting an intended word at slot $w$ changes $\pLM$ for all later positions.
-Scoring the conditional \eqref{eq:full-cond} therefore re-scores the suffix from $w$ to the frontier;
-the \emph{prefix cancels} in the softmax (it is identical across candidates). A lookback window of
-$\ell$ words bounds the suffix at $O(\ell)$ LM evaluations per candidate per move---and re-scoring
-the suffix is exactly what lets later context vote on the earlier word. Computing that suffix
-efficiently is the central engineering problem of Part~II (\S\ref{sec:kv}).
+The LM is causal: overwriting an intended word at slot $w$ changes $\pLM$ for all later positions. Scoring the conditional \eqref{eq:full-cond} therefore re-scores the suffix from $w$ to the frontier; the \emph{prefix cancels} in the softmax (it is identical across candidates). A lookback window of $\ell$ words bounds the suffix at $O(\ell)$ LM evaluations per candidate per move---and re-scoring the suffix is exactly what lets later context vote on the earlier word. Computing that suffix efficiently is the central engineering problem of Part~II (\S\ref{sec:kv}).
 
-\paragraph{The indel move does not share the suffix-tail cache.} That suffix trick applies only to the
-word move. Inserting or deleting a word shifts every later word, so there is no fixed shared prefix to
-cache, and each candidate parse in \eqref{eq:indel-set} is scored by an independent whole-sentence LM
-forward. An exact suffix-tail KV version of the indel move was built and measured $\approx 3.6\times$
-\emph{slower} on CPU---the KV transformer's per-call overhead dominates a full-length exact tail, which
-the indel move, unlike the windowed word move, cannot shorten---and was reverted. What makes the move
-affordable at scale is instead deduplication (\S\ref{sec:dedup}): the post-resample cloud is highly
-degenerate ($\sim\!2$--$6\%$ unique), so the dominant per-candidate scoring is run on the unique particle
-states only and scattered back (\code{\_dedup\_indel\_logits}), which fixed the out-of-memory the naive
-per-candidate re-score hit at scale.
+\paragraph{The indel move does not share the suffix-tail cache.} That suffix trick applies only to the word move. Inserting or deleting a word shifts every later word, so there is no fixed shared prefix to cache, and each candidate parse in \eqref{eq:indel-set} is scored by an independent whole-sentence LM forward. An exact suffix-tail KV version of the indel move was built and measured $\approx 3.6\times$ \emph{slower} on CPU---the KV transformer's per-call overhead dominates a full-length exact tail, which the indel move, unlike the windowed word move, cannot shorten---and was reverted. What makes the move affordable at scale is instead deduplication (\S\ref{sec:dedup}): the post-resample cloud is highly degenerate ($\sim\!2$--$6\%$ unique), so the dominant per-candidate scoring is run on the unique particle states only and scattered back (\code{\_dedup\_indel\_logits}), which fixed the out-of-memory the naive per-candidate re-score hit at scale.
 
 \part{Engineering and implementation}
 \label{part:eng}
 
-Part~I is a specification; Part~II is what makes it run at usable speed. The throughline is that the
-LM forward pass dominates cost, so every optimization is about \emph{reducing or sharing} LM work:
-batch it across particles (\S\ref{sec:vmap}), avoid recomputing the prefix in rejuvenation
-(\S\ref{sec:kv}), and never score a buffer twice (\S\ref{sec:dedup}). Multi-token words
-(\S\ref{sec:multitoken}) and candidate generation (\S\ref{sec:candidates}) are the two places where
-the BPE tokenizer's reality intrudes on the clean word-level story of Part~I.
+Part~I is a specification; Part~II is what makes it run at usable speed. The throughline is that the LM forward pass dominates cost, so every optimization is about \emph{reducing or sharing} LM work: batch it across particles (\S\ref{sec:vmap}), avoid recomputing the prefix in rejuvenation (\S\ref{sec:kv}), and never score a buffer twice (\S\ref{sec:dedup}). Multi-token words (\S\ref{sec:multitoken}) and candidate generation (\S\ref{sec:candidates}) are the two places where the BPE tokenizer's reality intrudes on the clean word-level story of Part~I.
 
 \section{Vectorization over particles (GenJAX \texorpdfstring{\code{vmap}}{vmap}/\texorpdfstring{\code{jit}}{jit})}
 \label{sec:vmap}
 
-\paragraph{One filter, two models.} All inference lives in \code{pairhmm\_smc.py} and is generic; the
-model-specific pieces---the LM, the channel, the candidate generator, the seed---are injected through
-a \code{PairHMMModel} dataclass. The toy bigram (fast, no LM load, certified by brute force) and
-Pythia (\code{pythia\_word\_caprop.py}) are two configurations of the \emph{same} code, so correctness
-proven on the toy transfers to Pythia by construction (\S\ref{sec:certification}).
+\paragraph{One filter, two models.} All inference lives in \code{pairhmm\_smc.py} and is generic; the model-specific pieces---the LM, the channel, the candidate generator, the seed---are injected through a \code{PairHMMModel} dataclass. The toy bigram (fast, no LM load, certified by brute force) and Pythia (\code{pythia\_word\_caprop.py}) are two configurations of the \emph{same} code, so correctness proven on the toy transfers to Pythia by construction (\S\ref{sec:certification}).
 
-\paragraph{Fixed-shape per-particle state.} Each particle carries a fixed-shape tuple of fields: a
-padded token buffer \code{ctx\_buf} and its fill length \code{ctx\_len}; the intended-word count
-\code{n\_words}; the per-word token counts \code{word\_len} and channel surface ids \code{word\_surf};
-the forward vector $\alpha$; and a completion flag \code{done}. Nothing is ragged, so the whole set of
-$P$ particles---the \emph{particle cloud}---is a collection of arrays with a leading axis of size $P$,
-and one SMC step is a single \code{jax.vmap} over that axis. Crucially, the \emph{whole cloud shares
-one batched LM forward per step}: a single call evaluates $\pLM(\cdot\given x_{\le n})$ for all $P$
-particles at once, so the dominant cost is paid once for the whole cloud, which is why runtime is
-nearly flat in $P$.
+\paragraph{Fixed-shape per-particle state.} Each particle carries a fixed-shape tuple of fields: a padded token buffer \code{ctx\_buf} and its fill length \code{ctx\_len}; the intended-word count \code{n\_words}; the per-word token counts \code{word\_len} and channel surface ids \code{word\_surf}; the forward vector $\alpha$; and a completion flag \code{done}. Nothing is ragged, so the whole set of $P$ particles---the \emph{particle cloud}---is a collection of arrays with a leading axis of size $P$, and one SMC step is a single \code{jax.vmap} over that axis. Crucially, the \emph{whole cloud shares one batched LM forward per step}: a single call evaluates $\pLM(\cdot\given x_{\le n})$ for all $P$ particles at once, so the dominant cost is paid once for the whole cloud, which is why runtime is nearly flat in $P$.
 
-\paragraph{The proposal kernel is a GenJAX \code{@gen} function.} The per-step kernel
-(\code{\_make\_kernel}) samples \code{genjax.categorical(scores) @ "action"} and injects the
-incremental weight through a deterministic \code{factor(incr) @ "ev"}; the filter drives it with
-\code{kernel.importance}, so the SMC weight is the generative-function-interface importance weight
-(Appendix~\ref{app:gfi}), not a hand-rolled quantity. The hand-written outer loop and the generative
-model thus agree by construction.
+\paragraph{The proposal kernel is a GenJAX \code{@gen} function.} The per-step kernel (\code{\_make\_kernel}) samples \code{genjax.categorical(scores) @ "action"} and injects the incremental weight through a deterministic \code{factor(incr) @ "ev"}; the filter drives it with \code{kernel.importance}, so the SMC weight is the generative-function-interface importance weight (Appendix~\ref{app:gfi}), not a hand-rolled quantity. The hand-written outer loop and the generative model thus agree by construction.
 
-\paragraph{Compile once, reuse across runs.} The jitted \code{extend} step and the rejuvenation step
-are built by factories memoized on their \emph{structural} signature (sequence lengths, candidate
-counts), with all per-run-varying data (the emission table, $\alpha^{(0)}$, the candidate pools, the
-edit costs, the seed) threaded as \emph{traced arguments} rather than baked into the compiled
-function. Two runs of the same sentence \emph{shape} therefore hit JAX's compilation cache and reuse
-the existing compiled code; only a new sentence length triggers a fresh compile. This matters most on
-the rejuvenation path, where the step is reused across the many resampling events of a single run as
-well as across separate runs.
+\paragraph{Compile once, reuse across runs.} The jitted \code{extend} step and the rejuvenation step are built by factories memoized on their \emph{structural} signature (sequence lengths, candidate counts), with all per-run-varying data (the emission table, $\alpha^{(0)}$, the candidate pools, the edit costs, the seed) threaded as \emph{traced arguments} rather than baked into the compiled function. Two runs of the same sentence \emph{shape} therefore hit JAX's compilation cache and reuse the existing compiled code; only a new sentence length triggers a fresh compile. This matters most on the rejuvenation path, where the step is reused across the many resampling events of a single run as well as across separate runs.
 
 \section{Multi-token intended words}
 \label{sec:multitoken}
 
-The clean ``one word'' of Part~I is, to the BPE tokenizer, a span of one or more tokens. Common words
-are usually a single token, but corrections sometimes are not (a misspelling of a rarer word, a
-proper noun, morphology), so a candidate intended word is represented as a \textbf{(token span,
-surface id)} pair, not a single token.
+The clean ``one word'' of Part~I is, to the BPE tokenizer, a span of one or more tokens. Common words are usually a single token, but corrections sometimes are not (a misspelling of a rarer word, a proper noun, morphology), so a candidate intended word is represented as a \textbf{(token span, surface id)} pair, not a single token.
 
-\paragraph{Decoupling LM scoring from the channel column.} The token span drives the LM chain-rule
-\eqref{eq:lm-word} and the buffer splice; the surface id indexes the channel emission table. A
-single-token candidate keeps $\text{surface id} = \text{token id}$ and the cheap one-forward LM score;
-a multi-token candidate gets its LM score from the chain-rule scorer (\code{tail\_logprobs}, the same
-KV-cached machinery as \S\ref{sec:kv}) and its channel column from a per-sentence \emph{augmented}
-emission table (multi-token surfaces occupy appended columns). The candidate inventory builder
-(\code{\_build\_candidates}) returns the per-word candidate spans, surfaces, and a multi-token index;
-$T_{\max}$ is the maximum span length over the sentence.
+\paragraph{Decoupling LM scoring from the channel column.} The token span drives the LM chain-rule \eqref{eq:lm-word} and the buffer splice; the surface id indexes the channel emission table. A single-token candidate keeps $\text{surface id} = \text{token id}$ and the cheap one-forward LM score; a multi-token candidate gets its LM score from the chain-rule scorer (\code{tail\_logprobs}, the same KV-cached machinery as \S\ref{sec:kv}) and its channel column from a per-sentence \emph{augmented} emission table (multi-token surfaces occupy appended columns). The candidate inventory builder (\code{\_build\_candidates}) returns the per-word candidate spans, surfaces, and a multi-token index; $T_{\max}$ is the maximum span length over the sentence.
 
-\paragraph{Capacity-parametric state and the re-pack.} The intended sentence is stored as an array
-\code{word\_tok} of shape $[P, W_{\max}, T_{\max}]$ together with per-word lengths, and the flat LM
-buffer is rebuilt from it by a cumulative-sum/scatter ``pack'' (\code{\_pack}) that handles unequal
-spans collision-free and at fixed shape; \code{\_unpack} inverts it using the stored per-word token
-counts. The band uses the \emph{word} count \code{n\_words}, not the token count \code{ctx\_len},
-since the two diverge once words are multi-token.
+\paragraph{Capacity-parametric state and the re-pack.} The intended sentence is stored as an array \code{word\_tok} of shape $[P, W_{\max}, T_{\max}]$ together with per-word lengths, and the flat LM buffer is rebuilt from it by a cumulative-sum/scatter ``pack'' (\code{\_pack}) that handles unequal spans collision-free and at fixed shape; \code{\_unpack} inverts it using the stored per-word token counts. The band uses the \emph{word} count \code{n\_words}, not the token count \code{ctx\_len}, since the two diverge once words are multi-token.
 
-\paragraph{Bit-identical reduction.} The decisive invariant: with no multi-token candidates
-($n_{\mathrm{mt}} = 0$, $T_{\max}=1$) every code path and value is \emph{bit-identical} to the
-certified single-token filter---each word's single token sits at the first slot of \code{word\_tok},
-\code{\_pack} with all lengths $1$ is the identity map from word index to buffer position, and the
-span is just the one token. The exact-enumeration gates (\S\ref{sec:certification}) run in this regime and so
-continue to certify the multi-token code.
+\paragraph{Bit-identical reduction.} The decisive invariant: with no multi-token candidates ($n_{\mathrm{mt}} = 0$, $T_{\max}=1$) every code path and value is \emph{bit-identical} to the certified single-token filter---each word's single token sits at the first slot of \code{word\_tok}, \code{\_pack} with all lengths $1$ is the identity map from word index to buffer position, and the span is just the one token. The exact-enumeration gates (\S\ref{sec:certification}) run in this regime and so continue to certify the multi-token code.
 
 \section{The KV-cache for rejuvenation}
 \label{sec:kv}
 
 \subsection{The LM engine}
 \label{sec:lm-engine}
-The LM is a Pythia (GPT-NeoX) model loaded from HuggingFace and converted \emph{once} to penzai
-(\code{lm\_penzai.py}); after conversion the forward pass is pure penzai/JAX (no torch in the loop),
-so it \code{jit}s and \code{vmap}s. Position $0$ of every buffer is seeded with $\eos$ as a
-start-of-sequence context; an optional content-neutral prime (a ``\code{.}'' that has no trailing
-space, to keep inter-word spacing consistent with the leading-space word tokens) conditions the
-model mid-document rather than at a document boundary. The LM is exposed only behind
-\code{next\_token\_logprobs}, so a different model could be swapped in without touching the filter.
+The LM is a Pythia (GPT-NeoX) model loaded from HuggingFace and converted \emph{once} to penzai (\code{lm\_penzai.py}); after conversion the forward pass is pure penzai/JAX (no torch in the loop), so it \code{jit}s and \code{vmap}s. Position $0$ of every buffer is seeded with $\eos$ as a start-of-sequence context; an optional content-neutral prime (a ``\code{.}'' that has no trailing space, to keep inter-word spacing consistent with the leading-space word tokens) conditions the model mid-document rather than at a document boundary. The LM is exposed only behind \code{next\_token\_logprobs}, so a different model could be swapped in without touching the filter.
 
 \subsection{Prefix cancellation and the suffix-tail scorer}
-The rejuvenation conditional \eqref{eq:full-cond} re-scores a candidate-dependent suffix, but the
-prefix LM (the words before the edited slot) is identical for every candidate and \emph{cancels} in
-the softmax and the SMCP3 weight. The scorer therefore computes only $\log P(\text{tail}\given
-\text{prefix})$ for the tail $=$ [candidate span, suffix words, $\eos$?], over the $K$ candidates of a
-slot. A transformer caches, for each layer, the key and value tensors it has already computed for the
-context (its ``KV cache''), so that extending the context reuses that work. The scorer
-(\code{\_batch\_tail\_logprobs\_kv}) exploits this: it \emph{prefills} the prefix once---runs the
-model over the prefix a single time to populate the cache---and then shares that cache across all $K$
-candidate feeds. It reads $\log P(\text{tail}_0\given \text{ctx})$ from the prefill output at
-position \code{ctx\_len}$-1$, then feeds each short candidate tail starting at position
-\code{ctx\_len} and reads the remaining chain-rule terms. The penzai
-\code{KVCachingTransformerLM} is driven by an unbind/bind pattern---\code{unbind\_variables} freezes
-the shared prefill K/V, and each candidate \code{bind}s a fresh copy and advances
-\code{cache\_end\_index}---so the expensive prefix attention is computed exactly once per particle per
-word. This is what brings the rejuvenation LM cost down from the naive ``re-score the whole sentence
-per candidate'' (an $O(\text{length})$ forward for each of $P\cdot K$ buffers) to one shared prefill
-plus cheap tail feeds.
+The rejuvenation conditional \eqref{eq:full-cond} re-scores a candidate-dependent suffix, but the prefix LM (the words before the edited slot) is identical for every candidate and \emph{cancels} in the softmax and the SMCP3 weight. The scorer therefore computes only $\log P(\text{tail}\given \text{prefix})$ for the tail $=$ [candidate span, suffix words, $\eos$?], over the $K$ candidates of a slot. A transformer caches, for each layer, the key and value tensors it has already computed for the context (its ``KV cache''), so that extending the context reuses that work. The scorer (\code{\_batch\_tail\_logprobs\_kv}) exploits this: it \emph{prefills} the prefix once---runs the model over the prefix a single time to populate the cache---and then shares that cache across all $K$ candidate feeds. It reads $\log P(\text{tail}_0\given \text{ctx})$ from the prefill output at position \code{ctx\_len}$-1$, then feeds each short candidate tail starting at position \code{ctx\_len} and reads the remaining chain-rule terms. The penzai \code{KVCachingTransformerLM} is driven by an unbind/bind pattern---\code{unbind\_variables} freezes the shared prefill K/V, and each candidate \code{bind}s a fresh copy and advances \code{cache\_end\_index}---so the expensive prefix attention is computed exactly once per particle per word. This is what brings the rejuvenation LM cost down from the naive ``re-score the whole sentence per candidate'' (an $O(\text{length})$ forward for each of $P\cdot K$ buffers) to one shared prefill plus cheap tail feeds.
 
 \section{Deduplication over the degenerate cloud}
 \label{sec:dedup}
 
-Resample-every-word makes the post-resample cloud highly degenerate---empirically $\sim\!93\%$ of the
-$P$ particles share an identical intended prefix (\code{cache\_dedup.py}). Two LM workloads exploit
-this, both \emph{exact} (bit-identical posterior given the same RNG; they remove only redundant
-forwards):
+Resample-every-word makes the post-resample cloud highly degenerate---empirically $\sim\!93\%$ of the $P$ particles share an identical intended prefix (\code{cache\_dedup.py}). Two LM workloads exploit this, both \emph{exact} (bit-identical posterior given the same RNG; they remove only redundant forwards):
 \begin{itemize}[leftmargin=1.6em,itemsep=1pt]
-  \item \textbf{Filter forward (\code{make\_forward\_dedup}).} The per-step batched LM forward is run
-        on the \emph{unique} buffers only, then scattered back to all $P$ particles.
-  \item \textbf{Rejuvenation tail (\code{\_dedup\_tail}).} The dominant single-sentence cost is the
-        sweep's KV prefills, which scale with $P$. The tail scorer is keyed on exactly the bytes it
-        reads---the prefix it prefills plus the candidate tails---and run on the unique rows only;
-        the per-particle SMCP3 \emph{sample} still runs on all $P$ (duplicates must diverge---that is
-        the diversification the dedup must never collapse).
+\item \textbf{Filter forward (\code{make\_forward\_dedup}).} The per-step batched LM forward is run on the \emph{unique} buffers only, then scattered back to all $P$ particles.
+\item \textbf{Rejuvenation tail (\code{\_dedup\_tail}).} The dominant single-sentence cost is the sweep's KV prefills, which scale with $P$. The tail scorer is keyed on exactly the bytes it reads---the prefix it prefills plus the candidate tails---and run on the unique rows only; the per-particle SMCP3 \emph{sample} still runs on all $P$ (duplicates must diverge---that is the diversification the dedup must never collapse).
 \end{itemize}
-Unique rows are padded to a fixed ``bucket ladder'' of batch sizes so the jitted scorer recompiles at
-only a few shapes.
+Unique rows are padded to a fixed ``bucket ladder'' of batch sizes so the jitted scorer recompiles at only a few shapes.
 
 \section{Candidate generation}
 \label{sec:candidates}
 
-Candidates are retrieved by a \textbf{SymSpell deletion index} over the word-initial vocabulary
-(\code{noise\_word.py}). Two strings are within Damerau--Levenshtein distance $D$ iff they share a
-common delete-variant (up to $D$ deletions on each side), so indexing the dictionary's delete-variants
-lets a query retrieve all candidates within $D$ by looking up its own deletes---the edit distance is a
-\emph{real} parameter, not capped at $1$. The verified distance is then computed by an
-optimal-string-alignment Damerau--Levenshtein with early cutoff, and candidates are returned
-nearest-first, truncated to \code{MAX\_SUB\_CANDIDATES}. The truncation is a tractability bound, not a
-modelling limit: far candidates are already crushed by $\theta_{\subact}^{d}$ in the channel
-\eqref{eq:char-channel}. There are two pools: the $\sim\!27$k single-token word-initial vocabulary,
-and a multi-token pool built from the top-$N$ \code{wordfreq} English words that tokenize to $\ge 2$
-BPE tokens (\S\ref{sec:multitoken}). The COPY candidate---the observed unit's own token span,
-verbatim---is always first, so a correctly-spelled (or correctly-punctuated) word can always be
-emitted as itself; using the \emph{observed} span keeps punctuation and casing faithful (a terminal
-``\code{.}'' stays the attached token, not a spaced one).
+Candidates are retrieved by a \textbf{SymSpell deletion index} over the word-initial vocabulary (\code{noise\_word.py}). Two strings are within Damerau--Levenshtein distance $D$ iff they share a common delete-variant (up to $D$ deletions on each side), so indexing the dictionary's delete-variants lets a query retrieve all candidates within $D$ by looking up its own deletes---the edit distance is a \emph{real} parameter, not capped at $1$. The verified distance is then computed by an optimal-string-alignment Damerau--Levenshtein with early cutoff, and candidates are returned nearest-first, truncated to \code{MAX\_SUB\_CANDIDATES}. The truncation is a tractability bound, not a modelling limit: far candidates are already crushed by $\theta_{\subact}^{d}$ in the channel \eqref{eq:char-channel}. There are two pools: the $\sim\!27$k single-token word-initial vocabulary, and a multi-token pool built from the top-$N$ \code{wordfreq} English words that tokenize to $\ge 2$ BPE tokens (\S\ref{sec:multitoken}). The COPY candidate---the observed unit's own token span, verbatim---is always first, so a correctly-spelled (or correctly-punctuated) word can always be emitted as itself; using the \emph{observed} span keeps punctuation and casing faithful (a terminal ``\code{.}'' stays the attached token, not a spaced one).
 
 \section{Calibrating the action prior}
 \label{sec:calibration}
 
-The action prior $\bm\alpha$ \eqref{eq:action-prior} has a behavioural signature---it sets how readily
-the channel edits---so it is chosen empirically against a calibration set rather than by fiat. The
-methodology is fixed before any tuning: design the set and the target behaviours first, then sweep the
-prior to match them.
+The action prior $\bm\alpha$ \eqref{eq:action-prior} has a behavioural signature---it sets how readily the channel edits---so it is chosen empirically against a calibration set rather than by fiat. The methodology is fixed before any tuning: design the set and the target behaviours first, then sweep the prior to match them.
 
-\paragraph{The battery.} The calibration set
-(\code{planning/calibration\_battery\_v0\_gated.csv}) is a collection of \emph{matched minimal pairs}.
-Each pair shares a context but differs in one manipulation: an \emph{implausible} member carrying a
-single slip---a misspelling, a dropped function word (\emph{to / for / from / of / a / the}), a
-spurious doubled word, a dative omission---and a \emph{plausible} member, its clean twin. Pairs are
-grouped into edit families (substitution, the several deletion families, insertion, datives), so the
-analysis can report behaviour family by family. This battery is \emph{synthetic} and was designed
-blind; the human behavioural data is a sealed hold-out, unlocked only at a pre-registered validation
-step and never used to tune the prior.
+\paragraph{The battery.} The calibration set (\code{planning/calibration\_battery\_v0\_gated.csv}) is a collection of \emph{matched minimal pairs}. Each pair shares a context but differs in one manipulation: an \emph{implausible} member carrying a single slip---a misspelling, a dropped function word (\emph{to / for / from / of / a / the}), a spurious doubled word, a dative omission---and a \emph{plausible} member, its clean twin. Pairs are grouped into edit families (substitution, the several deletion families, insertion, datives), so the analysis can report behaviour family by family. This battery is \emph{synthetic} and was designed blind; the human behavioural data is a sealed hold-out, unlocked only at a pre-registered validation step and never used to tune the prior.
 
-\paragraph{The target behaviours.} The intuition the prior must encode is simple: a plausible sentence
-should be \emph{read literally} (returned verbatim), and an implausible one should be \emph{corrected}
-to its minimal-pair twin. Two failure modes bound the knob from each side---\emph{under-editing}
-(a genuine slip left uncorrected) and \emph{over-editing} (a clean sentence ``corrected,'' or spurious
-words hallucinated into it). Against the posterior over intended sentences each item is scored by the
-mass the filter puts on the literal reading and on the intended correction; the per-item summaries are
-(\code{calibration\_battery\_analyze.py}):
+\paragraph{The target behaviours.} The intuition the prior must encode is simple: a plausible sentence should be \emph{read literally} (returned verbatim), and an implausible one should be \emph{corrected} to its minimal-pair twin. Two failure modes bound the knob from each side---\emph{under-editing} (a genuine slip left uncorrected) and \emph{over-editing} (a clean sentence ``corrected,'' or spurious words hallucinated into it). Against the posterior over intended sentences each item is scored by the mass the filter puts on the literal reading and on the intended correction; the per-item summaries are (\code{calibration\_battery\_analyze.py}):
 \begin{itemize}[leftmargin=1.6em,itemsep=1pt]
-  \item \textbf{should-EDIT correction rate $E$}---on implausible items, the posterior mass on the
-        corrected twin (high is good);
-  \item \textbf{should-KEEP literal retention $L$}---on plausible items, the mass on the verbatim
-        reading (high is good; $1-L$ is spurious editing of a clean sentence);
-  \item \textbf{tracks-manipulation}---the within-pair check that the implausible member is edited
-        more than its plausible twin is spuriously edited ($E_{\text{implausible}} > 1-L_{\text{plausible}}$);
-  \item \textbf{junk}---the residual mass on neither reading (over-edit / spurious-insertion mass).
+\item \textbf{should-EDIT correction rate $E$}---on implausible items, the posterior mass on the corrected twin (high is good);
+\item \textbf{should-KEEP literal retention $L$}---on plausible items, the mass on the verbatim reading (high is good; $1-L$ is spurious editing of a clean sentence);
+\item \textbf{tracks-manipulation}---the within-pair check that the implausible member is edited more than its plausible twin is spuriously edited ($E_{\text{implausible}} > 1-L_{\text{plausible}}$);
+\item \textbf{junk}---the residual mass on neither reading (over-edit / spurious-insertion mass).
 \end{itemize}
 
-\paragraph{The sweep.} The single knob tuned here is the \emph{copy concentration}: hold
-$\alpha_{\subact}=\alpha_{\insact}=\alpha_{\delact}=1$ and sweep $\alpha_{\copyact}$. Without
-rejuvenation the per-particle $\actdist$ is a prior draw (\S\ref{sec:word-action}), so the prior mean
-$\bar p_{\copyact}=\alpha_{\copyact}/(\alpha_{\copyact}+3)$ directly sets the edit budget, and the
-sweep cleanly isolates the prior's effect. The copy concentration is orthogonal to the form sharpness
-$\mathrm{SUB\_FORM\_LP}$, which is settled separately (\code{calibration\_word\_action\_prior\_search.py}).
+\paragraph{The sweep.} The single knob tuned here is the \emph{copy concentration}: hold $\alpha_{\subact}=\alpha_{\insact}=\alpha_{\delact}=1$ and sweep $\alpha_{\copyact}$. Without rejuvenation the per-particle $\actdist$ is a prior draw (\S\ref{sec:word-action}), so the prior mean $\bar p_{\copyact}=\alpha_{\copyact}/(\alpha_{\copyact}+3)$ directly sets the edit budget, and the sweep cleanly isolates the prior's effect. The copy concentration is orthogonal to the form sharpness $\mathrm{SUB\_FORM\_LP}$, which is settled separately (\code{calibration\_word\_action\_prior\_search.py}).
 
-\paragraph{What the sweep reveals.} Naively one expects concentration on copy to simply \emph{suppress}
-editing---trading correction for retention---and the task to be picking the knee before genuine
-corrections collapse. The data invert this: raising $\alpha_{\copyact}$ raises retention $L$ \emph{and}
-correction $E$ together. At a low (edit-happy) concentration the dominant failure is not under-editing
-but a spurious-insertion \emph{junk} channel that steals mass from \emph{both} the literal reading and
-the genuine correction; concentrating the prior on copy closes that junk channel, and the freed mass
-flows to the real correction wherever the LM supports it. The chosen $\alpha$ is the concentration that
-best balances $L$, the tracks-manipulation rate, and a non-collapsed $E$, at low junk; once chosen at
-the prior-only setting it is confirmed at the deployment setting (\code{rejuv="gibbs"}, the
-$\actdist$ posterior of \S\ref{sec:rejuv-theta}) before being promoted to the default. On the
-pythia-70m battery this knee is $\alpha_{\copyact}=200$ (a concentration of $\sim\!500$ finally craters
-the correction rate): there prior-only retention is $L\approx0.91$ at zero over-edit junk, and the
-\code{rejuv="gibbs"} confirmation \emph{raises} retention to $L\approx0.99$ without collapsing
-correction---so $(200,1,1,1)$ is the \code{word\_action} default \code{ACTION\_ALPHA\_DEFAULT}. Two
-effects the prior cannot fix---and must not be chased with $\alpha$---are the language model's own
-semantic/structural ceiling (small models miss argument-structure and content-word edits at every
-$\alpha$) and particle-count noise (sharp single-point wobbles that the rejuvenation sweep, not a
-different prior, is meant to cure).
+\paragraph{What the sweep reveals.} Naively one expects concentration on copy to simply \emph{suppress} editing---trading correction for retention---and the task to be picking the knee before genuine corrections collapse. The data invert this: raising $\alpha_{\copyact}$ raises retention $L$ \emph{and} correction $E$ together. At a low (edit-happy) concentration the dominant failure is not under-editing but a spurious-insertion \emph{junk} channel that steals mass from \emph{both} the literal reading and the genuine correction; concentrating the prior on copy closes that junk channel, and the freed mass flows to the real correction wherever the LM supports it. The chosen $\alpha$ is the concentration that best balances $L$, the tracks-manipulation rate, and a non-collapsed $E$, at low junk; once chosen at the prior-only setting it is confirmed at the deployment setting (\code{rejuv="gibbs"}, the $\actdist$ posterior of \S\ref{sec:rejuv-theta}) before being promoted to the default. On the pythia-70m battery this knee is $\alpha_{\copyact}=200$ (a concentration of $\sim\!500$ finally craters the correction rate): there prior-only retention is $L\approx0.91$ at zero over-edit junk, and the \code{rejuv="gibbs"} confirmation \emph{raises} retention to $L\approx0.99$ without collapsing correction---so $(200,1,1,1)$ is the \code{word\_action} default \code{ACTION\_ALPHA\_DEFAULT}. Two effects the prior cannot fix---and must not be chased with $\alpha$---are the language model's own semantic/structural ceiling (small models miss argument-structure and content-word edits at every $\alpha$) and particle-count noise (sharp single-point wobbles that the rejuvenation sweep, not a different prior, is meant to cure).
 
-\paragraph{Calibrating the align channel.} The deployed channel (\S\ref{sec:align}) is calibrated the
-same way but has \emph{two} knobs, and they turn out to move orthogonal failures. The slope $K$
-(\code{ALIGN\_SLOPE}) is the substitution knob: it sets how cheaply a near-miss real-word typo is
-corrected, with no effect on insertions or deletions. The concentration
-$\bm\alpha = (\alpha_{\mathrm{align}}, \alpha_{\insact}, \alpha_{\delact})$ is the insert/delete knob,
-exactly as $\alpha_{\copyact}$ was for word-action. The battery failure was bimodal---substitution
-under-editing and indel over-editing traded against each other whenever a single word-action knob tried
-to fix both---so decoupling them is what let both improve at once. On the pythia-70m battery, $K=-4.5$
-with $\bm\alpha=(200,2,2)$ roughly doubles the correction mass and lifts retention together
-($E\!:\,0.14\!\to\!0.29$, $L\!:\,0.77\!\to\!0.93$, over-edit junk $9/40\!\to\!\sim\!0$), and these are
-the promoted defaults (\code{ALIGN\_ALPHA\_DEFAULT}, \code{ALIGN\_SLOPE}). The word-action sweep just
-described backs the \code{word\_action} alternative, which retains slightly more literal readings but
-misses the real-word substitutions the smooth slope catches.
+\paragraph{Calibrating the align channel.} The deployed channel (\S\ref{sec:align}) is calibrated the same way but has \emph{two} knobs, and they turn out to move orthogonal failures. The slope $K$ (\code{ALIGN\_SLOPE}) is the substitution knob: it sets how cheaply a near-miss real-word typo is corrected, with no effect on insertions or deletions. The concentration $\bm\alpha = (\alpha_{\mathrm{align}}, \alpha_{\insact}, \alpha_{\delact})$ is the insert/delete knob, exactly as $\alpha_{\copyact}$ was for word-action. The battery failure was bimodal---substitution under-editing and indel over-editing traded against each other whenever a single word-action knob tried to fix both---so decoupling them is what let both improve at once. On the pythia-70m battery, $K=-4.5$ with $\bm\alpha=(200,2,2)$ roughly doubles the correction mass and lifts retention together ($E\!:\,0.14\!\to\!0.29$, $L\!:\,0.77\!\to\!0.93$, over-edit junk $9/40\!\to\!\sim\!0$), and these are the promoted defaults (\code{ALIGN\_ALPHA\_DEFAULT}, \code{ALIGN\_SLOPE}). The word-action sweep just described backs the \code{word\_action} alternative, which retains slightly more literal readings but misses the real-word substitutions the smooth slope catches.
 
 \section{Reference parameters}
 \label{sec:params}
@@ -1016,59 +486,24 @@ $\mathrm{SUB\_FORM\_LP}$ & char form-edit cost (copy free) & $\log(1/26)$ & \cod
 \end{tabular}
 \end{center}
 
-\noindent The three over-/under-editing knobs ($\wdel$, $\rho_{\insact}$, $\lambda$) interact and are
-co-tuned on a gold set: $\lambda<1$ trades substitution over-editing for word deletion, so it is set
-alongside $\wdel$. In the word-action channel $\wdel$ and $\rho_{\insact}$ are not free constants but
-read off the sampled rate vector ($\wdel=\log\pdel$, insertion rate $\log\pins$); the editing budget is
-then controlled by the single Dirichlet concentration $\bm\alpha$, tuned in \S\ref{sec:calibration}.
-The deployed \code{channel} is \code{align} (\S\ref{sec:align}), calibrated to $\bm\alpha=(200,2,2)$
-and slope $K=-4.5$; \code{word\_action} at $\bm\alpha=(200,1,1,1)$ is the higher-retention four-way
-alternative, and \code{char\_copy} remains only as the certification anchor.
+\noindent The three over-/under-editing knobs ($\wdel$, $\rho_{\insact}$, $\lambda$) interact and are co-tuned on a gold set: $\lambda<1$ trades substitution over-editing for word deletion, so it is set alongside $\wdel$. In the word-action channel $\wdel$ and $\rho_{\insact}$ are not free constants but read off the sampled rate vector ($\wdel=\log\pdel$, insertion rate $\log\pins$); the editing budget is then controlled by the single Dirichlet concentration $\bm\alpha$, tuned in \S\ref{sec:calibration}. The deployed \code{channel} is \code{align} (\S\ref{sec:align}), calibrated to $\bm\alpha=(200,2,2)$ and slope $K=-4.5$; \code{word\_action} at $\bm\alpha=(200,1,1,1)$ is the higher-retention four-way alternative, and \code{char\_copy} remains only as the certification anchor.
 
 \appendix
 
 \section{Generative-function interface weight identities}
 \label{app:gfi}
 
-The filter and the rejuvenation move are built on GenJAX's generative-function interface
-(\GFI). We recall the identities used above (the genjax/Gen semantics). For a generative function
-with density $p(t;a)$ over choice maps $t$:
+The filter and the rejuvenation move are built on GenJAX's generative-function interface (\GFI). We recall the identities used above (the genjax/Gen semantics). For a generative function with density $p(t;a)$ over choice maps $t$:
 \begin{description}[leftmargin=1.2em]
-  \item[\code{generate}/\code{importance}.] With constraint $c\subseteq t$ and internal proposal
-        $q$ over the unconstrained $u$, returns $(t,w)$ with $w = \log p(t;a) - \log q(u\given c;a)$;
-        when $c=t$ (fully constrained), $w = \log p(t;a)$. The SMC incremental weight
-        \eqref{eq:wstep} is this $w$ for the per-step kernel, whose only stochastic address is the
-        proposed word and whose \code{factor} carries $\lse_c S(c)$.
-  \item[\code{edit}/\code{Update}.] Overwriting addresses $\mathcal B$ with $u'$ (no-change argdiffs)
-        returns weight $w_{\mathrm{upd}} = \log\frac{p(t';a)}{p(t;a)}$ and a backward request that
-        restores the old values.
-  \item[\code{Rejuvenate} (SMCP3).] With proposal $Q$ and argument map $\phi$, the move draws
-        $\zeta\sim Q(\cdot;\phi(t))$, \code{Update}s $\mathcal B\gets\zeta$, and scores the reverse,
-        returning $\mathcal W = w_{\mathrm{upd}} + \log Q(t|_{\mathcal B};\phi(t')) -
-        \log Q(\zeta;\phi(t))$. Thresholding $\log u < \mathcal W$ gives the MH consumption (A);
-        folding $e^{\mathcal W}$ into the weight gives the SMCP3 consumption (B). Both appear in
-        \S\ref{sec:rejuv-move}; the inlined \code{\_smcp3\_move} threads per-particle proposal scores
-        that the stock \code{Rejuvenate} signature cannot.
+\item[\code{generate}/\code{importance}.] With constraint $c\subseteq t$ and internal proposal $q$ over the unconstrained $u$, returns $(t,w)$ with $w = \log p(t;a) - \log q(u\given c;a)$; when $c=t$ (fully constrained), $w = \log p(t;a)$. The SMC incremental weight \eqref{eq:wstep} is this $w$ for the per-step kernel, whose only stochastic address is the proposed word and whose \code{factor} carries $\lse_c S(c)$.
+\item[\code{edit}/\code{Update}.] Overwriting addresses $\mathcal B$ with $u'$ (no-change argdiffs) returns weight $w_{\mathrm{upd}} = \log\frac{p(t';a)}{p(t;a)}$ and a backward request that restores the old values.
+\item[\code{Rejuvenate} (SMCP3).] With proposal $Q$ and argument map $\phi$, the move draws $\zeta\sim Q(\cdot;\phi(t))$, \code{Update}s $\mathcal B\gets\zeta$, and scores the reverse, returning $\mathcal W = w_{\mathrm{upd}} + \log Q(t|_{\mathcal B};\phi(t')) - \log Q(\zeta;\phi(t))$. Thresholding $\log u < \mathcal W$ gives the MH consumption (A); folding $e^{\mathcal W}$ into the weight gives the SMCP3 consumption (B). Both appear in \S\ref{sec:rejuv-move}; the inlined \code{\_smcp3\_move} threads per-particle proposal scores that the stock \code{Rejuvenate} signature cannot.
 \end{description}
 
 \section{Certification by exact enumeration}
 \label{sec:certification}
 
-The filter's correctness is established on the toy bigram model, where the candidate set is the entire
-vocabulary and the channel marginal is small enough to brute-force
-(\code{tests/\allowbreak test\_pairhmm\_exact.py}). The substantive gates that pass are:
-(i) \code{caprop\_logZ\_\allowbreak matches\_exact}---the filter's $\log\widehat Z$ equals the exact log-marginal
-(minus the deterministic leading-spurious constant); (ii) \code{map\_matches\_exact}---the most
-probable (maximum-a-posteriori) intended sentence matches exact enumeration for substitution and
-spurious-word cases; and
-(iii) \code{posterior\_mass\_\allowbreak matches\_exact}---the full posterior over intended sentences
-matches in total variation. A further gate (\code{test\_edit\_types\_\allowbreak recovered\_with\_band})
-checks that all four
-edit behaviours (substitution; spurious $\to$ shorter; missing $\to$ longer; clean $\to$ unchanged)
-are recovered at the production band. Because the toy and Pythia run \emph{identical} inference code
-(\S\ref{sec:vmap}), and the multi-token path reduces bit-identically to the certified single-token
-path (\S\ref{sec:multitoken}), this certification transfers to the Pythia configuration by
-construction; Pythia runs are smoke tests at small $P$, not correctness gates.
+The filter's correctness is established on the toy bigram model, where the candidate set is the entire vocabulary and the channel marginal is small enough to brute-force (\code{tests/\allowbreak test\_pairhmm\_exact.py}). The substantive gates that pass are: (i) \code{caprop\_logZ\_\allowbreak matches\_exact}---the filter's $\log\widehat Z$ equals the exact log-marginal (minus the deterministic leading-spurious constant); (ii) \code{map\_matches\_exact}---the most probable (maximum-a-posteriori) intended sentence matches exact enumeration for substitution and spurious-word cases; and (iii) \code{posterior\_mass\_\allowbreak matches\_exact}---the full posterior over intended sentences matches in total variation. A further gate (\code{test\_edit\_types\_\allowbreak recovered\_with\_band}) checks that all four edit behaviours (substitution; spurious $\to$ shorter; missing $\to$ longer; clean $\to$ unchanged) are recovered at the production band. Because the toy and Pythia run \emph{identical} inference code (\S\ref{sec:vmap}), and the multi-token path reduces bit-identically to the certified single-token path (\S\ref{sec:multitoken}), this certification transfers to the Pythia configuration by construction; Pythia runs are smoke tests at small $P$, not correctness gates.
 
 \begin{thebibliography}{9}
 \bibitem{genjax} MIT Probabilistic Computing Project. \emph{GenJAX}: probabilistic programming with
