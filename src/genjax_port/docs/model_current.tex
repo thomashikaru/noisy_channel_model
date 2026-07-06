@@ -302,8 +302,12 @@ an \emph{action-rate} term:
   \item \textbf{Form} (fixed). The inner character pair-HMM \eqref{eq:char-dp} is run with a
         \emph{base-rate-free} parameterization (\code{channel\_form\_logpdf}): a matched character is
         free ($\log\theta_{\copyact}=0$) and every character-level edit---substitution, insertion,
-        deletion---pays a single sharpness $\mathrm{SUB\_FORM\_LP} = \log(1/26)$ (a transposition is
-        determined, hence free). The emission \eqref{eq:char-channel} now scores only the \emph{shape}
+        deletion, and adjacent transposition---pays a single sharpness
+        $\mathrm{SUB\_FORM\_LP} = \log(1/26)$. A transposition is one Damerau edit, so it pays the same
+        sharpness as a substitution ($\theta_{\mathrm{tr}}=\theta_{\subact}$); charging it zero (the
+        earlier behaviour) would make co-anagram word pairs---\emph{cat}/\emph{act},
+        \emph{form}/\emph{from}, \emph{calm}/\emph{clam}---channel-indistinguishable on form, contradicting
+        that calibrated operating point. The emission \eqref{eq:char-channel} now scores only the \emph{shape}
         of a word-level substitution---roughly $d\cdot\log(1/26)$ for a $d$-character edit---with the
         ``did it edit at all'' decision removed.
   \item \textbf{Action rates} (latent). A single vector
