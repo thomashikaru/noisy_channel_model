@@ -719,23 +719,30 @@ exactly $\bar\gamma$-invariant (Theorem~\ref{thm:rejuv}); the rate refresh is a 
 augmented posterior $p(x,\actdist\given o)$, exact in the regime where the positional alignment
 matches the true one.
 
-\subsection{Scheduling: the surprisal-relative gate}
+\subsection{Scheduling: where rejuvenation is spent}
 \label{sec:gate}
 
-\emph{Where} to spend rejuvenation is decided by a gate on each word's surprisal (its negative
-log-probability). Gating on raw contextual surprisal fires on any word that is improbable in
-context---including words that are merely \emph{rare} (a rare word is \emph{expected} to be
-surprising, so revisiting it wastes effort and can pull a legitimately rare literal toward a common
-substitute). Instead the gate fires on contextual surprisal \emph{relative to} the word's
-out-of-context (unigram) surprisal:
+The word move runs on a fixed \emph{lookback window}: after a resampling step it revisits the last
+$\ell$ intended words ($\code{lo} = \max(0,\,\text{frontier} - \ell)$; \code{rejuv\_lookback}, default
+$3$). This is a data-dependent but state-independent schedule, so Theorem~\ref{thm:rejuv} guarantees it
+changes only mixing, not the stationary distribution. The Gibbs indel move (\S\ref{sec:rejuv-indel}) is
+scheduled separately, as described there---one sweep after the loop in its default form.
+
+\paragraph{A surprisal-relative gate (designed, not yet wired).} A finer schedule would spend
+rejuvenation only \emph{where} a reanalysis is likely, by gating each word on its surprisal (its negative
+log-probability). Gating on raw contextual surprisal would fire on any word improbable in
+context---including words that are merely \emph{rare} (a rare word is \emph{expected} to be surprising, so
+revisiting it wastes effort and can pull a legitimately rare literal toward a common substitute). The
+intended gate instead fires on contextual surprisal \emph{relative to} the word's out-of-context
+(unigram) surprisal,
 \begin{equation}\label{eq:gate}
   p_{\mathrm{rejuv}}(o_k) \;=\; \sigma\!\big(\beta\,[\,\mathrm{surp}_{\mathrm{ctx}}(o_k)
                                               - \mathrm{surp}_{\mathrm{uni}}(o_k) - \tau\,]\big),
 \end{equation}
-which fires only when a word is \emph{more} surprising in context than its base rate predicts---the
-signature of a genuine garden-path reanalysis rather than a rare word (\code{unigram.py}). Because
-the gate is data-dependent but state-independent, Theorem~\ref{thm:rejuv} guarantees it changes only
-mixing, not the stationary distribution.
+so it fires only when a word is \emph{more} surprising in context than its base rate predicts---the
+signature of a genuine garden-path reanalysis rather than a rare word. The gate function is implemented
+(\code{unigram.py}) but is not currently wired into the filter, which uses the fixed window above; because
+any such gate is state-independent, adopting it would again change only mixing, not the target.
 
 \subsection{The cost of reanalysis}
 The LM is causal: overwriting an intended word at slot $w$ changes $\pLM$ for all later positions.
