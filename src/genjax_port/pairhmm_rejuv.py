@@ -35,11 +35,15 @@ Two things are NEW vs. R0 (plan REJUV_KV_REDESIGN_PLAN.md, phase R1):
     address -- confirmed in planning/kv_cache_spikes/rejuv_smcp3_spike.py). For a full-conditional
     proposal the SMCP3 weight ``w + bwd − fwd`` is ≈ 0 (asserted as a built-it-right check); for an
     asymmetric candidate set it carries real mass into the next resample (REJUV_GOAL3). ``gibbs_sweep``
-    returns ``(ctx_buf, move_logw)``; the caller folds ``move_logw`` into ``log_w`` BEFORE resampling.
+    returns ``(ctx_buf, log_alpha, move_logw)`` -- ``log_alpha`` is the forward carry recomputed to match
+    the swept words; the caller folds ``move_logw`` into ``log_w`` BEFORE resampling.
 
-Still deferred to R3: the KV-cache (the LM prior is a full O(T) re-score of the sentence per
-candidate here -- correctness/shape first). Certified on the toy by exact enumeration in
-``tests/test_pairhmm_exact.py``.
+LM scoring differs by move, and both choices are deliberate. The SUBSTITUTION sweep scores candidates with
+the KV-cached suffix-tail scorer (``lm_penzai.batch_tail_logprobs(..., use_kv=True)``), which pays off
+because its tails are windowed to a few tokens. The INDEL move instead re-scores each candidate with a
+plain full-sentence forward: it cannot window (a gap-0 insertion needs the whole suffix), and a KV version
+was built and measured ~3.6x slower on CPU -- see ``make_gibbs_indel_sweep``. Certified on the toy by exact
+enumeration in ``tests/test_pairhmm_exact.py``.
 """
 
 import functools
