@@ -97,6 +97,12 @@ and NO junk. Logs: `planning/bd_gibbs_pl5.log` (bridges) · `planning/bd_gibbs_f
   (each forward materialises a `Kc×` larger vocab-logit tensor), so it is reverted; the **per-move is
   JIT'd** so the nested-`lax.map` grid fuses into one program compiled once. A memory-bounded chunked-batch
   scorer is the obvious further perf win.
+  * **UPDATE (2026-07-06, MEASURED):** the indel move is **EXEC-bound, not compile-bound** — surgical split
+    COMPILE 3.8 s vs EXEC 28.6 s @P64 (so the "~175 s first-item compile" is the WHOLE run's one-time compile
+    across filter+penzai+sweeps, not the indel move, and per-run recompile is negligible). The chunked-batch
+    scorer is low-value CPU-only (deployment is CPU). The tempting **suffix-tail KV** alternative was BUILT +
+    measured **~3.6× SLOWER** and reverted (see `GIBBS_BD_SLOWDOWN_REPORT.md` banner). No exact CPU speedup
+    for the indel LM forwards; scale via approximations (P↓ / pool↓ / `bd_attempts`↓) or cluster fan-out.
 * Restoration needs the word in the insertion pool. `bd_funcwords` (default on) covers the function-word
   targets with NO per-gap bridge computation (`bd_bridge_j=0` suffices for the battery). `bd_bridge_j>0`
   adds the LM's local top-J bridges (content-word restorations); but the local top-J often MISSES the

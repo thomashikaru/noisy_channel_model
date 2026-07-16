@@ -774,7 +774,8 @@ def _del_logq(score_fn, word_tok, word_len, word_surf, n_words, done, cand_surf)
 
     Scores the ``Wmax`` candidate removals with the injected ``score_fn`` via ``lax.map`` (sequential over
     positions -> O(Wmax) score_fn calls, gentle on memory; each score_fn is itself ~O(Wmax) LM steps, so this
-    is the O(Wmax^2) cost the Phase-2/3 suffix-tail KV sharing will cut). The malformed states produced by
+    is an O(Wmax^2) whole-sentence cost. (A suffix-tail KV rescore was tried to cut it and was ~3.6x SLOWER on
+    CPU -- see ``make_gibbs_indel_sweep``; the plain forward is kept.) The malformed states produced by
     "removing" a pad position are scored too but masked out, so any NaN/inf there never reaches the softmax."""
     P, Wmax, T = word_tok.shape
 
@@ -945,7 +946,8 @@ def birth_death_move(key, word_tok, word_len, word_surf, n_words, done,
 # --------------------------------------------------------------------------------------------------
 # Production scoring + the in-filter sweep (plan §4). ``_make_bd_score_fn`` reproduces the SAME target the
 # filter uses for a complete hypothesis -- ``lm_temp * LM + channel_marginal`` -- via the shared
-# ``channel_carry`` / ``_lm_logprior`` (no suffix-tail KV cancellation yet; that is the Phase-2 perf win).
+# ``channel_carry`` / ``_lm_logprior`` (a WHOLE-sentence forward: a suffix-tail KV rescore was tried to
+# replace it and measured ~3.6x SLOWER on CPU, see ``make_gibbs_indel_sweep`` -- the plain forward is kept).
 # Only the RATIO logπ(y')−logπ(y) enters the weight, so any constant offset (e.g. the leading-spurious a0)
 # cancels. ``make_bd_sweep`` wraps ``birth_death_move`` into a filter-shaped sweep: unpack the flat buffer
 # to per-word slots, run N done-ONLY moves (mid-construction particles are left untouched so the forward
@@ -1170,7 +1172,13 @@ def make_gibbs_indel_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=1, tem
     per-candidate full-sentence re-score that OOM'd / timed out at scale (it reuses the same dedup trick
     ``make_sweep`` already applies to the substitution sweep). ``_apply`` (jitted) does the per-particle
     categorical sample + splice on all P. EXACT given the RNG (logits are a pure function of the deduped
-    inputs). None vs tuple ``theta_costs`` trace as distinct structures."""
+    inputs). None vs tuple ``theta_costs`` trace as distinct structures.
+
+    NB the LM prior here is the WHOLE-sentence forward (``_make_bd_score_fn`` -> ``seq_token_logprobs``), NOT a
+    suffix-tail KV rescore. An exact suffix-tail KV version was built + measured 2026-07-06 and was ~3.6x
+    SLOWER on CPU (the KV-caching transformer's per-call bind/copy/cache overhead dominates a FULL-length
+    exact tail, which the indel move cannot window; the sub-sweep's KV win came from tiny windowed tails).
+    Kept the plain forward. See planning/bd_kv_probe.py / bd_kv_surgical.py + GIBBS_BD_SLOWDOWN_REPORT.md."""
     sl, Wmax, T, M = ctx.seed_len, ctx.Wmax, ctx.t_max, ctx.M
     n_out = Wmax * T
     score = _make_bd_score_fn(ctx)

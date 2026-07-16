@@ -299,8 +299,9 @@ only if the global pool dilutes the right word. This attacks the regression at i
 DEL-of into a WIN (bd could insert `of`, not just dedupe). It is compatible with the existing machinery: Step 1
 already made `_bd_log_weight` proposal-agnostic, and a larger pool automatically (and correctly) makes more
 parse words deletable, with reverse densities still well-defined (in-pool ⇒ positive). COST: `_ins_logq` is
-O(Kc) `score_fn` calls (run twice, fwd+rev), so Kc growth is the price — cap the bd pool (Kc_bd ≈ 24–32) and
-the deferred suffix-tail KV sharing becomes the gating perf win. Lever A (informed/gated DIRECTION — fire a
+O(Kc) `score_fn` calls (run twice, fwd+rev), so Kc growth is the price — cap the bd pool (Kc_bd ≈ 24–32)
+(NB: the "suffix-tail KV sharing" once floated here as the perf answer was later BUILT + measured ~3.6× SLOWER
+and REVERTED — see §12; cap Kc instead). Lever A (informed/gated DIRECTION — fire a
 death only when a genuinely removable word exists) is now DEMOTED to an optional complementary variance lever,
 not the fix. Concrete change sketch + the re-run gates are in §10.
 
@@ -431,9 +432,14 @@ the per-position logprob at the first pad slot IS `log P(EOS | tokens)`. `_lm_lo
 the change is isolated.
 
 **Verified:** posterior + logZ match the slow path EXACTLY (INS-02a 0.691/−56.34, INS-02b 0.999/−50.51); gibbs+bd
-375→87 s and 263→67 s (bd-added cost ~348→~60 s). Battery now ~1 hr/config (was ~4 hr). The suffix-tail KV
-cancellation could still stack on top but is far more complex (prefix-cancel + per-position deletion rewind) and
-lower marginal value now that the LM is no longer the sole cost — deferred unless the battery needs it.
+375→87 s and 263→67 s (bd-added cost ~348→~60 s). Battery now ~1 hr/config (was ~4 hr).
+
+**The suffix-tail KV cancellation was later BUILT and measured ~3.6× SLOWER on CPU (2026-07-06) — REVERTED, do
+NOT retry.** §12's suspicion ("aimed at the wrong cost, lower marginal value") was right: the indel move can't
+window its tail (gap-0 insertion = whole-sentence suffix), so a KV feed costs ~a full forward, and penzai's
+KV-caching transformer adds large per-call overhead on CPU. The plain single-forward `seq_token_logprobs` here
+is the efficient path and is kept. Evidence: `planning/bd_kv_probe.py` / `bd_kv_surgical.py`; the correction
+banner in `GIBBS_BD_SLOWDOWN_REPORT.md`. The indel move is exec-bound; its LM cost is not exactly reducible on CPU.
 
 **Phase 2.5 is complete and COMMITTED** (3 commits on `rejuv-birth-death`):
 `0d989c0` LM-bridge pool · `d8d7c4d` STAY branch (clean-keep fix) · `a4759b1` single-forward perf.
@@ -472,8 +478,9 @@ this tractable). NB the battery is SYNTHETIC, not the reserved human hold-out ([
 
 **Caveats / known limits.** DEL-of-style insertion-restoration is a pythia-70m MODEL limit, not a move defect
 (the LM scores `one the best` > `one of the best`); a better LM would flip it. Don't over-tune `bd_p_stay` on
-the toy. The suffix-tail KV cancellation (the originally-planned perf win) is still available to stack on top
-if the battery proves too slow, but is far more complex and lower-value now (§12).
+the toy. The suffix-tail KV cancellation (the originally-planned perf win) was BUILT + measured ~3.6× SLOWER on
+CPU (2026-07-06) and REVERTED (§12) — NOT a lever; if the battery is too slow, use approximations (P↓ / pool↓ /
+`bd_attempts`↓) or cluster parallel fan-out, not KV.
 
 **Throwaway harnesses** (recreate-able): `planning/bd_{toy_gate,toy_step3,live_gate,gate5}.py`; logs
 `planning/bd_gate5{,_stay}.log`.
