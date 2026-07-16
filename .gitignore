@@ -20,3 +20,8 @@ run_example_native.sh
 # SLURM harness: private per-cluster settings (never commit) + batch outputs
 slurm/cluster.env
 results_nc/
+
+# Posterior-stability benchmark raw output. The report (planning/BENCHMARK_STABILITY_REPORT.md)
+# and the harness (planning/bench_*) are committed; these are regenerable run output.
+planning/bench_results/
+planning/bench_runtime/
