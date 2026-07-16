@@ -511,7 +511,17 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     action (see ``_caprop_scores``). Every SMC step is thus a clean LM word/EOS choice.
 
     ``rejuv`` (default ``"off"`` -- the certified path; the exact-enumeration gates run with it off)
-    enables a flag-gated Gibbs/SMCP3 rejuvenation sweep (REJUV_KV_REDESIGN_PLAN.md R2). ``"gibbs"``
+    enables a flag-gated Gibbs/SMCP3 rejuvenation sweep (REJUV_KV_REDESIGN_PLAN.md R2).
+
+    NB this default is DELIBERATE and is NOT a policy choice, unlike every entry point above it. The
+    higher-level entries (``pythia_word_caprop.run`` / its CLI, ``slurm/run_nc_batch.py``,
+    ``slurm/submit_nc_batch.sh``) all REQUIRE an explicit ``rejuv`` -- off vs gibbs+bd is a real inference
+    tradeoff that no default should silently make (see ``pythia_word_caprop.REJUV_CHOICES``). Here at the
+    filter primitive, ``"off"`` means "the plain forward filter with nothing bolted on": it is the anchor
+    the exact-enumeration gates are DEFINED against, so it is a property of the certified path, not a
+    recommendation. Callers that make a deployment choice should go through ``pythia_word_caprop.run``.
+
+    ``"gibbs"``
     runs a windowed full-conditional sweep (``pairhmm_rejuv.make_sweep``) over the last
     ``rejuv_lookback`` words **after each resample** on the equal-weight cloud, recomputes ``log_alpha``,
     and folds the move's SMCP3 weight into ``log_w`` BEFORE the next resample so mass can flow

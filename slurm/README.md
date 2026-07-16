@@ -105,10 +105,24 @@ If a job fails immediately, it's almost always this block — check `logs/shard_
 
 ### Common knobs
 
-**Model** (each distinct value → its own output directory): `NC_LM`, `CHANNEL` (`align`/`word_action`/
-`char_copy`), `REJUV` (`off`/`gibbs`/`gibbs+bd`), `PARTICLES`, `BAND`, `MAX_DIST`, `REJUV_LOOKBACK`,
-`SEED`, `LM_TEMP`, `INS_RATE`, and optional overrides `WDEL`, `ALIGN_SLOPE`, `ACTION_ALPHA`, `WINS`,
-`UNIFORM_INS`, `BD_P_STAY`, `BD_MODE`, `BD_ATTEMPTS`, `NO_BD_FUNCWORDS`.
+**Model** (each distinct value → its own output directory): `INPUT` and **`REJUV` are REQUIRED** (no
+default — the submit script refuses to run without them); then `NC_LM`, `CHANNEL` (`align`/`word_action`/
+`char_copy`), `PARTICLES`, `BAND`, `MAX_DIST`, `REJUV_LOOKBACK`, `SEED`, `LM_TEMP`, `INS_RATE`, and
+optional overrides `WDEL`, `ALIGN_SLOPE`, `ACTION_ALPHA`, `WINS`, `UNIFORM_INS`, `BD_P_STAY`, `BD_MODE`,
+`BD_ATTEMPTS`, `NO_BD_FUNCWORDS`.
+
+**`REJUV` has no default on purpose.** `off` and `gibbs+bd` are different inference regimes, not a
+speed dial, and picking one silently for a whole batch is exactly the mistake this guards against:
+
+| `REJUV` | cost/item | reaches word deletions? | notes |
+|---|---|---|---|
+| `off` | ~15–30 s | **no** | the certified forward-only filter; correct for insertions (P16) and substitutions (P128), where rejuvenation only adds noise |
+| `gibbs+bd` | ~180 s | **yes** | the only mode that can; +15/87 on the calibration battery; occasionally adds spurious mid-sentence capitals |
+| `gibbs` | ~3× `off` | no | substitution-only. Legacy: the align defaults were calibrated under it, but it never improves a MAP over `off` — avoid for new work |
+
+For a batch you expect to contain deletions, the benchmark's recommended point is
+`REJUV=gibbs+bd PARTICLES=64 REJUV_LOOKBACK=6 N_SEEDS=6` (the seed merge rescues the ~half of seeds that
+find the deletion). See `planning/BENCHMARK_STABILITY_REPORT.md`.
 
 **Execution**: `RESULTS_ROOT` (default `results_nc`), `SENTENCES_PER_SHARD` (8, the **max** per shard),
 `MIN_SENTENCES_PER_SHARD` (4), `SORT_BY_LENGTH` (1), `N_SEEDS` (1), `MAX_PARALLEL` (20), `MEM` (12G),

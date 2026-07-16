@@ -46,7 +46,15 @@ MODULE_LOADS="${MODULE_LOADS:-}"      # e.g. 'module load miniforge' ; semicolon
 INPUT="${INPUT:?set INPUT=path/to/sentences.txt (one observed sentence per line)}"
 NC_LM="${NC_LM:-EleutherAI/pythia-70m}"   # also selects the LM inside the model (read from this env var)
 CHANNEL="${CHANNEL:-align}"
-REJUV="${REJUV:-gibbs+bd}"
+# REJUV is REQUIRED -- deliberately no default. 'off' and 'gibbs+bd' are different inference regimes, not a
+# speed dial: 'off' is the certified forward-only filter (~15-30 s/item) but CANNOT reach a word deletion;
+# 'gibbs+bd' reaches deletions and scores +15/87 on the calibration battery, at ~180 s/item. A default here
+# would silently pick one for a whole batch. ('gibbs' = substitution-only, legacy.)
+REJUV="${REJUV:?set REJUV=off|gibbs|gibbs+bd -- no default. off=certified forward-only, cheap, cannot reach deletions. gibbs+bd=reaches deletions, +15/87 on the battery, ~180 s/item. gibbs=substitution-only legacy.}"
+case "$REJUV" in
+  off|gibbs|gibbs+bd) ;;
+  *) echo "submit_nc_batch.sh: REJUV must be one of: off, gibbs, gibbs+bd (got '$REJUV')" >&2; exit 2 ;;
+esac
 REJUV_LOOKBACK="${REJUV_LOOKBACK:-6}"
 PARTICLES="${PARTICLES:-128}"
 BAND="${BAND:-2}"

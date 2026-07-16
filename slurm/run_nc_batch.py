@@ -552,7 +552,13 @@ def build_parser():
     p.add_argument("--particles", type=int, default=128)
     p.add_argument("--band", type=int, default=2)
     p.add_argument("--max-dist", type=int, default=2)
-    p.add_argument("--rejuv", choices=("off", "gibbs", "gibbs+bd"), default="gibbs+bd")
+    # REQUIRED, no default. This used to default to "gibbs+bd" while the interactive CLI
+    # (pythia_word_caprop.py) defaulted to "off" -- so which inference regime a run got depended on how you
+    # entered the code, silently. Both now force the choice. See REJUV_CHOICES in pythia_word_caprop.py.
+    p.add_argument("--rejuv", choices=("off", "gibbs", "gibbs+bd"), required=True,
+                   help="REQUIRED: 'off' (certified forward-only, ~15-30 s/item, cannot reach deletions) | "
+                        "'gibbs+bd' (reaches deletions, +15/87 on the battery, ~180 s/item) | "
+                        "'gibbs' (substitution-only; legacy, avoid for new work)")
     p.add_argument("--rejuv-lookback", type=int, default=6)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--n-seeds", type=int, default=1,

@@ -106,6 +106,48 @@ ACTION_ALPHA_DEFAULT = (200.0, 1.0, 1.0, 1.0)
 ALIGN_ALPHA_DEFAULT = (200.0, 2.0, 2.0)
 ALIGN_SLOPE = -4.5   # K: per-edit substitution log-cost in the align FORM table (python float, sweepable)
 
+# Rejuvenation has NO DEFAULT, deliberately. `off` and `gibbs+bd` are different inference regimes, not a
+# fast/slow dial, and the evidence does not pick a winner for you:
+#   * gibbs+bd is the ONLY mode that can reach a word DELETION at all (planning/BENCHMARK_STABILITY_REPORT.md)
+#     and scores +15/87 on the calibration battery (planning/calibration_bd_vs_off.csv) -- but costs ~180 s/item
+#     vs ~15-30 s, and occasionally introduces spurious mid-sentence capitals.
+#   * off is the certified forward-only filter: cheap, exact, and correct for insertions (P16) and
+#     substitutions (P128), where rejuvenation only adds noise.
+# A default here would silently make that tradeoff on the caller's behalf, and for a long time TWO different
+# defaults disagreed (this CLI said "off", slurm/run_nc_batch.py said "gibbs+bd") -- so which regime you got
+# depended on how you happened to enter the code. Every entry point now requires an explicit choice.
+# `gibbs` (substitution-only) remains selectable: the align params above were calibrated under it and two
+# diagnostics use it, but the benchmark advises against it for new work (3x the cost of `off`, never improves
+# a MAP over it). NB pairhmm_smc.run keeps rejuv="off" -- that is the low-level filter's exact-enumeration
+# certification anchor, not a deployment policy.
+REJUV_CHOICES = ("off", "gibbs", "gibbs+bd")
+
+
+class _RejuvRequired:
+    """Sentinel: `rejuv` was not supplied. Not a value -- reaching the filter with it is a bug."""
+    def __repr__(self):
+        return "<rejuv: no default -- pass rejuv='off' | 'gibbs' | 'gibbs+bd'>"
+
+
+REJUV_REQUIRED = _RejuvRequired()
+
+
+def _check_rejuv(rejuv):
+    """Reject the missing/unknown `rejuv` at the entry point, with the tradeoff spelled out."""
+    if isinstance(rejuv, _RejuvRequired):
+        raise TypeError(
+            "run() requires an explicit rejuv=... -- there is deliberately no default.\n"
+            "  rejuv='off'       forward-only certified filter; cheap (~15-30 s/item). Correct for\n"
+            "                    insertions and substitutions; CANNOT reach a word deletion.\n"
+            "  rejuv='gibbs+bd'  adds the Gibbs indel move; the only mode that reaches deletions,\n"
+            "                    +15/87 on the calibration battery, but ~180 s/item.\n"
+            "  rejuv='gibbs'     substitution-only (legacy; the align params were calibrated under it,\n"
+            "                    but the benchmark advises against it for new work).\n"
+            "See REJUV_CHOICES in pythia_word_caprop.py for why this is not defaulted.")
+    if rejuv not in REJUV_CHOICES:
+        raise ValueError(f"rejuv must be one of {REJUV_CHOICES}, got {rejuv!r}")
+    return rejuv
+
 # Closed-class function words the indel rejuv move (bd_mode="gibbs") may always insert, so a dropped
 # function word is restorable even when it is not a local top-J LM bridge (see pairhmm_smc pool part 3).
 # Single-token (leading-space) only; the channel treats an inserted intended word as a deletion event.
@@ -328,7 +370,7 @@ def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False, 
 
 def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         max_dist=2, Ke=12, J=8, cwin=1, prime=PRIME, lm_logprobs_fn=None, use_word_mask=False,
-        rejuv="off", rejuv_lookback=3, rejuv_Ke=8, rejuv_stats=None, trace=None, dedup=False,
+        rejuv=REJUV_REQUIRED, rejuv_lookback=3, rejuv_Ke=8, rejuv_stats=None, trace=None, dedup=False,
         lm_temp=1.0, ins_rate=0.02, uniform_ins=False, action_alpha=None, channel=None,
         align_slope=None, bd_bridge_j=0, bd_pool_cap=None, bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1,
         bd_funcwords=True):
@@ -359,14 +401,17 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
     pythia's over-confident word preferences so plausible/grammatical inputs are read more literally,
     curbing the over-editing of clean sentences (it scales up the LM gap an edit must clear by 1/lm_temp).
 
-    ``rejuv="gibbs"`` enables the flag-gated post-resample Gibbs/SMCP3 rejuvenation sweep (R2): a
-    windowed (last ``rejuv_lookback`` words) full-conditional resample over a per-slot SymSpell pool
-    (``rejuv_Ke`` candidates). ``rejuv_stats`` (dict) collects the cost/degeneracy counters.
+    ``rejuv`` is REQUIRED -- there is no default; see ``REJUV_CHOICES`` for why. ``"off"`` is the certified
+    forward-only filter. ``"gibbs"`` enables the flag-gated post-resample Gibbs/SMCP3 rejuvenation sweep
+    (R2): a windowed (last ``rejuv_lookback`` words) full-conditional resample over a per-slot SymSpell pool
+    (``rejuv_Ke`` candidates). ``"gibbs+bd"`` adds the Gibbs indel move on top. ``rejuv_stats`` (dict)
+    collects the cost/degeneracy counters.
 
     ``dedup=True`` (R3 item 1) dedups the LM forwards over the degenerate post-resample cloud (exact;
     bit-identical posterior given the same RNG): the filter's per-step forward (1a, :func:`_pythia_model`)
     AND the rejuv sweep's tail scorer (1b, via ``rejuv_dedup``). The sweep is the dominant single-sentence
     cost (its prefills scale ~linearly with P), so 1b is the main wall-clock win."""
+    rejuv = _check_rejuv(rejuv)
     from genjax_port import pairhmm_rejuv as RJ
     # Channel selector (plan WORD_ACTION_REJUV_PLAN Phase 3): ``"word_action"`` is the model;
     # ``"char_copy"`` is the deprecated bundled char channel, kept as the exact-enumeration certification
@@ -525,12 +570,16 @@ def cli():
                          f"(emission = K*edit_distance; default ALIGN_SLOPE={ALIGN_SLOPE:.3f}, calibrated). "
                          "Less negative => cheaper near-misses (more correction); more negative => fewer. "
                          "The single over-editing knob, decoupled from --action_alpha. Only used by --channel align.")
-    ap.add_argument("--rejuv", choices=("off", "gibbs", "gibbs+bd"), default="off",
-                    help="post-resample Gibbs/SMCP3 rejuvenation sweep (R3): 'gibbs' re-diversifies "
-                         "the cloud and cures impoverishment collapses, at ~a few x the runtime "
-                         "(KV-cached suffix scorer). 'gibbs+bd' adds the Gibbs indel (birth/death) move "
-                         "that can restore dropped / remove spurious words (default bd_mode=gibbs, "
-                         "function-word insertion pool on). 'off' is the certified forward-only filter.")
+    ap.add_argument("--rejuv", choices=REJUV_CHOICES, required=True,
+                    help="REQUIRED -- no default, you must choose the inference regime. "
+                         "'off' = the certified forward-only filter: cheap (~15-30 s/item), correct for "
+                         "insertions (P16) and substitutions (P128), but CANNOT reach a word deletion. "
+                         "'gibbs+bd' = adds the Gibbs indel (birth/death) move: the only mode that reaches "
+                         "deletions, +15/87 on the calibration battery, but ~180 s/item and it sometimes "
+                         "adds spurious mid-sentence capitals. "
+                         "'gibbs' = substitution-only (legacy: the align params were calibrated under it, "
+                         "but it costs 3x 'off' and never improves a MAP over it -- avoid for new work). "
+                         "See REJUV_CHOICES in pythia_word_caprop.py.")
     ap.add_argument("--rejuv_lookback", type=int, default=3,
                     help="rejuvenation window: how many recent words each sweep revisits (default 3)")
     ap.add_argument("--no_dedup", action="store_true",

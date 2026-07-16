@@ -36,8 +36,10 @@ def test_kv_tail_parity():
 
 def test_missing_word_smoke():
     # P=128 is the validated budget; P=4 decodes pure noise (resample-and-count on 4 particles).
+    # rejuv="off" is explicit because run() has no default (see REJUV_CHOICES): this asserts the
+    # forward-only filter restores a dropped function word on its own, with no rejuvenation help.
     lm_penzai.load_model()
-    st, lw, _, sl = run("i want go home", jax.random.PRNGKey(0), P=128, Ke=8, J=8)
+    st, lw, _, sl = run("i want go home", jax.random.PRNGKey(0), P=128, Ke=8, J=8, rejuv="off")
     top = decode(st, lw, skip=sl, top=1)[0][0]
     assert _norm(top) == _norm("i want to go home")
 
