@@ -15,3 +15,11 @@
 - **Cost-check before anything expensive.** Before launching large jobs, long runs, or cluster
   work, estimate or measure memory and runtime on a representative worst case first. A two-minute
   probe is far cheaper than a failed multi-hour run.
+
+## Communication
+
+- Write in plain, standard language. The reader knows standard programming and CS terminology but
+  NOT operations / systems / queueing jargon. Avoid that jargon and unusual figurative terms;
+  prefer the ordinary word. E.g. say a job "finished" (not "drained"), the queue is "empty" (not
+  "drained"), something is "important" / "essential" / "critical" (not "load-bearing"). When in
+  doubt, choose the most common, literal verb.
