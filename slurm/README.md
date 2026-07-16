@@ -149,6 +149,15 @@ tracing/lowering, not XLA backend compile — so the in-process reuse from bucke
   seff <jobid>        # look at "Memory Efficiency"; set MEM ≈ 1.2× the peak
   ```
   12G is a deliberately safe starting point so the first run doesn't OOM-kill; drop it once you've measured.
+
+  **Size `MEM` from your longest sentence, and scale a mac probe up by ~2×.** Peak memory is driven by the
+  main SMC filter (a per-word DP over `P` particles), so it grows with sentence length — a probe on a
+  4–5-word sentence badly under-predicts a 10-word one. It does *not* grow with `N_SEEDS`: seeds run
+  sequentially and each run's particle state is freed before the next, so peak memory is one seed's run
+  (seeds cost runtime, not memory). Separately, the same workload measured **12.9 GB on an arm64 mac but
+  ~21 GB on the x86 cluster** (longest battery sentence, P=256, one seed — `planning/bd_mem_longest.out`),
+  so x86 XLA uses roughly **1.7–2× the mac's RSS**. Sizing 20G off a mac probe is what OOM-killed the
+  heaviest shards of the gibbs+bd battery run; they needed 48G. Probe your worst-case *input*, then double.
 - **Preemptions / node failures.** `--requeue` is set; writes are atomic (`.tmp` → `os.replace`, viz
   written before the compact file), so a preempted task loses at most the in-flight sentence and
   redoes only that on requeue.
