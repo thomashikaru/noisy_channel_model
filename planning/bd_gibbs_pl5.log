@@ -1,0 +1,20 @@
+LM=EleutherAI/pythia-70m  P=128  seed=0  channel=align  alpha=(200.0, 2.0, 2.0)  align_slope=-4.5  rejuv=gibbs+bd  dedup=True  cap_initial=True  bd_mode=gibbs bd_p_stay=0.0 bd_bridge_j=4 bd_pool_cap=14  items=3
+
+item         exp   metric  q_ref     L    E junk  obs -> intended
+DELFROM-01a  edit    0.88    nan  0.08 0.61 0.31  'The businessman benefited the tax law' -> 'The businessman benefited from the tax law'  (q_smc; 253s)  theta(align,ins,del)=[0.977, 0.01, 0.013]
+             p=0.54  'The businessman benefited from the tax law.'
+             p=0.13  'The businessman benefitted from the tax law.'
+             p=0.07  'The businessman benefited the tax law.'
+INS-02b      keep    1.00    nan  1.00 1.00 0.00  'the cat sat on the mat' -> 'the cat sat on the mat'  (kept; 169s)  theta(align,ins,del)=[0.981, 0.009, 0.011]
+             p=1.00  'The cat sat on the mat.'
+             p=0.00  'The car is on the mat.'
+             p=0.00  'The car sat on the mat.'
+DEL-the-01a  edit    0.07    nan  0.90 0.07 0.03  'we went to store' -> 'we went to the store'  (q_smc; 123s)  theta(align,ins,del)=[0.978, 0.01, 0.012]
+             p=0.71  'We went to store.'
+             p=0.19  'We went to Store.'
+             p=0.07  'We went to the store.'
+
+=== SUMMARY ===
+  edit  n=  2  pass(q_smc>0.5)=  1/2 (50%)  mean_metric=0.477
+  keep  n=  1  pass(kept>0.5)=  1/1 (100%)  mean_metric=1.000
+  junk>0.5 (leading-opener / over-edit artifact): 0/3

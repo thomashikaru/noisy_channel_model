@@ -1,0 +1,88 @@
+item_id,family,expected,single_map,merged_map5,map_changed,n_distinct_seed_maps,logZ_spread,single_ok,merged_ok
+SUBW-01a,SUBW,edit,The storyteller told an amusing anecdote.,The storyteller told an amusing anecdote.,0,1,1.03,1,1
+SUBW-01b,SUBW,keep,The doctor prepared a fast-acting antidote.,The doctor prepared a fast-acting antidote.,0,1,0.9,1,1
+SUBW-02a,SUBW,edit,The medic treated the wound to prevent an infection.,The medicate treated the wound to prevent an infection.,1,2,2.85,1,0
+SUBW-02b,SUBW,keep,The teacher explained the verb's inflection.,The teacher explained the verb's inflection.,0,2,1.4,1,1
+SUBW-03a,SUBW,edit,The judge cited an important president.,The judge is cited as an important president.,1,5,8.16,0,0
+SUBW-03b,SUBW,keep,The Board elected a new president.,The Board elected a new president.,0,1,10.33,1,1
+SUBW-04a,SUBW,edit,The explorers trekked across the scorching desert.,The explorers trekked across the scorching desert.,0,1,0.57,1,1
+SUBW-04b,SUBW,keep,She has ordered a rich chocolate dessert.,She ordered a rich chocolate dessert.,1,3,13.51,0,1
+SUBW-05a,SUBW,edit,He's been wore a very casual shirt to the wedding.,He wore a very casual shirt to the wedding.,1,3,30.58,0,1
+SUBW-05b,SUBW,keep,They studied the causal link between the two variables.,They've already studied the causal link between the variables.,1,5,5.57,0,0
+SUBW-06a,SUBW,edit,She gave him a lovely little compliment on his cooking.,She gave him a lovely compliment on his cooking.,1,4,9.06,0,1
+SUBW-06b,SUBW,keep,The wine was a perfect complement to the meal.,The wine was a perfect complement to the meal.,0,2,4.24,1,1
+SUBN-01a,SUBN,edit,Did you ever receive the message?,Did you receive the message?,1,1,3.24,0,1
+SUBN-01b,SUBN,keep,Did you receive the message?,Did you receive the message?,0,1,0.52,1,1
+SUBN-02a,SUBN,edit,The boy did an experiment today.,The Boy did an interesting experiment today.,1,3,6.19,1,0
+SUBN-02b,SUBN,keep,The boy did an experiment today.,The boy did an experiment today.,0,2,10.89,1,1
+SUBN-03a,SUBN,edit,She’s definitely agreed with the plan.,She’s definitely agreed with the plan.,0,3,2.59,0,0
+SUBN-03b,SUBN,keep,She’s definitely agreed with the plan.,She definitely agreed with the plan.,1,3,16.95,0,1
+SUBN-04a,SUBN,edit,The mountain was covered in snow.,The mountain was covered in snow.,0,1,1.14,1,1
+SUBN-04b,SUBN,keep,In the mountain was covered in snow.,The mountain was covered in snow.,1,1,10.87,0,1
+SUBN-05a,SUBN,edit,The purpose of the parcel yesterday.,They were all in the parcel yesterday.,1,5,3.38,0,0
+SUBN-06a,SUBN,edit,The chef seasoned the soup.,The chef seasoned the soup.,0,1,0.57,1,1
+SUBN-06b,SUBN,keep,The chef seasoned the soup.,The chef seasoned the soup.,0,1,0.66,1,1
+DELTO-01a,DEL_TO,edit,The mother gave the candle a daughter.,The mother gave the candle a daughter.,0,2,9.25,0,0
+DELTO-01b,DEL_TO,keep,The mother gave the daughter a candle.,The mother gave the daughter a candle.,0,1,9.8,1,1
+DELTO-02a,DEL_TO,edit,The waiter served the soup the customers.,The waiter served the soup the customers.,0,1,0.67,0,0
+DELTO-02b,DEL_TO,keep,The waiter served the customers the soup.,The waiter was served the customers the soup.,1,2,2.23,1,0
+DELTO-03a,DEL_TO,edit,The teacher read the story the children.,The teacher read the story the children.,0,1,10.85,0,0
+DELTO-03b,DEL_TO,keep,The teacher read the children the story.,The teacher has read the children the story.,1,2,5.41,1,0
+DELTO-04a,DEL_TO,edit,The judge awarded the trophy to the winner.,The Judge awarded the trophy to the winner.,0,4,4.54,1,1
+DELTO-04b,DEL_TO,keep,The Judge awarded the winner the trophy.,The judge awarded the winner the trophy.,0,1,10.93,1,1
+DELFOR-01a,DEL_FOR,edit,The tailor sewed the dress the bride.,The tailor sewed the dress the bride.,0,1,0.8,0,0
+DELFOR-01b,DEL_FOR,keep,The tailor sewed the bride the dress.,The tailor sewed the bride the dress.,0,1,0.82,1,1
+DELFOR-02a,DEL_FOR,edit,The father cooked the dinner the family.,The father cooked the dinner the family.,0,1,0.52,0,0
+DELFOR-02b,DEL_FOR,keep,The father cooked the family the dinner.,The father cooked the family the dinner.,0,2,1.17,1,1
+DELFOR-03a,DEL_FOR,edit,The baker iced the cake the children.,The bake bake is the cake for the children.,1,2,6.34,0,0
+DELFOR-03b,DEL_FOR,keep,The baker iced the children the cake.,The baker iced the children the cake.,0,1,0.98,1,1
+DELFROM-01a,DEL_FROM,edit,The businessman benefited the tax law.,The businessman benefited the tax law.,0,2,0.98,0,0
+DELFROM-01b,DEL_FROM,keep,The businessman benefited from the tax law.,The businessman benefited from the tax law.,0,1,0.47,1,1
+DELFROM-02a,DEL_FROM,edit,The patient slowly recovered the illness.,The patient slowly recovered from the illness.,1,2,12.32,0,1
+DELFROM-02b,DEL_FROM,keep,The patient slowly recovered from the illness.,The patient slowly recovered from the illness.,0,3,11.74,1,1
+INS-01a,INS_DUP,edit,The boy handed handed the pencil to the girl.,The boy and girl handed the pencil to the girl.,1,3,2.09,0,0
+INS-01b,INS_DUP,keep,The boy handed the pencil to the girl.,The boy handed the pencil to the girl.,0,1,0.88,1,1
+INS-02a,INS_DUP,edit,The cat at the end or on the mat.,The cat sat on on the mat.,1,4,1.34,0,0
+INS-02b,INS_DUP,keep,The cat sat on the mat.,The cat sat on the mat.,0,2,2.11,1,1
+INS-03a,INS_DUP,edit,She has a quickly quickly finished her lunch.,She’s quickly quickly finished her lunch.,1,3,2.06,0,0
+INS-03b,INS_DUP,keep,She's quickly finished her lunch.,She quickly finished her lunch.,1,4,18.41,0,1
+CTRL-01,CTRL,keep,The pirate buried the treasure.,The pirate buried the treasure.,0,1,1.05,1,1
+CTRL-02,CTRL,keep,The chef cooked the salmon.,The chef cooked the salmon.,0,2,1.26,1,1
+CTRL-03,CTRL,keep,The astronomer photographed the comet.,The astronomer photographed the comet.,0,1,0.31,1,1
+CTRL-04,CTRL,keep,The gardener planted the tulips.,In case the gardener planted the tulips.,1,2,2.17,1,0
+LADDER-give-1,LADDER,edit,The volunteer gave the blanket permission for the children.,The volunteer gave the blanket to the children.,1,3,12.1,0,1
+LADDER-give-2,LADDER,edit,The volunteer gave the shelter the children.,The volunteer gave the shelter the children.,0,1,0.38,0,0
+LADDER-give-3,LADDER,keep,The first volunteer gave the family the children.,The volunteer gave the family the children.,1,1,0.77,0,1
+LADDER-send-1,LADDER,edit,The clerk sent the package to the manager.,The clerk sent the package the manager.,1,2,10.63,1,0
+LADDER-send-2,LADDER,edit,The clerk sent the branch the manager.,The clerk sent the branch the manager.,0,1,11.44,0,0
+LADDER-send-3,LADDER,keep,The clerk sent the team the manager.,The clerk will send the team the manager.,1,2,4.47,1,0
+INS-04a,INS_DUP,edit,She went to to the store.,She went to to the store.,0,1,2.26,0,0
+INS-04b,INS_DUP,keep,She went to the store.,She went to the store.,0,1,2.24,1,1
+INS-05a,INS_DUP,edit,He is is very tall.,He is is very tall.,0,1,3.45,0,0
+INS-05b,INS_DUP,keep,He is very tall.,He is very tall.,0,1,0.93,1,1
+INS-06a,INS_DUP,edit,I saw a a movie.,We saw a a movie.,1,4,7.5,0,0
+INS-06b,INS_DUP,keep,We saw a movie.,We saw a movie.,0,2,0.91,1,1
+INS-07a,INS_DUP,edit,The book on the the table.,The book on the the table.,0,5,6.61,0,0
+INS-07b,INS_DUP,keep,The Book on the Table.,The book on the table.,0,2,1.46,1,1
+INS-08a,INS_DUP,edit,They walked in their walked home slowly.,They walked on their walked home slowly.,1,4,4.32,0,0
+INS-08b,INS_DUP,keep,They walked home slowly.,They've walked home slowly.,1,4,9.45,1,0
+INS-09a,INS_DUP,edit,The very very tall man left.,The very very tall man left.,0,3,10.5,0,0
+INS-09b,INS_DUP,keep,The very tall man left.,The very tall man left.,0,1,9.42,1,1
+DEL-to-05a,DEL_TO,edit,I want to go home.,I want to go home.,0,1,0.47,1,1
+DEL-to-05b,DEL_TO,keep,I want to go home.,I want to go home.,0,1,0.53,1,1
+DEL-of-01a,DEL_OF,edit,This is one of the best.,This is one of the best.,0,1,0.47,1,1
+DEL-of-01b,DEL_OF,keep,This is one of the best.,This is one of the best.,0,1,0.59,1,1
+DEL-a-01a,DEL_A,edit,He is good man.,He is good man.,0,1,1.13,0,0
+DEL-a-01b,DEL_A,keep,He is a good man.,He is a good man.,0,1,0.56,1,1
+DEL-a-02a,DEL_A,edit,She lives in big house.,She lives in big house.,0,1,1.55,0,0
+DEL-a-02b,DEL_A,keep,She lives in a big house.,She lives in a big house.,0,1,0.94,1,1
+DEL-the-01a,DEL_THE,edit,We went to store.,We went to store.,0,2,4.08,0,0
+DEL-the-01b,DEL_THE,keep,We went to the store.,We went to the store.,0,2,11.79,1,1
+INS-to-01a,INS_TO,edit,The mother gave the daughter to the candle.,The mother gave the daughter to the candle.,0,2,8.34,0,0
+INS-to-01b,INS_TO,keep,The mother gave the candle to the daughter.,The mother gave the candle to the daughter.,0,1,11.59,1,1
+INS-to-02a,INS_TO,edit,The waiter served the customers to the soup.,The waiter served the customers to the soup.,0,1,11.8,0,0
+INS-to-02b,INS_TO,keep,The waiter served the soup to the customers.,The waiter is served the soup to the customers.,1,2,7.04,1,0
+INS-to-03a,INS_TO,edit,The teacher read the children to the story.,The teacher read the children to the story.,0,1,11.13,0,0
+INS-to-03b,INS_TO,keep,The teacher read the story to the children.,The teacher read the story to the children.,0,1,4.35,1,1
+INS-to-04a,INS_TO,edit,The Judge awarded the winner to the trophy.,The judge awarded the winner to the trophy.,0,2,9.54,0,0
+INS-to-04b,INS_TO,keep,The judge awarded the trophy to the winner.,The Judge awarded the trophy to the winner.,0,2,4.11,1,1

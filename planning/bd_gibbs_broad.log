@@ -1,0 +1,21 @@
+LM=EleutherAI/pythia-70m  P=128  seed=0  channel=align  alpha=(200.0, 2.0, 2.0)  align_slope=-4.5  rejuv=gibbs+bd  dedup=True  cap_initial=True  bd_mode=gibbs bd_p_stay=0.0 bd_bridge_j=0 bd_pool_cap=None  items=4
+
+item         exp   metric  q_ref     L    E junk  obs -> intended
+DELFROM-02a  edit    0.42    nan  0.57 0.42 0.01  'The patient slowly recovered the illness' -> 'The patient slowly recovered from the illness'  (q_smc; 326s)  theta(align,ins,del)=[0.981, 0.009, 0.01]
+             p=0.57  'The patient slowly recovered the illness.'
+             p=0.42  'The patient slowly recovered from the illness.'
+             p=0.01  'The patient slowly recovered for the illness.'
+LADDER-send-2 edit    0.31    nan  0.58 0.26 0.15  'The clerk sent the branch the manager' -> 'The clerk sent the branch to the manager'  (q_smc; 392s)  theta(align,ins,del)=[0.975, 0.01, 0.014]
+             p=0.58  'The clerk sent the branch the manager.'
+             p=0.24  'The clerk sent the branch to the manager.'
+             p=0.13  'The clerk sent the branch manager.'
+DEL-the-01b  keep    1.00    nan  1.00 1.00 0.00  'we went to the store' -> 'we went to the store'  (kept; 146s)  theta(align,ins,del)=[0.981, 0.009, 0.01]
+             p=1.00  'We went to the store.'
+DEL-a-01a    edit    0.09    nan  0.91 0.09 0.00  'he is good man' -> 'he is a good man'  (q_smc; 130s)  theta(align,ins,del)=[0.978, 0.01, 0.013]
+             p=0.91  'He is good man.'
+             p=0.09  'He is a good man.'
+
+=== SUMMARY ===
+  edit  n=  3  pass(q_smc>0.5)=  0/3 (0%)  mean_metric=0.275
+  keep  n=  1  pass(kept>0.5)=  1/1 (100%)  mean_metric=1.000
+  junk>0.5 (leading-opener / over-edit artifact): 0/4

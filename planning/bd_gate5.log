@@ -1,0 +1,59 @@
+loading pythia-70m...
+  loaded in 1.3s
+
+=== DEL-of-01a restore 'of'  P=128 ===
+  obs   : 'this is one the best'
+  target: 'this is one of the best'
+  [  31.8s] gibbs              logZ=  -30.06  top1=miss  target_mass=0.047
+         0.922  'This is one the best'
+         0.047  'This is one of the best'  <-- target
+         0.031  'This is on the best'
+  [ 410.2s] bd j=0 (off)       logZ=  -33.64  top1=miss  target_mass=0.000  REGRESSION vs gibbs
+         1.000  'This is one the best'
+         0.000  'This is the the best'
+         0.000  'This is best'
+         0.000  'This is one'
+  [ 664.7s] bd j=3 (bridges)   logZ=  -32.25  top1=miss  target_mass=0.001  REGRESSION vs gibbs
+         0.993  'This is one the best'
+         0.005  'This is the best'
+         0.001  'This is one of the best'  <-- target
+         0.001  'This is one best'
+
+=== INS-02a remove 'on on'  P=128 ===
+  obs   : 'the cat sat on on the mat'
+  target: 'the cat sat on the mat'
+  [  28.3s] gibbs              logZ=  -53.71  top1=miss  target_mass=0.000
+         0.617  'The cat sat on on the mat'
+         0.141  'The car sat on on the mat'
+         0.078  'The car sat in on the mat'
+         0.070  'The cat at or on the at'
+  [ 391.4s] bd j=0 (off)       logZ=  -56.98  top1=HIT  target_mass=0.985  ok vs gibbs
+         0.985  'The cat sat on the mat'  <-- target
+         0.015  'The cat on on the mat'
+         0.000  'The cat sat on mat on the mat'
+         0.000  'The cat cat sat on on the mat'
+  [ 635.3s] bd j=3 (bridges)   logZ=  -57.16  top1=HIT  target_mass=0.976  ok vs gibbs
+         0.976  'The cat sat on the mat'  <-- target
+         0.023  'The cat on on the mat'
+         0.000  'The cat sat on on the mat.'
+         0.000  'The cat is sat on on the mat'
+
+=== INS-02b clean keep  P=128 ===
+  obs   : 'the cat sat on the mat'
+  target: 'the cat sat on the mat'
+  [  22.5s] gibbs              logZ=  -43.78  top1=HIT  target_mass=0.984
+         0.984  'The cat sat on the mat'  <-- target
+         0.008  'The cat sat on the rat'
+         0.008  'The car sat on the mat'
+  [ 260.1s] bd j=0 (off)       logZ=  -53.82  top1=miss  target_mass=0.000  REGRESSION vs gibbs
+         0.566  'The sat on the mat'
+         0.238  'The cat on the mat'
+         0.085  'The cat cat sat on the mat'
+         0.059  'The cat on the mar'
+  [ 421.1s] bd j=3 (bridges)   logZ=  -54.36  top1=HIT  target_mass=0.302  REGRESSION vs gibbs
+         0.302  'The cat sat on the mat.'  <-- target
+         0.187  'cat sat on the mat'
+         0.101  'cat sat on the mar'
+         0.087  'The sat on the mat'
+
+DONE

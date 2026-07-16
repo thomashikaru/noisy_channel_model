@@ -1,0 +1,88 @@
+item_id,family,condition,expected,observed,intended,off_map,bd_map,off_edited,bd_edited,off_ok,bd_ok,changed
+SUBW-01a,SUBW,implausible,edit,The storyteller told an amusing antidote.,The storyteller told an amusing anecdote.,The storyteller told an amusing anecdote.,The storyteller told an amusing anecdote.,1,1,1,1,0
+SUBW-01b,SUBW,plausible,keep,The doctor prepared a fast-acting antidote.,The doctor prepared a fast-acting antidote.,The doctor prepared a fast-acting antidote.,The doctor prepared a fast-acting antidote.,0,0,1,1,0
+SUBW-02a,SUBW,implausible,edit,The medic treated the wound to prevent an inflection.,The medic treated the wound to prevent an infection.,The medicate treated the wound to prevent an infection.,The medic treated the wound to prevent an infection.,1,1,0,1,1
+SUBW-02b,SUBW,plausible,keep,The teacher explained the verb's inflection.,The teacher explained the verb's inflection.,The teacher explained the verb's inflection.,The teacher explained the verb's inflection.,0,0,1,1,0
+SUBW-03a,SUBW,implausible,edit,The judge cited an important president.,The judge cited an important precedent.,The judge is cited as an important president.,The judge cited an important president.,1,0,0,0,1
+SUBW-03b,SUBW,plausible,keep,The board elected a new president.,The board elected a new president.,The Board elected a new president.,The Board elected a new president.,1,1,0,0,0
+SUBW-04a,SUBW,implausible,edit,The explorers trekked across the scorching dessert.,The explorers trekked across the scorching desert.,The explorers trekked across the scorching desert.,The explorers trekked across the scorching desert.,1,1,1,1,0
+SUBW-04b,SUBW,plausible,keep,She ordered a rich chocolate dessert.,She ordered a rich chocolate dessert.,She ordered a rich chocolate dessert.,She ordered a rich chocolate dessert.,0,0,1,1,0
+SUBW-05a,SUBW,implausible,edit,He wore a very causal shirt to the wedding.,He wore a very casual shirt to the wedding.,He wore a very casual shirt to the wedding.,He wore a very casual shirt to the wedding.,1,1,1,1,0
+SUBW-05b,SUBW,plausible,keep,They studied the causal link between the variables.,They studied the causal link between the variables.,They've already studied the causal link between the variables.,They studied the causal link between the variables.,1,0,0,1,1
+SUBW-06a,SUBW,implausible,edit,She gave him a lovely complement on his cooking.,She gave him a lovely compliment on his cooking.,She gave him a lovely compliment on his cooking.,She gave him a lovely compliment on his cooking.,1,1,1,1,0
+SUBW-06b,SUBW,plausible,keep,The wine was a perfect complement to the meal.,The wine was a perfect complement to the meal.,The wine was a perfect complement to the meal.,The wine was a perfect complement to the meal.,0,0,1,1,0
+SUBN-01a,SUBN,implausible,edit,Did you recieve the message?,Did you receive the message?,Did you receive the message?,Did you receive the message?,1,1,1,1,0
+SUBN-01b,SUBN,plausible,keep,Did you receive the message?,Did you receive the message?,Did you receive the message?,Did you receive the message?,0,0,1,1,0
+SUBN-02a,SUBN,implausible,edit,The boy did an experimemt today.,The boy did an experiment today.,The Boy did an interesting experiment today.,The boy did an experiment today.,1,1,0,1,1
+SUBN-02b,SUBN,plausible,keep,The boy did an experiment today.,The boy did an experiment today.,The boy did an experiment today.,The boy did an experiment today.,0,0,1,1,0
+SUBN-03a,SUBN,implausible,edit,She definately agreed with the plan.,She definitely agreed with the plan.,She’s definitely agreed with the plan.,She definitely agreed with the plan.,1,1,0,1,1
+SUBN-03b,SUBN,plausible,keep,She definitely agreed with the plan.,She definitely agreed with the plan.,She definitely agreed with the plan.,She definitely agreed with the plan.,0,0,1,1,0
+SUBN-04a,SUBN,implausible,edit,The mountian was covered in snow.,The mountain was covered in snow.,The mountain was covered in snow.,The mountain was covered in snow.,1,1,1,1,0
+SUBN-04b,SUBN,plausible,keep,The mountain was covered in snow.,The mountain was covered in snow.,The mountain was covered in snow.,The mountain was covered in snow.,0,0,1,1,0
+SUBN-05a,SUBN,implausible,edit,They reciesofted the parcel yesterday.,They received the parcel yesterday.,They were all in the parcel yesterday.,They the parcel yesterday.,1,1,0,0,1
+SUBN-06a,SUBN,implausible,edit,The chef seasoned the suop.,The chef seasoned the soup.,The chef seasoned the soup.,The chef seasoned the soup.,1,1,1,1,0
+SUBN-06b,SUBN,plausible,keep,The chef seasoned the soup.,The chef seasoned the soup.,The chef seasoned the soup.,The chef seasoned the soup.,0,0,1,1,0
+DELTO-01a,DEL_TO,implausible,edit,The mother gave the candle a daughter.,The mother gave the candle to a daughter.,The mother gave the candle a daughter.,The mother gave the candle a daughter.,0,0,0,0,0
+DELTO-01b,DEL_TO,plausible,keep,The mother gave the daughter a candle.,The mother gave the daughter a candle.,The mother gave the daughter a candle.,The mother gave the daughter a candle.,0,0,1,1,0
+DELTO-02a,DEL_TO,implausible,edit,The waiter served the soup the customers.,The waiter served the soup to the customers.,The waiter served the soup the customers.,The waiter served the soup to the customers.,0,1,0,1,1
+DELTO-02b,DEL_TO,plausible,keep,The waiter served the customers the soup.,The waiter served the customers the soup.,The waiter was served the customers the soup.,The waiter served the customers the soup.,1,0,0,1,1
+DELTO-03a,DEL_TO,implausible,edit,The teacher read the story the children.,The teacher read the story to the children.,The teacher read the story the children.,The teacher read the story to the children.,0,1,0,1,1
+DELTO-03b,DEL_TO,plausible,keep,The teacher read the children the story.,The teacher read the children the story.,The teacher has read the children the story.,The teacher read the children the story.,1,0,0,1,1
+DELTO-04a,DEL_TO,implausible,edit,The judge awarded the trophy the winner.,The judge awarded the trophy to the winner.,The Judge awarded the trophy to the winner.,The Judge awarded the trophy to the winner.,1,1,0,0,0
+DELTO-04b,DEL_TO,plausible,keep,The judge awarded the winner the trophy.,The judge awarded the winner the trophy.,The judge awarded the winner the trophy.,The Judge awarded the winner the trophy.,0,1,1,0,1
+DELFOR-01a,DEL_FOR,implausible,edit,The tailor sewed the dress the bride.,The tailor sewed the dress for the bride.,The tailor sewed the dress the bride.,The tailor sewed the dress the bride.,0,0,0,0,0
+DELFOR-01b,DEL_FOR,plausible,keep,The tailor sewed the bride the dress.,The tailor sewed the bride the dress.,The tailor sewed the bride the dress.,The tailor sewed the bride the dress.,0,0,1,1,0
+DELFOR-02a,DEL_FOR,implausible,edit,The father cooked the dinner the family.,The father cooked the dinner for the family.,The father cooked the dinner the family.,The father cooked the dinner for the family.,0,1,0,1,1
+DELFOR-02b,DEL_FOR,plausible,keep,The father cooked the family the dinner.,The father cooked the family the dinner.,The father cooked the family the dinner.,The father cooked the family the dinner.,0,0,1,1,0
+DELFOR-03a,DEL_FOR,implausible,edit,The baker iced the cake the children.,The baker iced the cake for the children.,The bake bake is the cake for the children.,The baker iced the cake the children.,1,0,0,0,1
+DELFOR-03b,DEL_FOR,plausible,keep,The baker iced the children the cake.,The baker iced the children the cake.,The baker iced the children the cake.,The baker iced the children the cake.,0,0,1,1,0
+DELFROM-01a,DEL_FROM,implausible,edit,The businessman benefited the tax law.,The businessman benefited from the tax law.,The businessman benefited the tax law.,The businessman benefited from the tax law.,0,1,0,1,1
+DELFROM-01b,DEL_FROM,plausible,keep,The businessman benefited from the tax law.,The businessman benefited from the tax law.,The businessman benefited from the tax law.,The businessman benefited from the Tax Law.,0,1,1,0,1
+DELFROM-02a,DEL_FROM,implausible,edit,The patient slowly recovered the illness.,The patient slowly recovered from the illness.,The patient slowly recovered from the illness.,The patient slowly recovered the illness.,1,0,1,0,1
+DELFROM-02b,DEL_FROM,plausible,keep,The patient slowly recovered from the illness.,The patient slowly recovered from the illness.,The patient slowly recovered from the illness.,The patient slowly recovered from the illness.,0,0,1,1,0
+INS-01a,INS_DUP,implausible,edit,The boy handed handed the pencil to the girl.,The boy handed the pencil to the girl.,The boy and girl handed the pencil to the girl.,The boy handed handed the pencil to the girl.,1,0,0,0,1
+INS-01b,INS_DUP,plausible,keep,The boy handed the pencil to the girl.,The boy handed the pencil to the girl.,The boy handed the pencil to the girl.,The boy handed the pencil to the girl.,0,0,1,1,0
+INS-02a,INS_DUP,implausible,edit,The cat sat on on the mat.,The cat sat on the mat.,The cat sat on on the mat.,The cat sat on the mat.,0,1,0,1,1
+INS-02b,INS_DUP,plausible,keep,The cat sat on the mat.,The cat sat on the mat.,The cat sat on the mat.,The cat sat on the mat.,0,0,1,1,0
+INS-03a,INS_DUP,implausible,edit,She quickly quickly finished her lunch.,She quickly finished her lunch.,She’s quickly quickly finished her lunch.,She quickly quickly finished her lunch.,1,0,0,0,1
+INS-03b,INS_DUP,plausible,keep,She quickly finished her lunch.,She quickly finished her lunch.,She quickly finished her lunch.,She quickly finished her lunch.,0,0,1,1,0
+CTRL-01,CTRL,control,keep,The pirate buried the treasure.,The pirate buried the treasure.,The pirate buried the treasure.,The pirate buried the treasure.,0,0,1,1,0
+CTRL-02,CTRL,control,keep,The chef cooked the salmon.,The chef cooked the salmon.,The chef cooked the salmon.,The chef cooked the salmon.,0,0,1,1,0
+CTRL-03,CTRL,control,keep,The astronomer photographed the comet.,The astronomer photographed the comet.,The astronomer photographed the comet.,The astronomer photographed the comet.,0,0,1,1,0
+CTRL-04,CTRL,control,keep,The gardener planted the tulips.,The gardener planted the tulips.,In case the gardener planted the tulips.,The gardener planted the tulips.,1,0,0,1,1
+LADDER-give-1,LADDER,ladder,edit,The volunteer gave the blanket the children.,The volunteer gave the blanket to the children.,The volunteer gave the blanket to the children.,The volunteer gave the blanket the children.,1,0,1,0,1
+LADDER-give-2,LADDER,ladder,edit,The volunteer gave the shelter the children.,The volunteer gave the shelter to the children.,The volunteer gave the shelter the children.,The volunteer gave the shelter the children.,0,0,0,0,0
+LADDER-give-3,LADDER,ladder,keep,The volunteer gave the family the children.,The volunteer gave the family the children.,The volunteer gave the family the children.,The volunteer gave the family the children.,0,0,1,1,0
+LADDER-send-1,LADDER,ladder,edit,The clerk sent the package the manager.,The clerk sent the package to the manager.,The clerk sent the package the manager.,The clerk sent the package to the manager.,0,1,0,1,1
+LADDER-send-2,LADDER,ladder,edit,The clerk sent the branch the manager.,The clerk sent the branch to the manager.,The clerk sent the branch the manager.,The clerk sent the branch the manager.,0,0,0,0,0
+LADDER-send-3,LADDER,ladder,keep,The clerk sent the team the manager.,The clerk sent the team the manager.,The clerk will send the team the manager.,The clerk sent the team the manager.,1,0,0,1,1
+INS-04a,INS_DUP,implausible,edit,She went to to the store.,She went to the store.,She went to to the store.,She went to the store.,0,1,0,1,1
+INS-04b,INS_DUP,plausible,keep,She went to the store.,She went to the store.,She went to the store.,She went to the store.,0,0,1,1,0
+INS-05a,INS_DUP,implausible,edit,He is is very tall.,He is very tall.,He is is very tall.,He is very tall.,0,1,0,1,1
+INS-05b,INS_DUP,plausible,keep,He is very tall.,He is very tall.,He is very tall.,He is very tall.,0,0,1,1,0
+INS-06a,INS_DUP,implausible,edit,We saw a a movie.,We saw a movie.,We saw a a movie.,We saw a movie.,0,1,0,1,1
+INS-06b,INS_DUP,plausible,keep,We saw a movie.,We saw a movie.,We saw a movie.,We saw a movie.,0,0,1,1,0
+INS-07a,INS_DUP,implausible,edit,The book on the the table.,The book on the table.,The book on the the table.,The book on the table.,0,1,0,1,1
+INS-07b,INS_DUP,plausible,keep,The book on the table.,The book on the table.,The book on the table.,The Book on the Table.,0,1,1,0,1
+INS-08a,INS_DUP,implausible,edit,They walked walked home slowly.,They walked home slowly.,They walked on their walked home slowly.,They walked walked home slowly.,1,0,0,0,1
+INS-08b,INS_DUP,plausible,keep,They walked home slowly.,They walked home slowly.,They've walked home slowly.,They walked home slowly.,1,0,0,1,1
+INS-09a,INS_DUP,implausible,edit,The very very tall man left.,The very tall man left.,The very very tall man left.,The very very tall man left.,0,0,0,0,0
+INS-09b,INS_DUP,plausible,keep,The very tall man left.,The very tall man left.,The very tall man left.,The very tall man left.,0,0,1,1,0
+DEL-to-05a,DEL_TO,implausible,edit,I want go home.,I want to go home.,I want to go home.,I want to go home.,1,1,1,1,0
+DEL-to-05b,DEL_TO,plausible,keep,I want to go home.,I want to go home.,I want to go home.,I want to go home.,0,0,1,1,0
+DEL-of-01a,DEL_OF,implausible,edit,This is one the best.,This is one of the best.,This is one of the best.,This is one of the best.,1,1,1,1,0
+DEL-of-01b,DEL_OF,plausible,keep,This is one of the best.,This is one of the best.,This is one of the best.,This is one of the best.,0,0,1,1,0
+DEL-a-01a,DEL_A,implausible,edit,He is good man.,He is a good man.,He is good man.,He is good man.,0,0,0,0,0
+DEL-a-01b,DEL_A,plausible,keep,He is a good man.,He is a good man.,He is a good man.,He is a good man.,0,0,1,1,0
+DEL-a-02a,DEL_A,implausible,edit,She lives in big house.,She lives in a big house.,She lives in big house.,She lives in big house.,0,0,0,0,0
+DEL-a-02b,DEL_A,plausible,keep,She lives in a big house.,She lives in a big house.,She lives in a big house.,She lives in a big house.,0,0,1,1,0
+DEL-the-01a,DEL_THE,implausible,edit,We went to store.,We went to the store.,We went to store.,We went to store.,0,0,0,0,0
+DEL-the-01b,DEL_THE,plausible,keep,We went to the store.,We went to the store.,We went to the store.,We went to the store.,0,0,1,1,0
+INS-to-01a,INS_TO,implausible,edit,The mother gave the daughter to the candle.,The mother gave the daughter the candle.,The mother gave the daughter to the candle.,The mother gave the daughter to the candle.,0,0,0,0,0
+INS-to-01b,INS_TO,plausible,keep,The mother gave the candle to the daughter.,The mother gave the candle to the daughter.,The mother gave the candle to the daughter.,The mother gave the candle to the daughter.,0,0,1,1,0
+INS-to-02a,INS_TO,implausible,edit,The waiter served the customers to the soup.,The waiter served the customers the soup.,The waiter served the customers to the soup.,The waiter served the customers to the soup.,0,0,0,0,0
+INS-to-02b,INS_TO,plausible,keep,The waiter served the soup to the customers.,The waiter served the soup to the customers.,The waiter is served the soup to the customers.,The waiter served the soup to the customers.,1,0,0,1,1
+INS-to-03a,INS_TO,implausible,edit,The teacher read the children to the story.,The teacher read the children the story.,The teacher read the children to the story.,The teacher read the children to the story.,0,0,0,0,0
+INS-to-03b,INS_TO,plausible,keep,The teacher read the story to the children.,The teacher read the story to the children.,The teacher read the story to the children.,The teacher read the story to the children.,0,0,1,1,0
+INS-to-04a,INS_TO,implausible,edit,The judge awarded the winner to the trophy.,The judge awarded the winner the trophy.,The judge awarded the winner to the trophy.,The Judge awarded the winner to the trophy.,0,1,0,0,1
+INS-to-04b,INS_TO,plausible,keep,The judge awarded the trophy to the winner.,The judge awarded the trophy to the winner.,The Judge awarded the trophy to the winner.,The Judge awarded the trophy to the winner.,1,1,0,0,0

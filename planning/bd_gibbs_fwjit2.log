@@ -1,0 +1,19 @@
+LM=EleutherAI/pythia-70m  P=128  seed=0  channel=align  alpha=(200.0, 2.0, 2.0)  align_slope=-4.5  rejuv=gibbs+bd  dedup=True  cap_initial=True  bd_mode=gibbs bd_p_stay=0.0 bd_bridge_j=0 bd_pool_cap=None  items=3
+
+item         exp   metric  q_ref     L    E junk  obs -> intended
+DELTO-02a    edit    0.68    nan  0.26 0.56 0.18  'The waiter served the soup the customers' -> 'The waiter served the soup to the customers'  (q_smc; 355s)  theta(align,ins,del)=[0.969, 0.023, 0.008]
+             p=0.55  'The waiter served the soup to the customers.'
+             p=0.22  'The waiter served the soup the customers.'
+             p=0.11  'The waiter served the soup and the customers.'
+INS-02b      keep    1.00    nan  1.00 1.00 0.00  'the cat sat on the mat' -> 'the cat sat on the mat'  (kept; 181s)  theta(align,ins,del)=[0.981, 0.009, 0.011]
+             p=1.00  'The cat sat on the mat.'
+             p=0.00  'The car sat on the mat.'
+DELFROM-01a  edit    0.85    nan  0.10 0.58 0.32  'The businessman benefited the tax law' -> 'The businessman benefited from the tax law'  (q_smc; 315s)  theta(align,ins,del)=[0.977, 0.01, 0.013]
+             p=0.50  'The businessman benefited from the tax law.'
+             p=0.10  'The businessman benefited the tax law.'
+             p=0.09  'The businessman benefitted from the tax law.'
+
+=== SUMMARY ===
+  edit  n=  2  pass(q_smc>0.5)=  2/2 (100%)  mean_metric=0.765
+  keep  n=  1  pass(kept>0.5)=  1/1 (100%)  mean_metric=1.000
+  junk>0.5 (leading-opener / over-edit artifact): 0/3

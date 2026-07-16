@@ -1,0 +1,89 @@
+# Calibration battery v0 -- observed (noisy) sentences, one per line.
+# Standardized: initial capital + sentence-final punctuation. From calibration_battery_v0.csv (87 items).
+The storyteller told an amusing antidote.
+The doctor prepared a fast-acting antidote.
+The medic treated the wound to prevent an inflection.
+The teacher explained the verb's inflection.
+The judge cited an important president.
+The board elected a new president.
+The explorers trekked across the scorching dessert.
+She ordered a rich chocolate dessert.
+He wore a very causal shirt to the wedding.
+They studied the causal link between the variables.
+She gave him a lovely complement on his cooking.
+The wine was a perfect complement to the meal.
+Did you recieve the message?
+Did you receive the message?
+The boy did an experimemt today.
+The boy did an experiment today.
+She definately agreed with the plan.
+She definitely agreed with the plan.
+The mountian was covered in snow.
+The mountain was covered in snow.
+They reciesofted the parcel yesterday.
+The chef seasoned the suop.
+The chef seasoned the soup.
+The mother gave the candle a daughter.
+The mother gave the daughter a candle.
+The waiter served the soup the customers.
+The waiter served the customers the soup.
+The teacher read the story the children.
+The teacher read the children the story.
+The judge awarded the trophy the winner.
+The judge awarded the winner the trophy.
+The tailor sewed the dress the bride.
+The tailor sewed the bride the dress.
+The father cooked the dinner the family.
+The father cooked the family the dinner.
+The baker iced the cake the children.
+The baker iced the children the cake.
+The businessman benefited the tax law.
+The businessman benefited from the tax law.
+The patient slowly recovered the illness.
+The patient slowly recovered from the illness.
+The boy handed handed the pencil to the girl.
+The boy handed the pencil to the girl.
+The cat sat on on the mat.
+The cat sat on the mat.
+She quickly quickly finished her lunch.
+She quickly finished her lunch.
+The pirate buried the treasure.
+The chef cooked the salmon.
+The astronomer photographed the comet.
+The gardener planted the tulips.
+The volunteer gave the blanket the children.
+The volunteer gave the shelter the children.
+The volunteer gave the family the children.
+The clerk sent the package the manager.
+The clerk sent the branch the manager.
+The clerk sent the team the manager.
+She went to to the store.
+She went to the store.
+He is is very tall.
+He is very tall.
+We saw a a movie.
+We saw a movie.
+The book on the the table.
+The book on the table.
+They walked walked home slowly.
+They walked home slowly.
+The very very tall man left.
+The very tall man left.
+I want go home.
+I want to go home.
+This is one the best.
+This is one of the best.
+He is good man.
+He is a good man.
+She lives in big house.
+She lives in a big house.
+We went to store.
+We went to the store.
+The mother gave the daughter to the candle.
+The mother gave the candle to the daughter.
+The waiter served the customers to the soup.
+The waiter served the soup to the customers.
+The teacher read the children to the story.
+The teacher read the story to the children.
+The judge awarded the winner to the trophy.
+The judge awarded the trophy to the winner.
