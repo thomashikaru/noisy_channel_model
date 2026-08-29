@@ -1,8 +1,8 @@
 {
-  "built_at": "2026-08-29T19:43:01+00:00",
+  "built_at": "2026-08-29T19:47:55+00:00",
   "converter_sha256": "30c90708125c5b0cab72af6ef14f242d05bb38b8c4103fa5e3173c2614efa88d",
-  "git_head_at_build": "4f022759a10230b9fb40e480801fc19c2a139a41",
-  "git_tree_dirty_at_build": true,
+  "git_head_at_build": "62e51cb96e4a90d572b116294b5790e7e1c90d34",
+  "git_tree_dirty_at_build": false,
   "python": "3.12.13",
   "holdout_paths": [
     "data/clark2026/exp_data_merged.csv",
