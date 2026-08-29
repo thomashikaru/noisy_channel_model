@@ -25,3 +25,5 @@ results_nc/
 # and the harness (planning/bench_*) are committed; these are regenerable run output.
 planning/bench_results/
 planning/bench_runtime/
+# Experiment harness: tidy result tables are regenerable from results_nc/ via collect.py
+experiments/outputs/
