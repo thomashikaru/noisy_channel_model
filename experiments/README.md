@@ -17,6 +17,7 @@ This file becomes the full reproduction guide in Phase 6.
 | `converters/` | one module per study: raw `data/<study>/…` -> the common stimulus schema | 1 ✅ |
 | `build_stimuli.py` | runs the converters -> `stimuli/`, checks invariants, writes `MANIFEST.json` | 1 ✅ |
 | `stimuli/` | the harmonized stimuli (**tracked** — this is the reproducibility anchor) | 1 ✅ |
+| `reachability.py` | capability probe: can the channel propose each intended repair? | 1 ✅ |
 | `tests/` | gates for the build: read-only sources, conventions, per-dataset invariants | 1 ✅ |
 | `configs/` | named model configs, as env files for `slurm/submit_nc_batch.sh` | 4 |
 | `run.sh` | `fetch-tabor \| build \| smoke-local \| probe \| submit \| status \| pull \| collect` | 4–5 |
@@ -33,6 +34,7 @@ wraps rather than replaces.
 python experiments/build_stimuli.py                 # build everything
 python experiments/build_stimuli.py --check         # report what would change, write nothing
 python experiments/build_stimuli.py qian2023        # rebuild one dataset
+conda run -n ncgenjax python experiments/reachability.py         # can the channel propose each repair?
 conda run -n ncgenjax python -m pytest -q experiments/tests/      # 37 gates
 ```
 
@@ -175,6 +177,44 @@ parser repairs that specific sequence and then asserts nothing non-ASCII survive
 The no-context `dopo_to` targets are byte-identical to gibson2013's `dopo_to` materials. They are kept —
 the two studies are separate datasets with separate input lists — so those 80 sentences are run twice, once
 under each dataset's `sentence_id`.
+
+## Can the channel even propose the repair? (`reachability.json`)
+
+`conda run -n ncgenjax python experiments/reachability.py` asks, for every stimulus whose intended
+counterpart is one word substitution away, whether the production candidate generator actually surfaces
+the intended word at the deployed `max_dist=2` — the same question `calibration_gate.reachable` (gate G2)
+asks of the calibration battery. It takes about three seconds and writes `stimuli/reachability.json`.
+
+**Run it before any cluster run, and read it before interpreting one.** An unreachable repair is not a
+result: if the channel cannot propose the intended word, the posterior cannot put mass on it, and the row
+says nothing about whether the model's inferences match people's. This is what separates "the model
+disagrees" from "the model was never asked".
+
+| dataset | single-substitution repairs reachable | note |
+|---|---|---|
+| clark2026 | **133/144 (92 %)** | 71/72 typo rows; 62/72 off-diagonal. `genes`/`jeans` is at distance 3, past `max_dist`; the rest are transpositions SymSpell does not retrieve |
+| ryskin2021 | **141/378 (37 %)** | by condition: `Synt` 81/126, `SemCrit` 60/126, `Sem` **0/126**. `Sem` substitutes an unrelated word by design, so its 0 is the design working, not a defect |
+| qian2023 | **38/240 (16 %)** | see below — the stimuli encode the harder of two repairs |
+| huang2024 | 0/23 | the NP/Z repair restores a **comma**, not a word. Known: `","` is not in the indel move's insertion pool, so it is reachable only through the filter's top-J LM bridges (plan §9) |
+| chen2023 | 0/30 | those 30 are the irregular-verb voice pairs, which are multi-word by design |
+| gibson2013, tabor2004, moses | — | their repairs are insertions/deletions, not substitutions |
+
+### qian2023 encodes the harder of two repairs
+
+An ungrammatical qian row admits two readings, and they are not equally reachable:
+
+```
+observed   The gifts for the kid is hidden under the bed.
+A (encoded)  fix the VERB   -> "...the kid are hidden..."     is -> are     reachable  38/240
+B            fix the NOUN   -> "The gift for the kid is..."   gifts -> gift reachable 234/240
+```
+
+`intended_uid` currently encodes **A**, following the plan's "verb number := N1 number". Both are
+legitimate noisy-channel readings — B is arguably the more standard account of agreement attraction, where
+the reader mis-perceives the noun's number — but the substitution channel can essentially only propose B.
+An analysis that scores qian2023 against A alone will read as a near-total failure for reasons that have
+nothing to do with the model's inferences. **This is an open decision, not a settled one**; `reachability.json`
+records both counts so it stays visible.
 
 ## Known defects in the published materials
 

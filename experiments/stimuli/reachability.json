@@ -1,0 +1,3686 @@
+{
+  "max_dist": 2,
+  "lm_candidate_source": "noise_word.word_sub_candidates (SymSpell + wordfreq multi-token)",
+  "datasets": {
+    "chen2023": {
+      "n_sub_rows": 30,
+      "n_reachable": 0,
+      "verdicts": {
+        "multiword": 30
+      },
+      "per_condition": {
+        "active_passive/active_implausible.non_supportive": {
+          "multiword": 5
+        },
+        "active_passive/active_implausible.none": {
+          "multiword": 5
+        },
+        "active_passive/active_implausible.supportive": {
+          "multiword": 5
+        },
+        "active_passive/passive_implausible.non_supportive": {
+          "multiword": 5
+        },
+        "active_passive/passive_implausible.none": {
+          "multiword": 5
+        },
+        "active_passive/passive_implausible.supportive": {
+          "multiword": 5
+        }
+      },
+      "unreachable": [
+        {
+          "stim_uid": "chen2023/active_passive/3/active_implausible.none",
+          "verdict": "multiword",
+          "from": "drove",
+          "to": "was driven by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/3/passive_implausible.none",
+          "verdict": "multiword",
+          "from": "was driven by",
+          "to": "drove",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/9/active_implausible.none",
+          "verdict": "multiword",
+          "from": "ate",
+          "to": "was eaten by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/9/passive_implausible.none",
+          "verdict": "multiword",
+          "from": "was eaten by",
+          "to": "ate",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/10/active_implausible.none",
+          "verdict": "multiword",
+          "from": "broke",
+          "to": "was broken by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/10/passive_implausible.none",
+          "verdict": "multiword",
+          "from": "was broken by",
+          "to": "broke",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/13/active_implausible.none",
+          "verdict": "multiword",
+          "from": "stole",
+          "to": "was stolen by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/13/passive_implausible.none",
+          "verdict": "multiword",
+          "from": "was stolen by",
+          "to": "stole",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/20/active_implausible.none",
+          "verdict": "multiword",
+          "from": "wrote",
+          "to": "was written by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/20/passive_implausible.none",
+          "verdict": "multiword",
+          "from": "was written by",
+          "to": "wrote",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/3/active_implausible.supportive",
+          "verdict": "multiword",
+          "from": "drove",
+          "to": "was driven by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/3/passive_implausible.supportive",
+          "verdict": "multiword",
+          "from": "was driven by",
+          "to": "drove",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/9/active_implausible.supportive",
+          "verdict": "multiword",
+          "from": "ate",
+          "to": "was eaten by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/9/passive_implausible.supportive",
+          "verdict": "multiword",
+          "from": "was eaten by",
+          "to": "ate",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/10/active_implausible.supportive",
+          "verdict": "multiword",
+          "from": "broke",
+          "to": "was broken by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/10/passive_implausible.supportive",
+          "verdict": "multiword",
+          "from": "was broken by",
+          "to": "broke",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/13/active_implausible.supportive",
+          "verdict": "multiword",
+          "from": "stole",
+          "to": "was stolen by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/13/passive_implausible.supportive",
+          "verdict": "multiword",
+          "from": "was stolen by",
+          "to": "stole",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/20/active_implausible.supportive",
+          "verdict": "multiword",
+          "from": "wrote",
+          "to": "was written by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/20/passive_implausible.supportive",
+          "verdict": "multiword",
+          "from": "was written by",
+          "to": "wrote",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/3/active_implausible.non_supportive",
+          "verdict": "multiword",
+          "from": "drove",
+          "to": "was driven by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/3/passive_implausible.non_supportive",
+          "verdict": "multiword",
+          "from": "was driven by",
+          "to": "drove",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/9/active_implausible.non_supportive",
+          "verdict": "multiword",
+          "from": "ate",
+          "to": "was eaten by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/9/passive_implausible.non_supportive",
+          "verdict": "multiword",
+          "from": "was eaten by",
+          "to": "ate",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/10/active_implausible.non_supportive",
+          "verdict": "multiword",
+          "from": "broke",
+          "to": "was broken by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/10/passive_implausible.non_supportive",
+          "verdict": "multiword",
+          "from": "was broken by",
+          "to": "broke",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/13/active_implausible.non_supportive",
+          "verdict": "multiword",
+          "from": "stole",
+          "to": "was stolen by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/13/passive_implausible.non_supportive",
+          "verdict": "multiword",
+          "from": "was stolen by",
+          "to": "stole",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/20/active_implausible.non_supportive",
+          "verdict": "multiword",
+          "from": "wrote",
+          "to": "was written by",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "chen2023/active_passive/20/passive_implausible.non_supportive",
+          "verdict": "multiword",
+          "from": "was written by",
+          "to": "wrote",
+          "char_dist": null
+        }
+      ]
+    },
+    "clark2026": {
+      "n_sub_rows": 144,
+      "n_reachable": 133,
+      "verdicts": {
+        "dist>max_dist": 2,
+        "not_retrieved": 9,
+        "reachable": 133
+      },
+      "per_condition": {
+        "1.2": {
+          "dist>max_dist": 1,
+          "not_retrieved": 4,
+          "reachable": 31
+        },
+        "2.1": {
+          "dist>max_dist": 1,
+          "not_retrieved": 4,
+          "reachable": 31
+        },
+        "Typo1.1": {
+          "not_retrieved": 1,
+          "reachable": 35
+        },
+        "Typo2.2": {
+          "reachable": 36
+        }
+      },
+      "unreachable": [
+        {
+          "stim_uid": "clark2026//3/1.2",
+          "verdict": "not_retrieved",
+          "from": "fan",
+          "to": "tan",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "clark2026//25/1.2",
+          "verdict": "not_retrieved",
+          "from": "saints",
+          "to": "stains",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "clark2026//25/2.1",
+          "verdict": "not_retrieved",
+          "from": "stains",
+          "to": "saints",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "clark2026//26/2.1",
+          "verdict": "not_retrieved",
+          "from": "unite",
+          "to": "untie",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "clark2026//26/Typo1.1",
+          "verdict": "not_retrieved",
+          "from": "unntie",
+          "to": "untie",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "clark2026//33/1.2",
+          "verdict": "not_retrieved",
+          "from": "males",
+          "to": "meals",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "clark2026//33/2.1",
+          "verdict": "not_retrieved",
+          "from": "meals",
+          "to": "males",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "clark2026//34/1.2",
+          "verdict": "not_retrieved",
+          "from": "bread",
+          "to": "beard",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "clark2026//34/2.1",
+          "verdict": "not_retrieved",
+          "from": "beard",
+          "to": "bread",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "clark2026//35/1.2",
+          "verdict": "dist>max_dist",
+          "from": "genes",
+          "to": "jeans",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "clark2026//35/2.1",
+          "verdict": "dist>max_dist",
+          "from": "jeans",
+          "to": "genes",
+          "char_dist": 3
+        }
+      ]
+    },
+    "gibson2013": {
+      "n_sub_rows": 0,
+      "n_reachable": 0,
+      "verdicts": {},
+      "per_condition": {},
+      "unreachable": []
+    },
+    "huang2024": {
+      "n_sub_rows": 23,
+      "n_reachable": 0,
+      "verdicts": {
+        "punctuation_only": 23
+      },
+      "per_condition": {
+        "NPZ_AMB": {
+          "punctuation_only": 23
+        }
+      },
+      "unreachable": [
+        {
+          "stim_uid": "huang2024//1/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "changed",
+          "to": "changed,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//2/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "signed",
+          "to": "signed,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//3/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "moved",
+          "to": "moved,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//4/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "attacked",
+          "to": "attacked,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//5/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "left",
+          "to": "left,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//6/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "read",
+          "to": "read,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//7/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "called",
+          "to": "called,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//8/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "stopped",
+          "to": "stopped,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//9/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "began",
+          "to": "began,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//10/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "lost",
+          "to": "lost,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//11/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "started",
+          "to": "started,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//12/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "worked",
+          "to": "worked,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//13/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "changed",
+          "to": "changed,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//15/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "moved",
+          "to": "moved,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//16/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "attacked",
+          "to": "attacked,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//17/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "left",
+          "to": "left,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//18/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "read",
+          "to": "read,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//19/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "called",
+          "to": "called,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//20/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "stopped",
+          "to": "stopped,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//21/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "began",
+          "to": "began,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//22/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "lost",
+          "to": "lost,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//23/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "started",
+          "to": "started,",
+          "char_dist": 0
+        },
+        {
+          "stim_uid": "huang2024//24/NPZ_AMB",
+          "verdict": "punctuation_only",
+          "from": "worked",
+          "to": "worked,",
+          "char_dist": 0
+        }
+      ]
+    },
+    "moses": {
+      "n_sub_rows": 0,
+      "n_reachable": 0,
+      "verdicts": {},
+      "per_condition": {},
+      "unreachable": []
+    },
+    "qian2023": {
+      "n_sub_rows": 240,
+      "n_reachable": 38,
+      "verdicts": {
+        "dist>max_dist": 172,
+        "not_retrieved": 30,
+        "reachable": 38
+      },
+      "per_condition": {
+        "pps": {
+          "dist>max_dist": 43,
+          "not_retrieved": 15,
+          "reachable": 2
+        },
+        "pss": {
+          "dist>max_dist": 43,
+          "not_retrieved": 15,
+          "reachable": 2
+        },
+        "spp": {
+          "dist>max_dist": 43,
+          "reachable": 17
+        },
+        "ssp": {
+          "dist>max_dist": 43,
+          "reachable": 17
+        }
+      },
+      "unreachable": [
+        {
+          "stim_uid": "qian2023//0/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//0/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//1/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//1/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//1/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//1/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//2/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//2/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//2/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//2/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//3/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//3/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//3/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//3/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//4/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//4/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//4/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//4/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//5/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//5/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//5/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//5/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//6/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//6/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//7/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//7/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//7/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//7/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//8/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//8/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//8/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//8/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//9/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//9/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//10/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//10/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//10/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//10/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//11/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//11/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//11/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//11/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//12/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//12/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//13/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//13/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//13/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//13/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//14/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//14/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//14/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//14/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//15/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//15/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//15/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//15/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//16/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//16/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//17/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//17/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//18/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//18/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//18/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//18/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//19/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//19/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//19/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//19/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//21/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//21/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//22/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//22/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//22/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//22/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//23/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//23/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//23/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//23/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//24/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//24/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//24/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//24/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//25/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//25/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//26/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//26/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//27/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//27/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//27/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//27/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//29/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//29/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//29/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//29/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//30/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//30/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//31/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//31/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//31/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//31/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//32/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//32/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//33/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//33/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//34/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//34/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//34/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//34/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//35/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//35/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//35/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//35/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//36/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//36/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//36/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//36/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//37/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//37/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//37/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//37/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//38/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//38/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//38/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//38/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//39/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//39/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//39/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//39/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//40/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//40/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//40/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//40/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//41/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//41/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//41/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//41/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//42/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//42/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//42/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//42/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//43/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//43/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//43/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//43/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//44/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//44/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//44/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//44/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//45/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//45/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//45/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//45/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//46/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//46/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//46/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//46/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//47/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//47/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//47/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//47/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//48/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//48/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//49/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//49/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//50/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//50/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//50/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//50/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//51/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//51/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//51/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//51/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//52/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//52/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//52/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//52/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//53/ssp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//53/spp",
+          "verdict": "dist>max_dist",
+          "from": "were",
+          "to": "was",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//53/pss",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//53/pps",
+          "verdict": "dist>max_dist",
+          "from": "was",
+          "to": "were",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//54/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//54/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//54/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//54/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//55/pss",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//55/pps",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//56/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//56/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//56/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//56/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//57/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//57/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//57/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//57/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//58/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//58/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//58/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//58/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//59/ssp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//59/spp",
+          "verdict": "dist>max_dist",
+          "from": "are",
+          "to": "is",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//59/pss",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//59/pps",
+          "verdict": "dist>max_dist",
+          "from": "is",
+          "to": "are",
+          "char_dist": 3
+        }
+      ]
+    },
+    "ryskin2021": {
+      "n_sub_rows": 378,
+      "n_reachable": 141,
+      "verdicts": {
+        "dist>max_dist": 183,
+        "multiword": 17,
+        "not_retrieved": 37,
+        "reachable": 141
+      },
+      "per_condition": {
+        "Sem": {
+          "dist>max_dist": 110,
+          "multiword": 16
+        },
+        "SemCrit": {
+          "dist>max_dist": 50,
+          "multiword": 1,
+          "not_retrieved": 15,
+          "reachable": 60
+        },
+        "Synt": {
+          "dist>max_dist": 23,
+          "not_retrieved": 22,
+          "reachable": 81
+        }
+      },
+      "unreachable": [
+        {
+          "stim_uid": "ryskin2021//1/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "veterinarian.",
+          "to": "veteran.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//1/Sem",
+          "verdict": "dist>max_dist",
+          "from": "rhinestone.",
+          "to": "veteran.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//2/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "veteran.",
+          "to": "veterinarian.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//2/Sem",
+          "verdict": "dist>max_dist",
+          "from": "carton.",
+          "to": "veterinarian.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//3/Sem",
+          "verdict": "dist>max_dist",
+          "from": "inferno.",
+          "to": "alteration.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//4/Sem",
+          "verdict": "dist>max_dist",
+          "from": "muskrat.",
+          "to": "altercation.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//5/Sem",
+          "verdict": "dist>max_dist",
+          "from": "hearse.",
+          "to": "anecdote.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//6/Sem",
+          "verdict": "multiword",
+          "from": "a matinee.",
+          "to": "an antidote.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//7/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "amenities.",
+          "to": "anemones.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//7/Sem",
+          "verdict": "dist>max_dist",
+          "from": "ornaments.",
+          "to": "anemones.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//7/Synt",
+          "verdict": "not_retrieved",
+          "from": "anemone.",
+          "to": "anemones.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//8/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "anemones.",
+          "to": "amenities.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//8/Sem",
+          "verdict": "dist>max_dist",
+          "from": "lymph.",
+          "to": "amenities.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//8/Synt",
+          "verdict": "dist>max_dist",
+          "from": "amenity.",
+          "to": "amenities.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//9/Sem",
+          "verdict": "dist>max_dist",
+          "from": "juggler.",
+          "to": "sediment.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//10/Sem",
+          "verdict": "dist>max_dist",
+          "from": "dalmatian.",
+          "to": "sentiment.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//11/Sem",
+          "verdict": "dist>max_dist",
+          "from": "masquerade.",
+          "to": "cardinal.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//12/Sem",
+          "verdict": "dist>max_dist",
+          "from": "destruction.",
+          "to": "carnival.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//13/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "callus.",
+          "to": "catalyst.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//13/Sem",
+          "verdict": "multiword",
+          "from": "an anecdote.",
+          "to": "a catalyst.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//15/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "cavity.",
+          "to": "cavalry.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//15/Sem",
+          "verdict": "dist>max_dist",
+          "from": "stipulation.",
+          "to": "cavalry.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//15/Synt",
+          "verdict": "dist>max_dist",
+          "from": "cavalries.",
+          "to": "cavalry.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//16/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "cavalry.",
+          "to": "cavity.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//16/Sem",
+          "verdict": "dist>max_dist",
+          "from": "petal.",
+          "to": "cavity.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//16/Synt",
+          "verdict": "dist>max_dist",
+          "from": "cavities.",
+          "to": "cavity.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//17/Sem",
+          "verdict": "dist>max_dist",
+          "from": "balcony.",
+          "to": "medication.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//18/Sem",
+          "verdict": "dist>max_dist",
+          "from": "arsenal.",
+          "to": "meditation.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//19/Sem",
+          "verdict": "dist>max_dist",
+          "from": "parasol.",
+          "to": "collection.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//20/Sem",
+          "verdict": "dist>max_dist",
+          "from": "mercenary.",
+          "to": "correction.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//21/Sem",
+          "verdict": "multiword",
+          "from": "an empire.",
+          "to": "a migraine.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//22/Sem",
+          "verdict": "dist>max_dist",
+          "from": "massage.",
+          "to": "migrant.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//24/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "rhino.",
+          "to": "rhinestone.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//24/Sem",
+          "verdict": "dist>max_dist",
+          "from": "captain.",
+          "to": "rhinestone.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//24/Synt",
+          "verdict": "not_retrieved",
+          "from": "rhinestones.",
+          "to": "rhinestone.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//25/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "corridor.",
+          "to": "coroner.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//25/Sem",
+          "verdict": "dist>max_dist",
+          "from": "dynasty.",
+          "to": "coroner.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//26/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "coroner.",
+          "to": "corridor.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//26/Sem",
+          "verdict": "dist>max_dist",
+          "from": "arsenic.",
+          "to": "corridor.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//27/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "coronation.",
+          "to": "correlation.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//27/Sem",
+          "verdict": "dist>max_dist",
+          "from": "hypotenuse.",
+          "to": "correlation.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//28/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "correlation.",
+          "to": "coronation.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//28/Sem",
+          "verdict": "dist>max_dist",
+          "from": "parasite.",
+          "to": "coronation.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//29/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "pharaoh.",
+          "to": "pheromone.",
+          "char_dist": 5
+        },
+        {
+          "stim_uid": "ryskin2021//29/Sem",
+          "verdict": "dist>max_dist",
+          "from": "admonition.",
+          "to": "pheromone.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//29/Synt",
+          "verdict": "not_retrieved",
+          "from": "pheromones.",
+          "to": "pheromone.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//30/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "pheromone.",
+          "to": "pharaoh.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//30/Sem",
+          "verdict": "dist>max_dist",
+          "from": "hearth.",
+          "to": "pharaoh.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//31/Sem",
+          "verdict": "dist>max_dist",
+          "from": "cardinal.",
+          "to": "physician.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//32/Sem",
+          "verdict": "dist>max_dist",
+          "from": "campaign.",
+          "to": "physicist.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//33/Sem",
+          "verdict": "dist>max_dist",
+          "from": "mutiny.",
+          "to": "dilation.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//34/Sem",
+          "verdict": "dist>max_dist",
+          "from": "shudder.",
+          "to": "dilution.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//36/Sem",
+          "verdict": "dist>max_dist",
+          "from": "aluminum.",
+          "to": "destruction.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//38/Sem",
+          "verdict": "dist>max_dist",
+          "from": "migrant.",
+          "to": "shutter.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//39/Sem",
+          "verdict": "dist>max_dist",
+          "from": "meditation.",
+          "to": "empire.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//40/Sem",
+          "verdict": "multiword",
+          "from": "a coronation.",
+          "to": "an umpire.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//41/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "exertion.",
+          "to": "excursion.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//41/Sem",
+          "verdict": "dist>max_dist",
+          "from": "irritation.",
+          "to": "excursion.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//42/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "excursion.",
+          "to": "exertion.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//42/Sem",
+          "verdict": "dist>max_dist",
+          "from": "cardinal.",
+          "to": "exertion.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//42/Synt",
+          "verdict": "not_retrieved",
+          "from": "exertions.",
+          "to": "exertion.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//43/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "phrenology.",
+          "to": "phonology.",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "ryskin2021//43/Sem",
+          "verdict": "dist>max_dist",
+          "from": "leisure.",
+          "to": "phonology.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//43/Synt",
+          "verdict": "dist>max_dist",
+          "from": "phonologies.",
+          "to": "phonology.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//44/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "phonology.",
+          "to": "phrenology.",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "ryskin2021//44/Sem",
+          "verdict": "dist>max_dist",
+          "from": "saffron.",
+          "to": "phrenology.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//44/Synt",
+          "verdict": "dist>max_dist",
+          "from": "phrenologies.",
+          "to": "phrenology.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//45/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "hearth.",
+          "to": "hearse.",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "ryskin2021//45/Sem",
+          "verdict": "dist>max_dist",
+          "from": "dilution.",
+          "to": "hearse.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//45/Synt",
+          "verdict": "not_retrieved",
+          "from": "hearses.",
+          "to": "hearse.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//47/Sem",
+          "verdict": "dist>max_dist",
+          "from": "catalyst.",
+          "to": "humidity.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//47/Synt",
+          "verdict": "dist>max_dist",
+          "from": "humidities.",
+          "to": "humidity.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//48/Sem",
+          "verdict": "dist>max_dist",
+          "from": "alumni.",
+          "to": "humility.",
+          "char_dist": 6
+        },
+        {
+          "stim_uid": "ryskin2021//48/Synt",
+          "verdict": "dist>max_dist",
+          "from": "humilities.",
+          "to": "humility.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//49/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "hypotenuse.",
+          "to": "hypothesis.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//49/Sem",
+          "verdict": "dist>max_dist",
+          "from": "gazette.",
+          "to": "hypothesis.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//50/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "hypothesis.",
+          "to": "hypotenuse.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//50/Sem",
+          "verdict": "dist>max_dist",
+          "from": "cavalry.",
+          "to": "hypotenuse.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//50/Synt",
+          "verdict": "not_retrieved",
+          "from": "hypotenuses.",
+          "to": "hypotenuse.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//51/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "immortality.",
+          "to": "immorality.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//51/Sem",
+          "verdict": "dist>max_dist",
+          "from": "irrigation.",
+          "to": "immorality.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//51/Synt",
+          "verdict": "dist>max_dist",
+          "from": "immoralities.",
+          "to": "immorality.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//52/Sem",
+          "verdict": "dist>max_dist",
+          "from": "dilation.",
+          "to": "immortality.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//52/Synt",
+          "verdict": "dist>max_dist",
+          "from": "immortalities.",
+          "to": "immortality.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//56/Sem",
+          "verdict": "multiword",
+          "from": "a sapphire.",
+          "to": "an infection.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//59/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "matinee.",
+          "to": "manatee.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//59/Sem",
+          "verdict": "dist>max_dist",
+          "from": "stimulation.",
+          "to": "manatee.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//59/Synt",
+          "verdict": "not_retrieved",
+          "from": "manatees.",
+          "to": "manatee.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//60/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "manatee.",
+          "to": "matinee.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//60/Sem",
+          "verdict": "dist>max_dist",
+          "from": "sentiment.",
+          "to": "matinee.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//60/Synt",
+          "verdict": "not_retrieved",
+          "from": "matinees.",
+          "to": "matinee.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//61/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "masquerade.",
+          "to": "mascara.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//61/Sem",
+          "verdict": "dist>max_dist",
+          "from": "audition.",
+          "to": "mascara.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//62/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "mascara.",
+          "to": "masquerade.",
+          "char_dist": 5
+        },
+        {
+          "stim_uid": "ryskin2021//62/Sem",
+          "verdict": "dist>max_dist",
+          "from": "mortar.",
+          "to": "masquerade.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//63/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "pleasantry.",
+          "to": "peasantry.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//63/Sem",
+          "verdict": "dist>max_dist",
+          "from": "travesty.",
+          "to": "peasantry.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//63/Synt",
+          "verdict": "dist>max_dist",
+          "from": "peasantries.",
+          "to": "peasantry.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//64/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "peasantry.",
+          "to": "pleasantry.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//64/Sem",
+          "verdict": "dist>max_dist",
+          "from": "escalator.",
+          "to": "pleasantry.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//64/Synt",
+          "verdict": "dist>max_dist",
+          "from": "pleasantries.",
+          "to": "pleasantry.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//65/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "synthesizer.",
+          "to": "sympathizer.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//65/Sem",
+          "verdict": "dist>max_dist",
+          "from": "fallacy.",
+          "to": "sympathizer.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//65/Synt",
+          "verdict": "not_retrieved",
+          "from": "sympathizers.",
+          "to": "sympathizer.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//66/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "sympathizer.",
+          "to": "synthesizer.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//66/Sem",
+          "verdict": "dist>max_dist",
+          "from": "baloney.",
+          "to": "synthesizer.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//66/Synt",
+          "verdict": "not_retrieved",
+          "from": "synthesizers.",
+          "to": "synthesizer.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//67/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "travesty.",
+          "to": "tapestry.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//67/Sem",
+          "verdict": "dist>max_dist",
+          "from": "abbreviation.",
+          "to": "tapestry.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//67/Synt",
+          "verdict": "dist>max_dist",
+          "from": "tapestries.",
+          "to": "tapestry.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//68/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "tapestry.",
+          "to": "travesty.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//68/Sem",
+          "verdict": "dist>max_dist",
+          "from": "diploma.",
+          "to": "travesty.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//68/Synt",
+          "verdict": "dist>max_dist",
+          "from": "travesties.",
+          "to": "travesty.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//69/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "saffron.",
+          "to": "sapphire.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//69/Sem",
+          "verdict": "dist>max_dist",
+          "from": "medication.",
+          "to": "sapphire.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//70/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "sapphire.",
+          "to": "saffron.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//70/Sem",
+          "verdict": "dist>max_dist",
+          "from": "message.",
+          "to": "saffron.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//72/Sem",
+          "verdict": "dist>max_dist",
+          "from": "physician.",
+          "to": "thermal.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//73/Sem",
+          "verdict": "dist>max_dist",
+          "from": "pleasantry.",
+          "to": "gazette.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//74/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "gazette.",
+          "to": "gazelle.",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "ryskin2021//74/Sem",
+          "verdict": "dist>max_dist",
+          "from": "addition.",
+          "to": "gazelle.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//74/Synt",
+          "verdict": "not_retrieved",
+          "from": "gazelles.",
+          "to": "gazelle.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//75/Sem",
+          "verdict": "multiword",
+          "from": "a correction.",
+          "to": "an embargo.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//76/Sem",
+          "verdict": "dist>max_dist",
+          "from": "migraine.",
+          "to": "embryo.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//78/Sem",
+          "verdict": "dist>max_dist",
+          "from": "caption.",
+          "to": "irrigation.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//79/Sem",
+          "verdict": "dist>max_dist",
+          "from": "spinster.",
+          "to": "mobility.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//79/Synt",
+          "verdict": "dist>max_dist",
+          "from": "mobilities.",
+          "to": "mobility.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//80/Sem",
+          "verdict": "dist>max_dist",
+          "from": "pheromone.",
+          "to": "nobility.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//80/Synt",
+          "verdict": "dist>max_dist",
+          "from": "nobilities.",
+          "to": "nobility.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//81/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "lymph.",
+          "to": "nymph.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//81/Sem",
+          "verdict": "dist>max_dist",
+          "from": "destiny.",
+          "to": "nymph.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//81/Synt",
+          "verdict": "not_retrieved",
+          "from": "nymphs.",
+          "to": "nymph.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//82/Sem",
+          "verdict": "dist>max_dist",
+          "from": "campaign.",
+          "to": "lymph.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//86/Sem",
+          "verdict": "dist>max_dist",
+          "from": "campaign.",
+          "to": "carton.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//87/Sem",
+          "verdict": "dist>max_dist",
+          "from": "nobility.",
+          "to": "splinter.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//88/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "splinter.",
+          "to": "spinster.",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "ryskin2021//88/Sem",
+          "verdict": "dist>max_dist",
+          "from": "radium.",
+          "to": "spinster.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//88/Synt",
+          "verdict": "not_retrieved",
+          "from": "spinsters.",
+          "to": "spinster.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//90/Sem",
+          "verdict": "dist>max_dist",
+          "from": "sediment.",
+          "to": "stimulation.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//91/SemCrit",
+          "verdict": "multiword",
+          "from": "a mutiny.",
+          "to": "an immunity.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//91/Sem",
+          "verdict": "multiword",
+          "from": "a cartoon.",
+          "to": "an immunity.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//91/Synt",
+          "verdict": "dist>max_dist",
+          "from": "immunities.",
+          "to": "immunity.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//93/Sem",
+          "verdict": "dist>max_dist",
+          "from": "humidity.",
+          "to": "mortar.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//94/Sem",
+          "verdict": "dist>max_dist",
+          "from": "expectation.",
+          "to": "mortal.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//96/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "abbreviation.",
+          "to": "inebriation.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//96/Sem",
+          "verdict": "dist>max_dist",
+          "from": "splinter.",
+          "to": "inebriation.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//96/Synt",
+          "verdict": "not_retrieved",
+          "from": "inebriations.",
+          "to": "inebriation.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//97/Sem",
+          "verdict": "dist>max_dist",
+          "from": "radius.",
+          "to": "caption.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//98/Sem",
+          "verdict": "dist>max_dist",
+          "from": "phrenology.",
+          "to": "captain.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//99/Sem",
+          "verdict": "dist>max_dist",
+          "from": "humility.",
+          "to": "addition.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//100/Sem",
+          "verdict": "multiword",
+          "from": "a corridor.",
+          "to": "an audition.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//101/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "admonition.",
+          "to": "admission.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//101/Sem",
+          "verdict": "dist>max_dist",
+          "from": "carnival.",
+          "to": "admission.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//103/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "cabaret.",
+          "to": "carburetor.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//103/Sem",
+          "verdict": "dist>max_dist",
+          "from": "callus.",
+          "to": "carburetor.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//103/Synt",
+          "verdict": "not_retrieved",
+          "from": "carburetors.",
+          "to": "carburetor.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//104/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "carburetor.",
+          "to": "cabaret.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//104/Sem",
+          "verdict": "dist>max_dist",
+          "from": "thermos.",
+          "to": "cabaret.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//105/Sem",
+          "verdict": "dist>max_dist",
+          "from": "conscience.",
+          "to": "altitude.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//106/Sem",
+          "verdict": "dist>max_dist",
+          "from": "shutter.",
+          "to": "attitude.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//107/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "aluminum.",
+          "to": "alumni.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//107/Sem",
+          "verdict": "dist>max_dist",
+          "from": "dynamite.",
+          "to": "alumni.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//108/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "alumni.",
+          "to": "aluminum.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//108/Sem",
+          "verdict": "dist>max_dist",
+          "from": "exertion.",
+          "to": "aluminum.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//109/Sem",
+          "verdict": "dist>max_dist",
+          "from": "thermal.",
+          "to": "carriage.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//110/Sem",
+          "verdict": "dist>max_dist",
+          "from": "veteran.",
+          "to": "cartridge.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//111/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "radius.",
+          "to": "radium.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//111/Sem",
+          "verdict": "dist>max_dist",
+          "from": "veterinarian.",
+          "to": "radium.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//111/Synt",
+          "verdict": "not_retrieved",
+          "from": "radiums.",
+          "to": "radium.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//112/Sem",
+          "verdict": "dist>max_dist",
+          "from": "cabaret.",
+          "to": "radius.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//113/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "ornaments.",
+          "to": "armaments.",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "ryskin2021//113/Sem",
+          "verdict": "dist>max_dist",
+          "from": "adoration.",
+          "to": "armaments.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//113/Synt",
+          "verdict": "not_retrieved",
+          "from": "armament.",
+          "to": "armaments.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//114/Sem",
+          "verdict": "dist>max_dist",
+          "from": "infantry.",
+          "to": "ornaments.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//115/Sem",
+          "verdict": "dist>max_dist",
+          "from": "consternation.",
+          "to": "arsenal.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//116/Sem",
+          "verdict": "dist>max_dist",
+          "from": "carriage.",
+          "to": "arsenic.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//117/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "balcony.",
+          "to": "baloney.",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "ryskin2021//117/Sem",
+          "verdict": "dist>max_dist",
+          "from": "immortality.",
+          "to": "baloney.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//117/Synt",
+          "verdict": "not_retrieved",
+          "from": "baloneys.",
+          "to": "baloney.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//118/Sem",
+          "verdict": "dist>max_dist",
+          "from": "consciousness.",
+          "to": "balcony.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//118/Synt",
+          "verdict": "dist>max_dist",
+          "from": "balconies.",
+          "to": "balcony.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//120/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "boundary.",
+          "to": "bounty.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//120/Sem",
+          "verdict": "multiword",
+          "from": "an expedition.",
+          "to": "a bounty.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//120/Synt",
+          "verdict": "dist>max_dist",
+          "from": "bounties.",
+          "to": "bounty.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//121/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "campaign.",
+          "to": "champagne.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//121/Sem",
+          "verdict": "dist>max_dist",
+          "from": "armaments.",
+          "to": "champagne.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//123/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "inferno.",
+          "to": "inference.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//123/Sem",
+          "verdict": "dist>max_dist",
+          "from": "peasantry.",
+          "to": "inference.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//124/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "inference.",
+          "to": "inferno.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//124/Sem",
+          "verdict": "dist>max_dist",
+          "from": "attitude.",
+          "to": "inferno.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//125/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "conscience.",
+          "to": "consciousness.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//125/Sem",
+          "verdict": "dist>max_dist",
+          "from": "duration.",
+          "to": "consciousness.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//127/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "constellation.",
+          "to": "consternation.",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "ryskin2021//127/Sem",
+          "verdict": "dist>max_dist",
+          "from": "inflection.",
+          "to": "consternation.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//127/Synt",
+          "verdict": "not_retrieved",
+          "from": "consternations.",
+          "to": "consternation.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//128/Sem",
+          "verdict": "dist>max_dist",
+          "from": "immunity.",
+          "to": "constellation.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//129/Sem",
+          "verdict": "multiword",
+          "from": "an altercation.",
+          "to": "a pasture.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//130/Sem",
+          "verdict": "multiword",
+          "from": "an escalation.",
+          "to": "a pastor.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//131/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "missionary.",
+          "to": "mercenary.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//131/Sem",
+          "verdict": "multiword",
+          "from": "an apostrophe.",
+          "to": "a mercenary.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//131/Synt",
+          "verdict": "dist>max_dist",
+          "from": "mercenaries.",
+          "to": "mercenary.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//132/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "mercenary.",
+          "to": "missionary.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//132/Sem",
+          "verdict": "multiword",
+          "from": "an admission.",
+          "to": "a missionary.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//132/Synt",
+          "verdict": "dist>max_dist",
+          "from": "missionaries.",
+          "to": "missionary.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//133/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "damnation.",
+          "to": "dalmatian.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//133/Sem",
+          "verdict": "multiword",
+          "from": "an umpire.",
+          "to": "a dalmatian.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//133/Synt",
+          "verdict": "not_retrieved",
+          "from": "dalmations.",
+          "to": "dalmatian.",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "ryskin2021//135/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "destiny.",
+          "to": "density.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//135/Sem",
+          "verdict": "dist>max_dist",
+          "from": "missionary.",
+          "to": "density.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//135/Synt",
+          "verdict": "dist>max_dist",
+          "from": "densities.",
+          "to": "density.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//138/Sem",
+          "verdict": "dist>max_dist",
+          "from": "cartridge.",
+          "to": "massage.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//139/Sem",
+          "verdict": "multiword",
+          "from": "an infection.",
+          "to": "a diploma.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//140/Sem",
+          "verdict": "dist>max_dist",
+          "from": "constellation.",
+          "to": "diplomat.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//141/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "lesion.",
+          "to": "leisure.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//141/Sem",
+          "verdict": "dist>max_dist",
+          "from": "phonology.",
+          "to": "leisure.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//142/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "leisure.",
+          "to": "lesion.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//142/Sem",
+          "verdict": "dist>max_dist",
+          "from": "rhino.",
+          "to": "lesion.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//143/Sem",
+          "verdict": "dist>max_dist",
+          "from": "frankenstein.",
+          "to": "duration.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//145/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "dynamite.",
+          "to": "dynasty.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//145/Sem",
+          "verdict": "dist>max_dist",
+          "from": "inebriation.",
+          "to": "dynasty.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//145/Synt",
+          "verdict": "dist>max_dist",
+          "from": "dynasties.",
+          "to": "dynasty.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//146/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "dynasty.",
+          "to": "dynamite.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//146/Sem",
+          "verdict": "dist>max_dist",
+          "from": "infamy.",
+          "to": "dynamite.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//148/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "apostrophe.",
+          "to": "apocalypse.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//148/Sem",
+          "verdict": "multiword",
+          "from": "a pharaoh.",
+          "to": "an apocalypse.",
+          "char_dist": null
+        },
+        {
+          "stim_uid": "ryskin2021//149/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "muskrat.",
+          "to": "musket.",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "ryskin2021//149/Sem",
+          "verdict": "dist>max_dist",
+          "from": "distraction.",
+          "to": "musket.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//149/Synt",
+          "verdict": "not_retrieved",
+          "from": "muskets.",
+          "to": "musket.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//150/SemCrit",
+          "verdict": "not_retrieved",
+          "from": "musket.",
+          "to": "muskrat.",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "ryskin2021//150/Sem",
+          "verdict": "dist>max_dist",
+          "from": "collection.",
+          "to": "muskrat.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//150/Synt",
+          "verdict": "not_retrieved",
+          "from": "muskrats.",
+          "to": "muskrat.",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "ryskin2021//154/Sem",
+          "verdict": "dist>max_dist",
+          "from": "apocalypse.",
+          "to": "escalator.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//158/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "expectation.",
+          "to": "expedition.",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "ryskin2021//158/Sem",
+          "verdict": "dist>max_dist",
+          "from": "sympathizer.",
+          "to": "expedition.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//159/SemCrit",
+          "verdict": "dist>max_dist",
+          "from": "facility.",
+          "to": "fallacy.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//159/Sem",
+          "verdict": "dist>max_dist",
+          "from": "excursion.",
+          "to": "fallacy.",
+          "char_dist": 4
+        },
+        {
+          "stim_uid": "ryskin2021//159/Synt",
+          "verdict": "dist>max_dist",
+          "from": "fallacies.",
+          "to": "fallacy.",
+          "char_dist": 3
+        }
+      ]
+    },
+    "tabor2004": {
+      "n_sub_rows": 0,
+      "n_reachable": 0,
+      "verdicts": {},
+      "per_condition": {},
+      "unreachable": []
+    }
+  },
+  "qian2023_repair_routes": {
+    "ungrammatical_rows": 240,
+    "route_A_verb_reachable": 38,
+    "route_B_noun_reachable": 234
+  }
+}
