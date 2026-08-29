@@ -1,8 +1,8 @@
 {
-  "built_at": "2026-08-29T19:32:00+00:00",
-  "converter_sha256": "d827880d95616a3945f804744f15f95d937427f5372fa11af50979e73cfd030a",
-  "git_head_at_build": "98ae5d91835cfdec3082994234ac980012dd6b03",
-  "git_tree_dirty_at_build": false,
+  "built_at": "2026-08-29T19:43:01+00:00",
+  "converter_sha256": "30c90708125c5b0cab72af6ef14f242d05bb38b8c4103fa5e3173c2614efa88d",
+  "git_head_at_build": "4f022759a10230b9fb40e480801fc19c2a139a41",
+  "git_tree_dirty_at_build": true,
   "python": "3.12.13",
   "holdout_paths": [
     "data/clark2026/exp_data_merged.csv",

@@ -12,11 +12,13 @@ Linger format::
     ? <comprehension question> <answer>
 
 **Context handling.**  The context and the target share one line, nominally separated by two
-spaces -- but the separator is inconsistent (three spaces before the target on some items, and
-some supportive contexts are one sentence rather than two), so splitting on ``"  "`` misparses
-24 of the 320 context rows.  Instead the no-context file is treated as the authority for the
-target text and the context is whatever prefix precedes it; this matches exactly on all 320
-rows.  The context becomes the LM prime, so the channel only ever sees the target sentence.
+spaces -- but the separator is inconsistent, and splitting on ``"  "`` recovers the wrong target
+on 27 of the 320 context rows: on 20 (all dopo_to/supportive) the separator before the target is
+three spaces, so the target keeps a leading space; on 7 (active_passive/supportive) two context
+sentences are separated by a single space, so a whole context sentence lands inside the
+"target".  Instead the no-context file is treated as the authority for the target text and the
+context is whatever prefix precedes it; that matches on all 320 rows and is asserted per row.
+The context becomes the LM prime, so the channel only ever sees the target sentence.
 
 **Encoding.**  All six files are CRLF.  ``dopo-to-supportive.txt`` is doubly encoded: its
 right single quotes appear as the mojibake ``‚Äô``, which is the UTF-8 bytes of ``’`` read as

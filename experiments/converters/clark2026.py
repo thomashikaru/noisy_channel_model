@@ -1,9 +1,10 @@
 """clark2026 -- noisy-channel garden paths (this project's own materials; formerly "ncgp2").
 
-``data/clark2026/materials.csv``: 36 items x 10 labels = 360 rows.  Each item has two critical
-verbs that are one keystroke apart (``kicked`` / ``licked``), two predicates that make one verb
-plausible and the other not, a control verb, a control predicate, and a typo'd version of each
-critical verb::
+``data/clark2026/materials.csv``: 36 items x 10 labels = 360 rows.  The core is a 2x2: two
+form-neighbour critical words (``kicked`` / ``licked``) crossed with two predicates, one of which
+makes each word plausible.  The two diagonal cells are plausible in all 36 items and the two
+off-diagonal cells implausible in all 36.  Each item also carries a control word, a control
+predicate, and a typo'd version of each critical word::
 
     1.1       The boy kicked the big round ball into the net.        plausible
     1.2       The boy kicked the big round lollipop with delight.    implausible -> 2.2
@@ -16,10 +17,20 @@ critical verb::
     Typo1.1   The boy kjcked the big round ball into the net.        -> 1.1
     Typo2.2   The boy ljcked the big round lollipop with delight.    -> 2.2
 
-**Counterparts.**  The typo rows restore their verb.  ``2.1`` and ``1.2`` are the noisy-channel
-garden paths: the sentence is implausible as written but one keystroke from a plausible reading
-with the other critical verb.  ``1.2 -> 2.2`` is the mirror image of the ``2.1 -> 1.1`` case the
-harness plan names as example 6, and is included on that symmetry; only the four control rows,
+**Counterparts.**  The typo rows restore their critical word (one character, all 36 items).
+``2.1`` and ``1.2`` are the noisy-channel garden paths: implausible as written, but one word
+substitution from a plausible reading with the other critical word.  Both are included.  They are
+mirror images across the diagonal -- same 36 word pairs, opposite directions, identical
+word-level shape (``sub`` in all 72) -- so there is no principle that would keep ``2.1 -> 1.1``,
+which the harness plan names as example 6, and drop ``1.2 -> 2.2``.  Keeping both preserves the
+DIRECTION contrast, which is not cosmetic: the substitution is only reachable for the model in
+one direction on two items (``fan``->``tan`` and ``unite``->``untie`` are not retrieved by the
+candidate generator, while their reverses are).
+
+The critical pairs are not all one character apart: 30 of 36 are at Damerau-Levenshtein 1, five
+are transpositions at 2 (``saints``/``stains``, ``reverse``/``reserve``, ``stored``/``sorted``,
+``males``/``meals``, ``bread``/``beard``) and one is at 3 (``genes``/``jeans``), which is beyond
+the deployed ``max_dist=2`` and so unreachable by construction.  Only the four control rows,
 whose implausibility has no one-edit repair, are left without a counterpart.
 
 **Hold-out.**  This is the one study in the set whose human data sits in the same directory.

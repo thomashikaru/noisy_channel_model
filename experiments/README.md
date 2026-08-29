@@ -165,10 +165,11 @@ minimal edit away — not necessarily the same-condition control.
 ### chen2023 parsing notes
 
 The context and the target share one line, nominally separated by two spaces — but the separator is
-inconsistent (three spaces on some items) and some supportive contexts are one sentence rather than two, so
-splitting on `"  "` misparses 24 of the 320 context rows. Instead the no-context file is the authority for
-the target text and the context is whatever prefix precedes it; that matches exactly on all 320 rows and is
-asserted per row. `dopo-to-supportive.txt` is doubly encoded (right single quotes appear as `‚Äô`); the
+inconsistent, and splitting on `"  "` recovers the wrong target on **27 of the 320** context rows: on 20
+(all `dopo_to`/supportive) the separator before the target is three spaces, so the target keeps a leading
+space; on 7 (`active_passive`/supportive) two context sentences are separated by a single space, so a whole
+context sentence lands inside the "target". Instead the no-context file is the authority for the target text
+and the context is whatever prefix precedes it; that matches on all 320 rows and is asserted per row. `dopo-to-supportive.txt` is doubly encoded (right single quotes appear as `‚Äô`); the
 parser repairs that specific sequence and then asserts nothing non-ASCII survives. Fillers are excluded.
 
 The no-context `dopo_to` targets are byte-identical to gibson2013's `dopo_to` materials. They are kept —
