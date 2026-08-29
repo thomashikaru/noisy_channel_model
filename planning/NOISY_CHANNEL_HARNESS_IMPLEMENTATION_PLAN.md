@@ -1,9 +1,41 @@
 # Noisy-channel experiment harness — implementation plan (approved 2026-08-29)
 
 Companion to `NOISY_CHANNEL_EXPERIMENT_HARNESS.md` (the goals). This file is the *how*: architecture,
-per-phase work, pseudocode for the non-obvious parts, verification, and the decisions taken. Nothing
-described here has been implemented yet; the code-facts below (paths, line numbers) were verified against
-branch `rejuv-birth-death @ c6a2459` on 2026-08-29 and will drift — re-grep symbols before editing.
+per-phase work, pseudocode for the non-obvious parts, verification, and the decisions taken. The
+code-facts below (paths, line numbers) were verified against branch `rejuv-birth-death @ c6a2459` on
+2026-08-29 and will drift — re-grep symbols before editing.
+
+> ## Build status — read this before trusting a section
+>
+> | phase | section | status |
+> |---|---|---|
+> | 0 branch + scaffold | — | **done** (`108beeb`) |
+> | 1 stimulus harmonization | §2 | **done** (`4f02275`) — **§2 is now a design record, not a spec.** Five details below were wrong about the data and the shipped converters deviate; `experiments/README.md` is authoritative for what exists |
+> | 2 per-word model outputs | §3 | **not started — this is next** |
+> | 3 worker + output schema | §4 | not started |
+> | 4 configs, smoke, cost probes | §5 | not started |
+> | 5 cluster runs | §6 | not started |
+> | 6 documentation | §7 | not started |
+>
+> **Where §2 was wrong** (each measured; see `experiments/README.md` for the full account):
+> 1. The gibson2013/chen2023 counterpart is the plausible row of the **other** structure, not the same
+>    one. The same-structure rule yields zero single-edit rows across all 120 implausible gibson rows
+>    (`sub;sub` 78 / `ins;sub` 37 / `del;sub` 5); the cross-structure rule yields `ins` 58 / `del` 60.
+> 2. chen2023's two-space split recovers the wrong target on 27 of 320 context rows (20 three-space
+>    separators, 7 where a context sentence is one-space separated and bleeds into the target). The
+>    no-context file is used as the target authority instead; §2.3's `assert` would have caught all 27.
+> 3. tabor2004's relativizer is not always `"who was"` — also `that was` (14), `who were` (3),
+>    `which was` (2), `who is` (2), `that were` (2). It is read off the reduced/nonreduced diff.
+> 4. clark2026 also maps `1.2 -> 2.2`, the mirror of `2.1 -> 1.1` (same 36 word pairs, opposite
+>    direction). Direction matters: only 62/72 off-diagonal repairs are reachable at `max_dist=2`, and
+>    two are one-directional.
+> 5. huang2024's `disambPosition_0idx` is **not** off by one. It is correct on all 144 rows against
+>    `model_input`, where punctuation stays attached; the off-by-one only affects the space-split
+>    `sentence_norm` form. §2.2's note to the contrary is wrong.
+>
+> The schema also gained `contrast` (design-level relation) plus `edit_ops` / `edit_from` / `edit_to`,
+> because `edit_type` alone splits chen2023's voice alternation arbitrarily (90 `multi` vs 30 `sub`,
+> depending only on whether the participle is irregular).
 
 ## 0. What exists, what is missing
 
