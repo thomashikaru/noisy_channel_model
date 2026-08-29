@@ -1,0 +1,2 @@
+dataset,subset,item_id,condition,stim_uid,sentence_orig,sentence_norm,model_input,context,sentence_id,plausibility,is_grammatical,contrast,intended_uid,intended_text,edit_type,edit_ops,edit_from,edit_to,critical_word_idx,comprehension_q,correct_answer,meta
+moses,,1,demo,moses//1/demo,How many animals of each kind did Moses take on the ark?,how many animals of each kind did moses take on the ark ?,How many animals of each kind did Moses take on the ark?,,0,,,,,,,,,,,,,{}

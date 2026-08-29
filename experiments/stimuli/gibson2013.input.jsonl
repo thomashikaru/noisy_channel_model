@@ -1,0 +1,240 @@
+{"sentence_id": 0, "text": "The sister mailed the letter the niece.", "context": ""}
+{"sentence_id": 1, "text": "The sister mailed the niece the letter.", "context": ""}
+{"sentence_id": 2, "text": "The sister mailed the niece to the letter.", "context": ""}
+{"sentence_id": 3, "text": "The sister mailed the letter to the niece.", "context": ""}
+{"sentence_id": 4, "text": "The mother gave the candle the daughter.", "context": ""}
+{"sentence_id": 5, "text": "The mother gave the daughter the candle.", "context": ""}
+{"sentence_id": 6, "text": "The mother gave the daughter to the candle.", "context": ""}
+{"sentence_id": 7, "text": "The mother gave the candle to the daughter.", "context": ""}
+{"sentence_id": 8, "text": "The uncle sold the truck the father.", "context": ""}
+{"sentence_id": 9, "text": "The uncle sold the father the truck.", "context": ""}
+{"sentence_id": 10, "text": "The uncle sold the father to the truck.", "context": ""}
+{"sentence_id": 11, "text": "The uncle sold the truck to the father.", "context": ""}
+{"sentence_id": 12, "text": "The contractor lent the saw the homeowner.", "context": ""}
+{"sentence_id": 13, "text": "The contractor lent the homeowner the saw.", "context": ""}
+{"sentence_id": 14, "text": "The contractor lent the homeowner to the saw.", "context": ""}
+{"sentence_id": 15, "text": "The contractor lent the saw to the homeowner.", "context": ""}
+{"sentence_id": 16, "text": "The sailing club leased the boat the man.", "context": ""}
+{"sentence_id": 17, "text": "The sailing club leased the man the boat.", "context": ""}
+{"sentence_id": 18, "text": "The sailing club leased the man to the boat.", "context": ""}
+{"sentence_id": 19, "text": "The sailing club leased the boat to the man.", "context": ""}
+{"sentence_id": 20, "text": "The girl tossed the apple the boy.", "context": ""}
+{"sentence_id": 21, "text": "The girl tossed the boy the apple.", "context": ""}
+{"sentence_id": 22, "text": "The girl tossed the boy to the apple.", "context": ""}
+{"sentence_id": 23, "text": "The girl tossed the apple to the boy.", "context": ""}
+{"sentence_id": 24, "text": "The daughter passed the bowl the mother.", "context": ""}
+{"sentence_id": 25, "text": "The daughter passed the mother the bowl.", "context": ""}
+{"sentence_id": 26, "text": "The daughter passed the mother to the bowl.", "context": ""}
+{"sentence_id": 27, "text": "The daughter passed the bowl to the mother.", "context": ""}
+{"sentence_id": 28, "text": "The scuba instructor rented the equipment the tourist.", "context": ""}
+{"sentence_id": 29, "text": "The scuba instructor rented the tourist the equipment.", "context": ""}
+{"sentence_id": 30, "text": "The scuba instructor rented the tourist to the equipment.", "context": ""}
+{"sentence_id": 31, "text": "The scuba instructor rented the equipment to the tourist.", "context": ""}
+{"sentence_id": 32, "text": "The boy handed the pencil the girl.", "context": ""}
+{"sentence_id": 33, "text": "The boy handed the girl the pencil.", "context": ""}
+{"sentence_id": 34, "text": "The boy handed the girl to the pencil.", "context": ""}
+{"sentence_id": 35, "text": "The boy handed the pencil to the girl.", "context": ""}
+{"sentence_id": 36, "text": "The nanny threw the toy the child.", "context": ""}
+{"sentence_id": 37, "text": "The nanny threw the child the toy.", "context": ""}
+{"sentence_id": 38, "text": "The nanny threw the child to the toy.", "context": ""}
+{"sentence_id": 39, "text": "The nanny threw the toy to the child.", "context": ""}
+{"sentence_id": 40, "text": "The nephew mailed the postcard the aunt.", "context": ""}
+{"sentence_id": 41, "text": "The nephew mailed the aunt the postcard.", "context": ""}
+{"sentence_id": 42, "text": "The nephew mailed the aunt to the postcard.", "context": ""}
+{"sentence_id": 43, "text": "The nephew mailed the postcard to the aunt.", "context": ""}
+{"sentence_id": 44, "text": "The father gave the car the son.", "context": ""}
+{"sentence_id": 45, "text": "The father gave the son the car.", "context": ""}
+{"sentence_id": 46, "text": "The father gave the son to the car.", "context": ""}
+{"sentence_id": 47, "text": "The father gave the car to the son.", "context": ""}
+{"sentence_id": 48, "text": "The shop sold the bike the student.", "context": ""}
+{"sentence_id": 49, "text": "The shop sold the student the bike.", "context": ""}
+{"sentence_id": 50, "text": "The shop sold the student to the bike.", "context": ""}
+{"sentence_id": 51, "text": "The shop sold the bike to the student.", "context": ""}
+{"sentence_id": 52, "text": "The janitor lent the mop the teacher.", "context": ""}
+{"sentence_id": 53, "text": "The janitor lent the teacher the mop.", "context": ""}
+{"sentence_id": 54, "text": "The janitor lent the teacher to the mop.", "context": ""}
+{"sentence_id": 55, "text": "The janitor lent the mop to the teacher.", "context": ""}
+{"sentence_id": 56, "text": "The car dealer leased the SUV the plumber.", "context": ""}
+{"sentence_id": 57, "text": "The car dealer leased the plumber the SUV.", "context": ""}
+{"sentence_id": 58, "text": "The car dealer leased the plumber to the SUV.", "context": ""}
+{"sentence_id": 59, "text": "The car dealer leased the SUV to the plumber.", "context": ""}
+{"sentence_id": 60, "text": "The host tossed the microphone the contestant.", "context": ""}
+{"sentence_id": 61, "text": "The host tossed the contestant the microphone.", "context": ""}
+{"sentence_id": 62, "text": "The host tossed the contestant to the microphone.", "context": ""}
+{"sentence_id": 63, "text": "The host tossed the microphone to the contestant.", "context": ""}
+{"sentence_id": 64, "text": "The quarterback passed the ball the receiver.", "context": ""}
+{"sentence_id": 65, "text": "The quarterback passed the receiver the ball.", "context": ""}
+{"sentence_id": 66, "text": "The quarterback passed the receiver to the ball.", "context": ""}
+{"sentence_id": 67, "text": "The quarterback passed the ball to the receiver.", "context": ""}
+{"sentence_id": 68, "text": "The videostore rented the DVD the customer.", "context": ""}
+{"sentence_id": 69, "text": "The videostore rented the customer the DVD.", "context": ""}
+{"sentence_id": 70, "text": "The videostore rented the customer to the DVD.", "context": ""}
+{"sentence_id": 71, "text": "The videostore rented the DVD to the customer.", "context": ""}
+{"sentence_id": 72, "text": "The bartender handed the drink the lady.", "context": ""}
+{"sentence_id": 73, "text": "The bartender handed the lady the drink.", "context": ""}
+{"sentence_id": 74, "text": "The bartender handed the lady to the drink.", "context": ""}
+{"sentence_id": 75, "text": "The bartender handed the drink to the lady.", "context": ""}
+{"sentence_id": 76, "text": "The magician threw the hat the assistant.", "context": ""}
+{"sentence_id": 77, "text": "The magician threw the assistant the hat.", "context": ""}
+{"sentence_id": 78, "text": "The magician threw the assistant to the hat.", "context": ""}
+{"sentence_id": 79, "text": "The magician threw the hat to the assistant.", "context": ""}
+{"sentence_id": 80, "text": "The cook baked a cake Lucy.", "context": ""}
+{"sentence_id": 81, "text": "The cook baked Lucy a cake.", "context": ""}
+{"sentence_id": 82, "text": "The cook baked Lucy for a cake.", "context": ""}
+{"sentence_id": 83, "text": "The cook baked a cake for Lucy.", "context": ""}
+{"sentence_id": 84, "text": "The bartender poured a drink the customer.", "context": ""}
+{"sentence_id": 85, "text": "The bartender poured the customer a drink.", "context": ""}
+{"sentence_id": 86, "text": "The bartender poured the customer for a drink.", "context": ""}
+{"sentence_id": 87, "text": "The bartender poured a drink for the customer.", "context": ""}
+{"sentence_id": 88, "text": "The woman saved a seat her husband.", "context": ""}
+{"sentence_id": 89, "text": "The woman saved her husband a seat.", "context": ""}
+{"sentence_id": 90, "text": "The woman saved her husband for a seat.", "context": ""}
+{"sentence_id": 91, "text": "The woman saved a seat for her husband.", "context": ""}
+{"sentence_id": 92, "text": "The grandmother made a quilt her granddaughter.", "context": ""}
+{"sentence_id": 93, "text": "The grandmother made her granddaughter a quilt.", "context": ""}
+{"sentence_id": 94, "text": "The grandmother made her granddaughter for a quilt.", "context": ""}
+{"sentence_id": 95, "text": "The grandmother made a quilt for her granddaughter.", "context": ""}
+{"sentence_id": 96, "text": "The apprentice fetched a hammer the carpenter.", "context": ""}
+{"sentence_id": 97, "text": "The apprentice fetched the carpenter a hammer.", "context": ""}
+{"sentence_id": 98, "text": "The apprentice fetched the carpenter for a hammer.", "context": ""}
+{"sentence_id": 99, "text": "The apprentice fetched a hammer for the carpenter.", "context": ""}
+{"sentence_id": 100, "text": "The secretary ordered some office supplies the boss.", "context": ""}
+{"sentence_id": 101, "text": "The secretary ordered the boss some office supplies.", "context": ""}
+{"sentence_id": 102, "text": "The secretary ordered the boss for some office supplies.", "context": ""}
+{"sentence_id": 103, "text": "The secretary ordered some office supplies for the boss.", "context": ""}
+{"sentence_id": 104, "text": "The wife reserved a table her husband.", "context": ""}
+{"sentence_id": 105, "text": "The wife reserved her husband a table.", "context": ""}
+{"sentence_id": 106, "text": "The wife reserved her husband for a table.", "context": ""}
+{"sentence_id": 107, "text": "The wife reserved table for her husband.", "context": ""}
+{"sentence_id": 108, "text": "The father bought a bicycle his son.", "context": ""}
+{"sentence_id": 109, "text": "The father bought his son a bicycle.", "context": ""}
+{"sentence_id": 110, "text": "The father bought his son for a bicycle.", "context": ""}
+{"sentence_id": 111, "text": "The father bought a bicycle for his son.", "context": ""}
+{"sentence_id": 112, "text": "The charity built a house the hurricane victim.", "context": ""}
+{"sentence_id": 113, "text": "The charity built the hurricane victim a house.", "context": ""}
+{"sentence_id": 114, "text": "The charity built the hurricane victim for a house.", "context": ""}
+{"sentence_id": 115, "text": "The charity built a house for the hurricane victim.", "context": ""}
+{"sentence_id": 116, "text": "The waitress fixed a sandwich the customer.", "context": ""}
+{"sentence_id": 117, "text": "The waitress fixed the customer a sandwich.", "context": ""}
+{"sentence_id": 118, "text": "The waitress fixed the customer for a sandwich.", "context": ""}
+{"sentence_id": 119, "text": "The waitress fixed a sandwich for the customer.", "context": ""}
+{"sentence_id": 120, "text": "The grandmother baked some cookies the grandson.", "context": ""}
+{"sentence_id": 121, "text": "The grandmother baked the grandson some cookies.", "context": ""}
+{"sentence_id": 122, "text": "The grandmother baked the grandson for some cookies.", "context": ""}
+{"sentence_id": 123, "text": "The grandmother baked some cookies for the grandson.", "context": ""}
+{"sentence_id": 124, "text": "The nurse poured some water the old man.", "context": ""}
+{"sentence_id": 125, "text": "The nurse poured the old man some water.", "context": ""}
+{"sentence_id": 126, "text": "The nurse poured the old man for some water.", "context": ""}
+{"sentence_id": 127, "text": "The nurse poured some water for the old man.", "context": ""}
+{"sentence_id": 128, "text": "The receptionist saved some cake her co-worker.", "context": ""}
+{"sentence_id": 129, "text": "The receptionist saved her co-worker some cake.", "context": ""}
+{"sentence_id": 130, "text": "The receptionist saved her co-worker for some cake.", "context": ""}
+{"sentence_id": 131, "text": "The receptionist saved some cake for her co-worker.", "context": ""}
+{"sentence_id": 132, "text": "The seamstress made a dress her client.", "context": ""}
+{"sentence_id": 133, "text": "The seamstress made her client a dress.", "context": ""}
+{"sentence_id": 134, "text": "The seamstress made her client for a dress.", "context": ""}
+{"sentence_id": 135, "text": "The seamstress made a dress for her client.", "context": ""}
+{"sentence_id": 136, "text": "The lab-assistant fetched a test-tube the scientist.", "context": ""}
+{"sentence_id": 137, "text": "The lab-assistant fetched the scientist a test-tube.", "context": ""}
+{"sentence_id": 138, "text": "The lab-assistant fetched the scientist for a test-tube.", "context": ""}
+{"sentence_id": 139, "text": "The lab-assistant fetched a test-tube for the scientist.", "context": ""}
+{"sentence_id": 140, "text": "The man ordered some champagne his girlfriend.", "context": ""}
+{"sentence_id": 141, "text": "The man ordered his girlfriend some champagne.", "context": ""}
+{"sentence_id": 142, "text": "The man ordered his girlfriend for some champagne.", "context": ""}
+{"sentence_id": 143, "text": "The man ordered some champagne for his girlfriend.", "context": ""}
+{"sentence_id": 144, "text": "The travel agent reserved a flight the businessman.", "context": ""}
+{"sentence_id": 145, "text": "The travel agent reserved the businessman a flight.", "context": ""}
+{"sentence_id": 146, "text": "The travel agent reserved the businessman for a flight.", "context": ""}
+{"sentence_id": 147, "text": "The travel agent reserved a flight for the businessman.", "context": ""}
+{"sentence_id": 148, "text": "The boyfriend obtained some concert tickets his girlfriend.", "context": ""}
+{"sentence_id": 149, "text": "The boyfriend obtained his girlfriend some concert tickets.", "context": ""}
+{"sentence_id": 150, "text": "The boyfriend obtained his girlfriend for some concert tickets.", "context": ""}
+{"sentence_id": 151, "text": "The boyfriend obtained some concert tickets for his girlfriend.", "context": ""}
+{"sentence_id": 152, "text": "The church built a shelter the homeless.", "context": ""}
+{"sentence_id": 153, "text": "The church built the homeless a shelter.", "context": ""}
+{"sentence_id": 154, "text": "The church built the homeless for a shelter.", "context": ""}
+{"sentence_id": 155, "text": "The church built a shelter for the homeless.", "context": ""}
+{"sentence_id": 156, "text": "The babysitter fixed some lunch the child.", "context": ""}
+{"sentence_id": 157, "text": "The babysitter fixed the child some lunch.", "context": ""}
+{"sentence_id": 158, "text": "The babysitter fixed the child for some lunch.", "context": ""}
+{"sentence_id": 159, "text": "The babysitter fixed some lunch for the child.", "context": ""}
+{"sentence_id": 160, "text": "The tax law benefited from the businessman.", "context": ""}
+{"sentence_id": 161, "text": "The businessman benefited from the tax law.", "context": ""}
+{"sentence_id": 162, "text": "The businessman benefited the tax law.", "context": ""}
+{"sentence_id": 163, "text": "The tax law benefited the businessman.", "context": ""}
+{"sentence_id": 164, "text": "The intense practice benefited from the player.", "context": ""}
+{"sentence_id": 165, "text": "The player benefited from the intense practice.", "context": ""}
+{"sentence_id": 166, "text": "The player benefited the intense practice.", "context": ""}
+{"sentence_id": 167, "text": "The intense practice benefited the player.", "context": ""}
+{"sentence_id": 168, "text": "The extra time benefited from the child with a learning disability.", "context": ""}
+{"sentence_id": 169, "text": "The child with a learning disability benefited from the extra time.", "context": ""}
+{"sentence_id": 170, "text": "The child with a learning disability benefited the extra time.", "context": ""}
+{"sentence_id": 171, "text": "The extra time benefited the child with a learning disability.", "context": ""}
+{"sentence_id": 172, "text": "The bribes profited from the corrupt politicians.", "context": ""}
+{"sentence_id": 173, "text": "The corrupt politicians profited from the bribes.", "context": ""}
+{"sentence_id": 174, "text": "The corrupt politicians profited the bribes.", "context": ""}
+{"sentence_id": 175, "text": "The bribes profited the corrupt politicians.", "context": ""}
+{"sentence_id": 176, "text": "The contract profited from the business.", "context": ""}
+{"sentence_id": 177, "text": "The business profited from the contract.", "context": ""}
+{"sentence_id": 178, "text": "The business profited the contract.", "context": ""}
+{"sentence_id": 179, "text": "The contract profited the business.", "context": ""}
+{"sentence_id": 180, "text": "The tax reduction profited from the millionaire.", "context": ""}
+{"sentence_id": 181, "text": "The millionaire profited from the tax reduction.", "context": ""}
+{"sentence_id": 182, "text": "The millionaire profited the tax reduction.", "context": ""}
+{"sentence_id": 183, "text": "The tax reduction profited the millionaire.", "context": ""}
+{"sentence_id": 184, "text": "The new medicine deteriorated from the patient's condition.", "context": ""}
+{"sentence_id": 185, "text": "The patient's condition deteriorated from the new medicine.", "context": ""}
+{"sentence_id": 186, "text": "The patient's condition deteriorated the new medicine.", "context": ""}
+{"sentence_id": 187, "text": "The new medicine deteriorated the patient's condition.", "context": ""}
+{"sentence_id": 188, "text": "The bad lighting deteriorated from the woman's eyesight.", "context": ""}
+{"sentence_id": 189, "text": "The woman's eyesight deteriorated from the bad lighting.", "context": ""}
+{"sentence_id": 190, "text": "The woman's eyesight deteriorated the bad lighting.", "context": ""}
+{"sentence_id": 191, "text": "The bad lighting deteriorated the woman's eyesight.", "context": ""}
+{"sentence_id": 192, "text": "The long drought deteriorated from the soil.", "context": ""}
+{"sentence_id": 193, "text": "The soil deteriorated from the long drought.", "context": ""}
+{"sentence_id": 194, "text": "The soil deteriorated the long drought.", "context": ""}
+{"sentence_id": 195, "text": "The long drought deteriorated the soil.", "context": ""}
+{"sentence_id": 196, "text": "The washing machine shrank inside the new sweatshirt.", "context": ""}
+{"sentence_id": 197, "text": "The new sweatshirt shrank inside the washing machine.", "context": ""}
+{"sentence_id": 198, "text": "The new sweatshirt shrank the washing machine.", "context": ""}
+{"sentence_id": 199, "text": "The washing machine shrank the new sweatshirt.", "context": ""}
+{"sentence_id": 200, "text": "The dryer shrank inside the new cotton t-shirt.", "context": ""}
+{"sentence_id": 201, "text": "The new cotton t-shirt shrank inside the dryer.", "context": ""}
+{"sentence_id": 202, "text": "The new cotton t-shirt shrank the dryer.", "context": ""}
+{"sentence_id": 203, "text": "The dryer shrank the new cotton t-shirt.", "context": ""}
+{"sentence_id": 204, "text": "The chemotherapy shrank from the tumor.", "context": ""}
+{"sentence_id": 205, "text": "The tumor shrank from the chemotherapy.", "context": ""}
+{"sentence_id": 206, "text": "The tumor shrank the chemotherapy.", "context": ""}
+{"sentence_id": 207, "text": "The chemotherapy shrank the tumor.", "context": ""}
+{"sentence_id": 208, "text": "The hot stove melted from the plastic handle.", "context": ""}
+{"sentence_id": 209, "text": "The plastic handled melted from the hot stove.", "context": ""}
+{"sentence_id": 210, "text": "The plastic handle melted the hot stove.", "context": ""}
+{"sentence_id": 211, "text": "The hot stove melted the plastic handle.", "context": ""}
+{"sentence_id": 212, "text": "The hot coffee melted from the ice cream.", "context": ""}
+{"sentence_id": 213, "text": "The ice cream melted from the hot coffee.", "context": ""}
+{"sentence_id": 214, "text": "The ice cream melted the hot coffee.", "context": ""}
+{"sentence_id": 215, "text": "The hot coffee melted the ice cream.", "context": ""}
+{"sentence_id": 216, "text": "The microwave melted inside the butter.", "context": ""}
+{"sentence_id": 217, "text": "The butter melted inside the microwave.", "context": ""}
+{"sentence_id": 218, "text": "The butter melted the microwave.", "context": ""}
+{"sentence_id": 219, "text": "The microwave melted the butter.", "context": ""}
+{"sentence_id": 220, "text": "The humidity worsened from the eczema.", "context": ""}
+{"sentence_id": 221, "text": "The eczema worsened from the humidity.", "context": ""}
+{"sentence_id": 222, "text": "The eczema worsened the humidity.", "context": ""}
+{"sentence_id": 223, "text": "The humidity worsened the eczema.", "context": ""}
+{"sentence_id": 224, "text": "The construction noise worsened from the man's hearing.", "context": ""}
+{"sentence_id": 225, "text": "The man's hearing worsened from the construction noise.", "context": ""}
+{"sentence_id": 226, "text": "The man's hearing worsened the construction noise.", "context": ""}
+{"sentence_id": 227, "text": "The construction noise worsened the man's hearing.", "context": ""}
+{"sentence_id": 228, "text": "The earthquake shattered from the house.", "context": ""}
+{"sentence_id": 229, "text": "The house shattered from the earthquake.", "context": ""}
+{"sentence_id": 230, "text": "The house shattered the earthquake.", "context": ""}
+{"sentence_id": 231, "text": "The earthquake shattered the house.", "context": ""}
+{"sentence_id": 232, "text": "The oven defrosted inside the lasagna.", "context": ""}
+{"sentence_id": 233, "text": "The lasagna defrosted inside the oven.", "context": ""}
+{"sentence_id": 234, "text": "The lasagna defrosted the oven.", "context": ""}
+{"sentence_id": 235, "text": "The oven defrosted the lasagna.", "context": ""}
+{"sentence_id": 236, "text": "The microwave defrosted inside the broccoli.", "context": ""}
+{"sentence_id": 237, "text": "The broccoli defrosted inside the microwave.", "context": ""}
+{"sentence_id": 238, "text": "The broccoli defrosted the microwave.", "context": ""}
+{"sentence_id": 239, "text": "The microwave defrosted the broccoli.", "context": ""}

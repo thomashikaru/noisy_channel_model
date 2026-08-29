@@ -1,0 +1,382 @@
+{
+  "built_at": "2026-08-29T19:32:00+00:00",
+  "converter_sha256": "d827880d95616a3945f804744f15f95d937427f5372fa11af50979e73cfd030a",
+  "git_head_at_build": "98ae5d91835cfdec3082994234ac980012dd6b03",
+  "git_tree_dirty_at_build": false,
+  "python": "3.12.13",
+  "holdout_paths": [
+    "data/clark2026/exp_data_merged.csv",
+    "data/clark2026/lists/"
+  ],
+  "datasets": {
+    "gibson2013": {
+      "sources": {
+        "data/gibson2013/dopo_to/materials.csv": "8257c58855486b6e1ed68a032d5e6c60e8532397e05108a5118d232d603f7834",
+        "data/gibson2013/dopo_for/materials.csv": "46fa9520558690b0053bbd8853b0baf6cdbe095fc1ae7e48b78c6baf19f6fb28",
+        "data/gibson2013/transitive_intransitive/materials.csv": "28502183b7521c0b7adbb4b9b8e980a1d0651392a4a89fb0cbdc031f9255b3ff"
+      },
+      "n_rows": 240,
+      "n_inputs": 240,
+      "n_with_context": 0,
+      "rows_per_condition": {
+        "dopo_for/DO_implausible": 20,
+        "dopo_for/DO_plausible": 20,
+        "dopo_for/PO_implausible": 20,
+        "dopo_for/PO_plausible": 20,
+        "dopo_to/DO_implausible": 20,
+        "dopo_to/DO_plausible": 20,
+        "dopo_to/PO_implausible": 20,
+        "dopo_to/PO_plausible": 20,
+        "transitive_intransitive/Preposition_implausible": 20,
+        "transitive_intransitive/Preposition_plausible": 20,
+        "transitive_intransitive/Transitive_implausible": 20,
+        "transitive_intransitive/Transitive_plausible": 20
+      },
+      "edit_types": {
+        "del": 60,
+        "ins": 58,
+        "multi": 2,
+        "none": 120
+      },
+      "contrasts": {
+        "dative": 160,
+        "transitivity": 80
+      },
+      "anomalies": [
+        {
+          "kind": "counterpart_needs_multiple_edits",
+          "stim_uid": "gibson2013/dopo_for/7/DO_implausible",
+          "edit_ops": "del;ins",
+          "observed": "The wife reserved a table her husband.",
+          "intended": "The wife reserved table for her husband.",
+          "intended_uid": "gibson2013/dopo_for/7/PO_plausible"
+        },
+        {
+          "kind": "counterpart_needs_multiple_edits",
+          "stim_uid": "gibson2013/transitive_intransitive/13/Transitive_implausible",
+          "edit_ops": "sub;ins",
+          "observed": "The plastic handle melted the hot stove.",
+          "intended": "The plastic handled melted from the hot stove.",
+          "intended_uid": "gibson2013/transitive_intransitive/13/Preposition_plausible"
+        }
+      ]
+    },
+    "chen2023": {
+      "sources": {
+        "data/chen2023/dopo_to/dopo-to-no-context.txt": "695115a372592703f303cce8163e9c847315124ef251093fb5f4fc6495a5bdd4",
+        "data/chen2023/dopo_to/dopo-to-supportive.txt": "23f070458cb725300a545d2f21c819a02155415e8257c5ce7f5edea807c75014",
+        "data/chen2023/dopo_to/dopo-to-non-supportive.txt": "0c2b374867cb43a8eddf3596c42d2d3ddd666ccfd8a6e89d45b646f8b242122b",
+        "data/chen2023/active_passive/active-passive-no-context.txt": "ad12d5d93114b55f7428cf4288a064de13d6c53b3b75a5feba84e9fdce83d7ca",
+        "data/chen2023/active_passive/active-passive-supportive.txt": "8741f7b8317ee142db45cf6e5c512bac18f256ccc27deec53cabff4acc96612b",
+        "data/chen2023/active_passive/active-passive-non-supportive.txt": "630385c50eaf67345b93e42bdc4263a744326c91acc0fda16453cfcdfabb34df"
+      },
+      "n_rows": 480,
+      "n_inputs": 480,
+      "n_with_context": 320,
+      "rows_per_condition": {
+        "active_passive/active_implausible.non_supportive": 20,
+        "active_passive/active_implausible.none": 20,
+        "active_passive/active_implausible.supportive": 20,
+        "active_passive/active_plausible.non_supportive": 20,
+        "active_passive/active_plausible.none": 20,
+        "active_passive/active_plausible.supportive": 20,
+        "active_passive/passive_implausible.non_supportive": 20,
+        "active_passive/passive_implausible.none": 20,
+        "active_passive/passive_implausible.supportive": 20,
+        "active_passive/passive_plausible.non_supportive": 20,
+        "active_passive/passive_plausible.none": 20,
+        "active_passive/passive_plausible.supportive": 20,
+        "dopo_to/DO_implausible.non_supportive": 20,
+        "dopo_to/DO_implausible.none": 20,
+        "dopo_to/DO_implausible.supportive": 20,
+        "dopo_to/DO_plausible.non_supportive": 20,
+        "dopo_to/DO_plausible.none": 20,
+        "dopo_to/DO_plausible.supportive": 20,
+        "dopo_to/PO_implausible.non_supportive": 20,
+        "dopo_to/PO_implausible.none": 20,
+        "dopo_to/PO_implausible.supportive": 20,
+        "dopo_to/PO_plausible.non_supportive": 20,
+        "dopo_to/PO_plausible.none": 20,
+        "dopo_to/PO_plausible.supportive": 20
+      },
+      "edit_types": {
+        "del": 60,
+        "ins": 60,
+        "multi": 90,
+        "none": 240,
+        "sub": 30
+      },
+      "contrasts": {
+        "dative": 240,
+        "voice": 240
+      },
+      "anomalies": []
+    },
+    "ryskin2021": {
+      "sources": {
+        "data/ryskin2021/materials.csv": "5dbab33bccd20382f6f3f56506ad0e704aa911a1f0274f64ae6ee2c6be09cc5d"
+      },
+      "n_rows": 504,
+      "n_inputs": 504,
+      "n_with_context": 0,
+      "rows_per_condition": {
+        "Control": 126,
+        "Sem": 126,
+        "SemCrit": 126,
+        "Synt": 126
+      },
+      "edit_types": {
+        "none": 126,
+        "sub": 378
+      },
+      "contrasts": {
+        "word_form": 504
+      },
+      "anomalies": []
+    },
+    "qian2023": {
+      "sources": {
+        "data/qian2023/materials.csv": "82fcb6af0bf7787561d28b987c3008b2b9ad698d42be5a17db70b459c0298a19"
+      },
+      "n_rows": 480,
+      "n_inputs": 472,
+      "n_with_context": 0,
+      "rows_per_condition": {
+        "ppp": 60,
+        "pps": 60,
+        "psp": 60,
+        "pss": 60,
+        "spp": 60,
+        "sps": 60,
+        "ssp": 60,
+        "sss": 60
+      },
+      "edit_types": {
+        "none": 240,
+        "sub": 240
+      },
+      "contrasts": {
+        "agreement": 480
+      },
+      "anomalies": [
+        {
+          "kind": "conditions_share_one_sentence",
+          "item_id": "55",
+          "subset": "",
+          "conditions": [
+            "sps",
+            "sss"
+          ],
+          "text": "The waiter at the restaurant has cleaned the room."
+        },
+        {
+          "kind": "conditions_share_one_sentence",
+          "item_id": "55",
+          "subset": "",
+          "conditions": [
+            "spp",
+            "ssp"
+          ],
+          "text": "The waiter at the restaurant have cleaned the room."
+        },
+        {
+          "kind": "conditions_share_one_sentence",
+          "item_id": "55",
+          "subset": "",
+          "conditions": [
+            "pps",
+            "pss"
+          ],
+          "text": "The waiters at the restaurant has cleaned the room."
+        },
+        {
+          "kind": "conditions_share_one_sentence",
+          "item_id": "55",
+          "subset": "",
+          "conditions": [
+            "ppp",
+            "psp"
+          ],
+          "text": "The waiters at the restaurant have cleaned the room."
+        },
+        {
+          "kind": "conditions_share_one_sentence",
+          "item_id": "57",
+          "subset": "",
+          "conditions": [
+            "sps",
+            "sss"
+          ],
+          "text": "The rice in the bowl is undercooked."
+        },
+        {
+          "kind": "conditions_share_one_sentence",
+          "item_id": "57",
+          "subset": "",
+          "conditions": [
+            "spp",
+            "ssp"
+          ],
+          "text": "The rice in the bowl are undercooked."
+        },
+        {
+          "kind": "conditions_share_one_sentence",
+          "item_id": "57",
+          "subset": "",
+          "conditions": [
+            "pps",
+            "pss"
+          ],
+          "text": "The rices in the bowl is undercooked."
+        },
+        {
+          "kind": "conditions_share_one_sentence",
+          "item_id": "57",
+          "subset": "",
+          "conditions": [
+            "ppp",
+            "psp"
+          ],
+          "text": "The rices in the bowl are undercooked."
+        }
+      ]
+    },
+    "huang2024": {
+      "sources": {
+        "data/huang2024/items_ClassicGP.pivot.csv": "fb743af2ea93c4eb0552984724977681ee9727022c1eb1c5ba7046ef586f40d5"
+      },
+      "n_rows": 144,
+      "n_inputs": 144,
+      "n_with_context": 0,
+      "rows_per_condition": {
+        "MVRR_AMB": 24,
+        "MVRR_UAMB": 24,
+        "NPS_AMB": 24,
+        "NPS_UAMB": 24,
+        "NPZ_AMB": 24,
+        "NPZ_UAMB": 24
+      },
+      "edit_types": {
+        "ins": 48,
+        "multi": 1,
+        "none": 72,
+        "sub": 23
+      },
+      "contrasts": {
+        "disambiguator": 144
+      },
+      "anomalies": [
+        {
+          "kind": "counterpart_needs_multiple_edits",
+          "stim_uid": "huang2024//14/NPZ_AMB",
+          "edit_ops": "sub;ins",
+          "observed": "After the basketball player signed the contract created another controversy in the NBA.",
+          "intended": "After the basketball player signed, the contract created another political controversy in the NBA.",
+          "intended_uid": "huang2024//14/NPZ_UAMB"
+        }
+      ]
+    },
+    "clark2026": {
+      "sources": {
+        "data/clark2026/raw_materials.csv": "52d6659228771d77643c5e392610c8af4f19f6216bcbbc163a7de731ac50feb6",
+        "data/clark2026/materials.csv": "d148929f2225772d92d3fa3ce701745f6687634d25ebd897fa73336bccc691ba"
+      },
+      "n_rows": 360,
+      "n_inputs": 360,
+      "n_with_context": 0,
+      "rows_per_condition": {
+        "1.1": 36,
+        "1.2": 36,
+        "1.Control": 36,
+        "2.1": 36,
+        "2.2": 36,
+        "2.Control": 36,
+        "Control.1": 36,
+        "Control.2": 36,
+        "Typo1.1": 36,
+        "Typo2.2": 36
+      },
+      "edit_types": {
+        "": 144,
+        "none": 72,
+        "sub": 144
+      },
+      "contrasts": {
+        "typo": 72,
+        "word_form": 144
+      },
+      "anomalies": []
+    },
+    "tabor2004": {
+      "sources": {
+        "data/tabor2004/items.csv": "f4030aadc67662f22c4d14a8ee5ee6a6b1d089a038bdb8c321079059bd01175e"
+      },
+      "n_rows": 128,
+      "n_inputs": 128,
+      "n_with_context": 0,
+      "rows_per_condition": {
+        "nonreduced_global": 32,
+        "nonreduced_local": 32,
+        "reduced_global": 32,
+        "reduced_local": 32
+      },
+      "edit_types": {
+        "ins": 64,
+        "none": 64
+      },
+      "contrasts": {
+        "relativizer": 128
+      },
+      "anomalies": []
+    },
+    "moses": {
+      "sources": {
+        "data/moses/raw_materials.csv": "705aa7bc54848d80aaeb427cfab91e2bcf71627b4ecbff4f1b98b9e813dee384"
+      },
+      "n_rows": 1,
+      "n_inputs": 1,
+      "n_with_context": 0,
+      "rows_per_condition": {
+        "demo": 1
+      },
+      "edit_types": {
+        "": 1
+      },
+      "contrasts": {},
+      "anomalies": []
+    },
+    "smoke": {
+      "sources": {},
+      "n_rows": 8,
+      "n_inputs": 8,
+      "n_with_context": 1,
+      "from": [
+        "gibson2013/dopo_to/2/DO_implausible",
+        "gibson2013/dopo_to/2/PO_implausible",
+        "ryskin2021//56/SemCrit",
+        "qian2023//35/pss",
+        "huang2024//1/NPZ_AMB",
+        "clark2026//0/2.1",
+        "tabor2004//e1_16/reduced_local",
+        "chen2023/dopo_to/2/DO_implausible.supportive"
+      ]
+    },
+    "probe": {
+      "sources": {},
+      "n_rows": 9,
+      "n_inputs": 9,
+      "n_with_context": 2,
+      "from": [
+        "gibson2013/transitive_intransitive/3/Preposition_plausible",
+        "chen2023/dopo_to/8/PO_plausible.supportive",
+        "ryskin2021//99/Synt",
+        "qian2023//25/sss",
+        "huang2024//10/MVRR_UAMB",
+        "clark2026//3/2.Control",
+        "tabor2004//e1_4/nonreduced_local",
+        "moses//1/demo",
+        "chen2023/active_passive/20/passive_plausible.supportive"
+      ]
+    }
+  }
+}
