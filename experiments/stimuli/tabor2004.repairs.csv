@@ -1,0 +1,129 @@
+dataset,stim_uid,intended_uid,intended_text,edit_type,edit_ops,edit_from,edit_to,edit_obs_idx,n_repairs_for_stim
+tabor2004,tabor2004//e1_1/nonreduced_global,tabor2004//e1_1/nonreduced_global,The kindergartners liked the little girl who was chosen a toy by her parents.,none,,,,,1
+tabor2004,tabor2004//e1_1/reduced_global,tabor2004//e1_1/nonreduced_global,The kindergartners liked the little girl who was chosen a toy by her parents.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_1/nonreduced_local,tabor2004//e1_1/nonreduced_local,The kindergartners liked the little girl who was brought a toy by her parents.,none,,,,,1
+tabor2004,tabor2004//e1_1/reduced_local,tabor2004//e1_1/nonreduced_local,The kindergartners liked the little girl who was brought a toy by her parents.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_2/nonreduced_global,tabor2004//e1_2/nonreduced_global,We saw a movie about an artist who was drawn a picture by her father.,none,,,,,1
+tabor2004,tabor2004//e1_2/reduced_global,tabor2004//e1_2/nonreduced_global,We saw a movie about an artist who was drawn a picture by her father.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_2/nonreduced_local,tabor2004//e1_2/nonreduced_local,We saw a movie about an artist who was painted a picture by her father.,none,,,,,1
+tabor2004,tabor2004//e1_2/reduced_local,tabor2004//e1_2/nonreduced_local,We saw a movie about an artist who was painted a picture by her father.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_3/nonreduced_global,tabor2004//e1_3/nonreduced_global,The health officials pounced on a restaurant which was flown a shipment of salmon by a company.,none,,,,,1
+tabor2004,tabor2004//e1_3/reduced_global,tabor2004//e1_3/nonreduced_global,The health officials pounced on a restaurant which was flown a shipment of salmon by a company.,ins,ins,,which was,,1
+tabor2004,tabor2004//e1_3/nonreduced_local,tabor2004//e1_3/nonreduced_local,The health officials pounced on a restaurant which was sent a shipment of salmon by a company.,none,,,,,1
+tabor2004,tabor2004//e1_3/reduced_local,tabor2004//e1_3/nonreduced_local,The health officials pounced on a restaurant which was sent a shipment of salmon by a company.,ins,ins,,which was,,1
+tabor2004,tabor2004//e1_4/nonreduced_global,tabor2004//e1_4/nonreduced_global,"At the dinner party, I met a man who was forbidden the pleasure of eating sweets by his doctor.",none,,,,,1
+tabor2004,tabor2004//e1_4/reduced_global,tabor2004//e1_4/nonreduced_global,"At the dinner party, I met a man who was forbidden the pleasure of eating sweets by his doctor.",ins,ins,,who was,,1
+tabor2004,tabor2004//e1_4/nonreduced_local,tabor2004//e1_4/nonreduced_local,"At the dinner party, I met a man who was allowed the pleasure of eating sweets by his doctor.",none,,,,,1
+tabor2004,tabor2004//e1_4/reduced_local,tabor2004//e1_4/nonreduced_local,"At the dinner party, I met a man who was allowed the pleasure of eating sweets by his doctor.",ins,ins,,who was,,1
+tabor2004,tabor2004//e1_5/nonreduced_global,tabor2004//e1_5/nonreduced_global,One should respect a man who is forgiven his sins by his own god.,none,,,,,1
+tabor2004,tabor2004//e1_5/reduced_global,tabor2004//e1_5/nonreduced_global,One should respect a man who is forgiven his sins by his own god.,ins,ins,,who is,,1
+tabor2004,tabor2004//e1_5/nonreduced_local,tabor2004//e1_5/nonreduced_local,One should respect a man who is told his sins by his own god.,none,,,,,1
+tabor2004,tabor2004//e1_5/reduced_local,tabor2004//e1_5/nonreduced_local,One should respect a man who is told his sins by his own god.,ins,ins,,who is,,1
+tabor2004,tabor2004//e1_6/nonreduced_global,tabor2004//e1_6/nonreduced_global,An elderly gentleman addressed the woman who was given a beer by the hostess.,none,,,,,1
+tabor2004,tabor2004//e1_6/reduced_global,tabor2004//e1_6/nonreduced_global,An elderly gentleman addressed the woman who was given a beer by the hostess.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_6/nonreduced_local,tabor2004//e1_6/nonreduced_local,An elderly gentleman addressed the woman who was offered a beer by the hostess.,none,,,,,1
+tabor2004,tabor2004//e1_6/reduced_local,tabor2004//e1_6/nonreduced_local,An elderly gentleman addressed the woman who was offered a beer by the hostess.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_8/nonreduced_global,tabor2004//e1_8/nonreduced_global,The manager watched a waiter who was given pea soup by a trainee.,none,,,,,1
+tabor2004,tabor2004//e1_8/reduced_global,tabor2004//e1_8/nonreduced_global,The manager watched a waiter who was given pea soup by a trainee.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_8/nonreduced_local,tabor2004//e1_8/nonreduced_local,The manager watched a waiter who was served pea soup by a trainee.,none,,,,,1
+tabor2004,tabor2004//e1_8/reduced_local,tabor2004//e1_8/nonreduced_local,The manager watched a waiter who was served pea soup by a trainee.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_10/nonreduced_global,tabor2004//e1_10/nonreduced_global,The foreman yelled at a carpenter who was sawn a board by his buddy.,none,,,,,1
+tabor2004,tabor2004//e1_10/reduced_global,tabor2004//e1_10/nonreduced_global,The foreman yelled at a carpenter who was sawn a board by his buddy.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_10/nonreduced_local,tabor2004//e1_10/nonreduced_local,The foreman yelled at a carpenter who was cut a board by his buddy.,none,,,,,1
+tabor2004,tabor2004//e1_10/reduced_local,tabor2004//e1_10/nonreduced_local,The foreman yelled at a carpenter who was cut a board by his buddy.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_11/nonreduced_global,tabor2004//e1_11/nonreduced_global,The preschool teacher congratulated the little boy who was sewn a hat by his grandmother.,none,,,,,1
+tabor2004,tabor2004//e1_11/reduced_global,tabor2004//e1_11/nonreduced_global,The preschool teacher congratulated the little boy who was sewn a hat by his grandmother.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_11/nonreduced_local,tabor2004//e1_11/nonreduced_local,The preschool teacher congratulated the little boy who was knitted a hat by his grandmother.,none,,,,,1
+tabor2004,tabor2004//e1_11/reduced_local,tabor2004//e1_11/nonreduced_local,The preschool teacher congratulated the little boy who was knitted a hat by his grandmother.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_12/nonreduced_global,tabor2004//e1_12/nonreduced_global,The janitor chatted with the young man who was shown an apartment by his uncle.,none,,,,,1
+tabor2004,tabor2004//e1_12/reduced_global,tabor2004//e1_12/nonreduced_global,The janitor chatted with the young man who was shown an apartment by his uncle.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_12/nonreduced_local,tabor2004//e1_12/nonreduced_local,The janitor chatted with the young man who was rented an apartment by his uncle.,none,,,,,1
+tabor2004,tabor2004//e1_12/reduced_local,tabor2004//e1_12/nonreduced_local,The janitor chatted with the young man who was rented an apartment by his uncle.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_14/nonreduced_global,tabor2004//e1_14/nonreduced_global,The play centered around an innkeeper who was sung a verse by a traveling monk.,none,,,,,1
+tabor2004,tabor2004//e1_14/reduced_global,tabor2004//e1_14/nonreduced_global,The play centered around an innkeeper who was sung a verse by a traveling monk.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_14/nonreduced_local,tabor2004//e1_14/nonreduced_local,The play centered around an innkeeper who was recited a verse by a traveling monk.,none,,,,,1
+tabor2004,tabor2004//e1_14/reduced_local,tabor2004//e1_14/nonreduced_local,The play centered around an innkeeper who was recited a verse by a traveling monk.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_15/nonreduced_global,tabor2004//e1_15/nonreduced_global,The hotel owner questioned a guest who was taken a drink by the bellboy.,none,,,,,1
+tabor2004,tabor2004//e1_15/reduced_global,tabor2004//e1_15/nonreduced_global,The hotel owner questioned a guest who was taken a drink by the bellboy.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_15/nonreduced_local,tabor2004//e1_15/nonreduced_local,The hotel owner questioned a guest who was brought a drink by the bellboy.,none,,,,,1
+tabor2004,tabor2004//e1_15/reduced_local,tabor2004//e1_15/nonreduced_local,The hotel owner questioned a guest who was brought a drink by the bellboy.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_16/nonreduced_global,tabor2004//e1_16/nonreduced_global,The coach smiled at the player who was thrown a frisbee by the opposing team.,none,,,,,1
+tabor2004,tabor2004//e1_16/reduced_global,tabor2004//e1_16/nonreduced_global,The coach smiled at the player who was thrown a frisbee by the opposing team.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_16/nonreduced_local,tabor2004//e1_16/nonreduced_local,The coach smiled at the player who was tossed a frisbee by the opposing team.,none,,,,,1
+tabor2004,tabor2004//e1_16/reduced_local,tabor2004//e1_16/nonreduced_local,The coach smiled at the player who was tossed a frisbee by the opposing team.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_17/nonreduced_global,tabor2004//e1_17/nonreduced_global,The anthropologist interviewed a woman who was woven a shawl by her mother.,none,,,,,1
+tabor2004,tabor2004//e1_17/reduced_global,tabor2004//e1_17/nonreduced_global,The anthropologist interviewed a woman who was woven a shawl by her mother.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_17/nonreduced_local,tabor2004//e1_17/nonreduced_local,The anthropologist interviewed a woman who was knitted a shawl by her mother.,none,,,,,1
+tabor2004,tabor2004//e1_17/reduced_local,tabor2004//e1_17/nonreduced_local,The anthropologist interviewed a woman who was knitted a shawl by her mother.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_18/nonreduced_global,tabor2004//e1_18/nonreduced_global,The FBI questioned a congressman who was written a letter by the activist.,none,,,,,1
+tabor2004,tabor2004//e1_18/reduced_global,tabor2004//e1_18/nonreduced_global,The FBI questioned a congressman who was written a letter by the activist.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_18/nonreduced_local,tabor2004//e1_18/nonreduced_local,The FBI questioned a congressman who was mailed a letter by the activist.,none,,,,,1
+tabor2004,tabor2004//e1_18/reduced_local,tabor2004//e1_18/nonreduced_local,The FBI questioned a congressman who was mailed a letter by the activist.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_19/nonreduced_global,tabor2004//e1_19/nonreduced_global,The deliveryman teased the accountant who was given a coupon by her boss.,none,,,,,1
+tabor2004,tabor2004//e1_19/reduced_global,tabor2004//e1_19/nonreduced_global,The deliveryman teased the accountant who was given a coupon by her boss.,ins,ins,,who was,,1
+tabor2004,tabor2004//e1_19/nonreduced_local,tabor2004//e1_19/nonreduced_local,The deliveryman teased the accountant who was saved a coupon by her boss.,none,,,,,1
+tabor2004,tabor2004//e1_19/reduced_local,tabor2004//e1_19/nonreduced_local,The deliveryman teased the accountant who was saved a coupon by her boss.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_1/nonreduced_global,tabor2004//e2_1/nonreduced_global,The man reminded us of the evidence that was examined the previous day by the lawyer.,none,,,,,1
+tabor2004,tabor2004//e2_1/reduced_global,tabor2004//e2_1/nonreduced_global,The man reminded us of the evidence that was examined the previous day by the lawyer.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_1/nonreduced_local,tabor2004//e2_1/nonreduced_local,The man reminded us of the defendant who was examined the previous day by the lawyer.,none,,,,,1
+tabor2004,tabor2004//e2_1/reduced_local,tabor2004//e2_1/nonreduced_local,The man reminded us of the defendant who was examined the previous day by the lawyer.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_2/nonreduced_global,tabor2004//e2_2/nonreduced_global,The bandit talked remorsefully of the gold that was transported the whole way by the guards.,none,,,,,1
+tabor2004,tabor2004//e2_2/reduced_global,tabor2004//e2_2/nonreduced_global,The bandit talked remorsefully of the gold that was transported the whole way by the guards.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_2/nonreduced_local,tabor2004//e2_2/nonreduced_local,The bandit talked remorsefully of the prisoner who was transported the whole way by the guards.,none,,,,,1
+tabor2004,tabor2004//e2_2/reduced_local,tabor2004//e2_2/nonreduced_local,The bandit talked remorsefully of the prisoner who was transported the whole way by the guards.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_4/nonreduced_global,tabor2004//e2_4/nonreduced_global,The foreman worried about the bricks that were lifted the whole way by the crane.,none,,,,,1
+tabor2004,tabor2004//e2_4/reduced_global,tabor2004//e2_4/nonreduced_global,The foreman worried about the bricks that were lifted the whole way by the crane.,ins,ins,,that were,,1
+tabor2004,tabor2004//e2_4/nonreduced_local,tabor2004//e2_4/nonreduced_local,The foreman worried about the workers who were lifted the whole way by the crane.,none,,,,,1
+tabor2004,tabor2004//e2_4/reduced_local,tabor2004//e2_4/nonreduced_local,The foreman worried about the workers who were lifted the whole way by the crane.,ins,ins,,who were,,1
+tabor2004,tabor2004//e2_6/nonreduced_global,tabor2004//e2_6/nonreduced_global,The master of ceremonies discussed the recipe that was selected the third time by the judges.,none,,,,,1
+tabor2004,tabor2004//e2_6/reduced_global,tabor2004//e2_6/nonreduced_global,The master of ceremonies discussed the recipe that was selected the third time by the judges.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_6/nonreduced_local,tabor2004//e2_6/nonreduced_local,The master of ceremonies discussed the contestant who was selected the third time by the judges.,none,,,,,1
+tabor2004,tabor2004//e2_6/reduced_local,tabor2004//e2_6/nonreduced_local,The master of ceremonies discussed the contestant who was selected the third time by the judges.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_7/nonreduced_global,tabor2004//e2_7/nonreduced_global,The doctor spoke highly of the equipment that was requested the second time by the hospital.,none,,,,,1
+tabor2004,tabor2004//e2_7/reduced_global,tabor2004//e2_7/nonreduced_global,The doctor spoke highly of the equipment that was requested the second time by the hospital.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_7/nonreduced_local,tabor2004//e2_7/nonreduced_local,The doctor spoke highly of the specialist who was requested the second time by the hospital.,none,,,,,1
+tabor2004,tabor2004//e2_7/reduced_local,tabor2004//e2_7/nonreduced_local,The doctor spoke highly of the specialist who was requested the second time by the hospital.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_8/nonreduced_global,tabor2004//e2_8/nonreduced_global,The police took pictures of the jewelry that was identified the first night by the victim.,none,,,,,1
+tabor2004,tabor2004//e2_8/reduced_global,tabor2004//e2_8/nonreduced_global,The police took pictures of the jewelry that was identified the first night by the victim.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_8/nonreduced_local,tabor2004//e2_8/nonreduced_local,The police took pictures of the thief who was identified the first night by the victim.,none,,,,,1
+tabor2004,tabor2004//e2_8/reduced_local,tabor2004//e2_8/nonreduced_local,The police took pictures of the thief who was identified the first night by the victim.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_9/nonreduced_global,tabor2004//e2_9/nonreduced_global,The general thought about the valley that was captured the previous day by the troops.,none,,,,,1
+tabor2004,tabor2004//e2_9/reduced_global,tabor2004//e2_9/nonreduced_global,The general thought about the valley that was captured the previous day by the troops.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_9/nonreduced_local,tabor2004//e2_9/nonreduced_local,The general thought about the soldier who was captured the previous day by the troops.,none,,,,,1
+tabor2004,tabor2004//e2_9/reduced_local,tabor2004//e2_9/nonreduced_local,The general thought about the soldier who was captured the previous day by the troops.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_10/nonreduced_global,tabor2004//e2_10/nonreduced_global,The governor sent reinforcements to the power plant that was attacked the previous week by the terrorists.,none,,,,,1
+tabor2004,tabor2004//e2_10/reduced_global,tabor2004//e2_10/nonreduced_global,The governor sent reinforcements to the power plant that was attacked the previous week by the terrorists.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_10/nonreduced_local,tabor2004//e2_10/nonreduced_local,The governor sent reinforcements to the troops who were attacked the previous week by the terrorists.,none,,,,,1
+tabor2004,tabor2004//e2_10/reduced_local,tabor2004//e2_10/nonreduced_local,The governor sent reinforcements to the troops who were attacked the previous week by the terrorists.,ins,ins,,who were,,1
+tabor2004,tabor2004//e2_11/nonreduced_global,tabor2004//e2_11/nonreduced_global,The curator criticized the painting that was studied the previous term by the students.,none,,,,,1
+tabor2004,tabor2004//e2_11/reduced_global,tabor2004//e2_11/nonreduced_global,The curator criticized the painting that was studied the previous term by the students.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_11/nonreduced_local,tabor2004//e2_11/nonreduced_local,The curator criticized the artist who was studied the previous term by the students.,none,,,,,1
+tabor2004,tabor2004//e2_11/reduced_local,tabor2004//e2_11/nonreduced_local,The curator criticized the artist who was studied the previous term by the students.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_12/nonreduced_global,tabor2004//e2_12/nonreduced_global,The governess identified the necklace that was described the first time by the lady.,none,,,,,1
+tabor2004,tabor2004//e2_12/reduced_global,tabor2004//e2_12/nonreduced_global,The governess identified the necklace that was described the first time by the lady.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_12/nonreduced_local,tabor2004//e2_12/nonreduced_local,The governess identified the boy who was described the first time by the lady.,none,,,,,1
+tabor2004,tabor2004//e2_12/reduced_local,tabor2004//e2_12/nonreduced_local,The governess identified the boy who was described the first time by the lady.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_14/nonreduced_global,tabor2004//e2_14/nonreduced_global,The children were worried about the sofa that was scratched the first day by the cat.,none,,,,,1
+tabor2004,tabor2004//e2_14/reduced_global,tabor2004//e2_14/nonreduced_global,The children were worried about the sofa that was scratched the first day by the cat.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_14/nonreduced_local,tabor2004//e2_14/nonreduced_local,The children were worried about the woman who was scratched the first day by the cat.,none,,,,,1
+tabor2004,tabor2004//e2_14/reduced_local,tabor2004//e2_14/nonreduced_local,The children were worried about the woman who was scratched the first day by the cat.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_15/nonreduced_global,tabor2004//e2_15/nonreduced_global,The agent photographed the van that was recognized the previous day by the spy.,none,,,,,1
+tabor2004,tabor2004//e2_15/reduced_global,tabor2004//e2_15/nonreduced_global,The agent photographed the van that was recognized the previous day by the spy.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_15/nonreduced_local,tabor2004//e2_15/nonreduced_local,The agent photographed the man who was recognized the previous day by the spy.,none,,,,,1
+tabor2004,tabor2004//e2_15/reduced_local,tabor2004//e2_15/nonreduced_local,The agent photographed the man who was recognized the previous day by the spy.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_16/nonreduced_global,tabor2004//e2_16/nonreduced_global,The manager was concerned about the account that was observed the previous month by the agents.,none,,,,,1
+tabor2004,tabor2004//e2_16/reduced_global,tabor2004//e2_16/nonreduced_global,The manager was concerned about the account that was observed the previous month by the agents.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_16/nonreduced_local,tabor2004//e2_16/nonreduced_local,The manager was concerned about the client who was observed the previous month by the agents.,none,,,,,1
+tabor2004,tabor2004//e2_16/reduced_local,tabor2004//e2_16/nonreduced_local,The manager was concerned about the client who was observed the previous month by the agents.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_17/nonreduced_global,tabor2004//e2_17/nonreduced_global,The activist admired the solution that was proposed the first time by the group.,none,,,,,1
+tabor2004,tabor2004//e2_17/reduced_global,tabor2004//e2_17/nonreduced_global,The activist admired the solution that was proposed the first time by the group.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_17/nonreduced_local,tabor2004//e2_17/nonreduced_local,The activist admired the speaker who was proposed the first time by the group.,none,,,,,1
+tabor2004,tabor2004//e2_17/reduced_local,tabor2004//e2_17/nonreduced_local,The activist admired the speaker who was proposed the first time by the group.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_18/nonreduced_global,tabor2004//e2_18/nonreduced_global,The congresswoman was referring to the package that was sent the first time by the governor.,none,,,,,1
+tabor2004,tabor2004//e2_18/reduced_global,tabor2004//e2_18/nonreduced_global,The congresswoman was referring to the package that was sent the first time by the governor.,ins,ins,,that was,,1
+tabor2004,tabor2004//e2_18/nonreduced_local,tabor2004//e2_18/nonreduced_local,The congresswoman was referring to the lawyer who was sent the first time by the governor.,none,,,,,1
+tabor2004,tabor2004//e2_18/reduced_local,tabor2004//e2_18/nonreduced_local,The congresswoman was referring to the lawyer who was sent the first time by the governor.,ins,ins,,who was,,1
+tabor2004,tabor2004//e2_19/nonreduced_global,tabor2004//e2_19/nonreduced_global,The board was concerned about the awards that were accepted the first year by the school.,none,,,,,1
+tabor2004,tabor2004//e2_19/reduced_global,tabor2004//e2_19/nonreduced_global,The board was concerned about the awards that were accepted the first year by the school.,ins,ins,,that were,,1
+tabor2004,tabor2004//e2_19/nonreduced_local,tabor2004//e2_19/nonreduced_local,The board was concerned about the students who were accepted the first year by the school.,none,,,,,1
+tabor2004,tabor2004//e2_19/reduced_local,tabor2004//e2_19/nonreduced_local,The board was concerned about the students who were accepted the first year by the school.,ins,ins,,who were,,1

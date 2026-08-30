@@ -58,7 +58,7 @@ def convert():
             sentence_norm=normalize(r["sentence"]),
             model_input=model_input,
             contrast="relativizer",
-            intended_uid=uid("tabor2004", r["item_nr"], f"nonreduced_{r['coherence']}"),
+            intended_uids=[uid("tabor2004", r["item_nr"], f"nonreduced_{r['coherence']}")],
             critical_word_idx=idx,
             comprehension_q=r["question"],
             correct_answer=r["corr_ans"],

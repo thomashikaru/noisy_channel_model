@@ -217,9 +217,9 @@ def uid(dataset: str, item_id: str, condition: str, subset: str = "") -> str:
 class StimRow:
     """One (item, condition) stimulus in the common schema.
 
-    Converters fill everything except ``sentence_id`` and the resolved intended fields
-    (``intended_text``, ``edit_type``, ``edit_ops``, ``edit_from``, ``edit_to``), which
-    ``build_stimuli.py`` derives once every row exists.
+    Converters fill everything except ``sentence_id``, which ``build_stimuli.py`` assigns, and
+    the resolved repair detail, which it derives into ``<dataset>.repairs.csv`` once every row
+    exists.
     """
 
     dataset: str
@@ -233,12 +233,11 @@ class StimRow:
     plausibility: str = ""           # "plausible" / "implausible" / "" when not applicable
     is_grammatical: bool | None = None
     contrast: str = ""               # what the design varies between this row and its counterpart
-    intended_uid: str = ""           # stim_uid of the counterpart; "" when none is defined
-    intended_text: str = ""          # resolved by build_stimuli
-    edit_type: str = ""              # resolved by build_stimuli
-    edit_ops: str = ""               # resolved by build_stimuli
-    edit_from: str = ""              # resolved by build_stimuli
-    edit_to: str = ""                # resolved by build_stimuli
+    intended_uids: list[str] = field(default_factory=list)
+    # ^ every reading a noisy-channel reader could recover, with NO ordering or primacy among
+    #   them.  Usually one; qian2023 has two (fix the verb or fix the noun) and neither is "the"
+    #   intended sentence.  The per-repair detail -- text, edit class, reachability -- lives in
+    #   <dataset>.repairs.csv, one row per (stimulus, repair); see build_stimuli.resolve_repairs.
     critical_word_idx: int | None = None   # 0-based, into model_input's whitespace tokens
     comprehension_q: str = ""        # normative answer key, NOT human data
     correct_answer: str = ""
@@ -252,6 +251,8 @@ class StimRow:
     def as_csv_row(self) -> dict:
         d = dataclasses.asdict(self)
         d["meta"] = json.dumps(self.meta, sort_keys=True, ensure_ascii=False)
+        d["intended_uids"] = ";".join(self.intended_uids)   # uids contain no ";"
+        d["n_intended"] = len(self.intended_uids)
         d["is_grammatical"] = "" if self.is_grammatical is None else int(self.is_grammatical)
         d["critical_word_idx"] = "" if self.critical_word_idx is None else self.critical_word_idx
         d["stim_uid"] = self.stim_uid
@@ -263,6 +264,12 @@ CSV_FIELDS = [
     "dataset", "subset", "item_id", "condition", "stim_uid",
     "sentence_orig", "sentence_norm", "model_input", "context", "sentence_id",
     "plausibility", "is_grammatical", "contrast",
-    "intended_uid", "intended_text", "edit_type", "edit_ops", "edit_from", "edit_to",
+    "intended_uids", "n_intended",
     "critical_word_idx", "comprehension_q", "correct_answer", "meta",
+]
+
+#: Column order of ``<dataset>.repairs.csv`` -- one row per (stimulus, admissible repair).
+REPAIR_FIELDS = [
+    "dataset", "stim_uid", "intended_uid", "intended_text",
+    "edit_type", "edit_ops", "edit_from", "edit_to", "edit_obs_idx", "n_repairs_for_stim",
 ]

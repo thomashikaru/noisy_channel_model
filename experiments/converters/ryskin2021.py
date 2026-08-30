@@ -35,5 +35,5 @@ def convert():
             model_input=standardize(r["sentence"]),
             plausibility="plausible" if r["Condition"] == "Control" else "implausible",
             contrast="word_form",
-            intended_uid=uid("ryskin2021", r["Item"], "Control"),
+            intended_uids=[uid("ryskin2021", r["Item"], "Control")],
         )

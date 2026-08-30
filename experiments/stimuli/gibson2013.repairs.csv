@@ -1,0 +1,241 @@
+dataset,stim_uid,intended_uid,intended_text,edit_type,edit_ops,edit_from,edit_to,edit_obs_idx,n_repairs_for_stim
+gibson2013,gibson2013/dopo_to/1/DO_implausible,gibson2013/dopo_to/1/PO_plausible,The sister mailed the letter to the niece.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/1/DO_plausible,gibson2013/dopo_to/1/DO_plausible,The sister mailed the niece the letter.,none,,,,,1
+gibson2013,gibson2013/dopo_to/1/PO_implausible,gibson2013/dopo_to/1/DO_plausible,The sister mailed the niece the letter.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/1/PO_plausible,gibson2013/dopo_to/1/PO_plausible,The sister mailed the letter to the niece.,none,,,,,1
+gibson2013,gibson2013/dopo_to/2/DO_implausible,gibson2013/dopo_to/2/PO_plausible,The mother gave the candle to the daughter.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/2/DO_plausible,gibson2013/dopo_to/2/DO_plausible,The mother gave the daughter the candle.,none,,,,,1
+gibson2013,gibson2013/dopo_to/2/PO_implausible,gibson2013/dopo_to/2/DO_plausible,The mother gave the daughter the candle.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/2/PO_plausible,gibson2013/dopo_to/2/PO_plausible,The mother gave the candle to the daughter.,none,,,,,1
+gibson2013,gibson2013/dopo_to/3/DO_implausible,gibson2013/dopo_to/3/PO_plausible,The uncle sold the truck to the father.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/3/DO_plausible,gibson2013/dopo_to/3/DO_plausible,The uncle sold the father the truck.,none,,,,,1
+gibson2013,gibson2013/dopo_to/3/PO_implausible,gibson2013/dopo_to/3/DO_plausible,The uncle sold the father the truck.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/3/PO_plausible,gibson2013/dopo_to/3/PO_plausible,The uncle sold the truck to the father.,none,,,,,1
+gibson2013,gibson2013/dopo_to/4/DO_implausible,gibson2013/dopo_to/4/PO_plausible,The contractor lent the saw to the homeowner.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/4/DO_plausible,gibson2013/dopo_to/4/DO_plausible,The contractor lent the homeowner the saw.,none,,,,,1
+gibson2013,gibson2013/dopo_to/4/PO_implausible,gibson2013/dopo_to/4/DO_plausible,The contractor lent the homeowner the saw.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/4/PO_plausible,gibson2013/dopo_to/4/PO_plausible,The contractor lent the saw to the homeowner.,none,,,,,1
+gibson2013,gibson2013/dopo_to/5/DO_implausible,gibson2013/dopo_to/5/PO_plausible,The sailing club leased the boat to the man.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/5/DO_plausible,gibson2013/dopo_to/5/DO_plausible,The sailing club leased the man the boat.,none,,,,,1
+gibson2013,gibson2013/dopo_to/5/PO_implausible,gibson2013/dopo_to/5/DO_plausible,The sailing club leased the man the boat.,del,del,to,,6,1
+gibson2013,gibson2013/dopo_to/5/PO_plausible,gibson2013/dopo_to/5/PO_plausible,The sailing club leased the boat to the man.,none,,,,,1
+gibson2013,gibson2013/dopo_to/6/DO_implausible,gibson2013/dopo_to/6/PO_plausible,The girl tossed the apple to the boy.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/6/DO_plausible,gibson2013/dopo_to/6/DO_plausible,The girl tossed the boy the apple.,none,,,,,1
+gibson2013,gibson2013/dopo_to/6/PO_implausible,gibson2013/dopo_to/6/DO_plausible,The girl tossed the boy the apple.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/6/PO_plausible,gibson2013/dopo_to/6/PO_plausible,The girl tossed the apple to the boy.,none,,,,,1
+gibson2013,gibson2013/dopo_to/7/DO_implausible,gibson2013/dopo_to/7/PO_plausible,The daughter passed the bowl to the mother.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/7/DO_plausible,gibson2013/dopo_to/7/DO_plausible,The daughter passed the mother the bowl.,none,,,,,1
+gibson2013,gibson2013/dopo_to/7/PO_implausible,gibson2013/dopo_to/7/DO_plausible,The daughter passed the mother the bowl.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/7/PO_plausible,gibson2013/dopo_to/7/PO_plausible,The daughter passed the bowl to the mother.,none,,,,,1
+gibson2013,gibson2013/dopo_to/8/DO_implausible,gibson2013/dopo_to/8/PO_plausible,The scuba instructor rented the equipment to the tourist.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/8/DO_plausible,gibson2013/dopo_to/8/DO_plausible,The scuba instructor rented the tourist the equipment.,none,,,,,1
+gibson2013,gibson2013/dopo_to/8/PO_implausible,gibson2013/dopo_to/8/DO_plausible,The scuba instructor rented the tourist the equipment.,del,del,to,,6,1
+gibson2013,gibson2013/dopo_to/8/PO_plausible,gibson2013/dopo_to/8/PO_plausible,The scuba instructor rented the equipment to the tourist.,none,,,,,1
+gibson2013,gibson2013/dopo_to/9/DO_implausible,gibson2013/dopo_to/9/PO_plausible,The boy handed the pencil to the girl.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/9/DO_plausible,gibson2013/dopo_to/9/DO_plausible,The boy handed the girl the pencil.,none,,,,,1
+gibson2013,gibson2013/dopo_to/9/PO_implausible,gibson2013/dopo_to/9/DO_plausible,The boy handed the girl the pencil.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/9/PO_plausible,gibson2013/dopo_to/9/PO_plausible,The boy handed the pencil to the girl.,none,,,,,1
+gibson2013,gibson2013/dopo_to/10/DO_implausible,gibson2013/dopo_to/10/PO_plausible,The nanny threw the toy to the child.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/10/DO_plausible,gibson2013/dopo_to/10/DO_plausible,The nanny threw the child the toy.,none,,,,,1
+gibson2013,gibson2013/dopo_to/10/PO_implausible,gibson2013/dopo_to/10/DO_plausible,The nanny threw the child the toy.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/10/PO_plausible,gibson2013/dopo_to/10/PO_plausible,The nanny threw the toy to the child.,none,,,,,1
+gibson2013,gibson2013/dopo_to/11/DO_implausible,gibson2013/dopo_to/11/PO_plausible,The nephew mailed the postcard to the aunt.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/11/DO_plausible,gibson2013/dopo_to/11/DO_plausible,The nephew mailed the aunt the postcard.,none,,,,,1
+gibson2013,gibson2013/dopo_to/11/PO_implausible,gibson2013/dopo_to/11/DO_plausible,The nephew mailed the aunt the postcard.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/11/PO_plausible,gibson2013/dopo_to/11/PO_plausible,The nephew mailed the postcard to the aunt.,none,,,,,1
+gibson2013,gibson2013/dopo_to/12/DO_implausible,gibson2013/dopo_to/12/PO_plausible,The father gave the car to the son.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/12/DO_plausible,gibson2013/dopo_to/12/DO_plausible,The father gave the son the car.,none,,,,,1
+gibson2013,gibson2013/dopo_to/12/PO_implausible,gibson2013/dopo_to/12/DO_plausible,The father gave the son the car.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/12/PO_plausible,gibson2013/dopo_to/12/PO_plausible,The father gave the car to the son.,none,,,,,1
+gibson2013,gibson2013/dopo_to/13/DO_implausible,gibson2013/dopo_to/13/PO_plausible,The shop sold the bike to the student.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/13/DO_plausible,gibson2013/dopo_to/13/DO_plausible,The shop sold the student the bike.,none,,,,,1
+gibson2013,gibson2013/dopo_to/13/PO_implausible,gibson2013/dopo_to/13/DO_plausible,The shop sold the student the bike.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/13/PO_plausible,gibson2013/dopo_to/13/PO_plausible,The shop sold the bike to the student.,none,,,,,1
+gibson2013,gibson2013/dopo_to/14/DO_implausible,gibson2013/dopo_to/14/PO_plausible,The janitor lent the mop to the teacher.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/14/DO_plausible,gibson2013/dopo_to/14/DO_plausible,The janitor lent the teacher the mop.,none,,,,,1
+gibson2013,gibson2013/dopo_to/14/PO_implausible,gibson2013/dopo_to/14/DO_plausible,The janitor lent the teacher the mop.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/14/PO_plausible,gibson2013/dopo_to/14/PO_plausible,The janitor lent the mop to the teacher.,none,,,,,1
+gibson2013,gibson2013/dopo_to/15/DO_implausible,gibson2013/dopo_to/15/PO_plausible,The car dealer leased the SUV to the plumber.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/15/DO_plausible,gibson2013/dopo_to/15/DO_plausible,The car dealer leased the plumber the SUV.,none,,,,,1
+gibson2013,gibson2013/dopo_to/15/PO_implausible,gibson2013/dopo_to/15/DO_plausible,The car dealer leased the plumber the SUV.,del,del,to,,6,1
+gibson2013,gibson2013/dopo_to/15/PO_plausible,gibson2013/dopo_to/15/PO_plausible,The car dealer leased the SUV to the plumber.,none,,,,,1
+gibson2013,gibson2013/dopo_to/16/DO_implausible,gibson2013/dopo_to/16/PO_plausible,The host tossed the microphone to the contestant.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/16/DO_plausible,gibson2013/dopo_to/16/DO_plausible,The host tossed the contestant the microphone.,none,,,,,1
+gibson2013,gibson2013/dopo_to/16/PO_implausible,gibson2013/dopo_to/16/DO_plausible,The host tossed the contestant the microphone.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/16/PO_plausible,gibson2013/dopo_to/16/PO_plausible,The host tossed the microphone to the contestant.,none,,,,,1
+gibson2013,gibson2013/dopo_to/17/DO_implausible,gibson2013/dopo_to/17/PO_plausible,The quarterback passed the ball to the receiver.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/17/DO_plausible,gibson2013/dopo_to/17/DO_plausible,The quarterback passed the receiver the ball.,none,,,,,1
+gibson2013,gibson2013/dopo_to/17/PO_implausible,gibson2013/dopo_to/17/DO_plausible,The quarterback passed the receiver the ball.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/17/PO_plausible,gibson2013/dopo_to/17/PO_plausible,The quarterback passed the ball to the receiver.,none,,,,,1
+gibson2013,gibson2013/dopo_to/18/DO_implausible,gibson2013/dopo_to/18/PO_plausible,The videostore rented the DVD to the customer.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/18/DO_plausible,gibson2013/dopo_to/18/DO_plausible,The videostore rented the customer the DVD.,none,,,,,1
+gibson2013,gibson2013/dopo_to/18/PO_implausible,gibson2013/dopo_to/18/DO_plausible,The videostore rented the customer the DVD.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/18/PO_plausible,gibson2013/dopo_to/18/PO_plausible,The videostore rented the DVD to the customer.,none,,,,,1
+gibson2013,gibson2013/dopo_to/19/DO_implausible,gibson2013/dopo_to/19/PO_plausible,The bartender handed the drink to the lady.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/19/DO_plausible,gibson2013/dopo_to/19/DO_plausible,The bartender handed the lady the drink.,none,,,,,1
+gibson2013,gibson2013/dopo_to/19/PO_implausible,gibson2013/dopo_to/19/DO_plausible,The bartender handed the lady the drink.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/19/PO_plausible,gibson2013/dopo_to/19/PO_plausible,The bartender handed the drink to the lady.,none,,,,,1
+gibson2013,gibson2013/dopo_to/20/DO_implausible,gibson2013/dopo_to/20/PO_plausible,The magician threw the hat to the assistant.,ins,ins,,to,,1
+gibson2013,gibson2013/dopo_to/20/DO_plausible,gibson2013/dopo_to/20/DO_plausible,The magician threw the assistant the hat.,none,,,,,1
+gibson2013,gibson2013/dopo_to/20/PO_implausible,gibson2013/dopo_to/20/DO_plausible,The magician threw the assistant the hat.,del,del,to,,5,1
+gibson2013,gibson2013/dopo_to/20/PO_plausible,gibson2013/dopo_to/20/PO_plausible,The magician threw the hat to the assistant.,none,,,,,1
+gibson2013,gibson2013/dopo_for/1/DO_implausible,gibson2013/dopo_for/1/PO_plausible,The cook baked a cake for Lucy.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/1/DO_plausible,gibson2013/dopo_for/1/DO_plausible,The cook baked Lucy a cake.,none,,,,,1
+gibson2013,gibson2013/dopo_for/1/PO_implausible,gibson2013/dopo_for/1/DO_plausible,The cook baked Lucy a cake.,del,del,for,,4,1
+gibson2013,gibson2013/dopo_for/1/PO_plausible,gibson2013/dopo_for/1/PO_plausible,The cook baked a cake for Lucy.,none,,,,,1
+gibson2013,gibson2013/dopo_for/2/DO_implausible,gibson2013/dopo_for/2/PO_plausible,The bartender poured a drink for the customer.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/2/DO_plausible,gibson2013/dopo_for/2/DO_plausible,The bartender poured the customer a drink.,none,,,,,1
+gibson2013,gibson2013/dopo_for/2/PO_implausible,gibson2013/dopo_for/2/DO_plausible,The bartender poured the customer a drink.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/2/PO_plausible,gibson2013/dopo_for/2/PO_plausible,The bartender poured a drink for the customer.,none,,,,,1
+gibson2013,gibson2013/dopo_for/3/DO_implausible,gibson2013/dopo_for/3/PO_plausible,The woman saved a seat for her husband.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/3/DO_plausible,gibson2013/dopo_for/3/DO_plausible,The woman saved her husband a seat.,none,,,,,1
+gibson2013,gibson2013/dopo_for/3/PO_implausible,gibson2013/dopo_for/3/DO_plausible,The woman saved her husband a seat.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/3/PO_plausible,gibson2013/dopo_for/3/PO_plausible,The woman saved a seat for her husband.,none,,,,,1
+gibson2013,gibson2013/dopo_for/4/DO_implausible,gibson2013/dopo_for/4/PO_plausible,The grandmother made a quilt for her granddaughter.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/4/DO_plausible,gibson2013/dopo_for/4/DO_plausible,The grandmother made her granddaughter a quilt.,none,,,,,1
+gibson2013,gibson2013/dopo_for/4/PO_implausible,gibson2013/dopo_for/4/DO_plausible,The grandmother made her granddaughter a quilt.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/4/PO_plausible,gibson2013/dopo_for/4/PO_plausible,The grandmother made a quilt for her granddaughter.,none,,,,,1
+gibson2013,gibson2013/dopo_for/5/DO_implausible,gibson2013/dopo_for/5/PO_plausible,The apprentice fetched a hammer for the carpenter.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/5/DO_plausible,gibson2013/dopo_for/5/DO_plausible,The apprentice fetched the carpenter a hammer.,none,,,,,1
+gibson2013,gibson2013/dopo_for/5/PO_implausible,gibson2013/dopo_for/5/DO_plausible,The apprentice fetched the carpenter a hammer.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/5/PO_plausible,gibson2013/dopo_for/5/PO_plausible,The apprentice fetched a hammer for the carpenter.,none,,,,,1
+gibson2013,gibson2013/dopo_for/6/DO_implausible,gibson2013/dopo_for/6/PO_plausible,The secretary ordered some office supplies for the boss.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/6/DO_plausible,gibson2013/dopo_for/6/DO_plausible,The secretary ordered the boss some office supplies.,none,,,,,1
+gibson2013,gibson2013/dopo_for/6/PO_implausible,gibson2013/dopo_for/6/DO_plausible,The secretary ordered the boss some office supplies.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/6/PO_plausible,gibson2013/dopo_for/6/PO_plausible,The secretary ordered some office supplies for the boss.,none,,,,,1
+gibson2013,gibson2013/dopo_for/7/DO_implausible,gibson2013/dopo_for/7/PO_plausible,The wife reserved table for her husband.,multi,del;ins,a,,3,1
+gibson2013,gibson2013/dopo_for/7/DO_plausible,gibson2013/dopo_for/7/DO_plausible,The wife reserved her husband a table.,none,,,,,1
+gibson2013,gibson2013/dopo_for/7/PO_implausible,gibson2013/dopo_for/7/DO_plausible,The wife reserved her husband a table.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/7/PO_plausible,gibson2013/dopo_for/7/PO_plausible,The wife reserved table for her husband.,none,,,,,1
+gibson2013,gibson2013/dopo_for/8/DO_implausible,gibson2013/dopo_for/8/PO_plausible,The father bought a bicycle for his son.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/8/DO_plausible,gibson2013/dopo_for/8/DO_plausible,The father bought his son a bicycle.,none,,,,,1
+gibson2013,gibson2013/dopo_for/8/PO_implausible,gibson2013/dopo_for/8/DO_plausible,The father bought his son a bicycle.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/8/PO_plausible,gibson2013/dopo_for/8/PO_plausible,The father bought a bicycle for his son.,none,,,,,1
+gibson2013,gibson2013/dopo_for/9/DO_implausible,gibson2013/dopo_for/9/PO_plausible,The charity built a house for the hurricane victim.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/9/DO_plausible,gibson2013/dopo_for/9/DO_plausible,The charity built the hurricane victim a house.,none,,,,,1
+gibson2013,gibson2013/dopo_for/9/PO_implausible,gibson2013/dopo_for/9/DO_plausible,The charity built the hurricane victim a house.,del,del,for,,6,1
+gibson2013,gibson2013/dopo_for/9/PO_plausible,gibson2013/dopo_for/9/PO_plausible,The charity built a house for the hurricane victim.,none,,,,,1
+gibson2013,gibson2013/dopo_for/10/DO_implausible,gibson2013/dopo_for/10/PO_plausible,The waitress fixed a sandwich for the customer.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/10/DO_plausible,gibson2013/dopo_for/10/DO_plausible,The waitress fixed the customer a sandwich.,none,,,,,1
+gibson2013,gibson2013/dopo_for/10/PO_implausible,gibson2013/dopo_for/10/DO_plausible,The waitress fixed the customer a sandwich.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/10/PO_plausible,gibson2013/dopo_for/10/PO_plausible,The waitress fixed a sandwich for the customer.,none,,,,,1
+gibson2013,gibson2013/dopo_for/11/DO_implausible,gibson2013/dopo_for/11/PO_plausible,The grandmother baked some cookies for the grandson.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/11/DO_plausible,gibson2013/dopo_for/11/DO_plausible,The grandmother baked the grandson some cookies.,none,,,,,1
+gibson2013,gibson2013/dopo_for/11/PO_implausible,gibson2013/dopo_for/11/DO_plausible,The grandmother baked the grandson some cookies.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/11/PO_plausible,gibson2013/dopo_for/11/PO_plausible,The grandmother baked some cookies for the grandson.,none,,,,,1
+gibson2013,gibson2013/dopo_for/12/DO_implausible,gibson2013/dopo_for/12/PO_plausible,The nurse poured some water for the old man.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/12/DO_plausible,gibson2013/dopo_for/12/DO_plausible,The nurse poured the old man some water.,none,,,,,1
+gibson2013,gibson2013/dopo_for/12/PO_implausible,gibson2013/dopo_for/12/DO_plausible,The nurse poured the old man some water.,del,del,for,,6,1
+gibson2013,gibson2013/dopo_for/12/PO_plausible,gibson2013/dopo_for/12/PO_plausible,The nurse poured some water for the old man.,none,,,,,1
+gibson2013,gibson2013/dopo_for/13/DO_implausible,gibson2013/dopo_for/13/PO_plausible,The receptionist saved some cake for her co-worker.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/13/DO_plausible,gibson2013/dopo_for/13/DO_plausible,The receptionist saved her co-worker some cake.,none,,,,,1
+gibson2013,gibson2013/dopo_for/13/PO_implausible,gibson2013/dopo_for/13/DO_plausible,The receptionist saved her co-worker some cake.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/13/PO_plausible,gibson2013/dopo_for/13/PO_plausible,The receptionist saved some cake for her co-worker.,none,,,,,1
+gibson2013,gibson2013/dopo_for/14/DO_implausible,gibson2013/dopo_for/14/PO_plausible,The seamstress made a dress for her client.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/14/DO_plausible,gibson2013/dopo_for/14/DO_plausible,The seamstress made her client a dress.,none,,,,,1
+gibson2013,gibson2013/dopo_for/14/PO_implausible,gibson2013/dopo_for/14/DO_plausible,The seamstress made her client a dress.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/14/PO_plausible,gibson2013/dopo_for/14/PO_plausible,The seamstress made a dress for her client.,none,,,,,1
+gibson2013,gibson2013/dopo_for/15/DO_implausible,gibson2013/dopo_for/15/PO_plausible,The lab-assistant fetched a test-tube for the scientist.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/15/DO_plausible,gibson2013/dopo_for/15/DO_plausible,The lab-assistant fetched the scientist a test-tube.,none,,,,,1
+gibson2013,gibson2013/dopo_for/15/PO_implausible,gibson2013/dopo_for/15/DO_plausible,The lab-assistant fetched the scientist a test-tube.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/15/PO_plausible,gibson2013/dopo_for/15/PO_plausible,The lab-assistant fetched a test-tube for the scientist.,none,,,,,1
+gibson2013,gibson2013/dopo_for/16/DO_implausible,gibson2013/dopo_for/16/PO_plausible,The man ordered some champagne for his girlfriend.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/16/DO_plausible,gibson2013/dopo_for/16/DO_plausible,The man ordered his girlfriend some champagne.,none,,,,,1
+gibson2013,gibson2013/dopo_for/16/PO_implausible,gibson2013/dopo_for/16/DO_plausible,The man ordered his girlfriend some champagne.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/16/PO_plausible,gibson2013/dopo_for/16/PO_plausible,The man ordered some champagne for his girlfriend.,none,,,,,1
+gibson2013,gibson2013/dopo_for/17/DO_implausible,gibson2013/dopo_for/17/PO_plausible,The travel agent reserved a flight for the businessman.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/17/DO_plausible,gibson2013/dopo_for/17/DO_plausible,The travel agent reserved the businessman a flight.,none,,,,,1
+gibson2013,gibson2013/dopo_for/17/PO_implausible,gibson2013/dopo_for/17/DO_plausible,The travel agent reserved the businessman a flight.,del,del,for,,6,1
+gibson2013,gibson2013/dopo_for/17/PO_plausible,gibson2013/dopo_for/17/PO_plausible,The travel agent reserved a flight for the businessman.,none,,,,,1
+gibson2013,gibson2013/dopo_for/18/DO_implausible,gibson2013/dopo_for/18/PO_plausible,The boyfriend obtained some concert tickets for his girlfriend.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/18/DO_plausible,gibson2013/dopo_for/18/DO_plausible,The boyfriend obtained his girlfriend some concert tickets.,none,,,,,1
+gibson2013,gibson2013/dopo_for/18/PO_implausible,gibson2013/dopo_for/18/DO_plausible,The boyfriend obtained his girlfriend some concert tickets.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/18/PO_plausible,gibson2013/dopo_for/18/PO_plausible,The boyfriend obtained some concert tickets for his girlfriend.,none,,,,,1
+gibson2013,gibson2013/dopo_for/19/DO_implausible,gibson2013/dopo_for/19/PO_plausible,The church built a shelter for the homeless.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/19/DO_plausible,gibson2013/dopo_for/19/DO_plausible,The church built the homeless a shelter.,none,,,,,1
+gibson2013,gibson2013/dopo_for/19/PO_implausible,gibson2013/dopo_for/19/DO_plausible,The church built the homeless a shelter.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/19/PO_plausible,gibson2013/dopo_for/19/PO_plausible,The church built a shelter for the homeless.,none,,,,,1
+gibson2013,gibson2013/dopo_for/20/DO_implausible,gibson2013/dopo_for/20/PO_plausible,The babysitter fixed some lunch for the child.,ins,ins,,for,,1
+gibson2013,gibson2013/dopo_for/20/DO_plausible,gibson2013/dopo_for/20/DO_plausible,The babysitter fixed the child some lunch.,none,,,,,1
+gibson2013,gibson2013/dopo_for/20/PO_implausible,gibson2013/dopo_for/20/DO_plausible,The babysitter fixed the child some lunch.,del,del,for,,5,1
+gibson2013,gibson2013/dopo_for/20/PO_plausible,gibson2013/dopo_for/20/PO_plausible,The babysitter fixed some lunch for the child.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/1/Preposition_implausible,gibson2013/transitive_intransitive/1/Transitive_plausible,The tax law benefited the businessman.,del,del,from,,4,1
+gibson2013,gibson2013/transitive_intransitive/1/Preposition_plausible,gibson2013/transitive_intransitive/1/Preposition_plausible,The businessman benefited from the tax law.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/1/Transitive_implausible,gibson2013/transitive_intransitive/1/Preposition_plausible,The businessman benefited from the tax law.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/1/Transitive_plausible,gibson2013/transitive_intransitive/1/Transitive_plausible,The tax law benefited the businessman.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/2/Preposition_implausible,gibson2013/transitive_intransitive/2/Transitive_plausible,The intense practice benefited the player.,del,del,from,,4,1
+gibson2013,gibson2013/transitive_intransitive/2/Preposition_plausible,gibson2013/transitive_intransitive/2/Preposition_plausible,The player benefited from the intense practice.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/2/Transitive_implausible,gibson2013/transitive_intransitive/2/Preposition_plausible,The player benefited from the intense practice.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/2/Transitive_plausible,gibson2013/transitive_intransitive/2/Transitive_plausible,The intense practice benefited the player.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/3/Preposition_implausible,gibson2013/transitive_intransitive/3/Transitive_plausible,The extra time benefited the child with a learning disability.,del,del,from,,4,1
+gibson2013,gibson2013/transitive_intransitive/3/Preposition_plausible,gibson2013/transitive_intransitive/3/Preposition_plausible,The child with a learning disability benefited from the extra time.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/3/Transitive_implausible,gibson2013/transitive_intransitive/3/Preposition_plausible,The child with a learning disability benefited from the extra time.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/3/Transitive_plausible,gibson2013/transitive_intransitive/3/Transitive_plausible,The extra time benefited the child with a learning disability.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/4/Preposition_implausible,gibson2013/transitive_intransitive/4/Transitive_plausible,The bribes profited the corrupt politicians.,del,del,from,,3,1
+gibson2013,gibson2013/transitive_intransitive/4/Preposition_plausible,gibson2013/transitive_intransitive/4/Preposition_plausible,The corrupt politicians profited from the bribes.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/4/Transitive_implausible,gibson2013/transitive_intransitive/4/Preposition_plausible,The corrupt politicians profited from the bribes.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/4/Transitive_plausible,gibson2013/transitive_intransitive/4/Transitive_plausible,The bribes profited the corrupt politicians.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/5/Preposition_implausible,gibson2013/transitive_intransitive/5/Transitive_plausible,The contract profited the business.,del,del,from,,3,1
+gibson2013,gibson2013/transitive_intransitive/5/Preposition_plausible,gibson2013/transitive_intransitive/5/Preposition_plausible,The business profited from the contract.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/5/Transitive_implausible,gibson2013/transitive_intransitive/5/Preposition_plausible,The business profited from the contract.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/5/Transitive_plausible,gibson2013/transitive_intransitive/5/Transitive_plausible,The contract profited the business.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/6/Preposition_implausible,gibson2013/transitive_intransitive/6/Transitive_plausible,The tax reduction profited the millionaire.,del,del,from,,4,1
+gibson2013,gibson2013/transitive_intransitive/6/Preposition_plausible,gibson2013/transitive_intransitive/6/Preposition_plausible,The millionaire profited from the tax reduction.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/6/Transitive_implausible,gibson2013/transitive_intransitive/6/Preposition_plausible,The millionaire profited from the tax reduction.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/6/Transitive_plausible,gibson2013/transitive_intransitive/6/Transitive_plausible,The tax reduction profited the millionaire.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/7/Preposition_implausible,gibson2013/transitive_intransitive/7/Transitive_plausible,The new medicine deteriorated the patient's condition.,del,del,from,,4,1
+gibson2013,gibson2013/transitive_intransitive/7/Preposition_plausible,gibson2013/transitive_intransitive/7/Preposition_plausible,The patient's condition deteriorated from the new medicine.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/7/Transitive_implausible,gibson2013/transitive_intransitive/7/Preposition_plausible,The patient's condition deteriorated from the new medicine.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/7/Transitive_plausible,gibson2013/transitive_intransitive/7/Transitive_plausible,The new medicine deteriorated the patient's condition.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/8/Preposition_implausible,gibson2013/transitive_intransitive/8/Transitive_plausible,The bad lighting deteriorated the woman's eyesight.,del,del,from,,4,1
+gibson2013,gibson2013/transitive_intransitive/8/Preposition_plausible,gibson2013/transitive_intransitive/8/Preposition_plausible,The woman's eyesight deteriorated from the bad lighting.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/8/Transitive_implausible,gibson2013/transitive_intransitive/8/Preposition_plausible,The woman's eyesight deteriorated from the bad lighting.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/8/Transitive_plausible,gibson2013/transitive_intransitive/8/Transitive_plausible,The bad lighting deteriorated the woman's eyesight.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/9/Preposition_implausible,gibson2013/transitive_intransitive/9/Transitive_plausible,The long drought deteriorated the soil.,del,del,from,,4,1
+gibson2013,gibson2013/transitive_intransitive/9/Preposition_plausible,gibson2013/transitive_intransitive/9/Preposition_plausible,The soil deteriorated from the long drought.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/9/Transitive_implausible,gibson2013/transitive_intransitive/9/Preposition_plausible,The soil deteriorated from the long drought.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/9/Transitive_plausible,gibson2013/transitive_intransitive/9/Transitive_plausible,The long drought deteriorated the soil.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/10/Preposition_implausible,gibson2013/transitive_intransitive/10/Transitive_plausible,The washing machine shrank the new sweatshirt.,del,del,inside,,4,1
+gibson2013,gibson2013/transitive_intransitive/10/Preposition_plausible,gibson2013/transitive_intransitive/10/Preposition_plausible,The new sweatshirt shrank inside the washing machine.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/10/Transitive_implausible,gibson2013/transitive_intransitive/10/Preposition_plausible,The new sweatshirt shrank inside the washing machine.,ins,ins,,inside,,1
+gibson2013,gibson2013/transitive_intransitive/10/Transitive_plausible,gibson2013/transitive_intransitive/10/Transitive_plausible,The washing machine shrank the new sweatshirt.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/11/Preposition_implausible,gibson2013/transitive_intransitive/11/Transitive_plausible,The dryer shrank the new cotton t-shirt.,del,del,inside,,3,1
+gibson2013,gibson2013/transitive_intransitive/11/Preposition_plausible,gibson2013/transitive_intransitive/11/Preposition_plausible,The new cotton t-shirt shrank inside the dryer.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/11/Transitive_implausible,gibson2013/transitive_intransitive/11/Preposition_plausible,The new cotton t-shirt shrank inside the dryer.,ins,ins,,inside,,1
+gibson2013,gibson2013/transitive_intransitive/11/Transitive_plausible,gibson2013/transitive_intransitive/11/Transitive_plausible,The dryer shrank the new cotton t-shirt.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/12/Preposition_implausible,gibson2013/transitive_intransitive/12/Transitive_plausible,The chemotherapy shrank the tumor.,del,del,from,,3,1
+gibson2013,gibson2013/transitive_intransitive/12/Preposition_plausible,gibson2013/transitive_intransitive/12/Preposition_plausible,The tumor shrank from the chemotherapy.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/12/Transitive_implausible,gibson2013/transitive_intransitive/12/Preposition_plausible,The tumor shrank from the chemotherapy.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/12/Transitive_plausible,gibson2013/transitive_intransitive/12/Transitive_plausible,The chemotherapy shrank the tumor.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/13/Preposition_implausible,gibson2013/transitive_intransitive/13/Transitive_plausible,The hot stove melted the plastic handle.,del,del,from,,4,1
+gibson2013,gibson2013/transitive_intransitive/13/Preposition_plausible,gibson2013/transitive_intransitive/13/Preposition_plausible,The plastic handled melted from the hot stove.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/13/Transitive_implausible,gibson2013/transitive_intransitive/13/Preposition_plausible,The plastic handled melted from the hot stove.,multi,sub;ins,handle,handled,2,1
+gibson2013,gibson2013/transitive_intransitive/13/Transitive_plausible,gibson2013/transitive_intransitive/13/Transitive_plausible,The hot stove melted the plastic handle.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/14/Preposition_implausible,gibson2013/transitive_intransitive/14/Transitive_plausible,The hot coffee melted the ice cream.,del,del,from,,4,1
+gibson2013,gibson2013/transitive_intransitive/14/Preposition_plausible,gibson2013/transitive_intransitive/14/Preposition_plausible,The ice cream melted from the hot coffee.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/14/Transitive_implausible,gibson2013/transitive_intransitive/14/Preposition_plausible,The ice cream melted from the hot coffee.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/14/Transitive_plausible,gibson2013/transitive_intransitive/14/Transitive_plausible,The hot coffee melted the ice cream.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/15/Preposition_implausible,gibson2013/transitive_intransitive/15/Transitive_plausible,The microwave melted the butter.,del,del,inside,,3,1
+gibson2013,gibson2013/transitive_intransitive/15/Preposition_plausible,gibson2013/transitive_intransitive/15/Preposition_plausible,The butter melted inside the microwave.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/15/Transitive_implausible,gibson2013/transitive_intransitive/15/Preposition_plausible,The butter melted inside the microwave.,ins,ins,,inside,,1
+gibson2013,gibson2013/transitive_intransitive/15/Transitive_plausible,gibson2013/transitive_intransitive/15/Transitive_plausible,The microwave melted the butter.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/16/Preposition_implausible,gibson2013/transitive_intransitive/16/Transitive_plausible,The humidity worsened the eczema.,del,del,from,,3,1
+gibson2013,gibson2013/transitive_intransitive/16/Preposition_plausible,gibson2013/transitive_intransitive/16/Preposition_plausible,The eczema worsened from the humidity.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/16/Transitive_implausible,gibson2013/transitive_intransitive/16/Preposition_plausible,The eczema worsened from the humidity.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/16/Transitive_plausible,gibson2013/transitive_intransitive/16/Transitive_plausible,The humidity worsened the eczema.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/17/Preposition_implausible,gibson2013/transitive_intransitive/17/Transitive_plausible,The construction noise worsened the man's hearing.,del,del,from,,4,1
+gibson2013,gibson2013/transitive_intransitive/17/Preposition_plausible,gibson2013/transitive_intransitive/17/Preposition_plausible,The man's hearing worsened from the construction noise.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/17/Transitive_implausible,gibson2013/transitive_intransitive/17/Preposition_plausible,The man's hearing worsened from the construction noise.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/17/Transitive_plausible,gibson2013/transitive_intransitive/17/Transitive_plausible,The construction noise worsened the man's hearing.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/18/Preposition_implausible,gibson2013/transitive_intransitive/18/Transitive_plausible,The earthquake shattered the house.,del,del,from,,3,1
+gibson2013,gibson2013/transitive_intransitive/18/Preposition_plausible,gibson2013/transitive_intransitive/18/Preposition_plausible,The house shattered from the earthquake.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/18/Transitive_implausible,gibson2013/transitive_intransitive/18/Preposition_plausible,The house shattered from the earthquake.,ins,ins,,from,,1
+gibson2013,gibson2013/transitive_intransitive/18/Transitive_plausible,gibson2013/transitive_intransitive/18/Transitive_plausible,The earthquake shattered the house.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/19/Preposition_implausible,gibson2013/transitive_intransitive/19/Transitive_plausible,The oven defrosted the lasagna.,del,del,inside,,3,1
+gibson2013,gibson2013/transitive_intransitive/19/Preposition_plausible,gibson2013/transitive_intransitive/19/Preposition_plausible,The lasagna defrosted inside the oven.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/19/Transitive_implausible,gibson2013/transitive_intransitive/19/Preposition_plausible,The lasagna defrosted inside the oven.,ins,ins,,inside,,1
+gibson2013,gibson2013/transitive_intransitive/19/Transitive_plausible,gibson2013/transitive_intransitive/19/Transitive_plausible,The oven defrosted the lasagna.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/20/Preposition_implausible,gibson2013/transitive_intransitive/20/Transitive_plausible,The microwave defrosted the broccoli.,del,del,inside,,3,1
+gibson2013,gibson2013/transitive_intransitive/20/Preposition_plausible,gibson2013/transitive_intransitive/20/Preposition_plausible,The broccoli defrosted inside the microwave.,none,,,,,1
+gibson2013,gibson2013/transitive_intransitive/20/Transitive_implausible,gibson2013/transitive_intransitive/20/Preposition_plausible,The broccoli defrosted inside the microwave.,ins,ins,,inside,,1
+gibson2013,gibson2013/transitive_intransitive/20/Transitive_plausible,gibson2013/transitive_intransitive/20/Transitive_plausible,The microwave defrosted the broccoli.,none,,,,,1

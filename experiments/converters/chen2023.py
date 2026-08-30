@@ -124,7 +124,7 @@ def _convert_subset(subset: str):
                 context=standardize(context) if context else "",
                 plausibility=plaus,
                 contrast=_CONTRAST[subset],
-                intended_uid=intended,
+                intended_uids=[intended],
                 comprehension_q=r["question"],
                 correct_answer=r["answer"],
                 meta={

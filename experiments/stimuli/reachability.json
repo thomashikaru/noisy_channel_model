@@ -5,6 +5,8 @@
     "chen2023": {
       "n_sub_rows": 30,
       "n_reachable": 0,
+      "n_stimuli_with_any_reachable_repair": 0,
+      "n_stimuli_with_a_sub_repair": 30,
       "verdicts": {
         "multiword": 30
       },
@@ -31,6 +33,7 @@
       "unreachable": [
         {
           "stim_uid": "chen2023/active_passive/3/active_implausible.none",
+          "intended_uid": "chen2023/active_passive/3/passive_plausible.none",
           "verdict": "multiword",
           "from": "drove",
           "to": "was driven by",
@@ -38,6 +41,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/3/passive_implausible.none",
+          "intended_uid": "chen2023/active_passive/3/active_plausible.none",
           "verdict": "multiword",
           "from": "was driven by",
           "to": "drove",
@@ -45,6 +49,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/9/active_implausible.none",
+          "intended_uid": "chen2023/active_passive/9/passive_plausible.none",
           "verdict": "multiword",
           "from": "ate",
           "to": "was eaten by",
@@ -52,6 +57,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/9/passive_implausible.none",
+          "intended_uid": "chen2023/active_passive/9/active_plausible.none",
           "verdict": "multiword",
           "from": "was eaten by",
           "to": "ate",
@@ -59,6 +65,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/10/active_implausible.none",
+          "intended_uid": "chen2023/active_passive/10/passive_plausible.none",
           "verdict": "multiword",
           "from": "broke",
           "to": "was broken by",
@@ -66,6 +73,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/10/passive_implausible.none",
+          "intended_uid": "chen2023/active_passive/10/active_plausible.none",
           "verdict": "multiword",
           "from": "was broken by",
           "to": "broke",
@@ -73,6 +81,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/13/active_implausible.none",
+          "intended_uid": "chen2023/active_passive/13/passive_plausible.none",
           "verdict": "multiword",
           "from": "stole",
           "to": "was stolen by",
@@ -80,6 +89,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/13/passive_implausible.none",
+          "intended_uid": "chen2023/active_passive/13/active_plausible.none",
           "verdict": "multiword",
           "from": "was stolen by",
           "to": "stole",
@@ -87,6 +97,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/20/active_implausible.none",
+          "intended_uid": "chen2023/active_passive/20/passive_plausible.none",
           "verdict": "multiword",
           "from": "wrote",
           "to": "was written by",
@@ -94,6 +105,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/20/passive_implausible.none",
+          "intended_uid": "chen2023/active_passive/20/active_plausible.none",
           "verdict": "multiword",
           "from": "was written by",
           "to": "wrote",
@@ -101,6 +113,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/3/active_implausible.supportive",
+          "intended_uid": "chen2023/active_passive/3/passive_plausible.supportive",
           "verdict": "multiword",
           "from": "drove",
           "to": "was driven by",
@@ -108,6 +121,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/3/passive_implausible.supportive",
+          "intended_uid": "chen2023/active_passive/3/active_plausible.supportive",
           "verdict": "multiword",
           "from": "was driven by",
           "to": "drove",
@@ -115,6 +129,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/9/active_implausible.supportive",
+          "intended_uid": "chen2023/active_passive/9/passive_plausible.supportive",
           "verdict": "multiword",
           "from": "ate",
           "to": "was eaten by",
@@ -122,6 +137,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/9/passive_implausible.supportive",
+          "intended_uid": "chen2023/active_passive/9/active_plausible.supportive",
           "verdict": "multiword",
           "from": "was eaten by",
           "to": "ate",
@@ -129,6 +145,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/10/active_implausible.supportive",
+          "intended_uid": "chen2023/active_passive/10/passive_plausible.supportive",
           "verdict": "multiword",
           "from": "broke",
           "to": "was broken by",
@@ -136,6 +153,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/10/passive_implausible.supportive",
+          "intended_uid": "chen2023/active_passive/10/active_plausible.supportive",
           "verdict": "multiword",
           "from": "was broken by",
           "to": "broke",
@@ -143,6 +161,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/13/active_implausible.supportive",
+          "intended_uid": "chen2023/active_passive/13/passive_plausible.supportive",
           "verdict": "multiword",
           "from": "stole",
           "to": "was stolen by",
@@ -150,6 +169,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/13/passive_implausible.supportive",
+          "intended_uid": "chen2023/active_passive/13/active_plausible.supportive",
           "verdict": "multiword",
           "from": "was stolen by",
           "to": "stole",
@@ -157,6 +177,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/20/active_implausible.supportive",
+          "intended_uid": "chen2023/active_passive/20/passive_plausible.supportive",
           "verdict": "multiword",
           "from": "wrote",
           "to": "was written by",
@@ -164,6 +185,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/20/passive_implausible.supportive",
+          "intended_uid": "chen2023/active_passive/20/active_plausible.supportive",
           "verdict": "multiword",
           "from": "was written by",
           "to": "wrote",
@@ -171,6 +193,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/3/active_implausible.non_supportive",
+          "intended_uid": "chen2023/active_passive/3/passive_plausible.non_supportive",
           "verdict": "multiword",
           "from": "drove",
           "to": "was driven by",
@@ -178,6 +201,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/3/passive_implausible.non_supportive",
+          "intended_uid": "chen2023/active_passive/3/active_plausible.non_supportive",
           "verdict": "multiword",
           "from": "was driven by",
           "to": "drove",
@@ -185,6 +209,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/9/active_implausible.non_supportive",
+          "intended_uid": "chen2023/active_passive/9/passive_plausible.non_supportive",
           "verdict": "multiword",
           "from": "ate",
           "to": "was eaten by",
@@ -192,6 +217,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/9/passive_implausible.non_supportive",
+          "intended_uid": "chen2023/active_passive/9/active_plausible.non_supportive",
           "verdict": "multiword",
           "from": "was eaten by",
           "to": "ate",
@@ -199,6 +225,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/10/active_implausible.non_supportive",
+          "intended_uid": "chen2023/active_passive/10/passive_plausible.non_supportive",
           "verdict": "multiword",
           "from": "broke",
           "to": "was broken by",
@@ -206,6 +233,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/10/passive_implausible.non_supportive",
+          "intended_uid": "chen2023/active_passive/10/active_plausible.non_supportive",
           "verdict": "multiword",
           "from": "was broken by",
           "to": "broke",
@@ -213,6 +241,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/13/active_implausible.non_supportive",
+          "intended_uid": "chen2023/active_passive/13/passive_plausible.non_supportive",
           "verdict": "multiword",
           "from": "stole",
           "to": "was stolen by",
@@ -220,6 +249,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/13/passive_implausible.non_supportive",
+          "intended_uid": "chen2023/active_passive/13/active_plausible.non_supportive",
           "verdict": "multiword",
           "from": "was stolen by",
           "to": "stole",
@@ -227,6 +257,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/20/active_implausible.non_supportive",
+          "intended_uid": "chen2023/active_passive/20/passive_plausible.non_supportive",
           "verdict": "multiword",
           "from": "wrote",
           "to": "was written by",
@@ -234,6 +265,7 @@
         },
         {
           "stim_uid": "chen2023/active_passive/20/passive_implausible.non_supportive",
+          "intended_uid": "chen2023/active_passive/20/active_plausible.non_supportive",
           "verdict": "multiword",
           "from": "was written by",
           "to": "wrote",
@@ -244,6 +276,8 @@
     "clark2026": {
       "n_sub_rows": 144,
       "n_reachable": 133,
+      "n_stimuli_with_any_reachable_repair": 133,
+      "n_stimuli_with_a_sub_repair": 144,
       "verdicts": {
         "dist>max_dist": 2,
         "not_retrieved": 9,
@@ -271,6 +305,7 @@
       "unreachable": [
         {
           "stim_uid": "clark2026//3/1.2",
+          "intended_uid": "clark2026//3/2.2",
           "verdict": "not_retrieved",
           "from": "fan",
           "to": "tan",
@@ -278,6 +313,7 @@
         },
         {
           "stim_uid": "clark2026//25/1.2",
+          "intended_uid": "clark2026//25/2.2",
           "verdict": "not_retrieved",
           "from": "saints",
           "to": "stains",
@@ -285,6 +321,7 @@
         },
         {
           "stim_uid": "clark2026//25/2.1",
+          "intended_uid": "clark2026//25/1.1",
           "verdict": "not_retrieved",
           "from": "stains",
           "to": "saints",
@@ -292,6 +329,7 @@
         },
         {
           "stim_uid": "clark2026//26/2.1",
+          "intended_uid": "clark2026//26/1.1",
           "verdict": "not_retrieved",
           "from": "unite",
           "to": "untie",
@@ -299,6 +337,7 @@
         },
         {
           "stim_uid": "clark2026//26/Typo1.1",
+          "intended_uid": "clark2026//26/1.1",
           "verdict": "not_retrieved",
           "from": "unntie",
           "to": "untie",
@@ -306,6 +345,7 @@
         },
         {
           "stim_uid": "clark2026//33/1.2",
+          "intended_uid": "clark2026//33/2.2",
           "verdict": "not_retrieved",
           "from": "males",
           "to": "meals",
@@ -313,6 +353,7 @@
         },
         {
           "stim_uid": "clark2026//33/2.1",
+          "intended_uid": "clark2026//33/1.1",
           "verdict": "not_retrieved",
           "from": "meals",
           "to": "males",
@@ -320,6 +361,7 @@
         },
         {
           "stim_uid": "clark2026//34/1.2",
+          "intended_uid": "clark2026//34/2.2",
           "verdict": "not_retrieved",
           "from": "bread",
           "to": "beard",
@@ -327,6 +369,7 @@
         },
         {
           "stim_uid": "clark2026//34/2.1",
+          "intended_uid": "clark2026//34/1.1",
           "verdict": "not_retrieved",
           "from": "beard",
           "to": "bread",
@@ -334,6 +377,7 @@
         },
         {
           "stim_uid": "clark2026//35/1.2",
+          "intended_uid": "clark2026//35/2.2",
           "verdict": "dist>max_dist",
           "from": "genes",
           "to": "jeans",
@@ -341,6 +385,7 @@
         },
         {
           "stim_uid": "clark2026//35/2.1",
+          "intended_uid": "clark2026//35/1.1",
           "verdict": "dist>max_dist",
           "from": "jeans",
           "to": "genes",
@@ -351,6 +396,8 @@
     "gibson2013": {
       "n_sub_rows": 0,
       "n_reachable": 0,
+      "n_stimuli_with_any_reachable_repair": 0,
+      "n_stimuli_with_a_sub_repair": 0,
       "verdicts": {},
       "per_condition": {},
       "unreachable": []
@@ -358,6 +405,8 @@
     "huang2024": {
       "n_sub_rows": 23,
       "n_reachable": 0,
+      "n_stimuli_with_any_reachable_repair": 0,
+      "n_stimuli_with_a_sub_repair": 23,
       "verdicts": {
         "punctuation_only": 23
       },
@@ -369,6 +418,7 @@
       "unreachable": [
         {
           "stim_uid": "huang2024//1/NPZ_AMB",
+          "intended_uid": "huang2024//1/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "changed",
           "to": "changed,",
@@ -376,6 +426,7 @@
         },
         {
           "stim_uid": "huang2024//2/NPZ_AMB",
+          "intended_uid": "huang2024//2/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "signed",
           "to": "signed,",
@@ -383,6 +434,7 @@
         },
         {
           "stim_uid": "huang2024//3/NPZ_AMB",
+          "intended_uid": "huang2024//3/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "moved",
           "to": "moved,",
@@ -390,6 +442,7 @@
         },
         {
           "stim_uid": "huang2024//4/NPZ_AMB",
+          "intended_uid": "huang2024//4/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "attacked",
           "to": "attacked,",
@@ -397,6 +450,7 @@
         },
         {
           "stim_uid": "huang2024//5/NPZ_AMB",
+          "intended_uid": "huang2024//5/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "left",
           "to": "left,",
@@ -404,6 +458,7 @@
         },
         {
           "stim_uid": "huang2024//6/NPZ_AMB",
+          "intended_uid": "huang2024//6/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "read",
           "to": "read,",
@@ -411,6 +466,7 @@
         },
         {
           "stim_uid": "huang2024//7/NPZ_AMB",
+          "intended_uid": "huang2024//7/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "called",
           "to": "called,",
@@ -418,6 +474,7 @@
         },
         {
           "stim_uid": "huang2024//8/NPZ_AMB",
+          "intended_uid": "huang2024//8/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "stopped",
           "to": "stopped,",
@@ -425,6 +482,7 @@
         },
         {
           "stim_uid": "huang2024//9/NPZ_AMB",
+          "intended_uid": "huang2024//9/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "began",
           "to": "began,",
@@ -432,6 +490,7 @@
         },
         {
           "stim_uid": "huang2024//10/NPZ_AMB",
+          "intended_uid": "huang2024//10/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "lost",
           "to": "lost,",
@@ -439,6 +498,7 @@
         },
         {
           "stim_uid": "huang2024//11/NPZ_AMB",
+          "intended_uid": "huang2024//11/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "started",
           "to": "started,",
@@ -446,6 +506,7 @@
         },
         {
           "stim_uid": "huang2024//12/NPZ_AMB",
+          "intended_uid": "huang2024//12/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "worked",
           "to": "worked,",
@@ -453,6 +514,7 @@
         },
         {
           "stim_uid": "huang2024//13/NPZ_AMB",
+          "intended_uid": "huang2024//13/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "changed",
           "to": "changed,",
@@ -460,6 +522,7 @@
         },
         {
           "stim_uid": "huang2024//15/NPZ_AMB",
+          "intended_uid": "huang2024//15/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "moved",
           "to": "moved,",
@@ -467,6 +530,7 @@
         },
         {
           "stim_uid": "huang2024//16/NPZ_AMB",
+          "intended_uid": "huang2024//16/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "attacked",
           "to": "attacked,",
@@ -474,6 +538,7 @@
         },
         {
           "stim_uid": "huang2024//17/NPZ_AMB",
+          "intended_uid": "huang2024//17/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "left",
           "to": "left,",
@@ -481,6 +546,7 @@
         },
         {
           "stim_uid": "huang2024//18/NPZ_AMB",
+          "intended_uid": "huang2024//18/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "read",
           "to": "read,",
@@ -488,6 +554,7 @@
         },
         {
           "stim_uid": "huang2024//19/NPZ_AMB",
+          "intended_uid": "huang2024//19/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "called",
           "to": "called,",
@@ -495,6 +562,7 @@
         },
         {
           "stim_uid": "huang2024//20/NPZ_AMB",
+          "intended_uid": "huang2024//20/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "stopped",
           "to": "stopped,",
@@ -502,6 +570,7 @@
         },
         {
           "stim_uid": "huang2024//21/NPZ_AMB",
+          "intended_uid": "huang2024//21/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "began",
           "to": "began,",
@@ -509,6 +578,7 @@
         },
         {
           "stim_uid": "huang2024//22/NPZ_AMB",
+          "intended_uid": "huang2024//22/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "lost",
           "to": "lost,",
@@ -516,6 +586,7 @@
         },
         {
           "stim_uid": "huang2024//23/NPZ_AMB",
+          "intended_uid": "huang2024//23/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "started",
           "to": "started,",
@@ -523,6 +594,7 @@
         },
         {
           "stim_uid": "huang2024//24/NPZ_AMB",
+          "intended_uid": "huang2024//24/NPZ_UAMB",
           "verdict": "punctuation_only",
           "from": "worked",
           "to": "worked,",
@@ -533,41 +605,48 @@
     "moses": {
       "n_sub_rows": 0,
       "n_reachable": 0,
+      "n_stimuli_with_any_reachable_repair": 0,
+      "n_stimuli_with_a_sub_repair": 0,
       "verdicts": {},
       "per_condition": {},
       "unreachable": []
     },
     "qian2023": {
-      "n_sub_rows": 240,
-      "n_reachable": 38,
+      "n_sub_rows": 480,
+      "n_reachable": 272,
+      "n_stimuli_with_any_reachable_repair": 236,
+      "n_stimuli_with_a_sub_repair": 240,
       "verdicts": {
-        "dist>max_dist": 172,
-        "not_retrieved": 30,
-        "reachable": 38
+        "dist>max_dist": 176,
+        "not_retrieved": 32,
+        "reachable": 272
       },
       "per_condition": {
         "pps": {
-          "dist>max_dist": 43,
+          "dist>max_dist": 44,
           "not_retrieved": 15,
-          "reachable": 2
+          "reachable": 61
         },
         "pss": {
-          "dist>max_dist": 43,
+          "dist>max_dist": 44,
           "not_retrieved": 15,
-          "reachable": 2
+          "reachable": 61
         },
         "spp": {
-          "dist>max_dist": 43,
-          "reachable": 17
+          "dist>max_dist": 44,
+          "not_retrieved": 1,
+          "reachable": 75
         },
         "ssp": {
-          "dist>max_dist": 43,
-          "reachable": 17
+          "dist>max_dist": 44,
+          "not_retrieved": 1,
+          "reachable": 75
         }
       },
       "unreachable": [
         {
           "stim_uid": "qian2023//0/pss",
+          "intended_uid": "qian2023//0/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -575,6 +654,7 @@
         },
         {
           "stim_uid": "qian2023//0/pps",
+          "intended_uid": "qian2023//0/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -582,6 +662,7 @@
         },
         {
           "stim_uid": "qian2023//1/ssp",
+          "intended_uid": "qian2023//1/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -589,6 +670,7 @@
         },
         {
           "stim_uid": "qian2023//1/spp",
+          "intended_uid": "qian2023//1/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -596,6 +678,7 @@
         },
         {
           "stim_uid": "qian2023//1/pss",
+          "intended_uid": "qian2023//1/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -603,6 +686,7 @@
         },
         {
           "stim_uid": "qian2023//1/pps",
+          "intended_uid": "qian2023//1/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -610,6 +694,7 @@
         },
         {
           "stim_uid": "qian2023//2/ssp",
+          "intended_uid": "qian2023//2/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -617,6 +702,7 @@
         },
         {
           "stim_uid": "qian2023//2/spp",
+          "intended_uid": "qian2023//2/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -624,6 +710,7 @@
         },
         {
           "stim_uid": "qian2023//2/pss",
+          "intended_uid": "qian2023//2/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -631,6 +718,7 @@
         },
         {
           "stim_uid": "qian2023//2/pps",
+          "intended_uid": "qian2023//2/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -638,6 +726,7 @@
         },
         {
           "stim_uid": "qian2023//3/ssp",
+          "intended_uid": "qian2023//3/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -645,6 +734,7 @@
         },
         {
           "stim_uid": "qian2023//3/spp",
+          "intended_uid": "qian2023//3/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -652,6 +742,7 @@
         },
         {
           "stim_uid": "qian2023//3/pss",
+          "intended_uid": "qian2023//3/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -659,6 +750,7 @@
         },
         {
           "stim_uid": "qian2023//3/pps",
+          "intended_uid": "qian2023//3/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -666,6 +758,7 @@
         },
         {
           "stim_uid": "qian2023//4/ssp",
+          "intended_uid": "qian2023//4/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -673,6 +766,7 @@
         },
         {
           "stim_uid": "qian2023//4/spp",
+          "intended_uid": "qian2023//4/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -680,6 +774,7 @@
         },
         {
           "stim_uid": "qian2023//4/pss",
+          "intended_uid": "qian2023//4/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -687,6 +782,7 @@
         },
         {
           "stim_uid": "qian2023//4/pps",
+          "intended_uid": "qian2023//4/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -694,6 +790,7 @@
         },
         {
           "stim_uid": "qian2023//5/ssp",
+          "intended_uid": "qian2023//5/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -701,6 +798,7 @@
         },
         {
           "stim_uid": "qian2023//5/spp",
+          "intended_uid": "qian2023//5/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -708,6 +806,7 @@
         },
         {
           "stim_uid": "qian2023//5/pss",
+          "intended_uid": "qian2023//5/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -715,6 +814,7 @@
         },
         {
           "stim_uid": "qian2023//5/pps",
+          "intended_uid": "qian2023//5/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -722,6 +822,7 @@
         },
         {
           "stim_uid": "qian2023//6/pss",
+          "intended_uid": "qian2023//6/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -729,6 +830,7 @@
         },
         {
           "stim_uid": "qian2023//6/pps",
+          "intended_uid": "qian2023//6/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -736,6 +838,7 @@
         },
         {
           "stim_uid": "qian2023//7/ssp",
+          "intended_uid": "qian2023//7/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -743,6 +846,7 @@
         },
         {
           "stim_uid": "qian2023//7/spp",
+          "intended_uid": "qian2023//7/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -750,6 +854,7 @@
         },
         {
           "stim_uid": "qian2023//7/pss",
+          "intended_uid": "qian2023//7/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -757,6 +862,7 @@
         },
         {
           "stim_uid": "qian2023//7/pps",
+          "intended_uid": "qian2023//7/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -764,6 +870,7 @@
         },
         {
           "stim_uid": "qian2023//8/ssp",
+          "intended_uid": "qian2023//8/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -771,6 +878,7 @@
         },
         {
           "stim_uid": "qian2023//8/spp",
+          "intended_uid": "qian2023//8/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -778,6 +886,7 @@
         },
         {
           "stim_uid": "qian2023//8/pss",
+          "intended_uid": "qian2023//8/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -785,6 +894,7 @@
         },
         {
           "stim_uid": "qian2023//8/pps",
+          "intended_uid": "qian2023//8/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -792,6 +902,7 @@
         },
         {
           "stim_uid": "qian2023//9/pss",
+          "intended_uid": "qian2023//9/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -799,6 +910,7 @@
         },
         {
           "stim_uid": "qian2023//9/pps",
+          "intended_uid": "qian2023//9/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -806,6 +918,7 @@
         },
         {
           "stim_uid": "qian2023//10/ssp",
+          "intended_uid": "qian2023//10/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -813,6 +926,7 @@
         },
         {
           "stim_uid": "qian2023//10/spp",
+          "intended_uid": "qian2023//10/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -820,6 +934,7 @@
         },
         {
           "stim_uid": "qian2023//10/pss",
+          "intended_uid": "qian2023//10/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -827,6 +942,7 @@
         },
         {
           "stim_uid": "qian2023//10/pps",
+          "intended_uid": "qian2023//10/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -834,6 +950,7 @@
         },
         {
           "stim_uid": "qian2023//11/ssp",
+          "intended_uid": "qian2023//11/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -841,6 +958,7 @@
         },
         {
           "stim_uid": "qian2023//11/spp",
+          "intended_uid": "qian2023//11/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -848,6 +966,7 @@
         },
         {
           "stim_uid": "qian2023//11/pss",
+          "intended_uid": "qian2023//11/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -855,6 +974,7 @@
         },
         {
           "stim_uid": "qian2023//11/pps",
+          "intended_uid": "qian2023//11/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -862,6 +982,7 @@
         },
         {
           "stim_uid": "qian2023//12/pss",
+          "intended_uid": "qian2023//12/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -869,6 +990,7 @@
         },
         {
           "stim_uid": "qian2023//12/pps",
+          "intended_uid": "qian2023//12/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -876,6 +998,7 @@
         },
         {
           "stim_uid": "qian2023//13/ssp",
+          "intended_uid": "qian2023//13/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -883,6 +1006,7 @@
         },
         {
           "stim_uid": "qian2023//13/spp",
+          "intended_uid": "qian2023//13/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -890,6 +1014,7 @@
         },
         {
           "stim_uid": "qian2023//13/pss",
+          "intended_uid": "qian2023//13/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -897,6 +1022,7 @@
         },
         {
           "stim_uid": "qian2023//13/pps",
+          "intended_uid": "qian2023//13/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -904,6 +1030,7 @@
         },
         {
           "stim_uid": "qian2023//14/ssp",
+          "intended_uid": "qian2023//14/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -911,6 +1038,7 @@
         },
         {
           "stim_uid": "qian2023//14/spp",
+          "intended_uid": "qian2023//14/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -918,6 +1046,7 @@
         },
         {
           "stim_uid": "qian2023//14/pss",
+          "intended_uid": "qian2023//14/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -925,6 +1054,7 @@
         },
         {
           "stim_uid": "qian2023//14/pps",
+          "intended_uid": "qian2023//14/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -932,6 +1062,7 @@
         },
         {
           "stim_uid": "qian2023//15/ssp",
+          "intended_uid": "qian2023//15/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -939,6 +1070,7 @@
         },
         {
           "stim_uid": "qian2023//15/spp",
+          "intended_uid": "qian2023//15/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -946,6 +1078,7 @@
         },
         {
           "stim_uid": "qian2023//15/pss",
+          "intended_uid": "qian2023//15/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -953,13 +1086,47 @@
         },
         {
           "stim_uid": "qian2023//15/pps",
+          "intended_uid": "qian2023//15/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
           "char_dist": 3
         },
         {
+          "stim_uid": "qian2023//16/ssp",
+          "intended_uid": "qian2023//16/psp",
+          "verdict": "dist>max_dist",
+          "from": "story",
+          "to": "stories",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//16/spp",
+          "intended_uid": "qian2023//16/ppp",
+          "verdict": "dist>max_dist",
+          "from": "story",
+          "to": "stories",
+          "char_dist": 3
+        },
+        {
           "stim_uid": "qian2023//16/pss",
+          "intended_uid": "qian2023//16/psp",
+          "verdict": "not_retrieved",
+          "from": "has",
+          "to": "have",
+          "char_dist": 2
+        },
+        {
+          "stim_uid": "qian2023//16/pss",
+          "intended_uid": "qian2023//16/sss",
+          "verdict": "dist>max_dist",
+          "from": "stories",
+          "to": "story",
+          "char_dist": 3
+        },
+        {
+          "stim_uid": "qian2023//16/pps",
+          "intended_uid": "qian2023//16/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -967,13 +1134,15 @@
         },
         {
           "stim_uid": "qian2023//16/pps",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
+          "intended_uid": "qian2023//16/sps",
+          "verdict": "dist>max_dist",
+          "from": "stories",
+          "to": "story",
+          "char_dist": 3
         },
         {
           "stim_uid": "qian2023//17/pss",
+          "intended_uid": "qian2023//17/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -981,6 +1150,7 @@
         },
         {
           "stim_uid": "qian2023//17/pps",
+          "intended_uid": "qian2023//17/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -988,6 +1158,7 @@
         },
         {
           "stim_uid": "qian2023//18/ssp",
+          "intended_uid": "qian2023//18/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -995,6 +1166,7 @@
         },
         {
           "stim_uid": "qian2023//18/spp",
+          "intended_uid": "qian2023//18/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1002,6 +1174,7 @@
         },
         {
           "stim_uid": "qian2023//18/pss",
+          "intended_uid": "qian2023//18/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1009,6 +1182,7 @@
         },
         {
           "stim_uid": "qian2023//18/pps",
+          "intended_uid": "qian2023//18/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1016,6 +1190,7 @@
         },
         {
           "stim_uid": "qian2023//19/ssp",
+          "intended_uid": "qian2023//19/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1023,6 +1198,7 @@
         },
         {
           "stim_uid": "qian2023//19/spp",
+          "intended_uid": "qian2023//19/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1030,6 +1206,7 @@
         },
         {
           "stim_uid": "qian2023//19/pss",
+          "intended_uid": "qian2023//19/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1037,6 +1214,7 @@
         },
         {
           "stim_uid": "qian2023//19/pps",
+          "intended_uid": "qian2023//19/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1044,6 +1222,7 @@
         },
         {
           "stim_uid": "qian2023//21/pss",
+          "intended_uid": "qian2023//21/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1051,6 +1230,7 @@
         },
         {
           "stim_uid": "qian2023//21/pps",
+          "intended_uid": "qian2023//21/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1058,6 +1238,7 @@
         },
         {
           "stim_uid": "qian2023//22/ssp",
+          "intended_uid": "qian2023//22/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1065,6 +1246,7 @@
         },
         {
           "stim_uid": "qian2023//22/spp",
+          "intended_uid": "qian2023//22/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1072,6 +1254,7 @@
         },
         {
           "stim_uid": "qian2023//22/pss",
+          "intended_uid": "qian2023//22/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1079,6 +1262,7 @@
         },
         {
           "stim_uid": "qian2023//22/pps",
+          "intended_uid": "qian2023//22/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1086,6 +1270,7 @@
         },
         {
           "stim_uid": "qian2023//23/ssp",
+          "intended_uid": "qian2023//23/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1093,6 +1278,7 @@
         },
         {
           "stim_uid": "qian2023//23/spp",
+          "intended_uid": "qian2023//23/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1100,6 +1286,7 @@
         },
         {
           "stim_uid": "qian2023//23/pss",
+          "intended_uid": "qian2023//23/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1107,6 +1294,7 @@
         },
         {
           "stim_uid": "qian2023//23/pps",
+          "intended_uid": "qian2023//23/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1114,6 +1302,7 @@
         },
         {
           "stim_uid": "qian2023//24/ssp",
+          "intended_uid": "qian2023//24/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1121,6 +1310,7 @@
         },
         {
           "stim_uid": "qian2023//24/spp",
+          "intended_uid": "qian2023//24/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1128,6 +1318,7 @@
         },
         {
           "stim_uid": "qian2023//24/pss",
+          "intended_uid": "qian2023//24/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1135,6 +1326,7 @@
         },
         {
           "stim_uid": "qian2023//24/pps",
+          "intended_uid": "qian2023//24/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1142,6 +1334,7 @@
         },
         {
           "stim_uid": "qian2023//25/pss",
+          "intended_uid": "qian2023//25/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1149,6 +1342,7 @@
         },
         {
           "stim_uid": "qian2023//25/pps",
+          "intended_uid": "qian2023//25/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1156,6 +1350,7 @@
         },
         {
           "stim_uid": "qian2023//26/pss",
+          "intended_uid": "qian2023//26/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1163,6 +1358,7 @@
         },
         {
           "stim_uid": "qian2023//26/pps",
+          "intended_uid": "qian2023//26/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1170,6 +1366,7 @@
         },
         {
           "stim_uid": "qian2023//27/ssp",
+          "intended_uid": "qian2023//27/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1177,6 +1374,7 @@
         },
         {
           "stim_uid": "qian2023//27/spp",
+          "intended_uid": "qian2023//27/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1184,6 +1382,7 @@
         },
         {
           "stim_uid": "qian2023//27/pss",
+          "intended_uid": "qian2023//27/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1191,6 +1390,7 @@
         },
         {
           "stim_uid": "qian2023//27/pps",
+          "intended_uid": "qian2023//27/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1198,6 +1398,7 @@
         },
         {
           "stim_uid": "qian2023//29/ssp",
+          "intended_uid": "qian2023//29/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1205,6 +1406,7 @@
         },
         {
           "stim_uid": "qian2023//29/spp",
+          "intended_uid": "qian2023//29/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1212,6 +1414,7 @@
         },
         {
           "stim_uid": "qian2023//29/pss",
+          "intended_uid": "qian2023//29/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1219,6 +1422,7 @@
         },
         {
           "stim_uid": "qian2023//29/pps",
+          "intended_uid": "qian2023//29/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1226,6 +1430,7 @@
         },
         {
           "stim_uid": "qian2023//30/pss",
+          "intended_uid": "qian2023//30/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1233,6 +1438,7 @@
         },
         {
           "stim_uid": "qian2023//30/pps",
+          "intended_uid": "qian2023//30/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1240,6 +1446,7 @@
         },
         {
           "stim_uid": "qian2023//31/ssp",
+          "intended_uid": "qian2023//31/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1247,6 +1454,7 @@
         },
         {
           "stim_uid": "qian2023//31/spp",
+          "intended_uid": "qian2023//31/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1254,6 +1462,7 @@
         },
         {
           "stim_uid": "qian2023//31/pss",
+          "intended_uid": "qian2023//31/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1261,6 +1470,7 @@
         },
         {
           "stim_uid": "qian2023//31/pps",
+          "intended_uid": "qian2023//31/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1268,6 +1478,7 @@
         },
         {
           "stim_uid": "qian2023//32/pss",
+          "intended_uid": "qian2023//32/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1275,6 +1486,7 @@
         },
         {
           "stim_uid": "qian2023//32/pps",
+          "intended_uid": "qian2023//32/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1282,6 +1494,7 @@
         },
         {
           "stim_uid": "qian2023//33/pss",
+          "intended_uid": "qian2023//33/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1289,6 +1502,7 @@
         },
         {
           "stim_uid": "qian2023//33/pps",
+          "intended_uid": "qian2023//33/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1296,6 +1510,7 @@
         },
         {
           "stim_uid": "qian2023//34/ssp",
+          "intended_uid": "qian2023//34/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1303,6 +1518,7 @@
         },
         {
           "stim_uid": "qian2023//34/spp",
+          "intended_uid": "qian2023//34/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1310,6 +1526,7 @@
         },
         {
           "stim_uid": "qian2023//34/pss",
+          "intended_uid": "qian2023//34/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1317,6 +1534,7 @@
         },
         {
           "stim_uid": "qian2023//34/pps",
+          "intended_uid": "qian2023//34/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1324,6 +1542,7 @@
         },
         {
           "stim_uid": "qian2023//35/ssp",
+          "intended_uid": "qian2023//35/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1331,6 +1550,7 @@
         },
         {
           "stim_uid": "qian2023//35/spp",
+          "intended_uid": "qian2023//35/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1338,6 +1558,7 @@
         },
         {
           "stim_uid": "qian2023//35/pss",
+          "intended_uid": "qian2023//35/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1345,6 +1566,7 @@
         },
         {
           "stim_uid": "qian2023//35/pps",
+          "intended_uid": "qian2023//35/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1352,6 +1574,7 @@
         },
         {
           "stim_uid": "qian2023//36/ssp",
+          "intended_uid": "qian2023//36/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1359,6 +1582,7 @@
         },
         {
           "stim_uid": "qian2023//36/spp",
+          "intended_uid": "qian2023//36/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1366,6 +1590,7 @@
         },
         {
           "stim_uid": "qian2023//36/pss",
+          "intended_uid": "qian2023//36/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1373,6 +1598,7 @@
         },
         {
           "stim_uid": "qian2023//36/pps",
+          "intended_uid": "qian2023//36/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1380,6 +1606,7 @@
         },
         {
           "stim_uid": "qian2023//37/ssp",
+          "intended_uid": "qian2023//37/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1387,6 +1614,7 @@
         },
         {
           "stim_uid": "qian2023//37/spp",
+          "intended_uid": "qian2023//37/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1394,6 +1622,7 @@
         },
         {
           "stim_uid": "qian2023//37/pss",
+          "intended_uid": "qian2023//37/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1401,6 +1630,7 @@
         },
         {
           "stim_uid": "qian2023//37/pps",
+          "intended_uid": "qian2023//37/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1408,6 +1638,7 @@
         },
         {
           "stim_uid": "qian2023//38/ssp",
+          "intended_uid": "qian2023//38/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1415,6 +1646,7 @@
         },
         {
           "stim_uid": "qian2023//38/spp",
+          "intended_uid": "qian2023//38/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1422,6 +1654,7 @@
         },
         {
           "stim_uid": "qian2023//38/pss",
+          "intended_uid": "qian2023//38/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1429,6 +1662,7 @@
         },
         {
           "stim_uid": "qian2023//38/pps",
+          "intended_uid": "qian2023//38/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1436,6 +1670,7 @@
         },
         {
           "stim_uid": "qian2023//39/ssp",
+          "intended_uid": "qian2023//39/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1443,6 +1678,7 @@
         },
         {
           "stim_uid": "qian2023//39/spp",
+          "intended_uid": "qian2023//39/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1450,6 +1686,7 @@
         },
         {
           "stim_uid": "qian2023//39/pss",
+          "intended_uid": "qian2023//39/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1457,6 +1694,7 @@
         },
         {
           "stim_uid": "qian2023//39/pps",
+          "intended_uid": "qian2023//39/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1464,6 +1702,7 @@
         },
         {
           "stim_uid": "qian2023//40/ssp",
+          "intended_uid": "qian2023//40/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1471,6 +1710,7 @@
         },
         {
           "stim_uid": "qian2023//40/spp",
+          "intended_uid": "qian2023//40/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1478,6 +1718,7 @@
         },
         {
           "stim_uid": "qian2023//40/pss",
+          "intended_uid": "qian2023//40/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1485,6 +1726,7 @@
         },
         {
           "stim_uid": "qian2023//40/pps",
+          "intended_uid": "qian2023//40/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1492,6 +1734,7 @@
         },
         {
           "stim_uid": "qian2023//41/ssp",
+          "intended_uid": "qian2023//41/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1499,6 +1742,7 @@
         },
         {
           "stim_uid": "qian2023//41/spp",
+          "intended_uid": "qian2023//41/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1506,6 +1750,7 @@
         },
         {
           "stim_uid": "qian2023//41/pss",
+          "intended_uid": "qian2023//41/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1513,6 +1758,7 @@
         },
         {
           "stim_uid": "qian2023//41/pps",
+          "intended_uid": "qian2023//41/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1520,6 +1766,7 @@
         },
         {
           "stim_uid": "qian2023//42/ssp",
+          "intended_uid": "qian2023//42/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1527,6 +1774,7 @@
         },
         {
           "stim_uid": "qian2023//42/spp",
+          "intended_uid": "qian2023//42/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1534,6 +1782,7 @@
         },
         {
           "stim_uid": "qian2023//42/pss",
+          "intended_uid": "qian2023//42/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1541,6 +1790,7 @@
         },
         {
           "stim_uid": "qian2023//42/pps",
+          "intended_uid": "qian2023//42/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1548,6 +1798,7 @@
         },
         {
           "stim_uid": "qian2023//43/ssp",
+          "intended_uid": "qian2023//43/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1555,6 +1806,7 @@
         },
         {
           "stim_uid": "qian2023//43/spp",
+          "intended_uid": "qian2023//43/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1562,6 +1814,7 @@
         },
         {
           "stim_uid": "qian2023//43/pss",
+          "intended_uid": "qian2023//43/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1569,6 +1822,7 @@
         },
         {
           "stim_uid": "qian2023//43/pps",
+          "intended_uid": "qian2023//43/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1576,6 +1830,7 @@
         },
         {
           "stim_uid": "qian2023//44/ssp",
+          "intended_uid": "qian2023//44/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1583,6 +1838,7 @@
         },
         {
           "stim_uid": "qian2023//44/spp",
+          "intended_uid": "qian2023//44/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1590,6 +1846,7 @@
         },
         {
           "stim_uid": "qian2023//44/pss",
+          "intended_uid": "qian2023//44/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1597,6 +1854,7 @@
         },
         {
           "stim_uid": "qian2023//44/pps",
+          "intended_uid": "qian2023//44/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1604,6 +1862,7 @@
         },
         {
           "stim_uid": "qian2023//45/ssp",
+          "intended_uid": "qian2023//45/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1611,6 +1870,7 @@
         },
         {
           "stim_uid": "qian2023//45/spp",
+          "intended_uid": "qian2023//45/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1618,6 +1878,7 @@
         },
         {
           "stim_uid": "qian2023//45/pss",
+          "intended_uid": "qian2023//45/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1625,6 +1886,7 @@
         },
         {
           "stim_uid": "qian2023//45/pps",
+          "intended_uid": "qian2023//45/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1632,6 +1894,7 @@
         },
         {
           "stim_uid": "qian2023//46/ssp",
+          "intended_uid": "qian2023//46/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1639,6 +1902,7 @@
         },
         {
           "stim_uid": "qian2023//46/spp",
+          "intended_uid": "qian2023//46/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1646,6 +1910,7 @@
         },
         {
           "stim_uid": "qian2023//46/pss",
+          "intended_uid": "qian2023//46/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1653,6 +1918,7 @@
         },
         {
           "stim_uid": "qian2023//46/pps",
+          "intended_uid": "qian2023//46/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1660,6 +1926,7 @@
         },
         {
           "stim_uid": "qian2023//47/ssp",
+          "intended_uid": "qian2023//47/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1667,6 +1934,7 @@
         },
         {
           "stim_uid": "qian2023//47/spp",
+          "intended_uid": "qian2023//47/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1674,6 +1942,7 @@
         },
         {
           "stim_uid": "qian2023//47/pss",
+          "intended_uid": "qian2023//47/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1681,6 +1950,7 @@
         },
         {
           "stim_uid": "qian2023//47/pps",
+          "intended_uid": "qian2023//47/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1688,6 +1958,7 @@
         },
         {
           "stim_uid": "qian2023//48/pss",
+          "intended_uid": "qian2023//48/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1695,6 +1966,7 @@
         },
         {
           "stim_uid": "qian2023//48/pps",
+          "intended_uid": "qian2023//48/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1702,6 +1974,7 @@
         },
         {
           "stim_uid": "qian2023//49/pss",
+          "intended_uid": "qian2023//49/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1709,6 +1982,7 @@
         },
         {
           "stim_uid": "qian2023//49/pps",
+          "intended_uid": "qian2023//49/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1716,6 +1990,7 @@
         },
         {
           "stim_uid": "qian2023//50/ssp",
+          "intended_uid": "qian2023//50/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1723,6 +1998,7 @@
         },
         {
           "stim_uid": "qian2023//50/spp",
+          "intended_uid": "qian2023//50/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1730,6 +2006,7 @@
         },
         {
           "stim_uid": "qian2023//50/pss",
+          "intended_uid": "qian2023//50/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1737,6 +2014,7 @@
         },
         {
           "stim_uid": "qian2023//50/pps",
+          "intended_uid": "qian2023//50/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1744,6 +2022,7 @@
         },
         {
           "stim_uid": "qian2023//51/ssp",
+          "intended_uid": "qian2023//51/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1751,6 +2030,7 @@
         },
         {
           "stim_uid": "qian2023//51/spp",
+          "intended_uid": "qian2023//51/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1758,6 +2038,7 @@
         },
         {
           "stim_uid": "qian2023//51/pss",
+          "intended_uid": "qian2023//51/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1765,6 +2046,7 @@
         },
         {
           "stim_uid": "qian2023//51/pps",
+          "intended_uid": "qian2023//51/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1772,6 +2054,7 @@
         },
         {
           "stim_uid": "qian2023//52/ssp",
+          "intended_uid": "qian2023//52/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1779,6 +2062,7 @@
         },
         {
           "stim_uid": "qian2023//52/spp",
+          "intended_uid": "qian2023//52/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1786,6 +2070,7 @@
         },
         {
           "stim_uid": "qian2023//52/pss",
+          "intended_uid": "qian2023//52/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1793,6 +2078,7 @@
         },
         {
           "stim_uid": "qian2023//52/pps",
+          "intended_uid": "qian2023//52/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1800,6 +2086,7 @@
         },
         {
           "stim_uid": "qian2023//53/ssp",
+          "intended_uid": "qian2023//53/sss",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1807,6 +2094,7 @@
         },
         {
           "stim_uid": "qian2023//53/spp",
+          "intended_uid": "qian2023//53/sps",
           "verdict": "dist>max_dist",
           "from": "were",
           "to": "was",
@@ -1814,6 +2102,7 @@
         },
         {
           "stim_uid": "qian2023//53/pss",
+          "intended_uid": "qian2023//53/psp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1821,6 +2110,7 @@
         },
         {
           "stim_uid": "qian2023//53/pps",
+          "intended_uid": "qian2023//53/ppp",
           "verdict": "dist>max_dist",
           "from": "was",
           "to": "were",
@@ -1828,6 +2118,7 @@
         },
         {
           "stim_uid": "qian2023//54/ssp",
+          "intended_uid": "qian2023//54/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1835,6 +2126,7 @@
         },
         {
           "stim_uid": "qian2023//54/spp",
+          "intended_uid": "qian2023//54/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1842,6 +2134,7 @@
         },
         {
           "stim_uid": "qian2023//54/pss",
+          "intended_uid": "qian2023//54/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1849,6 +2142,7 @@
         },
         {
           "stim_uid": "qian2023//54/pps",
+          "intended_uid": "qian2023//54/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1856,6 +2150,7 @@
         },
         {
           "stim_uid": "qian2023//55/pss",
+          "intended_uid": "qian2023//55/psp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1863,6 +2158,7 @@
         },
         {
           "stim_uid": "qian2023//55/pps",
+          "intended_uid": "qian2023//55/ppp",
           "verdict": "not_retrieved",
           "from": "has",
           "to": "have",
@@ -1870,6 +2166,7 @@
         },
         {
           "stim_uid": "qian2023//56/ssp",
+          "intended_uid": "qian2023//56/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1877,6 +2174,7 @@
         },
         {
           "stim_uid": "qian2023//56/spp",
+          "intended_uid": "qian2023//56/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1884,6 +2182,7 @@
         },
         {
           "stim_uid": "qian2023//56/pss",
+          "intended_uid": "qian2023//56/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1891,6 +2190,7 @@
         },
         {
           "stim_uid": "qian2023//56/pps",
+          "intended_uid": "qian2023//56/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1898,6 +2198,15 @@
         },
         {
           "stim_uid": "qian2023//57/ssp",
+          "intended_uid": "qian2023//57/psp",
+          "verdict": "not_retrieved",
+          "from": "rice",
+          "to": "rices",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "qian2023//57/ssp",
+          "intended_uid": "qian2023//57/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1905,6 +2214,15 @@
         },
         {
           "stim_uid": "qian2023//57/spp",
+          "intended_uid": "qian2023//57/ppp",
+          "verdict": "not_retrieved",
+          "from": "rice",
+          "to": "rices",
+          "char_dist": 1
+        },
+        {
+          "stim_uid": "qian2023//57/spp",
+          "intended_uid": "qian2023//57/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1912,6 +2230,7 @@
         },
         {
           "stim_uid": "qian2023//57/pss",
+          "intended_uid": "qian2023//57/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1919,6 +2238,7 @@
         },
         {
           "stim_uid": "qian2023//57/pps",
+          "intended_uid": "qian2023//57/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1926,6 +2246,7 @@
         },
         {
           "stim_uid": "qian2023//58/ssp",
+          "intended_uid": "qian2023//58/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1933,6 +2254,7 @@
         },
         {
           "stim_uid": "qian2023//58/spp",
+          "intended_uid": "qian2023//58/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1940,6 +2262,7 @@
         },
         {
           "stim_uid": "qian2023//58/pss",
+          "intended_uid": "qian2023//58/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1947,6 +2270,7 @@
         },
         {
           "stim_uid": "qian2023//58/pps",
+          "intended_uid": "qian2023//58/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1954,6 +2278,7 @@
         },
         {
           "stim_uid": "qian2023//59/ssp",
+          "intended_uid": "qian2023//59/sss",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1961,6 +2286,7 @@
         },
         {
           "stim_uid": "qian2023//59/spp",
+          "intended_uid": "qian2023//59/sps",
           "verdict": "dist>max_dist",
           "from": "are",
           "to": "is",
@@ -1968,6 +2294,7 @@
         },
         {
           "stim_uid": "qian2023//59/pss",
+          "intended_uid": "qian2023//59/psp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1975,6 +2302,7 @@
         },
         {
           "stim_uid": "qian2023//59/pps",
+          "intended_uid": "qian2023//59/ppp",
           "verdict": "dist>max_dist",
           "from": "is",
           "to": "are",
@@ -1985,6 +2313,8 @@
     "ryskin2021": {
       "n_sub_rows": 378,
       "n_reachable": 141,
+      "n_stimuli_with_any_reachable_repair": 141,
+      "n_stimuli_with_a_sub_repair": 378,
       "verdicts": {
         "dist>max_dist": 183,
         "multiword": 17,
@@ -2011,6 +2341,7 @@
       "unreachable": [
         {
           "stim_uid": "ryskin2021//1/SemCrit",
+          "intended_uid": "ryskin2021//1/Control",
           "verdict": "dist>max_dist",
           "from": "veterinarian.",
           "to": "veteran.",
@@ -2018,6 +2349,7 @@
         },
         {
           "stim_uid": "ryskin2021//1/Sem",
+          "intended_uid": "ryskin2021//1/Control",
           "verdict": "dist>max_dist",
           "from": "rhinestone.",
           "to": "veteran.",
@@ -2025,6 +2357,7 @@
         },
         {
           "stim_uid": "ryskin2021//2/SemCrit",
+          "intended_uid": "ryskin2021//2/Control",
           "verdict": "dist>max_dist",
           "from": "veteran.",
           "to": "veterinarian.",
@@ -2032,6 +2365,7 @@
         },
         {
           "stim_uid": "ryskin2021//2/Sem",
+          "intended_uid": "ryskin2021//2/Control",
           "verdict": "dist>max_dist",
           "from": "carton.",
           "to": "veterinarian.",
@@ -2039,6 +2373,7 @@
         },
         {
           "stim_uid": "ryskin2021//3/Sem",
+          "intended_uid": "ryskin2021//3/Control",
           "verdict": "dist>max_dist",
           "from": "inferno.",
           "to": "alteration.",
@@ -2046,6 +2381,7 @@
         },
         {
           "stim_uid": "ryskin2021//4/Sem",
+          "intended_uid": "ryskin2021//4/Control",
           "verdict": "dist>max_dist",
           "from": "muskrat.",
           "to": "altercation.",
@@ -2053,6 +2389,7 @@
         },
         {
           "stim_uid": "ryskin2021//5/Sem",
+          "intended_uid": "ryskin2021//5/Control",
           "verdict": "dist>max_dist",
           "from": "hearse.",
           "to": "anecdote.",
@@ -2060,6 +2397,7 @@
         },
         {
           "stim_uid": "ryskin2021//6/Sem",
+          "intended_uid": "ryskin2021//6/Control",
           "verdict": "multiword",
           "from": "a matinee.",
           "to": "an antidote.",
@@ -2067,6 +2405,7 @@
         },
         {
           "stim_uid": "ryskin2021//7/SemCrit",
+          "intended_uid": "ryskin2021//7/Control",
           "verdict": "dist>max_dist",
           "from": "amenities.",
           "to": "anemones.",
@@ -2074,6 +2413,7 @@
         },
         {
           "stim_uid": "ryskin2021//7/Sem",
+          "intended_uid": "ryskin2021//7/Control",
           "verdict": "dist>max_dist",
           "from": "ornaments.",
           "to": "anemones.",
@@ -2081,6 +2421,7 @@
         },
         {
           "stim_uid": "ryskin2021//7/Synt",
+          "intended_uid": "ryskin2021//7/Control",
           "verdict": "not_retrieved",
           "from": "anemone.",
           "to": "anemones.",
@@ -2088,6 +2429,7 @@
         },
         {
           "stim_uid": "ryskin2021//8/SemCrit",
+          "intended_uid": "ryskin2021//8/Control",
           "verdict": "dist>max_dist",
           "from": "anemones.",
           "to": "amenities.",
@@ -2095,6 +2437,7 @@
         },
         {
           "stim_uid": "ryskin2021//8/Sem",
+          "intended_uid": "ryskin2021//8/Control",
           "verdict": "dist>max_dist",
           "from": "lymph.",
           "to": "amenities.",
@@ -2102,6 +2445,7 @@
         },
         {
           "stim_uid": "ryskin2021//8/Synt",
+          "intended_uid": "ryskin2021//8/Control",
           "verdict": "dist>max_dist",
           "from": "amenity.",
           "to": "amenities.",
@@ -2109,6 +2453,7 @@
         },
         {
           "stim_uid": "ryskin2021//9/Sem",
+          "intended_uid": "ryskin2021//9/Control",
           "verdict": "dist>max_dist",
           "from": "juggler.",
           "to": "sediment.",
@@ -2116,6 +2461,7 @@
         },
         {
           "stim_uid": "ryskin2021//10/Sem",
+          "intended_uid": "ryskin2021//10/Control",
           "verdict": "dist>max_dist",
           "from": "dalmatian.",
           "to": "sentiment.",
@@ -2123,6 +2469,7 @@
         },
         {
           "stim_uid": "ryskin2021//11/Sem",
+          "intended_uid": "ryskin2021//11/Control",
           "verdict": "dist>max_dist",
           "from": "masquerade.",
           "to": "cardinal.",
@@ -2130,6 +2477,7 @@
         },
         {
           "stim_uid": "ryskin2021//12/Sem",
+          "intended_uid": "ryskin2021//12/Control",
           "verdict": "dist>max_dist",
           "from": "destruction.",
           "to": "carnival.",
@@ -2137,6 +2485,7 @@
         },
         {
           "stim_uid": "ryskin2021//13/SemCrit",
+          "intended_uid": "ryskin2021//13/Control",
           "verdict": "dist>max_dist",
           "from": "callus.",
           "to": "catalyst.",
@@ -2144,6 +2493,7 @@
         },
         {
           "stim_uid": "ryskin2021//13/Sem",
+          "intended_uid": "ryskin2021//13/Control",
           "verdict": "multiword",
           "from": "an anecdote.",
           "to": "a catalyst.",
@@ -2151,6 +2501,7 @@
         },
         {
           "stim_uid": "ryskin2021//15/SemCrit",
+          "intended_uid": "ryskin2021//15/Control",
           "verdict": "dist>max_dist",
           "from": "cavity.",
           "to": "cavalry.",
@@ -2158,6 +2509,7 @@
         },
         {
           "stim_uid": "ryskin2021//15/Sem",
+          "intended_uid": "ryskin2021//15/Control",
           "verdict": "dist>max_dist",
           "from": "stipulation.",
           "to": "cavalry.",
@@ -2165,6 +2517,7 @@
         },
         {
           "stim_uid": "ryskin2021//15/Synt",
+          "intended_uid": "ryskin2021//15/Control",
           "verdict": "dist>max_dist",
           "from": "cavalries.",
           "to": "cavalry.",
@@ -2172,6 +2525,7 @@
         },
         {
           "stim_uid": "ryskin2021//16/SemCrit",
+          "intended_uid": "ryskin2021//16/Control",
           "verdict": "dist>max_dist",
           "from": "cavalry.",
           "to": "cavity.",
@@ -2179,6 +2533,7 @@
         },
         {
           "stim_uid": "ryskin2021//16/Sem",
+          "intended_uid": "ryskin2021//16/Control",
           "verdict": "dist>max_dist",
           "from": "petal.",
           "to": "cavity.",
@@ -2186,6 +2541,7 @@
         },
         {
           "stim_uid": "ryskin2021//16/Synt",
+          "intended_uid": "ryskin2021//16/Control",
           "verdict": "dist>max_dist",
           "from": "cavities.",
           "to": "cavity.",
@@ -2193,6 +2549,7 @@
         },
         {
           "stim_uid": "ryskin2021//17/Sem",
+          "intended_uid": "ryskin2021//17/Control",
           "verdict": "dist>max_dist",
           "from": "balcony.",
           "to": "medication.",
@@ -2200,6 +2557,7 @@
         },
         {
           "stim_uid": "ryskin2021//18/Sem",
+          "intended_uid": "ryskin2021//18/Control",
           "verdict": "dist>max_dist",
           "from": "arsenal.",
           "to": "meditation.",
@@ -2207,6 +2565,7 @@
         },
         {
           "stim_uid": "ryskin2021//19/Sem",
+          "intended_uid": "ryskin2021//19/Control",
           "verdict": "dist>max_dist",
           "from": "parasol.",
           "to": "collection.",
@@ -2214,6 +2573,7 @@
         },
         {
           "stim_uid": "ryskin2021//20/Sem",
+          "intended_uid": "ryskin2021//20/Control",
           "verdict": "dist>max_dist",
           "from": "mercenary.",
           "to": "correction.",
@@ -2221,6 +2581,7 @@
         },
         {
           "stim_uid": "ryskin2021//21/Sem",
+          "intended_uid": "ryskin2021//21/Control",
           "verdict": "multiword",
           "from": "an empire.",
           "to": "a migraine.",
@@ -2228,6 +2589,7 @@
         },
         {
           "stim_uid": "ryskin2021//22/Sem",
+          "intended_uid": "ryskin2021//22/Control",
           "verdict": "dist>max_dist",
           "from": "massage.",
           "to": "migrant.",
@@ -2235,6 +2597,7 @@
         },
         {
           "stim_uid": "ryskin2021//24/SemCrit",
+          "intended_uid": "ryskin2021//24/Control",
           "verdict": "dist>max_dist",
           "from": "rhino.",
           "to": "rhinestone.",
@@ -2242,6 +2605,7 @@
         },
         {
           "stim_uid": "ryskin2021//24/Sem",
+          "intended_uid": "ryskin2021//24/Control",
           "verdict": "dist>max_dist",
           "from": "captain.",
           "to": "rhinestone.",
@@ -2249,6 +2613,7 @@
         },
         {
           "stim_uid": "ryskin2021//24/Synt",
+          "intended_uid": "ryskin2021//24/Control",
           "verdict": "not_retrieved",
           "from": "rhinestones.",
           "to": "rhinestone.",
@@ -2256,6 +2621,7 @@
         },
         {
           "stim_uid": "ryskin2021//25/SemCrit",
+          "intended_uid": "ryskin2021//25/Control",
           "verdict": "dist>max_dist",
           "from": "corridor.",
           "to": "coroner.",
@@ -2263,6 +2629,7 @@
         },
         {
           "stim_uid": "ryskin2021//25/Sem",
+          "intended_uid": "ryskin2021//25/Control",
           "verdict": "dist>max_dist",
           "from": "dynasty.",
           "to": "coroner.",
@@ -2270,6 +2637,7 @@
         },
         {
           "stim_uid": "ryskin2021//26/SemCrit",
+          "intended_uid": "ryskin2021//26/Control",
           "verdict": "dist>max_dist",
           "from": "coroner.",
           "to": "corridor.",
@@ -2277,6 +2645,7 @@
         },
         {
           "stim_uid": "ryskin2021//26/Sem",
+          "intended_uid": "ryskin2021//26/Control",
           "verdict": "dist>max_dist",
           "from": "arsenic.",
           "to": "corridor.",
@@ -2284,6 +2653,7 @@
         },
         {
           "stim_uid": "ryskin2021//27/SemCrit",
+          "intended_uid": "ryskin2021//27/Control",
           "verdict": "dist>max_dist",
           "from": "coronation.",
           "to": "correlation.",
@@ -2291,6 +2661,7 @@
         },
         {
           "stim_uid": "ryskin2021//27/Sem",
+          "intended_uid": "ryskin2021//27/Control",
           "verdict": "dist>max_dist",
           "from": "hypotenuse.",
           "to": "correlation.",
@@ -2298,6 +2669,7 @@
         },
         {
           "stim_uid": "ryskin2021//28/SemCrit",
+          "intended_uid": "ryskin2021//28/Control",
           "verdict": "dist>max_dist",
           "from": "correlation.",
           "to": "coronation.",
@@ -2305,6 +2677,7 @@
         },
         {
           "stim_uid": "ryskin2021//28/Sem",
+          "intended_uid": "ryskin2021//28/Control",
           "verdict": "dist>max_dist",
           "from": "parasite.",
           "to": "coronation.",
@@ -2312,6 +2685,7 @@
         },
         {
           "stim_uid": "ryskin2021//29/SemCrit",
+          "intended_uid": "ryskin2021//29/Control",
           "verdict": "dist>max_dist",
           "from": "pharaoh.",
           "to": "pheromone.",
@@ -2319,6 +2693,7 @@
         },
         {
           "stim_uid": "ryskin2021//29/Sem",
+          "intended_uid": "ryskin2021//29/Control",
           "verdict": "dist>max_dist",
           "from": "admonition.",
           "to": "pheromone.",
@@ -2326,6 +2701,7 @@
         },
         {
           "stim_uid": "ryskin2021//29/Synt",
+          "intended_uid": "ryskin2021//29/Control",
           "verdict": "not_retrieved",
           "from": "pheromones.",
           "to": "pheromone.",
@@ -2333,6 +2709,7 @@
         },
         {
           "stim_uid": "ryskin2021//30/SemCrit",
+          "intended_uid": "ryskin2021//30/Control",
           "verdict": "dist>max_dist",
           "from": "pheromone.",
           "to": "pharaoh.",
@@ -2340,6 +2717,7 @@
         },
         {
           "stim_uid": "ryskin2021//30/Sem",
+          "intended_uid": "ryskin2021//30/Control",
           "verdict": "dist>max_dist",
           "from": "hearth.",
           "to": "pharaoh.",
@@ -2347,6 +2725,7 @@
         },
         {
           "stim_uid": "ryskin2021//31/Sem",
+          "intended_uid": "ryskin2021//31/Control",
           "verdict": "dist>max_dist",
           "from": "cardinal.",
           "to": "physician.",
@@ -2354,6 +2733,7 @@
         },
         {
           "stim_uid": "ryskin2021//32/Sem",
+          "intended_uid": "ryskin2021//32/Control",
           "verdict": "dist>max_dist",
           "from": "campaign.",
           "to": "physicist.",
@@ -2361,6 +2741,7 @@
         },
         {
           "stim_uid": "ryskin2021//33/Sem",
+          "intended_uid": "ryskin2021//33/Control",
           "verdict": "dist>max_dist",
           "from": "mutiny.",
           "to": "dilation.",
@@ -2368,6 +2749,7 @@
         },
         {
           "stim_uid": "ryskin2021//34/Sem",
+          "intended_uid": "ryskin2021//34/Control",
           "verdict": "dist>max_dist",
           "from": "shudder.",
           "to": "dilution.",
@@ -2375,6 +2757,7 @@
         },
         {
           "stim_uid": "ryskin2021//36/Sem",
+          "intended_uid": "ryskin2021//36/Control",
           "verdict": "dist>max_dist",
           "from": "aluminum.",
           "to": "destruction.",
@@ -2382,6 +2765,7 @@
         },
         {
           "stim_uid": "ryskin2021//38/Sem",
+          "intended_uid": "ryskin2021//38/Control",
           "verdict": "dist>max_dist",
           "from": "migrant.",
           "to": "shutter.",
@@ -2389,6 +2773,7 @@
         },
         {
           "stim_uid": "ryskin2021//39/Sem",
+          "intended_uid": "ryskin2021//39/Control",
           "verdict": "dist>max_dist",
           "from": "meditation.",
           "to": "empire.",
@@ -2396,6 +2781,7 @@
         },
         {
           "stim_uid": "ryskin2021//40/Sem",
+          "intended_uid": "ryskin2021//40/Control",
           "verdict": "multiword",
           "from": "a coronation.",
           "to": "an umpire.",
@@ -2403,6 +2789,7 @@
         },
         {
           "stim_uid": "ryskin2021//41/SemCrit",
+          "intended_uid": "ryskin2021//41/Control",
           "verdict": "dist>max_dist",
           "from": "exertion.",
           "to": "excursion.",
@@ -2410,6 +2797,7 @@
         },
         {
           "stim_uid": "ryskin2021//41/Sem",
+          "intended_uid": "ryskin2021//41/Control",
           "verdict": "dist>max_dist",
           "from": "irritation.",
           "to": "excursion.",
@@ -2417,6 +2805,7 @@
         },
         {
           "stim_uid": "ryskin2021//42/SemCrit",
+          "intended_uid": "ryskin2021//42/Control",
           "verdict": "dist>max_dist",
           "from": "excursion.",
           "to": "exertion.",
@@ -2424,6 +2813,7 @@
         },
         {
           "stim_uid": "ryskin2021//42/Sem",
+          "intended_uid": "ryskin2021//42/Control",
           "verdict": "dist>max_dist",
           "from": "cardinal.",
           "to": "exertion.",
@@ -2431,6 +2821,7 @@
         },
         {
           "stim_uid": "ryskin2021//42/Synt",
+          "intended_uid": "ryskin2021//42/Control",
           "verdict": "not_retrieved",
           "from": "exertions.",
           "to": "exertion.",
@@ -2438,6 +2829,7 @@
         },
         {
           "stim_uid": "ryskin2021//43/SemCrit",
+          "intended_uid": "ryskin2021//43/Control",
           "verdict": "not_retrieved",
           "from": "phrenology.",
           "to": "phonology.",
@@ -2445,6 +2837,7 @@
         },
         {
           "stim_uid": "ryskin2021//43/Sem",
+          "intended_uid": "ryskin2021//43/Control",
           "verdict": "dist>max_dist",
           "from": "leisure.",
           "to": "phonology.",
@@ -2452,6 +2845,7 @@
         },
         {
           "stim_uid": "ryskin2021//43/Synt",
+          "intended_uid": "ryskin2021//43/Control",
           "verdict": "dist>max_dist",
           "from": "phonologies.",
           "to": "phonology.",
@@ -2459,6 +2853,7 @@
         },
         {
           "stim_uid": "ryskin2021//44/SemCrit",
+          "intended_uid": "ryskin2021//44/Control",
           "verdict": "not_retrieved",
           "from": "phonology.",
           "to": "phrenology.",
@@ -2466,6 +2861,7 @@
         },
         {
           "stim_uid": "ryskin2021//44/Sem",
+          "intended_uid": "ryskin2021//44/Control",
           "verdict": "dist>max_dist",
           "from": "saffron.",
           "to": "phrenology.",
@@ -2473,6 +2869,7 @@
         },
         {
           "stim_uid": "ryskin2021//44/Synt",
+          "intended_uid": "ryskin2021//44/Control",
           "verdict": "dist>max_dist",
           "from": "phrenologies.",
           "to": "phrenology.",
@@ -2480,6 +2877,7 @@
         },
         {
           "stim_uid": "ryskin2021//45/SemCrit",
+          "intended_uid": "ryskin2021//45/Control",
           "verdict": "not_retrieved",
           "from": "hearth.",
           "to": "hearse.",
@@ -2487,6 +2885,7 @@
         },
         {
           "stim_uid": "ryskin2021//45/Sem",
+          "intended_uid": "ryskin2021//45/Control",
           "verdict": "dist>max_dist",
           "from": "dilution.",
           "to": "hearse.",
@@ -2494,6 +2893,7 @@
         },
         {
           "stim_uid": "ryskin2021//45/Synt",
+          "intended_uid": "ryskin2021//45/Control",
           "verdict": "not_retrieved",
           "from": "hearses.",
           "to": "hearse.",
@@ -2501,6 +2901,7 @@
         },
         {
           "stim_uid": "ryskin2021//47/Sem",
+          "intended_uid": "ryskin2021//47/Control",
           "verdict": "dist>max_dist",
           "from": "catalyst.",
           "to": "humidity.",
@@ -2508,6 +2909,7 @@
         },
         {
           "stim_uid": "ryskin2021//47/Synt",
+          "intended_uid": "ryskin2021//47/Control",
           "verdict": "dist>max_dist",
           "from": "humidities.",
           "to": "humidity.",
@@ -2515,6 +2917,7 @@
         },
         {
           "stim_uid": "ryskin2021//48/Sem",
+          "intended_uid": "ryskin2021//48/Control",
           "verdict": "dist>max_dist",
           "from": "alumni.",
           "to": "humility.",
@@ -2522,6 +2925,7 @@
         },
         {
           "stim_uid": "ryskin2021//48/Synt",
+          "intended_uid": "ryskin2021//48/Control",
           "verdict": "dist>max_dist",
           "from": "humilities.",
           "to": "humility.",
@@ -2529,6 +2933,7 @@
         },
         {
           "stim_uid": "ryskin2021//49/SemCrit",
+          "intended_uid": "ryskin2021//49/Control",
           "verdict": "dist>max_dist",
           "from": "hypotenuse.",
           "to": "hypothesis.",
@@ -2536,6 +2941,7 @@
         },
         {
           "stim_uid": "ryskin2021//49/Sem",
+          "intended_uid": "ryskin2021//49/Control",
           "verdict": "dist>max_dist",
           "from": "gazette.",
           "to": "hypothesis.",
@@ -2543,6 +2949,7 @@
         },
         {
           "stim_uid": "ryskin2021//50/SemCrit",
+          "intended_uid": "ryskin2021//50/Control",
           "verdict": "dist>max_dist",
           "from": "hypothesis.",
           "to": "hypotenuse.",
@@ -2550,6 +2957,7 @@
         },
         {
           "stim_uid": "ryskin2021//50/Sem",
+          "intended_uid": "ryskin2021//50/Control",
           "verdict": "dist>max_dist",
           "from": "cavalry.",
           "to": "hypotenuse.",
@@ -2557,6 +2965,7 @@
         },
         {
           "stim_uid": "ryskin2021//50/Synt",
+          "intended_uid": "ryskin2021//50/Control",
           "verdict": "not_retrieved",
           "from": "hypotenuses.",
           "to": "hypotenuse.",
@@ -2564,6 +2973,7 @@
         },
         {
           "stim_uid": "ryskin2021//51/SemCrit",
+          "intended_uid": "ryskin2021//51/Control",
           "verdict": "not_retrieved",
           "from": "immortality.",
           "to": "immorality.",
@@ -2571,6 +2981,7 @@
         },
         {
           "stim_uid": "ryskin2021//51/Sem",
+          "intended_uid": "ryskin2021//51/Control",
           "verdict": "dist>max_dist",
           "from": "irrigation.",
           "to": "immorality.",
@@ -2578,6 +2989,7 @@
         },
         {
           "stim_uid": "ryskin2021//51/Synt",
+          "intended_uid": "ryskin2021//51/Control",
           "verdict": "dist>max_dist",
           "from": "immoralities.",
           "to": "immorality.",
@@ -2585,6 +2997,7 @@
         },
         {
           "stim_uid": "ryskin2021//52/Sem",
+          "intended_uid": "ryskin2021//52/Control",
           "verdict": "dist>max_dist",
           "from": "dilation.",
           "to": "immortality.",
@@ -2592,6 +3005,7 @@
         },
         {
           "stim_uid": "ryskin2021//52/Synt",
+          "intended_uid": "ryskin2021//52/Control",
           "verdict": "dist>max_dist",
           "from": "immortalities.",
           "to": "immortality.",
@@ -2599,6 +3013,7 @@
         },
         {
           "stim_uid": "ryskin2021//56/Sem",
+          "intended_uid": "ryskin2021//56/Control",
           "verdict": "multiword",
           "from": "a sapphire.",
           "to": "an infection.",
@@ -2606,6 +3021,7 @@
         },
         {
           "stim_uid": "ryskin2021//59/SemCrit",
+          "intended_uid": "ryskin2021//59/Control",
           "verdict": "dist>max_dist",
           "from": "matinee.",
           "to": "manatee.",
@@ -2613,6 +3029,7 @@
         },
         {
           "stim_uid": "ryskin2021//59/Sem",
+          "intended_uid": "ryskin2021//59/Control",
           "verdict": "dist>max_dist",
           "from": "stimulation.",
           "to": "manatee.",
@@ -2620,6 +3037,7 @@
         },
         {
           "stim_uid": "ryskin2021//59/Synt",
+          "intended_uid": "ryskin2021//59/Control",
           "verdict": "not_retrieved",
           "from": "manatees.",
           "to": "manatee.",
@@ -2627,6 +3045,7 @@
         },
         {
           "stim_uid": "ryskin2021//60/SemCrit",
+          "intended_uid": "ryskin2021//60/Control",
           "verdict": "dist>max_dist",
           "from": "manatee.",
           "to": "matinee.",
@@ -2634,6 +3053,7 @@
         },
         {
           "stim_uid": "ryskin2021//60/Sem",
+          "intended_uid": "ryskin2021//60/Control",
           "verdict": "dist>max_dist",
           "from": "sentiment.",
           "to": "matinee.",
@@ -2641,6 +3061,7 @@
         },
         {
           "stim_uid": "ryskin2021//60/Synt",
+          "intended_uid": "ryskin2021//60/Control",
           "verdict": "not_retrieved",
           "from": "matinees.",
           "to": "matinee.",
@@ -2648,6 +3069,7 @@
         },
         {
           "stim_uid": "ryskin2021//61/SemCrit",
+          "intended_uid": "ryskin2021//61/Control",
           "verdict": "dist>max_dist",
           "from": "masquerade.",
           "to": "mascara.",
@@ -2655,6 +3077,7 @@
         },
         {
           "stim_uid": "ryskin2021//61/Sem",
+          "intended_uid": "ryskin2021//61/Control",
           "verdict": "dist>max_dist",
           "from": "audition.",
           "to": "mascara.",
@@ -2662,6 +3085,7 @@
         },
         {
           "stim_uid": "ryskin2021//62/SemCrit",
+          "intended_uid": "ryskin2021//62/Control",
           "verdict": "dist>max_dist",
           "from": "mascara.",
           "to": "masquerade.",
@@ -2669,6 +3093,7 @@
         },
         {
           "stim_uid": "ryskin2021//62/Sem",
+          "intended_uid": "ryskin2021//62/Control",
           "verdict": "dist>max_dist",
           "from": "mortar.",
           "to": "masquerade.",
@@ -2676,6 +3101,7 @@
         },
         {
           "stim_uid": "ryskin2021//63/SemCrit",
+          "intended_uid": "ryskin2021//63/Control",
           "verdict": "not_retrieved",
           "from": "pleasantry.",
           "to": "peasantry.",
@@ -2683,6 +3109,7 @@
         },
         {
           "stim_uid": "ryskin2021//63/Sem",
+          "intended_uid": "ryskin2021//63/Control",
           "verdict": "dist>max_dist",
           "from": "travesty.",
           "to": "peasantry.",
@@ -2690,6 +3117,7 @@
         },
         {
           "stim_uid": "ryskin2021//63/Synt",
+          "intended_uid": "ryskin2021//63/Control",
           "verdict": "dist>max_dist",
           "from": "peasantries.",
           "to": "peasantry.",
@@ -2697,6 +3125,7 @@
         },
         {
           "stim_uid": "ryskin2021//64/SemCrit",
+          "intended_uid": "ryskin2021//64/Control",
           "verdict": "not_retrieved",
           "from": "peasantry.",
           "to": "pleasantry.",
@@ -2704,6 +3133,7 @@
         },
         {
           "stim_uid": "ryskin2021//64/Sem",
+          "intended_uid": "ryskin2021//64/Control",
           "verdict": "dist>max_dist",
           "from": "escalator.",
           "to": "pleasantry.",
@@ -2711,6 +3141,7 @@
         },
         {
           "stim_uid": "ryskin2021//64/Synt",
+          "intended_uid": "ryskin2021//64/Control",
           "verdict": "dist>max_dist",
           "from": "pleasantries.",
           "to": "pleasantry.",
@@ -2718,6 +3149,7 @@
         },
         {
           "stim_uid": "ryskin2021//65/SemCrit",
+          "intended_uid": "ryskin2021//65/Control",
           "verdict": "dist>max_dist",
           "from": "synthesizer.",
           "to": "sympathizer.",
@@ -2725,6 +3157,7 @@
         },
         {
           "stim_uid": "ryskin2021//65/Sem",
+          "intended_uid": "ryskin2021//65/Control",
           "verdict": "dist>max_dist",
           "from": "fallacy.",
           "to": "sympathizer.",
@@ -2732,6 +3165,7 @@
         },
         {
           "stim_uid": "ryskin2021//65/Synt",
+          "intended_uid": "ryskin2021//65/Control",
           "verdict": "not_retrieved",
           "from": "sympathizers.",
           "to": "sympathizer.",
@@ -2739,6 +3173,7 @@
         },
         {
           "stim_uid": "ryskin2021//66/SemCrit",
+          "intended_uid": "ryskin2021//66/Control",
           "verdict": "dist>max_dist",
           "from": "sympathizer.",
           "to": "synthesizer.",
@@ -2746,6 +3181,7 @@
         },
         {
           "stim_uid": "ryskin2021//66/Sem",
+          "intended_uid": "ryskin2021//66/Control",
           "verdict": "dist>max_dist",
           "from": "baloney.",
           "to": "synthesizer.",
@@ -2753,6 +3189,7 @@
         },
         {
           "stim_uid": "ryskin2021//66/Synt",
+          "intended_uid": "ryskin2021//66/Control",
           "verdict": "not_retrieved",
           "from": "synthesizers.",
           "to": "synthesizer.",
@@ -2760,6 +3197,7 @@
         },
         {
           "stim_uid": "ryskin2021//67/SemCrit",
+          "intended_uid": "ryskin2021//67/Control",
           "verdict": "dist>max_dist",
           "from": "travesty.",
           "to": "tapestry.",
@@ -2767,6 +3205,7 @@
         },
         {
           "stim_uid": "ryskin2021//67/Sem",
+          "intended_uid": "ryskin2021//67/Control",
           "verdict": "dist>max_dist",
           "from": "abbreviation.",
           "to": "tapestry.",
@@ -2774,6 +3213,7 @@
         },
         {
           "stim_uid": "ryskin2021//67/Synt",
+          "intended_uid": "ryskin2021//67/Control",
           "verdict": "dist>max_dist",
           "from": "tapestries.",
           "to": "tapestry.",
@@ -2781,6 +3221,7 @@
         },
         {
           "stim_uid": "ryskin2021//68/SemCrit",
+          "intended_uid": "ryskin2021//68/Control",
           "verdict": "dist>max_dist",
           "from": "tapestry.",
           "to": "travesty.",
@@ -2788,6 +3229,7 @@
         },
         {
           "stim_uid": "ryskin2021//68/Sem",
+          "intended_uid": "ryskin2021//68/Control",
           "verdict": "dist>max_dist",
           "from": "diploma.",
           "to": "travesty.",
@@ -2795,6 +3237,7 @@
         },
         {
           "stim_uid": "ryskin2021//68/Synt",
+          "intended_uid": "ryskin2021//68/Control",
           "verdict": "dist>max_dist",
           "from": "travesties.",
           "to": "travesty.",
@@ -2802,6 +3245,7 @@
         },
         {
           "stim_uid": "ryskin2021//69/SemCrit",
+          "intended_uid": "ryskin2021//69/Control",
           "verdict": "dist>max_dist",
           "from": "saffron.",
           "to": "sapphire.",
@@ -2809,6 +3253,7 @@
         },
         {
           "stim_uid": "ryskin2021//69/Sem",
+          "intended_uid": "ryskin2021//69/Control",
           "verdict": "dist>max_dist",
           "from": "medication.",
           "to": "sapphire.",
@@ -2816,6 +3261,7 @@
         },
         {
           "stim_uid": "ryskin2021//70/SemCrit",
+          "intended_uid": "ryskin2021//70/Control",
           "verdict": "dist>max_dist",
           "from": "sapphire.",
           "to": "saffron.",
@@ -2823,6 +3269,7 @@
         },
         {
           "stim_uid": "ryskin2021//70/Sem",
+          "intended_uid": "ryskin2021//70/Control",
           "verdict": "dist>max_dist",
           "from": "message.",
           "to": "saffron.",
@@ -2830,6 +3277,7 @@
         },
         {
           "stim_uid": "ryskin2021//72/Sem",
+          "intended_uid": "ryskin2021//72/Control",
           "verdict": "dist>max_dist",
           "from": "physician.",
           "to": "thermal.",
@@ -2837,6 +3285,7 @@
         },
         {
           "stim_uid": "ryskin2021//73/Sem",
+          "intended_uid": "ryskin2021//73/Control",
           "verdict": "dist>max_dist",
           "from": "pleasantry.",
           "to": "gazette.",
@@ -2844,6 +3293,7 @@
         },
         {
           "stim_uid": "ryskin2021//74/SemCrit",
+          "intended_uid": "ryskin2021//74/Control",
           "verdict": "not_retrieved",
           "from": "gazette.",
           "to": "gazelle.",
@@ -2851,6 +3301,7 @@
         },
         {
           "stim_uid": "ryskin2021//74/Sem",
+          "intended_uid": "ryskin2021//74/Control",
           "verdict": "dist>max_dist",
           "from": "addition.",
           "to": "gazelle.",
@@ -2858,6 +3309,7 @@
         },
         {
           "stim_uid": "ryskin2021//74/Synt",
+          "intended_uid": "ryskin2021//74/Control",
           "verdict": "not_retrieved",
           "from": "gazelles.",
           "to": "gazelle.",
@@ -2865,6 +3317,7 @@
         },
         {
           "stim_uid": "ryskin2021//75/Sem",
+          "intended_uid": "ryskin2021//75/Control",
           "verdict": "multiword",
           "from": "a correction.",
           "to": "an embargo.",
@@ -2872,6 +3325,7 @@
         },
         {
           "stim_uid": "ryskin2021//76/Sem",
+          "intended_uid": "ryskin2021//76/Control",
           "verdict": "dist>max_dist",
           "from": "migraine.",
           "to": "embryo.",
@@ -2879,6 +3333,7 @@
         },
         {
           "stim_uid": "ryskin2021//78/Sem",
+          "intended_uid": "ryskin2021//78/Control",
           "verdict": "dist>max_dist",
           "from": "caption.",
           "to": "irrigation.",
@@ -2886,6 +3341,7 @@
         },
         {
           "stim_uid": "ryskin2021//79/Sem",
+          "intended_uid": "ryskin2021//79/Control",
           "verdict": "dist>max_dist",
           "from": "spinster.",
           "to": "mobility.",
@@ -2893,6 +3349,7 @@
         },
         {
           "stim_uid": "ryskin2021//79/Synt",
+          "intended_uid": "ryskin2021//79/Control",
           "verdict": "dist>max_dist",
           "from": "mobilities.",
           "to": "mobility.",
@@ -2900,6 +3357,7 @@
         },
         {
           "stim_uid": "ryskin2021//80/Sem",
+          "intended_uid": "ryskin2021//80/Control",
           "verdict": "dist>max_dist",
           "from": "pheromone.",
           "to": "nobility.",
@@ -2907,6 +3365,7 @@
         },
         {
           "stim_uid": "ryskin2021//80/Synt",
+          "intended_uid": "ryskin2021//80/Control",
           "verdict": "dist>max_dist",
           "from": "nobilities.",
           "to": "nobility.",
@@ -2914,6 +3373,7 @@
         },
         {
           "stim_uid": "ryskin2021//81/SemCrit",
+          "intended_uid": "ryskin2021//81/Control",
           "verdict": "not_retrieved",
           "from": "lymph.",
           "to": "nymph.",
@@ -2921,6 +3381,7 @@
         },
         {
           "stim_uid": "ryskin2021//81/Sem",
+          "intended_uid": "ryskin2021//81/Control",
           "verdict": "dist>max_dist",
           "from": "destiny.",
           "to": "nymph.",
@@ -2928,6 +3389,7 @@
         },
         {
           "stim_uid": "ryskin2021//81/Synt",
+          "intended_uid": "ryskin2021//81/Control",
           "verdict": "not_retrieved",
           "from": "nymphs.",
           "to": "nymph.",
@@ -2935,6 +3397,7 @@
         },
         {
           "stim_uid": "ryskin2021//82/Sem",
+          "intended_uid": "ryskin2021//82/Control",
           "verdict": "dist>max_dist",
           "from": "campaign.",
           "to": "lymph.",
@@ -2942,6 +3405,7 @@
         },
         {
           "stim_uid": "ryskin2021//86/Sem",
+          "intended_uid": "ryskin2021//86/Control",
           "verdict": "dist>max_dist",
           "from": "campaign.",
           "to": "carton.",
@@ -2949,6 +3413,7 @@
         },
         {
           "stim_uid": "ryskin2021//87/Sem",
+          "intended_uid": "ryskin2021//87/Control",
           "verdict": "dist>max_dist",
           "from": "nobility.",
           "to": "splinter.",
@@ -2956,6 +3421,7 @@
         },
         {
           "stim_uid": "ryskin2021//88/SemCrit",
+          "intended_uid": "ryskin2021//88/Control",
           "verdict": "not_retrieved",
           "from": "splinter.",
           "to": "spinster.",
@@ -2963,6 +3429,7 @@
         },
         {
           "stim_uid": "ryskin2021//88/Sem",
+          "intended_uid": "ryskin2021//88/Control",
           "verdict": "dist>max_dist",
           "from": "radium.",
           "to": "spinster.",
@@ -2970,6 +3437,7 @@
         },
         {
           "stim_uid": "ryskin2021//88/Synt",
+          "intended_uid": "ryskin2021//88/Control",
           "verdict": "not_retrieved",
           "from": "spinsters.",
           "to": "spinster.",
@@ -2977,6 +3445,7 @@
         },
         {
           "stim_uid": "ryskin2021//90/Sem",
+          "intended_uid": "ryskin2021//90/Control",
           "verdict": "dist>max_dist",
           "from": "sediment.",
           "to": "stimulation.",
@@ -2984,6 +3453,7 @@
         },
         {
           "stim_uid": "ryskin2021//91/SemCrit",
+          "intended_uid": "ryskin2021//91/Control",
           "verdict": "multiword",
           "from": "a mutiny.",
           "to": "an immunity.",
@@ -2991,6 +3461,7 @@
         },
         {
           "stim_uid": "ryskin2021//91/Sem",
+          "intended_uid": "ryskin2021//91/Control",
           "verdict": "multiword",
           "from": "a cartoon.",
           "to": "an immunity.",
@@ -2998,6 +3469,7 @@
         },
         {
           "stim_uid": "ryskin2021//91/Synt",
+          "intended_uid": "ryskin2021//91/Control",
           "verdict": "dist>max_dist",
           "from": "immunities.",
           "to": "immunity.",
@@ -3005,6 +3477,7 @@
         },
         {
           "stim_uid": "ryskin2021//93/Sem",
+          "intended_uid": "ryskin2021//93/Control",
           "verdict": "dist>max_dist",
           "from": "humidity.",
           "to": "mortar.",
@@ -3012,6 +3485,7 @@
         },
         {
           "stim_uid": "ryskin2021//94/Sem",
+          "intended_uid": "ryskin2021//94/Control",
           "verdict": "dist>max_dist",
           "from": "expectation.",
           "to": "mortal.",
@@ -3019,6 +3493,7 @@
         },
         {
           "stim_uid": "ryskin2021//96/SemCrit",
+          "intended_uid": "ryskin2021//96/Control",
           "verdict": "dist>max_dist",
           "from": "abbreviation.",
           "to": "inebriation.",
@@ -3026,6 +3501,7 @@
         },
         {
           "stim_uid": "ryskin2021//96/Sem",
+          "intended_uid": "ryskin2021//96/Control",
           "verdict": "dist>max_dist",
           "from": "splinter.",
           "to": "inebriation.",
@@ -3033,6 +3509,7 @@
         },
         {
           "stim_uid": "ryskin2021//96/Synt",
+          "intended_uid": "ryskin2021//96/Control",
           "verdict": "not_retrieved",
           "from": "inebriations.",
           "to": "inebriation.",
@@ -3040,6 +3517,7 @@
         },
         {
           "stim_uid": "ryskin2021//97/Sem",
+          "intended_uid": "ryskin2021//97/Control",
           "verdict": "dist>max_dist",
           "from": "radius.",
           "to": "caption.",
@@ -3047,6 +3525,7 @@
         },
         {
           "stim_uid": "ryskin2021//98/Sem",
+          "intended_uid": "ryskin2021//98/Control",
           "verdict": "dist>max_dist",
           "from": "phrenology.",
           "to": "captain.",
@@ -3054,6 +3533,7 @@
         },
         {
           "stim_uid": "ryskin2021//99/Sem",
+          "intended_uid": "ryskin2021//99/Control",
           "verdict": "dist>max_dist",
           "from": "humility.",
           "to": "addition.",
@@ -3061,6 +3541,7 @@
         },
         {
           "stim_uid": "ryskin2021//100/Sem",
+          "intended_uid": "ryskin2021//100/Control",
           "verdict": "multiword",
           "from": "a corridor.",
           "to": "an audition.",
@@ -3068,6 +3549,7 @@
         },
         {
           "stim_uid": "ryskin2021//101/SemCrit",
+          "intended_uid": "ryskin2021//101/Control",
           "verdict": "dist>max_dist",
           "from": "admonition.",
           "to": "admission.",
@@ -3075,6 +3557,7 @@
         },
         {
           "stim_uid": "ryskin2021//101/Sem",
+          "intended_uid": "ryskin2021//101/Control",
           "verdict": "dist>max_dist",
           "from": "carnival.",
           "to": "admission.",
@@ -3082,6 +3565,7 @@
         },
         {
           "stim_uid": "ryskin2021//103/SemCrit",
+          "intended_uid": "ryskin2021//103/Control",
           "verdict": "dist>max_dist",
           "from": "cabaret.",
           "to": "carburetor.",
@@ -3089,6 +3573,7 @@
         },
         {
           "stim_uid": "ryskin2021//103/Sem",
+          "intended_uid": "ryskin2021//103/Control",
           "verdict": "dist>max_dist",
           "from": "callus.",
           "to": "carburetor.",
@@ -3096,6 +3581,7 @@
         },
         {
           "stim_uid": "ryskin2021//103/Synt",
+          "intended_uid": "ryskin2021//103/Control",
           "verdict": "not_retrieved",
           "from": "carburetors.",
           "to": "carburetor.",
@@ -3103,6 +3589,7 @@
         },
         {
           "stim_uid": "ryskin2021//104/SemCrit",
+          "intended_uid": "ryskin2021//104/Control",
           "verdict": "dist>max_dist",
           "from": "carburetor.",
           "to": "cabaret.",
@@ -3110,6 +3597,7 @@
         },
         {
           "stim_uid": "ryskin2021//104/Sem",
+          "intended_uid": "ryskin2021//104/Control",
           "verdict": "dist>max_dist",
           "from": "thermos.",
           "to": "cabaret.",
@@ -3117,6 +3605,7 @@
         },
         {
           "stim_uid": "ryskin2021//105/Sem",
+          "intended_uid": "ryskin2021//105/Control",
           "verdict": "dist>max_dist",
           "from": "conscience.",
           "to": "altitude.",
@@ -3124,6 +3613,7 @@
         },
         {
           "stim_uid": "ryskin2021//106/Sem",
+          "intended_uid": "ryskin2021//106/Control",
           "verdict": "dist>max_dist",
           "from": "shutter.",
           "to": "attitude.",
@@ -3131,6 +3621,7 @@
         },
         {
           "stim_uid": "ryskin2021//107/SemCrit",
+          "intended_uid": "ryskin2021//107/Control",
           "verdict": "dist>max_dist",
           "from": "aluminum.",
           "to": "alumni.",
@@ -3138,6 +3629,7 @@
         },
         {
           "stim_uid": "ryskin2021//107/Sem",
+          "intended_uid": "ryskin2021//107/Control",
           "verdict": "dist>max_dist",
           "from": "dynamite.",
           "to": "alumni.",
@@ -3145,6 +3637,7 @@
         },
         {
           "stim_uid": "ryskin2021//108/SemCrit",
+          "intended_uid": "ryskin2021//108/Control",
           "verdict": "dist>max_dist",
           "from": "alumni.",
           "to": "aluminum.",
@@ -3152,6 +3645,7 @@
         },
         {
           "stim_uid": "ryskin2021//108/Sem",
+          "intended_uid": "ryskin2021//108/Control",
           "verdict": "dist>max_dist",
           "from": "exertion.",
           "to": "aluminum.",
@@ -3159,6 +3653,7 @@
         },
         {
           "stim_uid": "ryskin2021//109/Sem",
+          "intended_uid": "ryskin2021//109/Control",
           "verdict": "dist>max_dist",
           "from": "thermal.",
           "to": "carriage.",
@@ -3166,6 +3661,7 @@
         },
         {
           "stim_uid": "ryskin2021//110/Sem",
+          "intended_uid": "ryskin2021//110/Control",
           "verdict": "dist>max_dist",
           "from": "veteran.",
           "to": "cartridge.",
@@ -3173,6 +3669,7 @@
         },
         {
           "stim_uid": "ryskin2021//111/SemCrit",
+          "intended_uid": "ryskin2021//111/Control",
           "verdict": "not_retrieved",
           "from": "radius.",
           "to": "radium.",
@@ -3180,6 +3677,7 @@
         },
         {
           "stim_uid": "ryskin2021//111/Sem",
+          "intended_uid": "ryskin2021//111/Control",
           "verdict": "dist>max_dist",
           "from": "veterinarian.",
           "to": "radium.",
@@ -3187,6 +3685,7 @@
         },
         {
           "stim_uid": "ryskin2021//111/Synt",
+          "intended_uid": "ryskin2021//111/Control",
           "verdict": "not_retrieved",
           "from": "radiums.",
           "to": "radium.",
@@ -3194,6 +3693,7 @@
         },
         {
           "stim_uid": "ryskin2021//112/Sem",
+          "intended_uid": "ryskin2021//112/Control",
           "verdict": "dist>max_dist",
           "from": "cabaret.",
           "to": "radius.",
@@ -3201,6 +3701,7 @@
         },
         {
           "stim_uid": "ryskin2021//113/SemCrit",
+          "intended_uid": "ryskin2021//113/Control",
           "verdict": "not_retrieved",
           "from": "ornaments.",
           "to": "armaments.",
@@ -3208,6 +3709,7 @@
         },
         {
           "stim_uid": "ryskin2021//113/Sem",
+          "intended_uid": "ryskin2021//113/Control",
           "verdict": "dist>max_dist",
           "from": "adoration.",
           "to": "armaments.",
@@ -3215,6 +3717,7 @@
         },
         {
           "stim_uid": "ryskin2021//113/Synt",
+          "intended_uid": "ryskin2021//113/Control",
           "verdict": "not_retrieved",
           "from": "armament.",
           "to": "armaments.",
@@ -3222,6 +3725,7 @@
         },
         {
           "stim_uid": "ryskin2021//114/Sem",
+          "intended_uid": "ryskin2021//114/Control",
           "verdict": "dist>max_dist",
           "from": "infantry.",
           "to": "ornaments.",
@@ -3229,6 +3733,7 @@
         },
         {
           "stim_uid": "ryskin2021//115/Sem",
+          "intended_uid": "ryskin2021//115/Control",
           "verdict": "dist>max_dist",
           "from": "consternation.",
           "to": "arsenal.",
@@ -3236,6 +3741,7 @@
         },
         {
           "stim_uid": "ryskin2021//116/Sem",
+          "intended_uid": "ryskin2021//116/Control",
           "verdict": "dist>max_dist",
           "from": "carriage.",
           "to": "arsenic.",
@@ -3243,6 +3749,7 @@
         },
         {
           "stim_uid": "ryskin2021//117/SemCrit",
+          "intended_uid": "ryskin2021//117/Control",
           "verdict": "not_retrieved",
           "from": "balcony.",
           "to": "baloney.",
@@ -3250,6 +3757,7 @@
         },
         {
           "stim_uid": "ryskin2021//117/Sem",
+          "intended_uid": "ryskin2021//117/Control",
           "verdict": "dist>max_dist",
           "from": "immortality.",
           "to": "baloney.",
@@ -3257,6 +3765,7 @@
         },
         {
           "stim_uid": "ryskin2021//117/Synt",
+          "intended_uid": "ryskin2021//117/Control",
           "verdict": "not_retrieved",
           "from": "baloneys.",
           "to": "baloney.",
@@ -3264,6 +3773,7 @@
         },
         {
           "stim_uid": "ryskin2021//118/Sem",
+          "intended_uid": "ryskin2021//118/Control",
           "verdict": "dist>max_dist",
           "from": "consciousness.",
           "to": "balcony.",
@@ -3271,6 +3781,7 @@
         },
         {
           "stim_uid": "ryskin2021//118/Synt",
+          "intended_uid": "ryskin2021//118/Control",
           "verdict": "dist>max_dist",
           "from": "balconies.",
           "to": "balcony.",
@@ -3278,6 +3789,7 @@
         },
         {
           "stim_uid": "ryskin2021//120/SemCrit",
+          "intended_uid": "ryskin2021//120/Control",
           "verdict": "dist>max_dist",
           "from": "boundary.",
           "to": "bounty.",
@@ -3285,6 +3797,7 @@
         },
         {
           "stim_uid": "ryskin2021//120/Sem",
+          "intended_uid": "ryskin2021//120/Control",
           "verdict": "multiword",
           "from": "an expedition.",
           "to": "a bounty.",
@@ -3292,6 +3805,7 @@
         },
         {
           "stim_uid": "ryskin2021//120/Synt",
+          "intended_uid": "ryskin2021//120/Control",
           "verdict": "dist>max_dist",
           "from": "bounties.",
           "to": "bounty.",
@@ -3299,6 +3813,7 @@
         },
         {
           "stim_uid": "ryskin2021//121/SemCrit",
+          "intended_uid": "ryskin2021//121/Control",
           "verdict": "dist>max_dist",
           "from": "campaign.",
           "to": "champagne.",
@@ -3306,6 +3821,7 @@
         },
         {
           "stim_uid": "ryskin2021//121/Sem",
+          "intended_uid": "ryskin2021//121/Control",
           "verdict": "dist>max_dist",
           "from": "armaments.",
           "to": "champagne.",
@@ -3313,6 +3829,7 @@
         },
         {
           "stim_uid": "ryskin2021//123/SemCrit",
+          "intended_uid": "ryskin2021//123/Control",
           "verdict": "dist>max_dist",
           "from": "inferno.",
           "to": "inference.",
@@ -3320,6 +3837,7 @@
         },
         {
           "stim_uid": "ryskin2021//123/Sem",
+          "intended_uid": "ryskin2021//123/Control",
           "verdict": "dist>max_dist",
           "from": "peasantry.",
           "to": "inference.",
@@ -3327,6 +3845,7 @@
         },
         {
           "stim_uid": "ryskin2021//124/SemCrit",
+          "intended_uid": "ryskin2021//124/Control",
           "verdict": "dist>max_dist",
           "from": "inference.",
           "to": "inferno.",
@@ -3334,6 +3853,7 @@
         },
         {
           "stim_uid": "ryskin2021//124/Sem",
+          "intended_uid": "ryskin2021//124/Control",
           "verdict": "dist>max_dist",
           "from": "attitude.",
           "to": "inferno.",
@@ -3341,6 +3861,7 @@
         },
         {
           "stim_uid": "ryskin2021//125/SemCrit",
+          "intended_uid": "ryskin2021//125/Control",
           "verdict": "dist>max_dist",
           "from": "conscience.",
           "to": "consciousness.",
@@ -3348,6 +3869,7 @@
         },
         {
           "stim_uid": "ryskin2021//125/Sem",
+          "intended_uid": "ryskin2021//125/Control",
           "verdict": "dist>max_dist",
           "from": "duration.",
           "to": "consciousness.",
@@ -3355,6 +3877,7 @@
         },
         {
           "stim_uid": "ryskin2021//127/SemCrit",
+          "intended_uid": "ryskin2021//127/Control",
           "verdict": "not_retrieved",
           "from": "constellation.",
           "to": "consternation.",
@@ -3362,6 +3885,7 @@
         },
         {
           "stim_uid": "ryskin2021//127/Sem",
+          "intended_uid": "ryskin2021//127/Control",
           "verdict": "dist>max_dist",
           "from": "inflection.",
           "to": "consternation.",
@@ -3369,6 +3893,7 @@
         },
         {
           "stim_uid": "ryskin2021//127/Synt",
+          "intended_uid": "ryskin2021//127/Control",
           "verdict": "not_retrieved",
           "from": "consternations.",
           "to": "consternation.",
@@ -3376,6 +3901,7 @@
         },
         {
           "stim_uid": "ryskin2021//128/Sem",
+          "intended_uid": "ryskin2021//128/Control",
           "verdict": "dist>max_dist",
           "from": "immunity.",
           "to": "constellation.",
@@ -3383,6 +3909,7 @@
         },
         {
           "stim_uid": "ryskin2021//129/Sem",
+          "intended_uid": "ryskin2021//129/Control",
           "verdict": "multiword",
           "from": "an altercation.",
           "to": "a pasture.",
@@ -3390,6 +3917,7 @@
         },
         {
           "stim_uid": "ryskin2021//130/Sem",
+          "intended_uid": "ryskin2021//130/Control",
           "verdict": "multiword",
           "from": "an escalation.",
           "to": "a pastor.",
@@ -3397,6 +3925,7 @@
         },
         {
           "stim_uid": "ryskin2021//131/SemCrit",
+          "intended_uid": "ryskin2021//131/Control",
           "verdict": "dist>max_dist",
           "from": "missionary.",
           "to": "mercenary.",
@@ -3404,6 +3933,7 @@
         },
         {
           "stim_uid": "ryskin2021//131/Sem",
+          "intended_uid": "ryskin2021//131/Control",
           "verdict": "multiword",
           "from": "an apostrophe.",
           "to": "a mercenary.",
@@ -3411,6 +3941,7 @@
         },
         {
           "stim_uid": "ryskin2021//131/Synt",
+          "intended_uid": "ryskin2021//131/Control",
           "verdict": "dist>max_dist",
           "from": "mercenaries.",
           "to": "mercenary.",
@@ -3418,6 +3949,7 @@
         },
         {
           "stim_uid": "ryskin2021//132/SemCrit",
+          "intended_uid": "ryskin2021//132/Control",
           "verdict": "dist>max_dist",
           "from": "mercenary.",
           "to": "missionary.",
@@ -3425,6 +3957,7 @@
         },
         {
           "stim_uid": "ryskin2021//132/Sem",
+          "intended_uid": "ryskin2021//132/Control",
           "verdict": "multiword",
           "from": "an admission.",
           "to": "a missionary.",
@@ -3432,6 +3965,7 @@
         },
         {
           "stim_uid": "ryskin2021//132/Synt",
+          "intended_uid": "ryskin2021//132/Control",
           "verdict": "dist>max_dist",
           "from": "missionaries.",
           "to": "missionary.",
@@ -3439,6 +3973,7 @@
         },
         {
           "stim_uid": "ryskin2021//133/SemCrit",
+          "intended_uid": "ryskin2021//133/Control",
           "verdict": "dist>max_dist",
           "from": "damnation.",
           "to": "dalmatian.",
@@ -3446,6 +3981,7 @@
         },
         {
           "stim_uid": "ryskin2021//133/Sem",
+          "intended_uid": "ryskin2021//133/Control",
           "verdict": "multiword",
           "from": "an umpire.",
           "to": "a dalmatian.",
@@ -3453,6 +3989,7 @@
         },
         {
           "stim_uid": "ryskin2021//133/Synt",
+          "intended_uid": "ryskin2021//133/Control",
           "verdict": "not_retrieved",
           "from": "dalmations.",
           "to": "dalmatian.",
@@ -3460,6 +3997,7 @@
         },
         {
           "stim_uid": "ryskin2021//135/SemCrit",
+          "intended_uid": "ryskin2021//135/Control",
           "verdict": "dist>max_dist",
           "from": "destiny.",
           "to": "density.",
@@ -3467,6 +4005,7 @@
         },
         {
           "stim_uid": "ryskin2021//135/Sem",
+          "intended_uid": "ryskin2021//135/Control",
           "verdict": "dist>max_dist",
           "from": "missionary.",
           "to": "density.",
@@ -3474,6 +4013,7 @@
         },
         {
           "stim_uid": "ryskin2021//135/Synt",
+          "intended_uid": "ryskin2021//135/Control",
           "verdict": "dist>max_dist",
           "from": "densities.",
           "to": "density.",
@@ -3481,6 +4021,7 @@
         },
         {
           "stim_uid": "ryskin2021//138/Sem",
+          "intended_uid": "ryskin2021//138/Control",
           "verdict": "dist>max_dist",
           "from": "cartridge.",
           "to": "massage.",
@@ -3488,6 +4029,7 @@
         },
         {
           "stim_uid": "ryskin2021//139/Sem",
+          "intended_uid": "ryskin2021//139/Control",
           "verdict": "multiword",
           "from": "an infection.",
           "to": "a diploma.",
@@ -3495,6 +4037,7 @@
         },
         {
           "stim_uid": "ryskin2021//140/Sem",
+          "intended_uid": "ryskin2021//140/Control",
           "verdict": "dist>max_dist",
           "from": "constellation.",
           "to": "diplomat.",
@@ -3502,6 +4045,7 @@
         },
         {
           "stim_uid": "ryskin2021//141/SemCrit",
+          "intended_uid": "ryskin2021//141/Control",
           "verdict": "dist>max_dist",
           "from": "lesion.",
           "to": "leisure.",
@@ -3509,6 +4053,7 @@
         },
         {
           "stim_uid": "ryskin2021//141/Sem",
+          "intended_uid": "ryskin2021//141/Control",
           "verdict": "dist>max_dist",
           "from": "phonology.",
           "to": "leisure.",
@@ -3516,6 +4061,7 @@
         },
         {
           "stim_uid": "ryskin2021//142/SemCrit",
+          "intended_uid": "ryskin2021//142/Control",
           "verdict": "dist>max_dist",
           "from": "leisure.",
           "to": "lesion.",
@@ -3523,6 +4069,7 @@
         },
         {
           "stim_uid": "ryskin2021//142/Sem",
+          "intended_uid": "ryskin2021//142/Control",
           "verdict": "dist>max_dist",
           "from": "rhino.",
           "to": "lesion.",
@@ -3530,6 +4077,7 @@
         },
         {
           "stim_uid": "ryskin2021//143/Sem",
+          "intended_uid": "ryskin2021//143/Control",
           "verdict": "dist>max_dist",
           "from": "frankenstein.",
           "to": "duration.",
@@ -3537,6 +4085,7 @@
         },
         {
           "stim_uid": "ryskin2021//145/SemCrit",
+          "intended_uid": "ryskin2021//145/Control",
           "verdict": "dist>max_dist",
           "from": "dynamite.",
           "to": "dynasty.",
@@ -3544,6 +4093,7 @@
         },
         {
           "stim_uid": "ryskin2021//145/Sem",
+          "intended_uid": "ryskin2021//145/Control",
           "verdict": "dist>max_dist",
           "from": "inebriation.",
           "to": "dynasty.",
@@ -3551,6 +4101,7 @@
         },
         {
           "stim_uid": "ryskin2021//145/Synt",
+          "intended_uid": "ryskin2021//145/Control",
           "verdict": "dist>max_dist",
           "from": "dynasties.",
           "to": "dynasty.",
@@ -3558,6 +4109,7 @@
         },
         {
           "stim_uid": "ryskin2021//146/SemCrit",
+          "intended_uid": "ryskin2021//146/Control",
           "verdict": "dist>max_dist",
           "from": "dynasty.",
           "to": "dynamite.",
@@ -3565,6 +4117,7 @@
         },
         {
           "stim_uid": "ryskin2021//146/Sem",
+          "intended_uid": "ryskin2021//146/Control",
           "verdict": "dist>max_dist",
           "from": "infamy.",
           "to": "dynamite.",
@@ -3572,6 +4125,7 @@
         },
         {
           "stim_uid": "ryskin2021//148/SemCrit",
+          "intended_uid": "ryskin2021//148/Control",
           "verdict": "dist>max_dist",
           "from": "apostrophe.",
           "to": "apocalypse.",
@@ -3579,6 +4133,7 @@
         },
         {
           "stim_uid": "ryskin2021//148/Sem",
+          "intended_uid": "ryskin2021//148/Control",
           "verdict": "multiword",
           "from": "a pharaoh.",
           "to": "an apocalypse.",
@@ -3586,6 +4141,7 @@
         },
         {
           "stim_uid": "ryskin2021//149/SemCrit",
+          "intended_uid": "ryskin2021//149/Control",
           "verdict": "not_retrieved",
           "from": "muskrat.",
           "to": "musket.",
@@ -3593,6 +4149,7 @@
         },
         {
           "stim_uid": "ryskin2021//149/Sem",
+          "intended_uid": "ryskin2021//149/Control",
           "verdict": "dist>max_dist",
           "from": "distraction.",
           "to": "musket.",
@@ -3600,6 +4157,7 @@
         },
         {
           "stim_uid": "ryskin2021//149/Synt",
+          "intended_uid": "ryskin2021//149/Control",
           "verdict": "not_retrieved",
           "from": "muskets.",
           "to": "musket.",
@@ -3607,6 +4165,7 @@
         },
         {
           "stim_uid": "ryskin2021//150/SemCrit",
+          "intended_uid": "ryskin2021//150/Control",
           "verdict": "not_retrieved",
           "from": "musket.",
           "to": "muskrat.",
@@ -3614,6 +4173,7 @@
         },
         {
           "stim_uid": "ryskin2021//150/Sem",
+          "intended_uid": "ryskin2021//150/Control",
           "verdict": "dist>max_dist",
           "from": "collection.",
           "to": "muskrat.",
@@ -3621,6 +4181,7 @@
         },
         {
           "stim_uid": "ryskin2021//150/Synt",
+          "intended_uid": "ryskin2021//150/Control",
           "verdict": "not_retrieved",
           "from": "muskrats.",
           "to": "muskrat.",
@@ -3628,6 +4189,7 @@
         },
         {
           "stim_uid": "ryskin2021//154/Sem",
+          "intended_uid": "ryskin2021//154/Control",
           "verdict": "dist>max_dist",
           "from": "apocalypse.",
           "to": "escalator.",
@@ -3635,6 +4197,7 @@
         },
         {
           "stim_uid": "ryskin2021//158/SemCrit",
+          "intended_uid": "ryskin2021//158/Control",
           "verdict": "dist>max_dist",
           "from": "expectation.",
           "to": "expedition.",
@@ -3642,6 +4205,7 @@
         },
         {
           "stim_uid": "ryskin2021//158/Sem",
+          "intended_uid": "ryskin2021//158/Control",
           "verdict": "dist>max_dist",
           "from": "sympathizer.",
           "to": "expedition.",
@@ -3649,6 +4213,7 @@
         },
         {
           "stim_uid": "ryskin2021//159/SemCrit",
+          "intended_uid": "ryskin2021//159/Control",
           "verdict": "dist>max_dist",
           "from": "facility.",
           "to": "fallacy.",
@@ -3656,6 +4221,7 @@
         },
         {
           "stim_uid": "ryskin2021//159/Sem",
+          "intended_uid": "ryskin2021//159/Control",
           "verdict": "dist>max_dist",
           "from": "excursion.",
           "to": "fallacy.",
@@ -3663,6 +4229,7 @@
         },
         {
           "stim_uid": "ryskin2021//159/Synt",
+          "intended_uid": "ryskin2021//159/Control",
           "verdict": "dist>max_dist",
           "from": "fallacies.",
           "to": "fallacy.",
@@ -3673,14 +4240,18 @@
     "tabor2004": {
       "n_sub_rows": 0,
       "n_reachable": 0,
+      "n_stimuli_with_any_reachable_repair": 0,
+      "n_stimuli_with_a_sub_repair": 0,
       "verdicts": {},
       "per_condition": {},
       "unreachable": []
     }
   },
   "qian2023_repair_routes": {
-    "ungrammatical_rows": 240,
+    "ungrammatical_stimuli": 240,
+    "route_B_noun_reachable": 234,
+    "route_B_noun_total": 240,
     "route_A_verb_reachable": 38,
-    "route_B_noun_reachable": 234
+    "route_A_verb_total": 240
   }
 }

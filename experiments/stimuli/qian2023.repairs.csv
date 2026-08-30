@@ -1,0 +1,721 @@
+dataset,stim_uid,intended_uid,intended_text,edit_type,edit_ops,edit_from,edit_to,edit_obs_idx,n_repairs_for_stim
+qian2023,qian2023//0/sss,qian2023//0/sss,The location of the star has caught attention of some astronomers.,none,,,,,1
+qian2023,qian2023//0/ssp,qian2023//0/psp,The locations of the star have caught attention of some astronomers.,sub,sub,location,locations,1,2
+qian2023,qian2023//0/ssp,qian2023//0/sss,The location of the star has caught attention of some astronomers.,sub,sub,have,has,5,2
+qian2023,qian2023//0/sps,qian2023//0/sps,The location of the stars has caught attention of some astronomers.,none,,,,,1
+qian2023,qian2023//0/spp,qian2023//0/ppp,The locations of the stars have caught attention of some astronomers.,sub,sub,location,locations,1,2
+qian2023,qian2023//0/spp,qian2023//0/sps,The location of the stars has caught attention of some astronomers.,sub,sub,have,has,5,2
+qian2023,qian2023//0/pss,qian2023//0/psp,The locations of the star have caught attention of some astronomers.,sub,sub,has,have,5,2
+qian2023,qian2023//0/pss,qian2023//0/sss,The location of the star has caught attention of some astronomers.,sub,sub,locations,location,1,2
+qian2023,qian2023//0/psp,qian2023//0/psp,The locations of the star have caught attention of some astronomers.,none,,,,,1
+qian2023,qian2023//0/pps,qian2023//0/ppp,The locations of the stars have caught attention of some astronomers.,sub,sub,has,have,5,2
+qian2023,qian2023//0/pps,qian2023//0/sps,The location of the stars has caught attention of some astronomers.,sub,sub,locations,location,1,2
+qian2023,qian2023//0/ppp,qian2023//0/ppp,The locations of the stars have caught attention of some astronomers.,none,,,,,1
+qian2023,qian2023//1/sss,qian2023//1/sss,The sound of the string is so gorgeous on this guitar.,none,,,,,1
+qian2023,qian2023//1/ssp,qian2023//1/psp,The sounds of the string are so gorgeous on this guitar.,sub,sub,sound,sounds,1,2
+qian2023,qian2023//1/ssp,qian2023//1/sss,The sound of the string is so gorgeous on this guitar.,sub,sub,are,is,5,2
+qian2023,qian2023//1/sps,qian2023//1/sps,The sound of the strings is so gorgeous on this guitar.,none,,,,,1
+qian2023,qian2023//1/spp,qian2023//1/ppp,The sounds of the strings are so gorgeous on this guitar.,sub,sub,sound,sounds,1,2
+qian2023,qian2023//1/spp,qian2023//1/sps,The sound of the strings is so gorgeous on this guitar.,sub,sub,are,is,5,2
+qian2023,qian2023//1/pss,qian2023//1/psp,The sounds of the string are so gorgeous on this guitar.,sub,sub,is,are,5,2
+qian2023,qian2023//1/pss,qian2023//1/sss,The sound of the string is so gorgeous on this guitar.,sub,sub,sounds,sound,1,2
+qian2023,qian2023//1/psp,qian2023//1/psp,The sounds of the string are so gorgeous on this guitar.,none,,,,,1
+qian2023,qian2023//1/pps,qian2023//1/ppp,The sounds of the strings are so gorgeous on this guitar.,sub,sub,is,are,5,2
+qian2023,qian2023//1/pps,qian2023//1/sps,The sound of the strings is so gorgeous on this guitar.,sub,sub,sounds,sound,1,2
+qian2023,qian2023//1/ppp,qian2023//1/ppp,The sounds of the strings are so gorgeous on this guitar.,none,,,,,1
+qian2023,qian2023//2/sss,qian2023//2/sss,The cause of the problem was investigated thoroughly.,none,,,,,1
+qian2023,qian2023//2/ssp,qian2023//2/psp,The causes of the problem were investigated thoroughly.,sub,sub,cause,causes,1,2
+qian2023,qian2023//2/ssp,qian2023//2/sss,The cause of the problem was investigated thoroughly.,sub,sub,were,was,5,2
+qian2023,qian2023//2/sps,qian2023//2/sps,The cause of the problems was investigated thoroughly.,none,,,,,1
+qian2023,qian2023//2/spp,qian2023//2/ppp,The causes of the problems were investigated thoroughly.,sub,sub,cause,causes,1,2
+qian2023,qian2023//2/spp,qian2023//2/sps,The cause of the problems was investigated thoroughly.,sub,sub,were,was,5,2
+qian2023,qian2023//2/pss,qian2023//2/psp,The causes of the problem were investigated thoroughly.,sub,sub,was,were,5,2
+qian2023,qian2023//2/pss,qian2023//2/sss,The cause of the problem was investigated thoroughly.,sub,sub,causes,cause,1,2
+qian2023,qian2023//2/psp,qian2023//2/psp,The causes of the problem were investigated thoroughly.,none,,,,,1
+qian2023,qian2023//2/pps,qian2023//2/ppp,The causes of the problems were investigated thoroughly.,sub,sub,was,were,5,2
+qian2023,qian2023//2/pps,qian2023//2/sps,The cause of the problems was investigated thoroughly.,sub,sub,causes,cause,1,2
+qian2023,qian2023//2/ppp,qian2023//2/ppp,The causes of the problems were investigated thoroughly.,none,,,,,1
+qian2023,qian2023//3/sss,qian2023//3/sss,The review of the exhibition is too pedantic for the readers.,none,,,,,1
+qian2023,qian2023//3/ssp,qian2023//3/psp,The reviews of the exhibition are too pedantic for the readers.,sub,sub,review,reviews,1,2
+qian2023,qian2023//3/ssp,qian2023//3/sss,The review of the exhibition is too pedantic for the readers.,sub,sub,are,is,5,2
+qian2023,qian2023//3/sps,qian2023//3/sps,The review of the exhibitions is too pedantic for the readers.,none,,,,,1
+qian2023,qian2023//3/spp,qian2023//3/ppp,The reviews of the exhibitions are too pedantic for the readers.,sub,sub,review,reviews,1,2
+qian2023,qian2023//3/spp,qian2023//3/sps,The review of the exhibitions is too pedantic for the readers.,sub,sub,are,is,5,2
+qian2023,qian2023//3/pss,qian2023//3/psp,The reviews of the exhibition are too pedantic for the readers.,sub,sub,is,are,5,2
+qian2023,qian2023//3/pss,qian2023//3/sss,The review of the exhibition is too pedantic for the readers.,sub,sub,reviews,review,1,2
+qian2023,qian2023//3/psp,qian2023//3/psp,The reviews of the exhibition are too pedantic for the readers.,none,,,,,1
+qian2023,qian2023//3/pps,qian2023//3/ppp,The reviews of the exhibitions are too pedantic for the readers.,sub,sub,is,are,5,2
+qian2023,qian2023//3/pps,qian2023//3/sps,The review of the exhibitions is too pedantic for the readers.,sub,sub,reviews,review,1,2
+qian2023,qian2023//3/ppp,qian2023//3/ppp,The reviews of the exhibitions are too pedantic for the readers.,none,,,,,1
+qian2023,qian2023//4/sss,qian2023//4/sss,The speech of the candidate is summarized in the news show today.,none,,,,,1
+qian2023,qian2023//4/ssp,qian2023//4/psp,The speeches of the candidate are summarized in the news show today.,sub,sub,speech,speeches,1,2
+qian2023,qian2023//4/ssp,qian2023//4/sss,The speech of the candidate is summarized in the news show today.,sub,sub,are,is,5,2
+qian2023,qian2023//4/sps,qian2023//4/sps,The speech of the candidates is summarized in the news show today.,none,,,,,1
+qian2023,qian2023//4/spp,qian2023//4/ppp,The speeches of the candidates are summarized in the news show today.,sub,sub,speech,speeches,1,2
+qian2023,qian2023//4/spp,qian2023//4/sps,The speech of the candidates is summarized in the news show today.,sub,sub,are,is,5,2
+qian2023,qian2023//4/pss,qian2023//4/psp,The speeches of the candidate are summarized in the news show today.,sub,sub,is,are,5,2
+qian2023,qian2023//4/pss,qian2023//4/sss,The speech of the candidate is summarized in the news show today.,sub,sub,speeches,speech,1,2
+qian2023,qian2023//4/psp,qian2023//4/psp,The speeches of the candidate are summarized in the news show today.,none,,,,,1
+qian2023,qian2023//4/pps,qian2023//4/ppp,The speeches of the candidates are summarized in the news show today.,sub,sub,is,are,5,2
+qian2023,qian2023//4/pps,qian2023//4/sps,The speech of the candidates is summarized in the news show today.,sub,sub,speeches,speech,1,2
+qian2023,qian2023//4/ppp,qian2023//4/ppp,The speeches of the candidates are summarized in the news show today.,none,,,,,1
+qian2023,qian2023//5/sss,qian2023//5/sss,The test of the device was carried out before packaging.,none,,,,,1
+qian2023,qian2023//5/ssp,qian2023//5/psp,The tests of the device were carried out before packaging.,sub,sub,test,tests,1,2
+qian2023,qian2023//5/ssp,qian2023//5/sss,The test of the device was carried out before packaging.,sub,sub,were,was,5,2
+qian2023,qian2023//5/sps,qian2023//5/sps,The test of the devices was carried out before packaging.,none,,,,,1
+qian2023,qian2023//5/spp,qian2023//5/ppp,The tests of the devices were carried out before packaging.,sub,sub,test,tests,1,2
+qian2023,qian2023//5/spp,qian2023//5/sps,The test of the devices was carried out before packaging.,sub,sub,were,was,5,2
+qian2023,qian2023//5/pss,qian2023//5/psp,The tests of the device were carried out before packaging.,sub,sub,was,were,5,2
+qian2023,qian2023//5/pss,qian2023//5/sss,The test of the device was carried out before packaging.,sub,sub,tests,test,1,2
+qian2023,qian2023//5/psp,qian2023//5/psp,The tests of the device were carried out before packaging.,none,,,,,1
+qian2023,qian2023//5/pps,qian2023//5/ppp,The tests of the devices were carried out before packaging.,sub,sub,was,were,5,2
+qian2023,qian2023//5/pps,qian2023//5/sps,The test of the devices was carried out before packaging.,sub,sub,tests,test,1,2
+qian2023,qian2023//5/ppp,qian2023//5/ppp,The tests of the devices were carried out before packaging.,none,,,,,1
+qian2023,qian2023//6/sss,qian2023//6/sss,The director of the film has planned to hold an audition this week.,none,,,,,1
+qian2023,qian2023//6/ssp,qian2023//6/psp,The directors of the film have planned to hold an audition this week.,sub,sub,director,directors,1,2
+qian2023,qian2023//6/ssp,qian2023//6/sss,The director of the film has planned to hold an audition this week.,sub,sub,have,has,5,2
+qian2023,qian2023//6/sps,qian2023//6/sps,The director of the films has planned to hold an audition this week.,none,,,,,1
+qian2023,qian2023//6/spp,qian2023//6/ppp,The directors of the films have planned to hold an audition this week.,sub,sub,director,directors,1,2
+qian2023,qian2023//6/spp,qian2023//6/sps,The director of the films has planned to hold an audition this week.,sub,sub,have,has,5,2
+qian2023,qian2023//6/pss,qian2023//6/psp,The directors of the film have planned to hold an audition this week.,sub,sub,has,have,5,2
+qian2023,qian2023//6/pss,qian2023//6/sss,The director of the film has planned to hold an audition this week.,sub,sub,directors,director,1,2
+qian2023,qian2023//6/psp,qian2023//6/psp,The directors of the film have planned to hold an audition this week.,none,,,,,1
+qian2023,qian2023//6/pps,qian2023//6/ppp,The directors of the films have planned to hold an audition this week.,sub,sub,has,have,5,2
+qian2023,qian2023//6/pps,qian2023//6/sps,The director of the films has planned to hold an audition this week.,sub,sub,directors,director,1,2
+qian2023,qian2023//6/ppp,qian2023//6/ppp,The directors of the films have planned to hold an audition this week.,none,,,,,1
+qian2023,qian2023//7/sss,qian2023//7/sss,The teacher of the student is attending a workshop on active learning.,none,,,,,1
+qian2023,qian2023//7/ssp,qian2023//7/psp,The teachers of the student are attending a workshop on active learning.,sub,sub,teacher,teachers,1,2
+qian2023,qian2023//7/ssp,qian2023//7/sss,The teacher of the student is attending a workshop on active learning.,sub,sub,are,is,5,2
+qian2023,qian2023//7/sps,qian2023//7/sps,The teacher of the students is attending a workshop on active learning.,none,,,,,1
+qian2023,qian2023//7/spp,qian2023//7/ppp,The teachers of the students are attending a workshop on active learning.,sub,sub,teacher,teachers,1,2
+qian2023,qian2023//7/spp,qian2023//7/sps,The teacher of the students is attending a workshop on active learning.,sub,sub,are,is,5,2
+qian2023,qian2023//7/pss,qian2023//7/psp,The teachers of the student are attending a workshop on active learning.,sub,sub,is,are,5,2
+qian2023,qian2023//7/pss,qian2023//7/sss,The teacher of the student is attending a workshop on active learning.,sub,sub,teachers,teacher,1,2
+qian2023,qian2023//7/psp,qian2023//7/psp,The teachers of the student are attending a workshop on active learning.,none,,,,,1
+qian2023,qian2023//7/pps,qian2023//7/ppp,The teachers of the students are attending a workshop on active learning.,sub,sub,is,are,5,2
+qian2023,qian2023//7/pps,qian2023//7/sps,The teacher of the students is attending a workshop on active learning.,sub,sub,teachers,teacher,1,2
+qian2023,qian2023//7/ppp,qian2023//7/ppp,The teachers of the students are attending a workshop on active learning.,none,,,,,1
+qian2023,qian2023//8/sss,qian2023//8/sss,The photo of the mountain is displayed in an exhibition at the gallery.,none,,,,,1
+qian2023,qian2023//8/ssp,qian2023//8/psp,The photos of the mountain are displayed in an exhibition at the gallery.,sub,sub,photo,photos,1,2
+qian2023,qian2023//8/ssp,qian2023//8/sss,The photo of the mountain is displayed in an exhibition at the gallery.,sub,sub,are,is,5,2
+qian2023,qian2023//8/sps,qian2023//8/sps,The photo of the mountains is displayed in an exhibition at the gallery.,none,,,,,1
+qian2023,qian2023//8/spp,qian2023//8/ppp,The photos of the mountains are displayed in an exhibition at the gallery.,sub,sub,photo,photos,1,2
+qian2023,qian2023//8/spp,qian2023//8/sps,The photo of the mountains is displayed in an exhibition at the gallery.,sub,sub,are,is,5,2
+qian2023,qian2023//8/pss,qian2023//8/psp,The photos of the mountain are displayed in an exhibition at the gallery.,sub,sub,is,are,5,2
+qian2023,qian2023//8/pss,qian2023//8/sss,The photo of the mountain is displayed in an exhibition at the gallery.,sub,sub,photos,photo,1,2
+qian2023,qian2023//8/psp,qian2023//8/psp,The photos of the mountain are displayed in an exhibition at the gallery.,none,,,,,1
+qian2023,qian2023//8/pps,qian2023//8/ppp,The photos of the mountains are displayed in an exhibition at the gallery.,sub,sub,is,are,5,2
+qian2023,qian2023//8/pps,qian2023//8/sps,The photo of the mountains is displayed in an exhibition at the gallery.,sub,sub,photos,photo,1,2
+qian2023,qian2023//8/ppp,qian2023//8/ppp,The photos of the mountains are displayed in an exhibition at the gallery.,none,,,,,1
+qian2023,qian2023//9/sss,qian2023//9/sss,The editor of the book has been invited to the seminar.,none,,,,,1
+qian2023,qian2023//9/ssp,qian2023//9/psp,The editors of the book have been invited to the seminar.,sub,sub,editor,editors,1,2
+qian2023,qian2023//9/ssp,qian2023//9/sss,The editor of the book has been invited to the seminar.,sub,sub,have,has,5,2
+qian2023,qian2023//9/sps,qian2023//9/sps,The editor of the books has been invited to the seminar.,none,,,,,1
+qian2023,qian2023//9/spp,qian2023//9/ppp,The editors of the books have been invited to the seminar.,sub,sub,editor,editors,1,2
+qian2023,qian2023//9/spp,qian2023//9/sps,The editor of the books has been invited to the seminar.,sub,sub,have,has,5,2
+qian2023,qian2023//9/pss,qian2023//9/psp,The editors of the book have been invited to the seminar.,sub,sub,has,have,5,2
+qian2023,qian2023//9/pss,qian2023//9/sss,The editor of the book has been invited to the seminar.,sub,sub,editors,editor,1,2
+qian2023,qian2023//9/psp,qian2023//9/psp,The editors of the book have been invited to the seminar.,none,,,,,1
+qian2023,qian2023//9/pps,qian2023//9/ppp,The editors of the books have been invited to the seminar.,sub,sub,has,have,5,2
+qian2023,qian2023//9/pps,qian2023//9/sps,The editor of the books has been invited to the seminar.,sub,sub,editors,editor,1,2
+qian2023,qian2023//9/ppp,qian2023//9/ppp,The editors of the books have been invited to the seminar.,none,,,,,1
+qian2023,qian2023//10/sss,qian2023//10/sss,The host of the show was nominated for an award.,none,,,,,1
+qian2023,qian2023//10/ssp,qian2023//10/psp,The hosts of the show were nominated for an award.,sub,sub,host,hosts,1,2
+qian2023,qian2023//10/ssp,qian2023//10/sss,The host of the show was nominated for an award.,sub,sub,were,was,5,2
+qian2023,qian2023//10/sps,qian2023//10/sps,The host of the shows was nominated for an award.,none,,,,,1
+qian2023,qian2023//10/spp,qian2023//10/ppp,The hosts of the shows were nominated for an award.,sub,sub,host,hosts,1,2
+qian2023,qian2023//10/spp,qian2023//10/sps,The host of the shows was nominated for an award.,sub,sub,were,was,5,2
+qian2023,qian2023//10/pss,qian2023//10/psp,The hosts of the show were nominated for an award.,sub,sub,was,were,5,2
+qian2023,qian2023//10/pss,qian2023//10/sss,The host of the show was nominated for an award.,sub,sub,hosts,host,1,2
+qian2023,qian2023//10/psp,qian2023//10/psp,The hosts of the show were nominated for an award.,none,,,,,1
+qian2023,qian2023//10/pps,qian2023//10/ppp,The hosts of the shows were nominated for an award.,sub,sub,was,were,5,2
+qian2023,qian2023//10/pps,qian2023//10/sps,The host of the shows was nominated for an award.,sub,sub,hosts,host,1,2
+qian2023,qian2023//10/ppp,qian2023//10/ppp,The hosts of the shows were nominated for an award.,none,,,,,1
+qian2023,qian2023//11/sss,qian2023//11/sss,The judge of the competition is the same as last year.,none,,,,,1
+qian2023,qian2023//11/ssp,qian2023//11/psp,The judges of the competition are the same as last year.,sub,sub,judge,judges,1,2
+qian2023,qian2023//11/ssp,qian2023//11/sss,The judge of the competition is the same as last year.,sub,sub,are,is,5,2
+qian2023,qian2023//11/sps,qian2023//11/sps,The judge of the competitions is the same as last year.,none,,,,,1
+qian2023,qian2023//11/spp,qian2023//11/ppp,The judges of the competitions are the same as last year.,sub,sub,judge,judges,1,2
+qian2023,qian2023//11/spp,qian2023//11/sps,The judge of the competitions is the same as last year.,sub,sub,are,is,5,2
+qian2023,qian2023//11/pss,qian2023//11/psp,The judges of the competition are the same as last year.,sub,sub,is,are,5,2
+qian2023,qian2023//11/pss,qian2023//11/sss,The judge of the competition is the same as last year.,sub,sub,judges,judge,1,2
+qian2023,qian2023//11/psp,qian2023//11/psp,The judges of the competition are the same as last year.,none,,,,,1
+qian2023,qian2023//11/pps,qian2023//11/ppp,The judges of the competitions are the same as last year.,sub,sub,is,are,5,2
+qian2023,qian2023//11/pps,qian2023//11/sps,The judge of the competitions is the same as last year.,sub,sub,judges,judge,1,2
+qian2023,qian2023//11/ppp,qian2023//11/ppp,The judges of the competitions are the same as last year.,none,,,,,1
+qian2023,qian2023//12/sss,qian2023//12/sss,The friend of the actor has come to see the play.,none,,,,,1
+qian2023,qian2023//12/ssp,qian2023//12/psp,The friends of the actor have come to see the play.,sub,sub,friend,friends,1,2
+qian2023,qian2023//12/ssp,qian2023//12/sss,The friend of the actor has come to see the play.,sub,sub,have,has,5,2
+qian2023,qian2023//12/sps,qian2023//12/sps,The friend of the actors has come to see the play.,none,,,,,1
+qian2023,qian2023//12/spp,qian2023//12/ppp,The friends of the actors have come to see the play.,sub,sub,friend,friends,1,2
+qian2023,qian2023//12/spp,qian2023//12/sps,The friend of the actors has come to see the play.,sub,sub,have,has,5,2
+qian2023,qian2023//12/pss,qian2023//12/psp,The friends of the actor have come to see the play.,sub,sub,has,have,5,2
+qian2023,qian2023//12/pss,qian2023//12/sss,The friend of the actor has come to see the play.,sub,sub,friends,friend,1,2
+qian2023,qian2023//12/psp,qian2023//12/psp,The friends of the actor have come to see the play.,none,,,,,1
+qian2023,qian2023//12/pps,qian2023//12/ppp,The friends of the actors have come to see the play.,sub,sub,has,have,5,2
+qian2023,qian2023//12/pps,qian2023//12/sps,The friend of the actors has come to see the play.,sub,sub,friends,friend,1,2
+qian2023,qian2023//12/ppp,qian2023//12/ppp,The friends of the actors have come to see the play.,none,,,,,1
+qian2023,qian2023//13/sss,qian2023//13/sss,The bone of the dinosaur is on display at the natural history museum.,none,,,,,1
+qian2023,qian2023//13/ssp,qian2023//13/psp,The bones of the dinosaur are on display at the natural history museum.,sub,sub,bone,bones,1,2
+qian2023,qian2023//13/ssp,qian2023//13/sss,The bone of the dinosaur is on display at the natural history museum.,sub,sub,are,is,5,2
+qian2023,qian2023//13/sps,qian2023//13/sps,The bone of the dinosaurs is on display at the natural history museum.,none,,,,,1
+qian2023,qian2023//13/spp,qian2023//13/ppp,The bones of the dinosaurs are on display at the natural history museum.,sub,sub,bone,bones,1,2
+qian2023,qian2023//13/spp,qian2023//13/sps,The bone of the dinosaurs is on display at the natural history museum.,sub,sub,are,is,5,2
+qian2023,qian2023//13/pss,qian2023//13/psp,The bones of the dinosaur are on display at the natural history museum.,sub,sub,is,are,5,2
+qian2023,qian2023//13/pss,qian2023//13/sss,The bone of the dinosaur is on display at the natural history museum.,sub,sub,bones,bone,1,2
+qian2023,qian2023//13/psp,qian2023//13/psp,The bones of the dinosaur are on display at the natural history museum.,none,,,,,1
+qian2023,qian2023//13/pps,qian2023//13/ppp,The bones of the dinosaurs are on display at the natural history museum.,sub,sub,is,are,5,2
+qian2023,qian2023//13/pps,qian2023//13/sps,The bone of the dinosaurs is on display at the natural history museum.,sub,sub,bones,bone,1,2
+qian2023,qian2023//13/ppp,qian2023//13/ppp,The bones of the dinosaurs are on display at the natural history museum.,none,,,,,1
+qian2023,qian2023//14/sss,qian2023//14/sss,The doubt about the product was completely expected.,none,,,,,1
+qian2023,qian2023//14/ssp,qian2023//14/psp,The doubts about the product were completely expected.,sub,sub,doubt,doubts,1,2
+qian2023,qian2023//14/ssp,qian2023//14/sss,The doubt about the product was completely expected.,sub,sub,were,was,5,2
+qian2023,qian2023//14/sps,qian2023//14/sps,The doubt about the products was completely expected.,none,,,,,1
+qian2023,qian2023//14/spp,qian2023//14/ppp,The doubts about the products were completely expected.,sub,sub,doubt,doubts,1,2
+qian2023,qian2023//14/spp,qian2023//14/sps,The doubt about the products was completely expected.,sub,sub,were,was,5,2
+qian2023,qian2023//14/pss,qian2023//14/psp,The doubts about the product were completely expected.,sub,sub,was,were,5,2
+qian2023,qian2023//14/pss,qian2023//14/sss,The doubt about the product was completely expected.,sub,sub,doubts,doubt,1,2
+qian2023,qian2023//14/psp,qian2023//14/psp,The doubts about the product were completely expected.,none,,,,,1
+qian2023,qian2023//14/pps,qian2023//14/ppp,The doubts about the products were completely expected.,sub,sub,was,were,5,2
+qian2023,qian2023//14/pps,qian2023//14/sps,The doubt about the products was completely expected.,sub,sub,doubts,doubt,1,2
+qian2023,qian2023//14/ppp,qian2023//14/ppp,The doubts about the products were completely expected.,none,,,,,1
+qian2023,qian2023//15/sss,qian2023//15/sss,The article about the discovery is very easy to read.,none,,,,,1
+qian2023,qian2023//15/ssp,qian2023//15/psp,The articles about the discovery are very easy to read.,sub,sub,article,articles,1,2
+qian2023,qian2023//15/ssp,qian2023//15/sss,The article about the discovery is very easy to read.,sub,sub,are,is,5,2
+qian2023,qian2023//15/sps,qian2023//15/sps,The article about the discoveries is very easy to read.,none,,,,,1
+qian2023,qian2023//15/spp,qian2023//15/ppp,The articles about the discoveries are very easy to read.,sub,sub,article,articles,1,2
+qian2023,qian2023//15/spp,qian2023//15/sps,The article about the discoveries is very easy to read.,sub,sub,are,is,5,2
+qian2023,qian2023//15/pss,qian2023//15/psp,The articles about the discovery are very easy to read.,sub,sub,is,are,5,2
+qian2023,qian2023//15/pss,qian2023//15/sss,The article about the discovery is very easy to read.,sub,sub,articles,article,1,2
+qian2023,qian2023//15/psp,qian2023//15/psp,The articles about the discovery are very easy to read.,none,,,,,1
+qian2023,qian2023//15/pps,qian2023//15/ppp,The articles about the discoveries are very easy to read.,sub,sub,is,are,5,2
+qian2023,qian2023//15/pps,qian2023//15/sps,The article about the discoveries is very easy to read.,sub,sub,articles,article,1,2
+qian2023,qian2023//15/ppp,qian2023//15/ppp,The articles about the discoveries are very easy to read.,none,,,,,1
+qian2023,qian2023//16/sss,qian2023//16/sss,The story about the scientist has inspired many people.,none,,,,,1
+qian2023,qian2023//16/ssp,qian2023//16/psp,The stories about the scientist have inspired many people.,sub,sub,story,stories,1,2
+qian2023,qian2023//16/ssp,qian2023//16/sss,The story about the scientist has inspired many people.,sub,sub,have,has,5,2
+qian2023,qian2023//16/sps,qian2023//16/sps,The story about the scientists has inspired many people.,none,,,,,1
+qian2023,qian2023//16/spp,qian2023//16/ppp,The stories about the scientists have inspired many people.,sub,sub,story,stories,1,2
+qian2023,qian2023//16/spp,qian2023//16/sps,The story about the scientists has inspired many people.,sub,sub,have,has,5,2
+qian2023,qian2023//16/pss,qian2023//16/psp,The stories about the scientist have inspired many people.,sub,sub,has,have,5,2
+qian2023,qian2023//16/pss,qian2023//16/sss,The story about the scientist has inspired many people.,sub,sub,stories,story,1,2
+qian2023,qian2023//16/psp,qian2023//16/psp,The stories about the scientist have inspired many people.,none,,,,,1
+qian2023,qian2023//16/pps,qian2023//16/ppp,The stories about the scientists have inspired many people.,sub,sub,has,have,5,2
+qian2023,qian2023//16/pps,qian2023//16/sps,The story about the scientists has inspired many people.,sub,sub,stories,story,1,2
+qian2023,qian2023//16/ppp,qian2023//16/ppp,The stories about the scientists have inspired many people.,none,,,,,1
+qian2023,qian2023//17/sss,qian2023//17/sss,The alarm in the station has been maintained regularly.,none,,,,,1
+qian2023,qian2023//17/ssp,qian2023//17/psp,The alarms in the station have been maintained regularly.,sub,sub,alarm,alarms,1,2
+qian2023,qian2023//17/ssp,qian2023//17/sss,The alarm in the station has been maintained regularly.,sub,sub,have,has,5,2
+qian2023,qian2023//17/sps,qian2023//17/sps,The alarm in the stations has been maintained regularly.,none,,,,,1
+qian2023,qian2023//17/spp,qian2023//17/ppp,The alarms in the stations have been maintained regularly.,sub,sub,alarm,alarms,1,2
+qian2023,qian2023//17/spp,qian2023//17/sps,The alarm in the stations has been maintained regularly.,sub,sub,have,has,5,2
+qian2023,qian2023//17/pss,qian2023//17/psp,The alarms in the station have been maintained regularly.,sub,sub,has,have,5,2
+qian2023,qian2023//17/pss,qian2023//17/sss,The alarm in the station has been maintained regularly.,sub,sub,alarms,alarm,1,2
+qian2023,qian2023//17/psp,qian2023//17/psp,The alarms in the station have been maintained regularly.,none,,,,,1
+qian2023,qian2023//17/pps,qian2023//17/ppp,The alarms in the stations have been maintained regularly.,sub,sub,has,have,5,2
+qian2023,qian2023//17/pps,qian2023//17/sps,The alarm in the stations has been maintained regularly.,sub,sub,alarms,alarm,1,2
+qian2023,qian2023//17/ppp,qian2023//17/ppp,The alarms in the stations have been maintained regularly.,none,,,,,1
+qian2023,qian2023//18/sss,qian2023//18/sss,The musician in the orchestra is organizing a community concert.,none,,,,,1
+qian2023,qian2023//18/ssp,qian2023//18/psp,The musicians in the orchestra are organizing a community concert.,sub,sub,musician,musicians,1,2
+qian2023,qian2023//18/ssp,qian2023//18/sss,The musician in the orchestra is organizing a community concert.,sub,sub,are,is,5,2
+qian2023,qian2023//18/sps,qian2023//18/sps,The musician in the orchestras is organizing a community concert.,none,,,,,1
+qian2023,qian2023//18/spp,qian2023//18/ppp,The musicians in the orchestras are organizing a community concert.,sub,sub,musician,musicians,1,2
+qian2023,qian2023//18/spp,qian2023//18/sps,The musician in the orchestras is organizing a community concert.,sub,sub,are,is,5,2
+qian2023,qian2023//18/pss,qian2023//18/psp,The musicians in the orchestra are organizing a community concert.,sub,sub,is,are,5,2
+qian2023,qian2023//18/pss,qian2023//18/sss,The musician in the orchestra is organizing a community concert.,sub,sub,musicians,musician,1,2
+qian2023,qian2023//18/psp,qian2023//18/psp,The musicians in the orchestra are organizing a community concert.,none,,,,,1
+qian2023,qian2023//18/pps,qian2023//18/ppp,The musicians in the orchestras are organizing a community concert.,sub,sub,is,are,5,2
+qian2023,qian2023//18/pps,qian2023//18/sps,The musician in the orchestras is organizing a community concert.,sub,sub,musicians,musician,1,2
+qian2023,qian2023//18/ppp,qian2023//18/ppp,The musicians in the orchestras are organizing a community concert.,none,,,,,1
+qian2023,qian2023//19/sss,qian2023//19/sss,The character in the episode was too chaotic.,none,,,,,1
+qian2023,qian2023//19/ssp,qian2023//19/psp,The characters in the episode were too chaotic.,sub,sub,character,characters,1,2
+qian2023,qian2023//19/ssp,qian2023//19/sss,The character in the episode was too chaotic.,sub,sub,were,was,5,2
+qian2023,qian2023//19/sps,qian2023//19/sps,The character in the episodes was too chaotic.,none,,,,,1
+qian2023,qian2023//19/spp,qian2023//19/ppp,The characters in the episodes were too chaotic.,sub,sub,character,characters,1,2
+qian2023,qian2023//19/spp,qian2023//19/sps,The character in the episodes was too chaotic.,sub,sub,were,was,5,2
+qian2023,qian2023//19/pss,qian2023//19/psp,The characters in the episode were too chaotic.,sub,sub,was,were,5,2
+qian2023,qian2023//19/pss,qian2023//19/sss,The character in the episode was too chaotic.,sub,sub,characters,character,1,2
+qian2023,qian2023//19/psp,qian2023//19/psp,The characters in the episode were too chaotic.,none,,,,,1
+qian2023,qian2023//19/pps,qian2023//19/ppp,The characters in the episodes were too chaotic.,sub,sub,was,were,5,2
+qian2023,qian2023//19/pps,qian2023//19/sps,The character in the episodes was too chaotic.,sub,sub,characters,character,1,2
+qian2023,qian2023//19/ppp,qian2023//19/ppp,The characters in the episodes were too chaotic.,none,,,,,1
+qian2023,qian2023//20/sss,qian2023//20/sss,The picture in the album reminds them of the days they spent together.,none,,,,,1
+qian2023,qian2023//20/ssp,qian2023//20/psp,The pictures in the album remind them of the days they spent together.,sub,sub,picture,pictures,1,2
+qian2023,qian2023//20/ssp,qian2023//20/sss,The picture in the album reminds them of the days they spent together.,sub,sub,remind,reminds,5,2
+qian2023,qian2023//20/sps,qian2023//20/sps,The picture in the albums reminds them of the days they spent together.,none,,,,,1
+qian2023,qian2023//20/spp,qian2023//20/ppp,The pictures in the albums remind them of the days they spent together.,sub,sub,picture,pictures,1,2
+qian2023,qian2023//20/spp,qian2023//20/sps,The picture in the albums reminds them of the days they spent together.,sub,sub,remind,reminds,5,2
+qian2023,qian2023//20/pss,qian2023//20/psp,The pictures in the album remind them of the days they spent together.,sub,sub,reminds,remind,5,2
+qian2023,qian2023//20/pss,qian2023//20/sss,The picture in the album reminds them of the days they spent together.,sub,sub,pictures,picture,1,2
+qian2023,qian2023//20/psp,qian2023//20/psp,The pictures in the album remind them of the days they spent together.,none,,,,,1
+qian2023,qian2023//20/pps,qian2023//20/ppp,The pictures in the albums remind them of the days they spent together.,sub,sub,reminds,remind,5,2
+qian2023,qian2023//20/pps,qian2023//20/sps,The picture in the albums reminds them of the days they spent together.,sub,sub,pictures,picture,1,2
+qian2023,qian2023//20/ppp,qian2023//20/ppp,The pictures in the albums remind them of the days they spent together.,none,,,,,1
+qian2023,qian2023//21/sss,qian2023//21/sss,The player in the game has won several championships.,none,,,,,1
+qian2023,qian2023//21/ssp,qian2023//21/psp,The players in the game have won several championships.,sub,sub,player,players,1,2
+qian2023,qian2023//21/ssp,qian2023//21/sss,The player in the game has won several championships.,sub,sub,have,has,5,2
+qian2023,qian2023//21/sps,qian2023//21/sps,The player in the games has won several championships.,none,,,,,1
+qian2023,qian2023//21/spp,qian2023//21/ppp,The players in the games have won several championships.,sub,sub,player,players,1,2
+qian2023,qian2023//21/spp,qian2023//21/sps,The player in the games has won several championships.,sub,sub,have,has,5,2
+qian2023,qian2023//21/pss,qian2023//21/psp,The players in the game have won several championships.,sub,sub,has,have,5,2
+qian2023,qian2023//21/pss,qian2023//21/sss,The player in the game has won several championships.,sub,sub,players,player,1,2
+qian2023,qian2023//21/psp,qian2023//21/psp,The players in the game have won several championships.,none,,,,,1
+qian2023,qian2023//21/pps,qian2023//21/ppp,The players in the games have won several championships.,sub,sub,has,have,5,2
+qian2023,qian2023//21/pps,qian2023//21/sps,The player in the games has won several championships.,sub,sub,players,player,1,2
+qian2023,qian2023//21/ppp,qian2023//21/ppp,The players in the games have won several championships.,none,,,,,1
+qian2023,qian2023//22/sss,qian2023//22/sss,The bee in the flower is collecting pollen.,none,,,,,1
+qian2023,qian2023//22/ssp,qian2023//22/psp,The bees in the flower are collecting pollen.,sub,sub,bee,bees,1,2
+qian2023,qian2023//22/ssp,qian2023//22/sss,The bee in the flower is collecting pollen.,sub,sub,are,is,5,2
+qian2023,qian2023//22/sps,qian2023//22/sps,The bee in the flowers is collecting pollen.,none,,,,,1
+qian2023,qian2023//22/spp,qian2023//22/ppp,The bees in the flowers are collecting pollen.,sub,sub,bee,bees,1,2
+qian2023,qian2023//22/spp,qian2023//22/sps,The bee in the flowers is collecting pollen.,sub,sub,are,is,5,2
+qian2023,qian2023//22/pss,qian2023//22/psp,The bees in the flower are collecting pollen.,sub,sub,is,are,5,2
+qian2023,qian2023//22/pss,qian2023//22/sss,The bee in the flower is collecting pollen.,sub,sub,bees,bee,1,2
+qian2023,qian2023//22/psp,qian2023//22/psp,The bees in the flower are collecting pollen.,none,,,,,1
+qian2023,qian2023//22/pps,qian2023//22/ppp,The bees in the flowers are collecting pollen.,sub,sub,is,are,5,2
+qian2023,qian2023//22/pps,qian2023//22/sps,The bee in the flowers is collecting pollen.,sub,sub,bees,bee,1,2
+qian2023,qian2023//22/ppp,qian2023//22/ppp,The bees in the flowers are collecting pollen.,none,,,,,1
+qian2023,qian2023//23/sss,qian2023//23/sss,The rug under the chair is handmade from wool and silk.,none,,,,,1
+qian2023,qian2023//23/ssp,qian2023//23/psp,The rugs under the chair are handmade from wool and silk.,sub,sub,rug,rugs,1,2
+qian2023,qian2023//23/ssp,qian2023//23/sss,The rug under the chair is handmade from wool and silk.,sub,sub,are,is,5,2
+qian2023,qian2023//23/sps,qian2023//23/sps,The rug under the chairs is handmade from wool and silk.,none,,,,,1
+qian2023,qian2023//23/spp,qian2023//23/ppp,The rugs under the chairs are handmade from wool and silk.,sub,sub,rug,rugs,1,2
+qian2023,qian2023//23/spp,qian2023//23/sps,The rug under the chairs is handmade from wool and silk.,sub,sub,are,is,5,2
+qian2023,qian2023//23/pss,qian2023//23/psp,The rugs under the chair are handmade from wool and silk.,sub,sub,is,are,5,2
+qian2023,qian2023//23/pss,qian2023//23/sss,The rug under the chair is handmade from wool and silk.,sub,sub,rugs,rug,1,2
+qian2023,qian2023//23/psp,qian2023//23/psp,The rugs under the chair are handmade from wool and silk.,none,,,,,1
+qian2023,qian2023//23/pps,qian2023//23/ppp,The rugs under the chairs are handmade from wool and silk.,sub,sub,is,are,5,2
+qian2023,qian2023//23/pps,qian2023//23/sps,The rug under the chairs is handmade from wool and silk.,sub,sub,rugs,rug,1,2
+qian2023,qian2023//23/ppp,qian2023//23/ppp,The rugs under the chairs are handmade from wool and silk.,none,,,,,1
+qian2023,qian2023//24/sss,qian2023//24/sss,The bench under the tree is cleaned everyday.,none,,,,,1
+qian2023,qian2023//24/ssp,qian2023//24/psp,The benches under the tree are cleaned everyday.,sub,sub,bench,benches,1,2
+qian2023,qian2023//24/ssp,qian2023//24/sss,The bench under the tree is cleaned everyday.,sub,sub,are,is,5,2
+qian2023,qian2023//24/sps,qian2023//24/sps,The bench under the trees is cleaned everyday.,none,,,,,1
+qian2023,qian2023//24/spp,qian2023//24/ppp,The benches under the trees are cleaned everyday.,sub,sub,bench,benches,1,2
+qian2023,qian2023//24/spp,qian2023//24/sps,The bench under the trees is cleaned everyday.,sub,sub,are,is,5,2
+qian2023,qian2023//24/pss,qian2023//24/psp,The benches under the tree are cleaned everyday.,sub,sub,is,are,5,2
+qian2023,qian2023//24/pss,qian2023//24/sss,The bench under the tree is cleaned everyday.,sub,sub,benches,bench,1,2
+qian2023,qian2023//24/psp,qian2023//24/psp,The benches under the tree are cleaned everyday.,none,,,,,1
+qian2023,qian2023//24/pps,qian2023//24/ppp,The benches under the trees are cleaned everyday.,sub,sub,is,are,5,2
+qian2023,qian2023//24/pps,qian2023//24/sps,The bench under the trees is cleaned everyday.,sub,sub,benches,bench,1,2
+qian2023,qian2023//24/ppp,qian2023//24/ppp,The benches under the trees are cleaned everyday.,none,,,,,1
+qian2023,qian2023//25/sss,qian2023//25/sss,The tunnel under the lake has cost a lot of money beyond enigeering challenges.,none,,,,,1
+qian2023,qian2023//25/ssp,qian2023//25/psp,The tunnels under the lake have cost a lot of money beyond enigeering challenges.,sub,sub,tunnel,tunnels,1,2
+qian2023,qian2023//25/ssp,qian2023//25/sss,The tunnel under the lake has cost a lot of money beyond enigeering challenges.,sub,sub,have,has,5,2
+qian2023,qian2023//25/sps,qian2023//25/sps,The tunnel under the lakes has cost a lot of money beyond enigeering challenges.,none,,,,,1
+qian2023,qian2023//25/spp,qian2023//25/ppp,The tunnels under the lakes have cost a lot of money beyond enigeering challenges.,sub,sub,tunnel,tunnels,1,2
+qian2023,qian2023//25/spp,qian2023//25/sps,The tunnel under the lakes has cost a lot of money beyond enigeering challenges.,sub,sub,have,has,5,2
+qian2023,qian2023//25/pss,qian2023//25/psp,The tunnels under the lake have cost a lot of money beyond enigeering challenges.,sub,sub,has,have,5,2
+qian2023,qian2023//25/pss,qian2023//25/sss,The tunnel under the lake has cost a lot of money beyond enigeering challenges.,sub,sub,tunnels,tunnel,1,2
+qian2023,qian2023//25/psp,qian2023//25/psp,The tunnels under the lake have cost a lot of money beyond enigeering challenges.,none,,,,,1
+qian2023,qian2023//25/pps,qian2023//25/ppp,The tunnels under the lakes have cost a lot of money beyond enigeering challenges.,sub,sub,has,have,5,2
+qian2023,qian2023//25/pps,qian2023//25/sps,The tunnel under the lakes has cost a lot of money beyond enigeering challenges.,sub,sub,tunnels,tunnel,1,2
+qian2023,qian2023//25/ppp,qian2023//25/ppp,The tunnels under the lakes have cost a lot of money beyond enigeering challenges.,none,,,,,1
+qian2023,qian2023//26/sss,qian2023//26/sss,The cafe near the shop has got popular around the neighbourhood.,none,,,,,1
+qian2023,qian2023//26/ssp,qian2023//26/psp,The cafes near the shop have got popular around the neighbourhood.,sub,sub,cafe,cafes,1,2
+qian2023,qian2023//26/ssp,qian2023//26/sss,The cafe near the shop has got popular around the neighbourhood.,sub,sub,have,has,5,2
+qian2023,qian2023//26/sps,qian2023//26/sps,The cafe near the shops has got popular around the neighbourhood.,none,,,,,1
+qian2023,qian2023//26/spp,qian2023//26/ppp,The cafes near the shops have got popular around the neighbourhood.,sub,sub,cafe,cafes,1,2
+qian2023,qian2023//26/spp,qian2023//26/sps,The cafe near the shops has got popular around the neighbourhood.,sub,sub,have,has,5,2
+qian2023,qian2023//26/pss,qian2023//26/psp,The cafes near the shop have got popular around the neighbourhood.,sub,sub,has,have,5,2
+qian2023,qian2023//26/pss,qian2023//26/sss,The cafe near the shop has got popular around the neighbourhood.,sub,sub,cafes,cafe,1,2
+qian2023,qian2023//26/psp,qian2023//26/psp,The cafes near the shop have got popular around the neighbourhood.,none,,,,,1
+qian2023,qian2023//26/pps,qian2023//26/ppp,The cafes near the shops have got popular around the neighbourhood.,sub,sub,has,have,5,2
+qian2023,qian2023//26/pps,qian2023//26/sps,The cafe near the shops has got popular around the neighbourhood.,sub,sub,cafes,cafe,1,2
+qian2023,qian2023//26/ppp,qian2023//26/ppp,The cafes near the shops have got popular around the neighbourhood.,none,,,,,1
+qian2023,qian2023//27/sss,qian2023//27/sss,The key to the office is on the table.,none,,,,,1
+qian2023,qian2023//27/ssp,qian2023//27/psp,The keys to the office are on the table.,sub,sub,key,keys,1,2
+qian2023,qian2023//27/ssp,qian2023//27/sss,The key to the office is on the table.,sub,sub,are,is,5,2
+qian2023,qian2023//27/sps,qian2023//27/sps,The key to the offices is on the table.,none,,,,,1
+qian2023,qian2023//27/spp,qian2023//27/ppp,The keys to the offices are on the table.,sub,sub,key,keys,1,2
+qian2023,qian2023//27/spp,qian2023//27/sps,The key to the offices is on the table.,sub,sub,are,is,5,2
+qian2023,qian2023//27/pss,qian2023//27/psp,The keys to the office are on the table.,sub,sub,is,are,5,2
+qian2023,qian2023//27/pss,qian2023//27/sss,The key to the office is on the table.,sub,sub,keys,key,1,2
+qian2023,qian2023//27/psp,qian2023//27/psp,The keys to the office are on the table.,none,,,,,1
+qian2023,qian2023//27/pps,qian2023//27/ppp,The keys to the offices are on the table.,sub,sub,is,are,5,2
+qian2023,qian2023//27/pps,qian2023//27/sps,The key to the offices is on the table.,sub,sub,keys,key,1,2
+qian2023,qian2023//27/ppp,qian2023//27/ppp,The keys to the offices are on the table.,none,,,,,1
+qian2023,qian2023//28/sss,qian2023//28/sss,The door to the room looks very festive with the decorations.,none,,,,,1
+qian2023,qian2023//28/ssp,qian2023//28/psp,The doors to the room look very festive with the decorations.,sub,sub,door,doors,1,2
+qian2023,qian2023//28/ssp,qian2023//28/sss,The door to the room looks very festive with the decorations.,sub,sub,look,looks,5,2
+qian2023,qian2023//28/sps,qian2023//28/sps,The door to the rooms looks very festive with the decorations.,none,,,,,1
+qian2023,qian2023//28/spp,qian2023//28/ppp,The doors to the rooms look very festive with the decorations.,sub,sub,door,doors,1,2
+qian2023,qian2023//28/spp,qian2023//28/sps,The door to the rooms looks very festive with the decorations.,sub,sub,look,looks,5,2
+qian2023,qian2023//28/pss,qian2023//28/psp,The doors to the room look very festive with the decorations.,sub,sub,looks,look,5,2
+qian2023,qian2023//28/pss,qian2023//28/sss,The door to the room looks very festive with the decorations.,sub,sub,doors,door,1,2
+qian2023,qian2023//28/psp,qian2023//28/psp,The doors to the room look very festive with the decorations.,none,,,,,1
+qian2023,qian2023//28/pps,qian2023//28/ppp,The doors to the rooms look very festive with the decorations.,sub,sub,looks,look,5,2
+qian2023,qian2023//28/pps,qian2023//28/sps,The door to the rooms looks very festive with the decorations.,sub,sub,doors,door,1,2
+qian2023,qian2023//28/ppp,qian2023//28/ppp,The doors to the rooms look very festive with the decorations.,none,,,,,1
+qian2023,qian2023//29/sss,qian2023//29/sss,The tour to the island was suspended temporarily.,none,,,,,1
+qian2023,qian2023//29/ssp,qian2023//29/psp,The tours to the island were suspended temporarily.,sub,sub,tour,tours,1,2
+qian2023,qian2023//29/ssp,qian2023//29/sss,The tour to the island was suspended temporarily.,sub,sub,were,was,5,2
+qian2023,qian2023//29/sps,qian2023//29/sps,The tour to the islands was suspended temporarily.,none,,,,,1
+qian2023,qian2023//29/spp,qian2023//29/ppp,The tours to the islands were suspended temporarily.,sub,sub,tour,tours,1,2
+qian2023,qian2023//29/spp,qian2023//29/sps,The tour to the islands was suspended temporarily.,sub,sub,were,was,5,2
+qian2023,qian2023//29/pss,qian2023//29/psp,The tours to the island were suspended temporarily.,sub,sub,was,were,5,2
+qian2023,qian2023//29/pss,qian2023//29/sss,The tour to the island was suspended temporarily.,sub,sub,tours,tour,1,2
+qian2023,qian2023//29/psp,qian2023//29/psp,The tours to the island were suspended temporarily.,none,,,,,1
+qian2023,qian2023//29/pps,qian2023//29/ppp,The tours to the islands were suspended temporarily.,sub,sub,was,were,5,2
+qian2023,qian2023//29/pps,qian2023//29/sps,The tour to the islands was suspended temporarily.,sub,sub,tours,tour,1,2
+qian2023,qian2023//29/ppp,qian2023//29/ppp,The tours to the islands were suspended temporarily.,none,,,,,1
+qian2023,qian2023//30/sss,qian2023//30/sss,The visit to the garden has sparked her interest in botany.,none,,,,,1
+qian2023,qian2023//30/ssp,qian2023//30/psp,The visits to the garden have sparked her interest in botany.,sub,sub,visit,visits,1,2
+qian2023,qian2023//30/ssp,qian2023//30/sss,The visit to the garden has sparked her interest in botany.,sub,sub,have,has,5,2
+qian2023,qian2023//30/sps,qian2023//30/sps,The visit to the gardens has sparked her interest in botany.,none,,,,,1
+qian2023,qian2023//30/spp,qian2023//30/ppp,The visits to the gardens have sparked her interest in botany.,sub,sub,visit,visits,1,2
+qian2023,qian2023//30/spp,qian2023//30/sps,The visit to the gardens has sparked her interest in botany.,sub,sub,have,has,5,2
+qian2023,qian2023//30/pss,qian2023//30/psp,The visits to the garden have sparked her interest in botany.,sub,sub,has,have,5,2
+qian2023,qian2023//30/pss,qian2023//30/sss,The visit to the garden has sparked her interest in botany.,sub,sub,visits,visit,1,2
+qian2023,qian2023//30/psp,qian2023//30/psp,The visits to the garden have sparked her interest in botany.,none,,,,,1
+qian2023,qian2023//30/pps,qian2023//30/ppp,The visits to the gardens have sparked her interest in botany.,sub,sub,has,have,5,2
+qian2023,qian2023//30/pps,qian2023//30/sps,The visit to the gardens has sparked her interest in botany.,sub,sub,visits,visit,1,2
+qian2023,qian2023//30/ppp,qian2023//30/ppp,The visits to the gardens have sparked her interest in botany.,none,,,,,1
+qian2023,qian2023//31/sss,qian2023//31/sss,The letter to the editor is published online.,none,,,,,1
+qian2023,qian2023//31/ssp,qian2023//31/psp,The letters to the editor are published online.,sub,sub,letter,letters,1,2
+qian2023,qian2023//31/ssp,qian2023//31/sss,The letter to the editor is published online.,sub,sub,are,is,5,2
+qian2023,qian2023//31/sps,qian2023//31/sps,The letter to the editors is published online.,none,,,,,1
+qian2023,qian2023//31/spp,qian2023//31/ppp,The letters to the editors are published online.,sub,sub,letter,letters,1,2
+qian2023,qian2023//31/spp,qian2023//31/sps,The letter to the editors is published online.,sub,sub,are,is,5,2
+qian2023,qian2023//31/pss,qian2023//31/psp,The letters to the editor are published online.,sub,sub,is,are,5,2
+qian2023,qian2023//31/pss,qian2023//31/sss,The letter to the editor is published online.,sub,sub,letters,letter,1,2
+qian2023,qian2023//31/psp,qian2023//31/psp,The letters to the editor are published online.,none,,,,,1
+qian2023,qian2023//31/pps,qian2023//31/ppp,The letters to the editors are published online.,sub,sub,is,are,5,2
+qian2023,qian2023//31/pps,qian2023//31/sps,The letter to the editors is published online.,sub,sub,letters,letter,1,2
+qian2023,qian2023//31/ppp,qian2023//31/ppp,The letters to the editors are published online.,none,,,,,1
+qian2023,qian2023//32/sss,qian2023//32/sss,The applicant to the school has received emails about financial assistance.,none,,,,,1
+qian2023,qian2023//32/ssp,qian2023//32/psp,The applicants to the school have received emails about financial assistance.,sub,sub,applicant,applicants,1,2
+qian2023,qian2023//32/ssp,qian2023//32/sss,The applicant to the school has received emails about financial assistance.,sub,sub,have,has,5,2
+qian2023,qian2023//32/sps,qian2023//32/sps,The applicant to the schools has received emails about financial assistance.,none,,,,,1
+qian2023,qian2023//32/spp,qian2023//32/ppp,The applicants to the schools have received emails about financial assistance.,sub,sub,applicant,applicants,1,2
+qian2023,qian2023//32/spp,qian2023//32/sps,The applicant to the schools has received emails about financial assistance.,sub,sub,have,has,5,2
+qian2023,qian2023//32/pss,qian2023//32/psp,The applicants to the school have received emails about financial assistance.,sub,sub,has,have,5,2
+qian2023,qian2023//32/pss,qian2023//32/sss,The applicant to the school has received emails about financial assistance.,sub,sub,applicants,applicant,1,2
+qian2023,qian2023//32/psp,qian2023//32/psp,The applicants to the school have received emails about financial assistance.,none,,,,,1
+qian2023,qian2023//32/pps,qian2023//32/ppp,The applicants to the schools have received emails about financial assistance.,sub,sub,has,have,5,2
+qian2023,qian2023//32/pps,qian2023//32/sps,The applicant to the schools has received emails about financial assistance.,sub,sub,applicants,applicant,1,2
+qian2023,qian2023//32/ppp,qian2023//32/ppp,The applicants to the schools have received emails about financial assistance.,none,,,,,1
+qian2023,qian2023//33/sss,qian2023//33/sss,The railway to the village has promoted economic growth.,none,,,,,1
+qian2023,qian2023//33/ssp,qian2023//33/psp,The railways to the village have promoted economic growth.,sub,sub,railway,railways,1,2
+qian2023,qian2023//33/ssp,qian2023//33/sss,The railway to the village has promoted economic growth.,sub,sub,have,has,5,2
+qian2023,qian2023//33/sps,qian2023//33/sps,The railway to the villages has promoted economic growth.,none,,,,,1
+qian2023,qian2023//33/spp,qian2023//33/ppp,The railways to the villages have promoted economic growth.,sub,sub,railway,railways,1,2
+qian2023,qian2023//33/spp,qian2023//33/sps,The railway to the villages has promoted economic growth.,sub,sub,have,has,5,2
+qian2023,qian2023//33/pss,qian2023//33/psp,The railways to the village have promoted economic growth.,sub,sub,has,have,5,2
+qian2023,qian2023//33/pss,qian2023//33/sss,The railway to the village has promoted economic growth.,sub,sub,railways,railway,1,2
+qian2023,qian2023//33/psp,qian2023//33/psp,The railways to the village have promoted economic growth.,none,,,,,1
+qian2023,qian2023//33/pps,qian2023//33/ppp,The railways to the villages have promoted economic growth.,sub,sub,has,have,5,2
+qian2023,qian2023//33/pps,qian2023//33/sps,The railway to the villages has promoted economic growth.,sub,sub,railways,railway,1,2
+qian2023,qian2023//33/ppp,qian2023//33/ppp,The railways to the villages have promoted economic growth.,none,,,,,1
+qian2023,qian2023//34/sss,qian2023//34/sss,The trail to the pond is highly recommended for beginner cyclists.,none,,,,,1
+qian2023,qian2023//34/ssp,qian2023//34/psp,The trails to the pond are highly recommended for beginner cyclists.,sub,sub,trail,trails,1,2
+qian2023,qian2023//34/ssp,qian2023//34/sss,The trail to the pond is highly recommended for beginner cyclists.,sub,sub,are,is,5,2
+qian2023,qian2023//34/sps,qian2023//34/sps,The trail to the ponds is highly recommended for beginner cyclists.,none,,,,,1
+qian2023,qian2023//34/spp,qian2023//34/ppp,The trails to the ponds are highly recommended for beginner cyclists.,sub,sub,trail,trails,1,2
+qian2023,qian2023//34/spp,qian2023//34/sps,The trail to the ponds is highly recommended for beginner cyclists.,sub,sub,are,is,5,2
+qian2023,qian2023//34/pss,qian2023//34/psp,The trails to the pond are highly recommended for beginner cyclists.,sub,sub,is,are,5,2
+qian2023,qian2023//34/pss,qian2023//34/sss,The trail to the pond is highly recommended for beginner cyclists.,sub,sub,trails,trail,1,2
+qian2023,qian2023//34/psp,qian2023//34/psp,The trails to the pond are highly recommended for beginner cyclists.,none,,,,,1
+qian2023,qian2023//34/pps,qian2023//34/ppp,The trails to the ponds are highly recommended for beginner cyclists.,sub,sub,is,are,5,2
+qian2023,qian2023//34/pps,qian2023//34/sps,The trail to the ponds is highly recommended for beginner cyclists.,sub,sub,trails,trail,1,2
+qian2023,qian2023//34/ppp,qian2023//34/ppp,The trails to the ponds are highly recommended for beginner cyclists.,none,,,,,1
+qian2023,qian2023//35/sss,qian2023//35/sss,The gift for the kid is hidden under the bed.,none,,,,,1
+qian2023,qian2023//35/ssp,qian2023//35/psp,The gifts for the kid are hidden under the bed.,sub,sub,gift,gifts,1,2
+qian2023,qian2023//35/ssp,qian2023//35/sss,The gift for the kid is hidden under the bed.,sub,sub,are,is,5,2
+qian2023,qian2023//35/sps,qian2023//35/sps,The gift for the kids is hidden under the bed.,none,,,,,1
+qian2023,qian2023//35/spp,qian2023//35/ppp,The gifts for the kids are hidden under the bed.,sub,sub,gift,gifts,1,2
+qian2023,qian2023//35/spp,qian2023//35/sps,The gift for the kids is hidden under the bed.,sub,sub,are,is,5,2
+qian2023,qian2023//35/pss,qian2023//35/psp,The gifts for the kid are hidden under the bed.,sub,sub,is,are,5,2
+qian2023,qian2023//35/pss,qian2023//35/sss,The gift for the kid is hidden under the bed.,sub,sub,gifts,gift,1,2
+qian2023,qian2023//35/psp,qian2023//35/psp,The gifts for the kid are hidden under the bed.,none,,,,,1
+qian2023,qian2023//35/pps,qian2023//35/ppp,The gifts for the kids are hidden under the bed.,sub,sub,is,are,5,2
+qian2023,qian2023//35/pps,qian2023//35/sps,The gift for the kids is hidden under the bed.,sub,sub,gifts,gift,1,2
+qian2023,qian2023//35/ppp,qian2023//35/ppp,The gifts for the kids are hidden under the bed.,none,,,,,1
+qian2023,qian2023//36/sss,qian2023//36/sss,The cake for the family was prepared by a local bakery.,none,,,,,1
+qian2023,qian2023//36/ssp,qian2023//36/psp,The cakes for the family were prepared by a local bakery.,sub,sub,cake,cakes,1,2
+qian2023,qian2023//36/ssp,qian2023//36/sss,The cake for the family was prepared by a local bakery.,sub,sub,were,was,5,2
+qian2023,qian2023//36/sps,qian2023//36/sps,The cake for the families was prepared by a local bakery.,none,,,,,1
+qian2023,qian2023//36/spp,qian2023//36/ppp,The cakes for the families were prepared by a local bakery.,sub,sub,cake,cakes,1,2
+qian2023,qian2023//36/spp,qian2023//36/sps,The cake for the families was prepared by a local bakery.,sub,sub,were,was,5,2
+qian2023,qian2023//36/pss,qian2023//36/psp,The cakes for the family were prepared by a local bakery.,sub,sub,was,were,5,2
+qian2023,qian2023//36/pss,qian2023//36/sss,The cake for the family was prepared by a local bakery.,sub,sub,cakes,cake,1,2
+qian2023,qian2023//36/psp,qian2023//36/psp,The cakes for the family were prepared by a local bakery.,none,,,,,1
+qian2023,qian2023//36/pps,qian2023//36/ppp,The cakes for the families were prepared by a local bakery.,sub,sub,was,were,5,2
+qian2023,qian2023//36/pps,qian2023//36/sps,The cake for the families was prepared by a local bakery.,sub,sub,cakes,cake,1,2
+qian2023,qian2023//36/ppp,qian2023//36/ppp,The cakes for the families were prepared by a local bakery.,none,,,,,1
+qian2023,qian2023//37/sss,qian2023//37/sss,The ticket for the game was ordered online.,none,,,,,1
+qian2023,qian2023//37/ssp,qian2023//37/psp,The tickets for the game were ordered online.,sub,sub,ticket,tickets,1,2
+qian2023,qian2023//37/ssp,qian2023//37/sss,The ticket for the game was ordered online.,sub,sub,were,was,5,2
+qian2023,qian2023//37/sps,qian2023//37/sps,The ticket for the games was ordered online.,none,,,,,1
+qian2023,qian2023//37/spp,qian2023//37/ppp,The tickets for the games were ordered online.,sub,sub,ticket,tickets,1,2
+qian2023,qian2023//37/spp,qian2023//37/sps,The ticket for the games was ordered online.,sub,sub,were,was,5,2
+qian2023,qian2023//37/pss,qian2023//37/psp,The tickets for the game were ordered online.,sub,sub,was,were,5,2
+qian2023,qian2023//37/pss,qian2023//37/sss,The ticket for the game was ordered online.,sub,sub,tickets,ticket,1,2
+qian2023,qian2023//37/psp,qian2023//37/psp,The tickets for the game were ordered online.,none,,,,,1
+qian2023,qian2023//37/pps,qian2023//37/ppp,The tickets for the games were ordered online.,sub,sub,was,were,5,2
+qian2023,qian2023//37/pps,qian2023//37/sps,The ticket for the games was ordered online.,sub,sub,tickets,ticket,1,2
+qian2023,qian2023//37/ppp,qian2023//37/ppp,The tickets for the games were ordered online.,none,,,,,1
+qian2023,qian2023//38/sss,qian2023//38/sss,The exam for the student was challenging but interesting.,none,,,,,1
+qian2023,qian2023//38/ssp,qian2023//38/psp,The exams for the student were challenging but interesting.,sub,sub,exam,exams,1,2
+qian2023,qian2023//38/ssp,qian2023//38/sss,The exam for the student was challenging but interesting.,sub,sub,were,was,5,2
+qian2023,qian2023//38/sps,qian2023//38/sps,The exam for the students was challenging but interesting.,none,,,,,1
+qian2023,qian2023//38/spp,qian2023//38/ppp,The exams for the students were challenging but interesting.,sub,sub,exam,exams,1,2
+qian2023,qian2023//38/spp,qian2023//38/sps,The exam for the students was challenging but interesting.,sub,sub,were,was,5,2
+qian2023,qian2023//38/pss,qian2023//38/psp,The exams for the student were challenging but interesting.,sub,sub,was,were,5,2
+qian2023,qian2023//38/pss,qian2023//38/sss,The exam for the student was challenging but interesting.,sub,sub,exams,exam,1,2
+qian2023,qian2023//38/psp,qian2023//38/psp,The exams for the student were challenging but interesting.,none,,,,,1
+qian2023,qian2023//38/pps,qian2023//38/ppp,The exams for the students were challenging but interesting.,sub,sub,was,were,5,2
+qian2023,qian2023//38/pps,qian2023//38/sps,The exam for the students was challenging but interesting.,sub,sub,exams,exam,1,2
+qian2023,qian2023//38/ppp,qian2023//38/ppp,The exams for the students were challenging but interesting.,none,,,,,1
+qian2023,qian2023//39/sss,qian2023//39/sss,The prize for the winner is a big surprise.,none,,,,,1
+qian2023,qian2023//39/ssp,qian2023//39/psp,The prizes for the winner are a big surprise.,sub,sub,prize,prizes,1,2
+qian2023,qian2023//39/ssp,qian2023//39/sss,The prize for the winner is a big surprise.,sub,sub,are,is,5,2
+qian2023,qian2023//39/sps,qian2023//39/sps,The prize for the winners is a big surprise.,none,,,,,1
+qian2023,qian2023//39/spp,qian2023//39/ppp,The prizes for the winners are a big surprise.,sub,sub,prize,prizes,1,2
+qian2023,qian2023//39/spp,qian2023//39/sps,The prize for the winners is a big surprise.,sub,sub,are,is,5,2
+qian2023,qian2023//39/pss,qian2023//39/psp,The prizes for the winner are a big surprise.,sub,sub,is,are,5,2
+qian2023,qian2023//39/pss,qian2023//39/sss,The prize for the winner is a big surprise.,sub,sub,prizes,prize,1,2
+qian2023,qian2023//39/psp,qian2023//39/psp,The prizes for the winner are a big surprise.,none,,,,,1
+qian2023,qian2023//39/pps,qian2023//39/ppp,The prizes for the winners are a big surprise.,sub,sub,is,are,5,2
+qian2023,qian2023//39/pps,qian2023//39/sps,The prize for the winners is a big surprise.,sub,sub,prizes,prize,1,2
+qian2023,qian2023//39/ppp,qian2023//39/ppp,The prizes for the winners are a big surprise.,none,,,,,1
+qian2023,qian2023//40/sss,qian2023//40/sss,The plan for the event was discussed at a group meeting.,none,,,,,1
+qian2023,qian2023//40/ssp,qian2023//40/psp,The plans for the event were discussed at a group meeting.,sub,sub,plan,plans,1,2
+qian2023,qian2023//40/ssp,qian2023//40/sss,The plan for the event was discussed at a group meeting.,sub,sub,were,was,5,2
+qian2023,qian2023//40/sps,qian2023//40/sps,The plan for the events was discussed at a group meeting.,none,,,,,1
+qian2023,qian2023//40/spp,qian2023//40/ppp,The plans for the events were discussed at a group meeting.,sub,sub,plan,plans,1,2
+qian2023,qian2023//40/spp,qian2023//40/sps,The plan for the events was discussed at a group meeting.,sub,sub,were,was,5,2
+qian2023,qian2023//40/pss,qian2023//40/psp,The plans for the event were discussed at a group meeting.,sub,sub,was,were,5,2
+qian2023,qian2023//40/pss,qian2023//40/sss,The plan for the event was discussed at a group meeting.,sub,sub,plans,plan,1,2
+qian2023,qian2023//40/psp,qian2023//40/psp,The plans for the event were discussed at a group meeting.,none,,,,,1
+qian2023,qian2023//40/pps,qian2023//40/ppp,The plans for the events were discussed at a group meeting.,sub,sub,was,were,5,2
+qian2023,qian2023//40/pps,qian2023//40/sps,The plan for the events was discussed at a group meeting.,sub,sub,plans,plan,1,2
+qian2023,qian2023//40/ppp,qian2023//40/ppp,The plans for the events were discussed at a group meeting.,none,,,,,1
+qian2023,qian2023//41/sss,qian2023//41/sss,The wine on the table is from napa valley.,none,,,,,1
+qian2023,qian2023//41/ssp,qian2023//41/psp,The wines on the table are from napa valley.,sub,sub,wine,wines,1,2
+qian2023,qian2023//41/ssp,qian2023//41/sss,The wine on the table is from napa valley.,sub,sub,are,is,5,2
+qian2023,qian2023//41/sps,qian2023//41/sps,The wine on the tables is from napa valley.,none,,,,,1
+qian2023,qian2023//41/spp,qian2023//41/ppp,The wines on the tables are from napa valley.,sub,sub,wine,wines,1,2
+qian2023,qian2023//41/spp,qian2023//41/sps,The wine on the tables is from napa valley.,sub,sub,are,is,5,2
+qian2023,qian2023//41/pss,qian2023//41/psp,The wines on the table are from napa valley.,sub,sub,is,are,5,2
+qian2023,qian2023//41/pss,qian2023//41/sss,The wine on the table is from napa valley.,sub,sub,wines,wine,1,2
+qian2023,qian2023//41/psp,qian2023//41/psp,The wines on the table are from napa valley.,none,,,,,1
+qian2023,qian2023//41/pps,qian2023//41/ppp,The wines on the tables are from napa valley.,sub,sub,is,are,5,2
+qian2023,qian2023//41/pps,qian2023//41/sps,The wine on the tables is from napa valley.,sub,sub,wines,wine,1,2
+qian2023,qian2023//41/ppp,qian2023//41/ppp,The wines on the tables are from napa valley.,none,,,,,1
+qian2023,qian2023//42/sss,qian2023//42/sss,The magazine on the shelf was moved to a different place.,none,,,,,1
+qian2023,qian2023//42/ssp,qian2023//42/psp,The magazines on the shelf were moved to a different place.,sub,sub,magazine,magazines,1,2
+qian2023,qian2023//42/ssp,qian2023//42/sss,The magazine on the shelf was moved to a different place.,sub,sub,were,was,5,2
+qian2023,qian2023//42/sps,qian2023//42/sps,The magazine on the shelves was moved to a different place.,none,,,,,1
+qian2023,qian2023//42/spp,qian2023//42/ppp,The magazines on the shelves were moved to a different place.,sub,sub,magazine,magazines,1,2
+qian2023,qian2023//42/spp,qian2023//42/sps,The magazine on the shelves was moved to a different place.,sub,sub,were,was,5,2
+qian2023,qian2023//42/pss,qian2023//42/psp,The magazines on the shelf were moved to a different place.,sub,sub,was,were,5,2
+qian2023,qian2023//42/pss,qian2023//42/sss,The magazine on the shelf was moved to a different place.,sub,sub,magazines,magazine,1,2
+qian2023,qian2023//42/psp,qian2023//42/psp,The magazines on the shelf were moved to a different place.,none,,,,,1
+qian2023,qian2023//42/pps,qian2023//42/ppp,The magazines on the shelves were moved to a different place.,sub,sub,was,were,5,2
+qian2023,qian2023//42/pps,qian2023//42/sps,The magazine on the shelves was moved to a different place.,sub,sub,magazines,magazine,1,2
+qian2023,qian2023//42/ppp,qian2023//42/ppp,The magazines on the shelves were moved to a different place.,none,,,,,1
+qian2023,qian2023//43/sss,qian2023//43/sss,The pebble on the beach is up to 200 million years old.,none,,,,,1
+qian2023,qian2023//43/ssp,qian2023//43/psp,The pebbles on the beach are up to 200 million years old.,sub,sub,pebble,pebbles,1,2
+qian2023,qian2023//43/ssp,qian2023//43/sss,The pebble on the beach is up to 200 million years old.,sub,sub,are,is,5,2
+qian2023,qian2023//43/sps,qian2023//43/sps,The pebble on the beaches is up to 200 million years old.,none,,,,,1
+qian2023,qian2023//43/spp,qian2023//43/ppp,The pebbles on the beaches are up to 200 million years old.,sub,sub,pebble,pebbles,1,2
+qian2023,qian2023//43/spp,qian2023//43/sps,The pebble on the beaches is up to 200 million years old.,sub,sub,are,is,5,2
+qian2023,qian2023//43/pss,qian2023//43/psp,The pebbles on the beach are up to 200 million years old.,sub,sub,is,are,5,2
+qian2023,qian2023//43/pss,qian2023//43/sss,The pebble on the beach is up to 200 million years old.,sub,sub,pebbles,pebble,1,2
+qian2023,qian2023//43/psp,qian2023//43/psp,The pebbles on the beach are up to 200 million years old.,none,,,,,1
+qian2023,qian2023//43/pps,qian2023//43/ppp,The pebbles on the beaches are up to 200 million years old.,sub,sub,is,are,5,2
+qian2023,qian2023//43/pps,qian2023//43/sps,The pebble on the beaches is up to 200 million years old.,sub,sub,pebbles,pebble,1,2
+qian2023,qian2023//43/ppp,qian2023//43/ppp,The pebbles on the beaches are up to 200 million years old.,none,,,,,1
+qian2023,qian2023//44/sss,qian2023//44/sss,The label on the box is positioned properly before shipping.,none,,,,,1
+qian2023,qian2023//44/ssp,qian2023//44/psp,The labels on the box are positioned properly before shipping.,sub,sub,label,labels,1,2
+qian2023,qian2023//44/ssp,qian2023//44/sss,The label on the box is positioned properly before shipping.,sub,sub,are,is,5,2
+qian2023,qian2023//44/sps,qian2023//44/sps,The label on the boxes is positioned properly before shipping.,none,,,,,1
+qian2023,qian2023//44/spp,qian2023//44/ppp,The labels on the boxes are positioned properly before shipping.,sub,sub,label,labels,1,2
+qian2023,qian2023//44/spp,qian2023//44/sps,The label on the boxes is positioned properly before shipping.,sub,sub,are,is,5,2
+qian2023,qian2023//44/pss,qian2023//44/psp,The labels on the box are positioned properly before shipping.,sub,sub,is,are,5,2
+qian2023,qian2023//44/pss,qian2023//44/sss,The label on the box is positioned properly before shipping.,sub,sub,labels,label,1,2
+qian2023,qian2023//44/psp,qian2023//44/psp,The labels on the box are positioned properly before shipping.,none,,,,,1
+qian2023,qian2023//44/pps,qian2023//44/ppp,The labels on the boxes are positioned properly before shipping.,sub,sub,is,are,5,2
+qian2023,qian2023//44/pps,qian2023//44/sps,The label on the boxes is positioned properly before shipping.,sub,sub,labels,label,1,2
+qian2023,qian2023//44/ppp,qian2023//44/ppp,The labels on the boxes are positioned properly before shipping.,none,,,,,1
+qian2023,qian2023//45/sss,qian2023//45/sss,The painting on the wall was taken down during the renovation.,none,,,,,1
+qian2023,qian2023//45/ssp,qian2023//45/psp,The paintings on the wall were taken down during the renovation.,sub,sub,painting,paintings,1,2
+qian2023,qian2023//45/ssp,qian2023//45/sss,The painting on the wall was taken down during the renovation.,sub,sub,were,was,5,2
+qian2023,qian2023//45/sps,qian2023//45/sps,The painting on the walls was taken down during the renovation.,none,,,,,1
+qian2023,qian2023//45/spp,qian2023//45/ppp,The paintings on the walls were taken down during the renovation.,sub,sub,painting,paintings,1,2
+qian2023,qian2023//45/spp,qian2023//45/sps,The painting on the walls was taken down during the renovation.,sub,sub,were,was,5,2
+qian2023,qian2023//45/pss,qian2023//45/psp,The paintings on the wall were taken down during the renovation.,sub,sub,was,were,5,2
+qian2023,qian2023//45/pss,qian2023//45/sss,The painting on the wall was taken down during the renovation.,sub,sub,paintings,painting,1,2
+qian2023,qian2023//45/psp,qian2023//45/psp,The paintings on the wall were taken down during the renovation.,none,,,,,1
+qian2023,qian2023//45/pps,qian2023//45/ppp,The paintings on the walls were taken down during the renovation.,sub,sub,was,were,5,2
+qian2023,qian2023//45/pps,qian2023//45/sps,The painting on the walls was taken down during the renovation.,sub,sub,paintings,painting,1,2
+qian2023,qian2023//45/ppp,qian2023//45/ppp,The paintings on the walls were taken down during the renovation.,none,,,,,1
+qian2023,qian2023//46/sss,qian2023//46/sss,The slogan on the poster is printed in larger font.,none,,,,,1
+qian2023,qian2023//46/ssp,qian2023//46/psp,The slogans on the poster are printed in larger font.,sub,sub,slogan,slogans,1,2
+qian2023,qian2023//46/ssp,qian2023//46/sss,The slogan on the poster is printed in larger font.,sub,sub,are,is,5,2
+qian2023,qian2023//46/sps,qian2023//46/sps,The slogan on the posters is printed in larger font.,none,,,,,1
+qian2023,qian2023//46/spp,qian2023//46/ppp,The slogans on the posters are printed in larger font.,sub,sub,slogan,slogans,1,2
+qian2023,qian2023//46/spp,qian2023//46/sps,The slogan on the posters is printed in larger font.,sub,sub,are,is,5,2
+qian2023,qian2023//46/pss,qian2023//46/psp,The slogans on the poster are printed in larger font.,sub,sub,is,are,5,2
+qian2023,qian2023//46/pss,qian2023//46/sss,The slogan on the poster is printed in larger font.,sub,sub,slogans,slogan,1,2
+qian2023,qian2023//46/psp,qian2023//46/psp,The slogans on the poster are printed in larger font.,none,,,,,1
+qian2023,qian2023//46/pps,qian2023//46/ppp,The slogans on the posters are printed in larger font.,sub,sub,is,are,5,2
+qian2023,qian2023//46/pps,qian2023//46/sps,The slogan on the posters is printed in larger font.,sub,sub,slogans,slogan,1,2
+qian2023,qian2023//46/ppp,qian2023//46/ppp,The slogans on the posters are printed in larger font.,none,,,,,1
+qian2023,qian2023//47/sss,qian2023//47/sss,The debate with the lawyer is broadcast live on the radio.,none,,,,,1
+qian2023,qian2023//47/ssp,qian2023//47/psp,The debates with the lawyer are broadcast live on the radio.,sub,sub,debate,debates,1,2
+qian2023,qian2023//47/ssp,qian2023//47/sss,The debate with the lawyer is broadcast live on the radio.,sub,sub,are,is,5,2
+qian2023,qian2023//47/sps,qian2023//47/sps,The debate with the lawyers is broadcast live on the radio.,none,,,,,1
+qian2023,qian2023//47/spp,qian2023//47/ppp,The debates with the lawyers are broadcast live on the radio.,sub,sub,debate,debates,1,2
+qian2023,qian2023//47/spp,qian2023//47/sps,The debate with the lawyers is broadcast live on the radio.,sub,sub,are,is,5,2
+qian2023,qian2023//47/pss,qian2023//47/psp,The debates with the lawyer are broadcast live on the radio.,sub,sub,is,are,5,2
+qian2023,qian2023//47/pss,qian2023//47/sss,The debate with the lawyer is broadcast live on the radio.,sub,sub,debates,debate,1,2
+qian2023,qian2023//47/psp,qian2023//47/psp,The debates with the lawyer are broadcast live on the radio.,none,,,,,1
+qian2023,qian2023//47/pps,qian2023//47/ppp,The debates with the lawyers are broadcast live on the radio.,sub,sub,is,are,5,2
+qian2023,qian2023//47/pps,qian2023//47/sps,The debate with the lawyers is broadcast live on the radio.,sub,sub,debates,debate,1,2
+qian2023,qian2023//47/ppp,qian2023//47/ppp,The debates with the lawyers are broadcast live on the radio.,none,,,,,1
+qian2023,qian2023//48/sss,qian2023//48/sss,The contract with the company has been examined carefully by a legal consultant.,none,,,,,1
+qian2023,qian2023//48/ssp,qian2023//48/psp,The contracts with the company have been examined carefully by a legal consultant.,sub,sub,contract,contracts,1,2
+qian2023,qian2023//48/ssp,qian2023//48/sss,The contract with the company has been examined carefully by a legal consultant.,sub,sub,have,has,5,2
+qian2023,qian2023//48/sps,qian2023//48/sps,The contract with the companies has been examined carefully by a legal consultant.,none,,,,,1
+qian2023,qian2023//48/spp,qian2023//48/ppp,The contracts with the companies have been examined carefully by a legal consultant.,sub,sub,contract,contracts,1,2
+qian2023,qian2023//48/spp,qian2023//48/sps,The contract with the companies has been examined carefully by a legal consultant.,sub,sub,have,has,5,2
+qian2023,qian2023//48/pss,qian2023//48/psp,The contracts with the company have been examined carefully by a legal consultant.,sub,sub,has,have,5,2
+qian2023,qian2023//48/pss,qian2023//48/sss,The contract with the company has been examined carefully by a legal consultant.,sub,sub,contracts,contract,1,2
+qian2023,qian2023//48/psp,qian2023//48/psp,The contracts with the company have been examined carefully by a legal consultant.,none,,,,,1
+qian2023,qian2023//48/pps,qian2023//48/ppp,The contracts with the companies have been examined carefully by a legal consultant.,sub,sub,has,have,5,2
+qian2023,qian2023//48/pps,qian2023//48/sps,The contract with the companies has been examined carefully by a legal consultant.,sub,sub,contracts,contract,1,2
+qian2023,qian2023//48/ppp,qian2023//48/ppp,The contracts with the companies have been examined carefully by a legal consultant.,none,,,,,1
+qian2023,qian2023//49/sss,qian2023//49/sss,The project with the team has been very successful.,none,,,,,1
+qian2023,qian2023//49/ssp,qian2023//49/psp,The projects with the team have been very successful.,sub,sub,project,projects,1,2
+qian2023,qian2023//49/ssp,qian2023//49/sss,The project with the team has been very successful.,sub,sub,have,has,5,2
+qian2023,qian2023//49/sps,qian2023//49/sps,The project with the teams has been very successful.,none,,,,,1
+qian2023,qian2023//49/spp,qian2023//49/ppp,The projects with the teams have been very successful.,sub,sub,project,projects,1,2
+qian2023,qian2023//49/spp,qian2023//49/sps,The project with the teams has been very successful.,sub,sub,have,has,5,2
+qian2023,qian2023//49/pss,qian2023//49/psp,The projects with the team have been very successful.,sub,sub,has,have,5,2
+qian2023,qian2023//49/pss,qian2023//49/sss,The project with the team has been very successful.,sub,sub,projects,project,1,2
+qian2023,qian2023//49/psp,qian2023//49/psp,The projects with the team have been very successful.,none,,,,,1
+qian2023,qian2023//49/pps,qian2023//49/ppp,The projects with the teams have been very successful.,sub,sub,has,have,5,2
+qian2023,qian2023//49/pps,qian2023//49/sps,The project with the teams has been very successful.,sub,sub,projects,project,1,2
+qian2023,qian2023//49/ppp,qian2023//49/ppp,The projects with the teams have been very successful.,none,,,,,1
+qian2023,qian2023//50/sss,qian2023//50/sss,The rehearsal with the band is rescheduled.,none,,,,,1
+qian2023,qian2023//50/ssp,qian2023//50/psp,The rehearsals with the band are rescheduled.,sub,sub,rehearsal,rehearsals,1,2
+qian2023,qian2023//50/ssp,qian2023//50/sss,The rehearsal with the band is rescheduled.,sub,sub,are,is,5,2
+qian2023,qian2023//50/sps,qian2023//50/sps,The rehearsal with the bands is rescheduled.,none,,,,,1
+qian2023,qian2023//50/spp,qian2023//50/ppp,The rehearsals with the bands are rescheduled.,sub,sub,rehearsal,rehearsals,1,2
+qian2023,qian2023//50/spp,qian2023//50/sps,The rehearsal with the bands is rescheduled.,sub,sub,are,is,5,2
+qian2023,qian2023//50/pss,qian2023//50/psp,The rehearsals with the band are rescheduled.,sub,sub,is,are,5,2
+qian2023,qian2023//50/pss,qian2023//50/sss,The rehearsal with the band is rescheduled.,sub,sub,rehearsals,rehearsal,1,2
+qian2023,qian2023//50/psp,qian2023//50/psp,The rehearsals with the band are rescheduled.,none,,,,,1
+qian2023,qian2023//50/pps,qian2023//50/ppp,The rehearsals with the bands are rescheduled.,sub,sub,is,are,5,2
+qian2023,qian2023//50/pps,qian2023//50/sps,The rehearsal with the bands is rescheduled.,sub,sub,rehearsals,rehearsal,1,2
+qian2023,qian2023//50/ppp,qian2023//50/ppp,The rehearsals with the bands are rescheduled.,none,,,,,1
+qian2023,qian2023//51/sss,qian2023//51/sss,The lawsuit against the company was resolved in court.,none,,,,,1
+qian2023,qian2023//51/ssp,qian2023//51/psp,The lawsuits against the company were resolved in court.,sub,sub,lawsuit,lawsuits,1,2
+qian2023,qian2023//51/ssp,qian2023//51/sss,The lawsuit against the company was resolved in court.,sub,sub,were,was,5,2
+qian2023,qian2023//51/sps,qian2023//51/sps,The lawsuit against the companies was resolved in court.,none,,,,,1
+qian2023,qian2023//51/spp,qian2023//51/ppp,The lawsuits against the companies were resolved in court.,sub,sub,lawsuit,lawsuits,1,2
+qian2023,qian2023//51/spp,qian2023//51/sps,The lawsuit against the companies was resolved in court.,sub,sub,were,was,5,2
+qian2023,qian2023//51/pss,qian2023//51/psp,The lawsuits against the company were resolved in court.,sub,sub,was,were,5,2
+qian2023,qian2023//51/pss,qian2023//51/sss,The lawsuit against the company was resolved in court.,sub,sub,lawsuits,lawsuit,1,2
+qian2023,qian2023//51/psp,qian2023//51/psp,The lawsuits against the company were resolved in court.,none,,,,,1
+qian2023,qian2023//51/pps,qian2023//51/ppp,The lawsuits against the companies were resolved in court.,sub,sub,was,were,5,2
+qian2023,qian2023//51/pps,qian2023//51/sps,The lawsuit against the companies was resolved in court.,sub,sub,lawsuits,lawsuit,1,2
+qian2023,qian2023//51/ppp,qian2023//51/ppp,The lawsuits against the companies were resolved in court.,none,,,,,1
+qian2023,qian2023//52/sss,qian2023//52/sss,The vote against the measure is indicative of the ongoing miscommunication.,none,,,,,1
+qian2023,qian2023//52/ssp,qian2023//52/psp,The votes against the measure are indicative of the ongoing miscommunication.,sub,sub,vote,votes,1,2
+qian2023,qian2023//52/ssp,qian2023//52/sss,The vote against the measure is indicative of the ongoing miscommunication.,sub,sub,are,is,5,2
+qian2023,qian2023//52/sps,qian2023//52/sps,The vote against the measures is indicative of the ongoing miscommunication.,none,,,,,1
+qian2023,qian2023//52/spp,qian2023//52/ppp,The votes against the measures are indicative of the ongoing miscommunication.,sub,sub,vote,votes,1,2
+qian2023,qian2023//52/spp,qian2023//52/sps,The vote against the measures is indicative of the ongoing miscommunication.,sub,sub,are,is,5,2
+qian2023,qian2023//52/pss,qian2023//52/psp,The votes against the measure are indicative of the ongoing miscommunication.,sub,sub,is,are,5,2
+qian2023,qian2023//52/pss,qian2023//52/sss,The vote against the measure is indicative of the ongoing miscommunication.,sub,sub,votes,vote,1,2
+qian2023,qian2023//52/psp,qian2023//52/psp,The votes against the measure are indicative of the ongoing miscommunication.,none,,,,,1
+qian2023,qian2023//52/pps,qian2023//52/ppp,The votes against the measures are indicative of the ongoing miscommunication.,sub,sub,is,are,5,2
+qian2023,qian2023//52/pps,qian2023//52/sps,The vote against the measures is indicative of the ongoing miscommunication.,sub,sub,votes,vote,1,2
+qian2023,qian2023//52/ppp,qian2023//52/ppp,The votes against the measures are indicative of the ongoing miscommunication.,none,,,,,1
+qian2023,qian2023//53/sss,qian2023//53/sss,The complaint from the customer was filed in time.,none,,,,,1
+qian2023,qian2023//53/ssp,qian2023//53/psp,The complaints from the customer were filed in time.,sub,sub,complaint,complaints,1,2
+qian2023,qian2023//53/ssp,qian2023//53/sss,The complaint from the customer was filed in time.,sub,sub,were,was,5,2
+qian2023,qian2023//53/sps,qian2023//53/sps,The complaint from the customers was filed in time.,none,,,,,1
+qian2023,qian2023//53/spp,qian2023//53/ppp,The complaints from the customers were filed in time.,sub,sub,complaint,complaints,1,2
+qian2023,qian2023//53/spp,qian2023//53/sps,The complaint from the customers was filed in time.,sub,sub,were,was,5,2
+qian2023,qian2023//53/pss,qian2023//53/psp,The complaints from the customer were filed in time.,sub,sub,was,were,5,2
+qian2023,qian2023//53/pss,qian2023//53/sss,The complaint from the customer was filed in time.,sub,sub,complaints,complaint,1,2
+qian2023,qian2023//53/psp,qian2023//53/psp,The complaints from the customer were filed in time.,none,,,,,1
+qian2023,qian2023//53/pps,qian2023//53/ppp,The complaints from the customers were filed in time.,sub,sub,was,were,5,2
+qian2023,qian2023//53/pps,qian2023//53/sps,The complaint from the customers was filed in time.,sub,sub,complaints,complaint,1,2
+qian2023,qian2023//53/ppp,qian2023//53/ppp,The complaints from the customers were filed in time.,none,,,,,1
+qian2023,qian2023//54/sss,qian2023//54/sss,The question from the interviewer is too difficult.,none,,,,,1
+qian2023,qian2023//54/ssp,qian2023//54/psp,The questions from the interviewer are too difficult.,sub,sub,question,questions,1,2
+qian2023,qian2023//54/ssp,qian2023//54/sss,The question from the interviewer is too difficult.,sub,sub,are,is,5,2
+qian2023,qian2023//54/sps,qian2023//54/sps,The question from the interviewers is too difficult.,none,,,,,1
+qian2023,qian2023//54/spp,qian2023//54/ppp,The questions from the interviewers are too difficult.,sub,sub,question,questions,1,2
+qian2023,qian2023//54/spp,qian2023//54/sps,The question from the interviewers is too difficult.,sub,sub,are,is,5,2
+qian2023,qian2023//54/pss,qian2023//54/psp,The questions from the interviewer are too difficult.,sub,sub,is,are,5,2
+qian2023,qian2023//54/pss,qian2023//54/sss,The question from the interviewer is too difficult.,sub,sub,questions,question,1,2
+qian2023,qian2023//54/psp,qian2023//54/psp,The questions from the interviewer are too difficult.,none,,,,,1
+qian2023,qian2023//54/pps,qian2023//54/ppp,The questions from the interviewers are too difficult.,sub,sub,is,are,5,2
+qian2023,qian2023//54/pps,qian2023//54/sps,The question from the interviewers is too difficult.,sub,sub,questions,question,1,2
+qian2023,qian2023//54/ppp,qian2023//54/ppp,The questions from the interviewers are too difficult.,none,,,,,1
+qian2023,qian2023//55/sss,qian2023//55/sss,The waiter at the restaurant has cleaned the room.,none,,,,,1
+qian2023,qian2023//55/ssp,qian2023//55/psp,The waiters at the restaurant have cleaned the room.,sub,sub,waiter,waiters,1,2
+qian2023,qian2023//55/ssp,qian2023//55/sss,The waiter at the restaurant has cleaned the room.,sub,sub,have,has,5,2
+qian2023,qian2023//55/sps,qian2023//55/sps,The waiter at the restaurant has cleaned the room.,none,,,,,1
+qian2023,qian2023//55/spp,qian2023//55/ppp,The waiters at the restaurant have cleaned the room.,sub,sub,waiter,waiters,1,2
+qian2023,qian2023//55/spp,qian2023//55/sps,The waiter at the restaurant has cleaned the room.,sub,sub,have,has,5,2
+qian2023,qian2023//55/pss,qian2023//55/psp,The waiters at the restaurant have cleaned the room.,sub,sub,has,have,5,2
+qian2023,qian2023//55/pss,qian2023//55/sss,The waiter at the restaurant has cleaned the room.,sub,sub,waiters,waiter,1,2
+qian2023,qian2023//55/psp,qian2023//55/psp,The waiters at the restaurant have cleaned the room.,none,,,,,1
+qian2023,qian2023//55/pps,qian2023//55/ppp,The waiters at the restaurant have cleaned the room.,sub,sub,has,have,5,2
+qian2023,qian2023//55/pps,qian2023//55/sps,The waiter at the restaurant has cleaned the room.,sub,sub,waiters,waiter,1,2
+qian2023,qian2023//55/ppp,qian2023//55/ppp,The waiters at the restaurant have cleaned the room.,none,,,,,1
+qian2023,qian2023//56/sss,qian2023//56/sss,The bike at the station is broken.,none,,,,,1
+qian2023,qian2023//56/ssp,qian2023//56/psp,The bikes at the station are broken.,sub,sub,bike,bikes,1,2
+qian2023,qian2023//56/ssp,qian2023//56/sss,The bike at the station is broken.,sub,sub,are,is,5,2
+qian2023,qian2023//56/sps,qian2023//56/sps,The bike at the stations is broken.,none,,,,,1
+qian2023,qian2023//56/spp,qian2023//56/ppp,The bikes at the stations are broken.,sub,sub,bike,bikes,1,2
+qian2023,qian2023//56/spp,qian2023//56/sps,The bike at the stations is broken.,sub,sub,are,is,5,2
+qian2023,qian2023//56/pss,qian2023//56/psp,The bikes at the station are broken.,sub,sub,is,are,5,2
+qian2023,qian2023//56/pss,qian2023//56/sss,The bike at the station is broken.,sub,sub,bikes,bike,1,2
+qian2023,qian2023//56/psp,qian2023//56/psp,The bikes at the station are broken.,none,,,,,1
+qian2023,qian2023//56/pps,qian2023//56/ppp,The bikes at the stations are broken.,sub,sub,is,are,5,2
+qian2023,qian2023//56/pps,qian2023//56/sps,The bike at the stations is broken.,sub,sub,bikes,bike,1,2
+qian2023,qian2023//56/ppp,qian2023//56/ppp,The bikes at the stations are broken.,none,,,,,1
+qian2023,qian2023//57/sss,qian2023//57/sss,The rice in the bowl is undercooked.,none,,,,,1
+qian2023,qian2023//57/ssp,qian2023//57/psp,The rices in the bowl are undercooked.,sub,sub,rice,rices,1,2
+qian2023,qian2023//57/ssp,qian2023//57/sss,The rice in the bowl is undercooked.,sub,sub,are,is,5,2
+qian2023,qian2023//57/sps,qian2023//57/sps,The rice in the bowl is undercooked.,none,,,,,1
+qian2023,qian2023//57/spp,qian2023//57/ppp,The rices in the bowl are undercooked.,sub,sub,rice,rices,1,2
+qian2023,qian2023//57/spp,qian2023//57/sps,The rice in the bowl is undercooked.,sub,sub,are,is,5,2
+qian2023,qian2023//57/pss,qian2023//57/psp,The rices in the bowl are undercooked.,sub,sub,is,are,5,2
+qian2023,qian2023//57/pss,qian2023//57/sss,The rice in the bowl is undercooked.,sub,sub,rices,rice,1,2
+qian2023,qian2023//57/psp,qian2023//57/psp,The rices in the bowl are undercooked.,none,,,,,1
+qian2023,qian2023//57/pps,qian2023//57/ppp,The rices in the bowl are undercooked.,sub,sub,is,are,5,2
+qian2023,qian2023//57/pps,qian2023//57/sps,The rice in the bowl is undercooked.,sub,sub,rices,rice,1,2
+qian2023,qian2023//57/ppp,qian2023//57/ppp,The rices in the bowl are undercooked.,none,,,,,1
+qian2023,qian2023//58/sss,qian2023//58/sss,The water in the bottle is too cold.,none,,,,,1
+qian2023,qian2023//58/ssp,qian2023//58/psp,The waters in the bottle are too cold.,sub,sub,water,waters,1,2
+qian2023,qian2023//58/ssp,qian2023//58/sss,The water in the bottle is too cold.,sub,sub,are,is,5,2
+qian2023,qian2023//58/sps,qian2023//58/sps,The water in the bottles is too cold.,none,,,,,1
+qian2023,qian2023//58/spp,qian2023//58/ppp,The waters in the bottles are too cold.,sub,sub,water,waters,1,2
+qian2023,qian2023//58/spp,qian2023//58/sps,The water in the bottles is too cold.,sub,sub,are,is,5,2
+qian2023,qian2023//58/pss,qian2023//58/psp,The waters in the bottle are too cold.,sub,sub,is,are,5,2
+qian2023,qian2023//58/pss,qian2023//58/sss,The water in the bottle is too cold.,sub,sub,waters,water,1,2
+qian2023,qian2023//58/psp,qian2023//58/psp,The waters in the bottle are too cold.,none,,,,,1
+qian2023,qian2023//58/pps,qian2023//58/ppp,The waters in the bottles are too cold.,sub,sub,is,are,5,2
+qian2023,qian2023//58/pps,qian2023//58/sps,The water in the bottles is too cold.,sub,sub,waters,water,1,2
+qian2023,qian2023//58/ppp,qian2023//58/ppp,The waters in the bottles are too cold.,none,,,,,1
+qian2023,qian2023//59/sss,qian2023//59/sss,The meeting between the senator is held in the conference room.,none,,,,,1
+qian2023,qian2023//59/ssp,qian2023//59/psp,The meetings between the senator are held in the conference room.,sub,sub,meeting,meetings,1,2
+qian2023,qian2023//59/ssp,qian2023//59/sss,The meeting between the senator is held in the conference room.,sub,sub,are,is,5,2
+qian2023,qian2023//59/sps,qian2023//59/sps,The meeting between the senators is held in the conference room.,none,,,,,1
+qian2023,qian2023//59/spp,qian2023//59/ppp,The meetings between the senators are held in the conference room.,sub,sub,meeting,meetings,1,2
+qian2023,qian2023//59/spp,qian2023//59/sps,The meeting between the senators is held in the conference room.,sub,sub,are,is,5,2
+qian2023,qian2023//59/pss,qian2023//59/psp,The meetings between the senator are held in the conference room.,sub,sub,is,are,5,2
+qian2023,qian2023//59/pss,qian2023//59/sss,The meeting between the senator is held in the conference room.,sub,sub,meetings,meeting,1,2
+qian2023,qian2023//59/psp,qian2023//59/psp,The meetings between the senator are held in the conference room.,none,,,,,1
+qian2023,qian2023//59/pps,qian2023//59/ppp,The meetings between the senators are held in the conference room.,sub,sub,is,are,5,2
+qian2023,qian2023//59/pps,qian2023//59/sps,The meeting between the senators is held in the conference room.,sub,sub,meetings,meeting,1,2
+qian2023,qian2023//59/ppp,qian2023//59/ppp,The meetings between the senators are held in the conference room.,none,,,,,1

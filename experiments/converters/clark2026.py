@@ -76,7 +76,7 @@ def convert():
             model_input=model_input,
             plausibility=r["Plausibility"],
             contrast=("typo" if label.startswith("Typo") else "word_form" if target else ""),
-            intended_uid=uid("clark2026", r["Item"], target) if target else "",
+            intended_uids=[uid("clark2026", r["Item"], target)] if target else [],
             critical_word_idx=_critical_index(model_input, r["CriticalWord"]),
             meta={
                 "critical_word": r["CriticalWord"],

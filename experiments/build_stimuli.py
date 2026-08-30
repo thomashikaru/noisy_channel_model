@@ -37,8 +37,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from converters import CONVERTERS                                    # noqa: E402
-from converters.common import (CONTRASTS, CSV_FIELDS, HOLDOUT_PATHS, REPO_ROOT,  # noqa: E402
-                               SOURCES_SEEN, StimRow, classify_edit)
+from converters.common import (CONTRASTS, CSV_FIELDS, HOLDOUT_PATHS, REPAIR_FIELDS,  # noqa: E402
+                               REPO_ROOT, SOURCES_SEEN, StimRow, classify_edit)
 
 STIMULI_DIR = Path(__file__).resolve().parent / "stimuli"
 
@@ -83,7 +83,7 @@ SMOKE_UIDS = [
 ]
 
 
-def build_dataset(name: str, convert) -> tuple[list[StimRow], dict[str, str]]:
+def build_dataset(name: str, convert) -> tuple[list[StimRow], dict[str, str], list[dict]]:
     """Run one converter and fill in sentence ids and the resolved intended fields."""
     seen_before = set(SOURCES_SEEN)
     rows = list(convert())
@@ -104,23 +104,44 @@ def build_dataset(name: str, convert) -> tuple[list[StimRow], dict[str, str]]:
         f"{name}: duplicate stim_uid ({len(rows) - len(by_uid)} collisions) -- " \
         f"condition does not uniquely identify a row"
 
-    for r in rows:
-        if not r.intended_uid:
-            continue
-        assert r.intended_uid in by_uid, \
-            f"{name}: {r.stim_uid} points at intended_uid {r.intended_uid!r}, which is not a row"
-        r.intended_text = by_uid[r.intended_uid].model_input
-        edit = classify_edit(r.model_input, r.intended_text)
-        r.edit_type, r.edit_ops, r.edit_from, r.edit_to = edit.type, edit.ops, edit.frm, edit.to
-        # Datasets that know their own critical word set it; otherwise the changed word is it.
-        if r.critical_word_idx is None and edit.obs_idx is not None:
-            r.critical_word_idx = edit.obs_idx
-
+    repairs = resolve_repairs(name, rows, by_uid)
     check_rows(name, rows)
-    return rows, sources
+    return rows, sources, repairs
 
 
-def find_anomalies(rows: list[StimRow]) -> list[dict]:
+def resolve_repairs(name: str, rows: list[StimRow], by_uid: dict[str, StimRow]) -> list[dict]:
+    """One record per (stimulus, admissible repair).
+
+    A stimulus may admit more than one repair, and when it does they are co-equal: qian2023's
+    ungrammatical rows can be fixed at the verb or at the noun, and nothing in the design says
+    which one the reader recovers.  Keeping them in their own table rather than as a primary
+    plus alternatives is what stops an analysis from silently privileging one.
+    """
+    out: list[dict] = []
+    for r in rows:
+        for intended_uid in r.intended_uids:
+            assert intended_uid in by_uid, \
+                f"{name}: {r.stim_uid} names intended_uid {intended_uid!r}, which is not a row"
+            intended_text = by_uid[intended_uid].model_input
+            edit = classify_edit(r.model_input, intended_text)
+            out.append({
+                "dataset": name, "stim_uid": r.stim_uid, "intended_uid": intended_uid,
+                "intended_text": intended_text, "edit_type": edit.type, "edit_ops": edit.ops,
+                "edit_from": edit.frm, "edit_to": edit.to,
+                "edit_obs_idx": "" if edit.obs_idx is None else edit.obs_idx,
+                "n_repairs_for_stim": len(r.intended_uids),
+            })
+        # A dataset that names its own critical word has already set the index.  Otherwise take
+        # it from the repair, but only when every repair agrees -- qian2023's two routes touch
+        # different words, so there is no single critical index and it stays empty.
+        if r.critical_word_idx is None:
+            idxs = {e["edit_obs_idx"] for e in out[-len(r.intended_uids):]} if r.intended_uids else set()
+            if len(idxs) == 1 and (only := idxs.pop()) != "":
+                r.critical_word_idx = only
+    return out
+
+
+def find_anomalies(rows: list[StimRow], repairs: list[dict]) -> list[dict]:
     """Defects in the published materials that survive into the harmonized stimuli.
 
     Two kinds show up across these eight studies:
@@ -137,11 +158,13 @@ def find_anomalies(rows: list[StimRow]) -> list[dict]:
     model run, which is right -- the model sees one sentence.
     """
     out: list[dict] = []
-    for r in rows:
-        if r.edit_type == "multi" and r.contrast not in MULTI_BY_DESIGN:
-            out.append({"kind": "counterpart_needs_multiple_edits", "stim_uid": r.stim_uid,
-                        "edit_ops": r.edit_ops, "observed": r.model_input,
-                        "intended": r.intended_text, "intended_uid": r.intended_uid})
+    contrast = {r.stim_uid: r.contrast for r in rows}
+    text = {r.stim_uid: r.model_input for r in rows}
+    for e in repairs:
+        if e["edit_type"] == "multi" and contrast[e["stim_uid"]] not in MULTI_BY_DESIGN:
+            out.append({"kind": "counterpart_needs_multiple_edits", "stim_uid": e["stim_uid"],
+                        "edit_ops": e["edit_ops"], "observed": text[e["stim_uid"]],
+                        "intended": e["intended_text"], "intended_uid": e["intended_uid"]})
     by_text: dict[tuple, list[str]] = {}
     for r in rows:
         by_text.setdefault((r.item_id, r.subset, r.context, r.model_input), []).append(r.condition)
@@ -157,7 +180,7 @@ def check_rows(name: str, rows: list[StimRow]) -> None:
     for r in rows:
         assert r.contrast in ("",) + CONTRASTS, \
             f"{name}: {r.stim_uid} has contrast {r.contrast!r}, which is not in common.CONTRASTS"
-        assert bool(r.contrast) or not r.intended_uid, \
+        assert bool(r.contrast) or not r.intended_uids, \
             f"{name}: {r.stim_uid} has a counterpart but no contrast naming the design axis"
         mi = r.model_input
         assert mi and mi == mi.strip(), f"{name}: {r.stim_uid} has empty or padded model_input"
@@ -167,6 +190,10 @@ def check_rows(name: str, rows: list[StimRow]) -> None:
         assert "  " not in mi, f"{name}: {r.stim_uid} model_input has a double space: {mi!r}"
         if r.context:
             assert r.context == r.context.strip(), f"{name}: {r.stim_uid} has a padded context"
+        for u in r.intended_uids:
+            assert u, f"{name}: {r.stim_uid} has an empty string in intended_uids"
+        assert len(set(r.intended_uids)) == len(r.intended_uids), \
+            f"{name}: {r.stim_uid} lists a duplicate intended_uid"
         if r.critical_word_idx is not None:
             n = len(mi.split())
             assert 0 <= r.critical_word_idx < n, \
@@ -210,7 +237,8 @@ def check_append_only(path: Path, new: list[dict], rebuild: bool) -> str:
     return "REBUILT (previous results for this dataset are invalid)"
 
 
-def write_dataset(name: str, rows: list[StimRow], rebuild: bool, dry: bool) -> str:
+def write_dataset(name: str, rows: list[StimRow], rebuild: bool, dry: bool,
+                  repairs: list[dict] | None = None) -> str:
     records = input_records(rows)
     status = check_append_only(STIMULI_DIR / f"{name}.input.jsonl", records, rebuild)
     if dry:
@@ -223,15 +251,20 @@ def write_dataset(name: str, rows: list[StimRow], rebuild: bool, dry: bool) -> s
     with (STIMULI_DIR / f"{name}.input.jsonl").open("w") as fh:
         for rec in records:
             fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    if repairs is not None:
+        with (STIMULI_DIR / f"{name}.repairs.csv").open("w", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=REPAIR_FIELDS, lineterminator="\n")
+            w.writeheader()
+            w.writerows(repairs)
     return status
 
 
 def derived_set(name: str, rows: list[StimRow]) -> list[StimRow]:
     """Re-key a hand-picked selection of rows as its own little dataset (smoke / probe).
 
-    ``intended_text`` and the edit fields come along because they are useful when eyeballing a
-    smoke run; ``intended_uid`` deliberately does not, since it would point into another
-    dataset's table.  ``meta.source_stim_uid`` is the link back.
+    ``intended_uids`` deliberately does not come along -- the uids point into another dataset's
+    table -- so a derived set has no repairs table.  ``meta.source_stim_uid`` is the link back to
+    the row these were picked from, and to its repairs.
     """
     out = []
     for i, src in enumerate(rows):
@@ -239,10 +272,7 @@ def derived_set(name: str, rows: list[StimRow]) -> list[StimRow]:
                     sentence_orig=src.sentence_orig, sentence_norm=src.sentence_norm,
                     model_input=src.model_input, context=src.context,
                     plausibility=src.plausibility, is_grammatical=src.is_grammatical,
-                    contrast=src.contrast,
-                    intended_text=src.intended_text, edit_type=src.edit_type,
-                    edit_ops=src.edit_ops, edit_from=src.edit_from, edit_to=src.edit_to,
-                    critical_word_idx=src.critical_word_idx,
+                    contrast=src.contrast, critical_word_idx=src.critical_word_idx,
                     comprehension_q=src.comprehension_q, correct_answer=src.correct_answer,
                     meta={"source_stim_uid": src.stim_uid, "source_dataset": src.dataset})
         r.sentence_id = i
@@ -326,12 +356,12 @@ def main() -> None:
     manifest_datasets: dict[str, dict] = {}
 
     for name in wanted:
-        rows, srcs = build_dataset(name, CONVERTERS[name])
+        rows, srcs, repairs = build_dataset(name, CONVERTERS[name])
         all_rows[name], sources[name] = rows, srcs
-        status = write_dataset(name, rows, args.rebuild, args.check)
+        status = write_dataset(name, rows, args.rebuild, args.check, repairs)
         n_inputs = len({r.sentence_id for r in rows})
-        edits = collections.Counter(r.edit_type for r in rows)
-        anomalies = find_anomalies(rows)
+        edits = collections.Counter(e["edit_type"] for e in repairs)
+        anomalies = find_anomalies(rows, repairs)
         expected = EXPECTED_ANOMALIES.get(name, 0)
         assert len(anomalies) == expected, (
             f"{name}: found {len(anomalies)} source anomalies, expected {expected}. If a source "
@@ -344,6 +374,8 @@ def main() -> None:
             "n_with_context": sum(1 for r in rows if r.context),
             "rows_per_condition": dict(sorted(collections.Counter(
                 f"{r.subset}/{r.condition}" if r.subset else r.condition for r in rows).items())),
+            "n_repairs": len(repairs),
+            "n_stimuli_with_multiple_repairs": sum(1 for r in rows if len(r.intended_uids) > 1),
             "edit_types": dict(sorted(edits.items())),
             "contrasts": dict(sorted(collections.Counter(
                 r.contrast for r in rows if r.contrast).items())),
@@ -351,7 +383,7 @@ def main() -> None:
         }
         print(f"{name:12s} rows={len(rows):4d}  inputs={n_inputs:4d}  "
               f"ctx={manifest_datasets[name]['n_with_context']:4d}  "
-              f"edits={dict(sorted(edits.items()))}"
+              f"repairs={len(repairs):4d} edits={dict(sorted(edits.items()))}"
               f"{f'  anomalies={len(anomalies)}' if anomalies else ''}  [{status}]")
 
     if set(wanted) == set(CONVERTERS):

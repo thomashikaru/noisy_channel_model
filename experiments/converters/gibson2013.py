@@ -69,7 +69,7 @@ def _convert_subset(subset: str):
             model_input=standardize(r["Sentence"]),
             plausibility=plaus,
             contrast=_CONTRAST[subset],
-            intended_uid=intended,
+            intended_uids=[intended],
             comprehension_q=r["Question"],
             correct_answer=r["Answer"],
             meta={

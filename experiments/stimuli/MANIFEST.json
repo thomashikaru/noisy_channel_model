@@ -1,8 +1,8 @@
 {
-  "built_at": "2026-08-29T19:47:55+00:00",
-  "converter_sha256": "30c90708125c5b0cab72af6ef14f242d05bb38b8c4103fa5e3173c2614efa88d",
-  "git_head_at_build": "62e51cb96e4a90d572b116294b5790e7e1c90d34",
-  "git_tree_dirty_at_build": false,
+  "built_at": "2026-08-30T21:05:15+00:00",
+  "converter_sha256": "b1cd121fc982d737d79f02ffece478e6c43974428f03e23185c40ce85a62b7f6",
+  "git_head_at_build": "d50743232f7cec37a18a0c8328a63c9231ed28b4",
+  "git_tree_dirty_at_build": true,
   "python": "3.12.13",
   "holdout_paths": [
     "data/clark2026/exp_data_merged.csv",
@@ -32,6 +32,8 @@
         "transitive_intransitive/Transitive_implausible": 20,
         "transitive_intransitive/Transitive_plausible": 20
       },
+      "n_repairs": 240,
+      "n_stimuli_with_multiple_repairs": 0,
       "edit_types": {
         "del": 60,
         "ins": 58,
@@ -99,6 +101,8 @@
         "dopo_to/PO_plausible.none": 20,
         "dopo_to/PO_plausible.supportive": 20
       },
+      "n_repairs": 480,
+      "n_stimuli_with_multiple_repairs": 0,
       "edit_types": {
         "del": 60,
         "ins": 60,
@@ -125,6 +129,8 @@
         "SemCrit": 126,
         "Synt": 126
       },
+      "n_repairs": 504,
+      "n_stimuli_with_multiple_repairs": 0,
       "edit_types": {
         "none": 126,
         "sub": 378
@@ -151,9 +157,11 @@
         "ssp": 60,
         "sss": 60
       },
+      "n_repairs": 720,
+      "n_stimuli_with_multiple_repairs": 240,
       "edit_types": {
         "none": 240,
-        "sub": 240
+        "sub": 480
       },
       "contrasts": {
         "agreement": 480
@@ -256,6 +264,8 @@
         "NPZ_AMB": 24,
         "NPZ_UAMB": 24
       },
+      "n_repairs": 144,
+      "n_stimuli_with_multiple_repairs": 0,
       "edit_types": {
         "ins": 48,
         "multi": 1,
@@ -296,8 +306,9 @@
         "Typo1.1": 36,
         "Typo2.2": 36
       },
+      "n_repairs": 216,
+      "n_stimuli_with_multiple_repairs": 0,
       "edit_types": {
-        "": 144,
         "none": 72,
         "sub": 144
       },
@@ -320,6 +331,8 @@
         "reduced_global": 32,
         "reduced_local": 32
       },
+      "n_repairs": 128,
+      "n_stimuli_with_multiple_repairs": 0,
       "edit_types": {
         "ins": 64,
         "none": 64
@@ -339,9 +352,9 @@
       "rows_per_condition": {
         "demo": 1
       },
-      "edit_types": {
-        "": 1
-      },
+      "n_repairs": 0,
+      "n_stimuli_with_multiple_repairs": 0,
+      "edit_types": {},
       "contrasts": {},
       "anomalies": []
     },

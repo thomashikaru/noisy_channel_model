@@ -8,6 +8,7 @@ model-side ``calibration_gate.word_change`` it mirrors; that one skips if jax is
 
 from __future__ import annotations
 
+import collections
 import hashlib
 import io
 import json
@@ -34,6 +35,12 @@ def _hash_tree(root: Path) -> dict[str, str]:
 def built() -> dict[str, list]:
     """Every dataset, built once in memory (nothing written)."""
     return {name: bs.build_dataset(name, conv)[0] for name, conv in CONVERTERS.items()}
+
+
+@pytest.fixture(scope="module")
+def repairs() -> dict[str, list]:
+    """The (stimulus, repair) records for every dataset."""
+    return {name: bs.build_dataset(name, conv)[2] for name, conv in CONVERTERS.items()}
 
 
 # ---------------------------------------------------------------------------------------
@@ -165,25 +172,23 @@ def test_classify_edit_shapes():
                          "The ball was kicked by the girl.").ops == "ins;ins"
 
 
-def test_classify_edit_matches_the_model_side_word_change(built):
+def test_classify_edit_matches_the_model_side_word_change(built, repairs):
     """common.classify_edit restates calibration_gate.word_change; they must not drift."""
     pytest.importorskip("jax", reason="calibration_gate imports jax and the penzai LM")
     sys.path.insert(0, str(REPO_ROOT / "src"))
     from genjax_port import calibration_gate
 
     checked = 0
-    for rows in built.values():
+    for name, rows in built.items():
         by_uid = {r.stim_uid: r for r in rows}
-        for r in rows:
-            if not r.intended_uid:
-                continue
-            intended = by_uid[r.intended_uid].model_input
-            mine = classify_edit(r.model_input, intended)
-            theirs = calibration_gate.word_change(r.model_input, intended)
+        for e in repairs[name]:
+            observed = by_uid[e["stim_uid"]].model_input
+            mine = classify_edit(observed, e["intended_text"])
+            theirs = calibration_gate.word_change(observed, e["intended_text"])
             if mine.type == "multi":
                 continue                       # word_change reports only its first opcode
             assert (mine.type, mine.frm, mine.to) == theirs, \
-                f"{r.stim_uid}: {mine[:4]} vs {theirs}"
+                f"{e['stim_uid']}: {mine[:4]} vs {theirs}"
             checked += 1
     assert checked > 2000, f"only {checked} pairs compared"
 
@@ -196,13 +201,41 @@ def test_row_counts(built):
     assert {k: len(v) for k, v in built.items()} == bs.EXPECTED_ROWS
 
 
-def test_every_intended_uid_resolves(built):
+def test_every_intended_uid_resolves(built, repairs):
     for name, rows in built.items():
         uids = {r.stim_uid for r in rows}
         for r in rows:
-            if r.intended_uid:
-                assert r.intended_uid in uids, f"{name}: {r.stim_uid} -> {r.intended_uid}"
-                assert r.intended_text, f"{name}: {r.stim_uid} has an unresolved intended_text"
+            for u in r.intended_uids:
+                assert u in uids, f"{name}: {r.stim_uid} -> {u}"
+        by_stim = collections.Counter(e["stim_uid"] for e in repairs[name])
+        for r in rows:
+            assert by_stim[r.stim_uid] == len(r.intended_uids), \
+                f"{name}: {r.stim_uid} has {by_stim[r.stim_uid]} repair rows for " \
+                f"{len(r.intended_uids)} intended_uids"
+        for e in repairs[name]:
+            assert e["intended_text"], f"{name}: {e['stim_uid']} has an unresolved intended_text"
+
+
+def test_qian_carries_both_repairs_with_no_primacy(built, repairs):
+    """The sentence is ambiguous about which word is wrong; the schema must not pick one."""
+    stim = {r.stim_uid: r for r in built["qian2023"]}
+    by_stim = collections.defaultdict(list)
+    for e in repairs["qian2023"]:
+        by_stim[e["stim_uid"]].append(e)
+    n_two = 0
+    for uid_, es in by_stim.items():
+        cond = stim[uid_].condition
+        targets = {e["intended_uid"].rsplit("/", 1)[1] for e in es}
+        verb_route, noun_route = cond[0] + cond[1] + cond[0], cond[2] + cond[1] + cond[2]
+        assert targets == {verb_route, noun_route}, f"{uid_}: {targets}"
+        if cond[0] != cond[2]:
+            n_two += 1
+            assert len(es) == 2, f"{uid_}: ungrammatical rows need both routes"
+            # the two routes touch DIFFERENT words -- that is what makes the row ambiguous
+            assert len({e["edit_obs_idx"] for e in es}) == 2, f"{uid_}: routes edit the same word"
+        else:
+            assert len(es) == 1 and es[0]["edit_type"] == "none"
+    assert n_two == 240, n_two
 
 
 def test_stim_uids_are_unique_across_all_datasets(built):
@@ -272,33 +305,32 @@ def test_critical_word_indices_point_at_the_expected_word(built):
                 f"{name}: {r.stim_uid} index {r.critical_word_idx} -> {tok!r}, want {expected(r)!r}"
 
 
-def test_qian_grammaticality_and_counterpart(built):
+def test_qian_grammaticality(built):
     for r in built["qian2023"]:
         assert r.is_grammatical == (r.condition[0] == r.condition[2])
-        assert r.intended_uid.endswith("/" + r.condition[0] + r.condition[1] + r.condition[0])
-        if r.is_grammatical:
-            assert r.edit_type == "none"
+        assert len(r.intended_uids) == (1 if r.is_grammatical else 2)
 
 
-def test_gibson_counterpart_is_one_preposition(built):
+def test_gibson_counterpart_is_one_preposition(built, repairs):
     """The whole point of the design: implausible rows are one word from a plausible reading."""
+    plaus = {r.stim_uid: r.plausibility for r in built["gibson2013"]}
     got = {"ins": 0, "del": 0}
-    for r in built["gibson2013"]:
-        if r.plausibility != "implausible":
+    for e in repairs["gibson2013"]:
+        if plaus[e["stim_uid"]] != "implausible":
             continue
-        if r.edit_type in got:
-            got[r.edit_type] += 1
-            word = (r.edit_to or r.edit_from).lower()
-            assert len(word.split()) == 1, f"{r.stim_uid}: edit is not one word: {word!r}"
+        if e["edit_type"] in got:
+            got[e["edit_type"]] += 1
+            word = (e["edit_to"] or e["edit_from"]).lower()
+            assert len(word.split()) == 1, f"{e['stim_uid']}: edit is not one word: {word!r}"
             # dopo_to varies "to", dopo_for "for", transitive_intransitive "from" or "inside"
             assert word in {"to", "for", "from", "inside"}, \
-                f"{r.stim_uid}: unexpected edit word {word!r}"
+                f"{e['stim_uid']}: unexpected edit word {word!r}"
     assert got == {"ins": 58, "del": 60}, got   # 2 rows are source typos; see EXPECTED_ANOMALIES
 
 
-def test_known_source_anomalies(built):
+def test_known_source_anomalies(built, repairs):
     for name, rows in built.items():
-        found = bs.find_anomalies(rows)
+        found = bs.find_anomalies(rows, repairs[name])
         assert len(found) == bs.EXPECTED_ANOMALIES.get(name, 0), \
             f"{name}: {len(found)} anomalies, expected {bs.EXPECTED_ANOMALIES.get(name, 0)}"
 
@@ -371,6 +403,19 @@ def test_manifest_records_the_current_converters():
         "Re-run experiments/build_stimuli.py and commit the result.")
 
 
+def test_repairs_table_matches_a_fresh_build(repairs):
+    import csv
+    for name, recs in repairs.items():
+        path = bs.STIMULI_DIR / f"{name}.repairs.csv"
+        if not path.exists():
+            pytest.skip(f"{path.name} not built yet; run experiments/build_stimuli.py")
+        on_disk = list(csv.DictReader(path.open()))
+        assert len(on_disk) == len(recs), f"{name}: {len(on_disk)} on disk, {len(recs)} fresh"
+        for a, b in zip(on_disk, recs):
+            assert (a["stim_uid"], a["intended_uid"], a["edit_type"]) == \
+                   (b["stim_uid"], b["intended_uid"], b["edit_type"])
+
+
 def test_written_stimuli_match_a_fresh_build(built):
     """experiments/stimuli/ on disk must be what the converters produce right now."""
     import csv
@@ -382,6 +427,7 @@ def test_written_stimuli_match_a_fresh_build(built):
         assert len(on_disk) == len(rows), f"{name}: {len(on_disk)} rows on disk, {len(rows)} fresh"
         for a, b in zip(on_disk, rows):
             assert a["stim_uid"] == b.stim_uid
+            assert a["intended_uids"] == ";".join(b.intended_uids)
             assert a["model_input"] == b.model_input
             assert a["context"] == b.context
             assert int(a["sentence_id"]) == b.sentence_id

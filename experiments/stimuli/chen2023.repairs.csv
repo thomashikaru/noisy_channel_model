@@ -1,0 +1,481 @@
+dataset,stim_uid,intended_uid,intended_text,edit_type,edit_ops,edit_from,edit_to,edit_obs_idx,n_repairs_for_stim
+chen2023,chen2023/dopo_to/1/DO_plausible.none,chen2023/dopo_to/1/DO_plausible.none,The sister mailed the niece the letter.,none,,,,,1
+chen2023,chen2023/dopo_to/1/DO_implausible.none,chen2023/dopo_to/1/PO_plausible.none,The sister mailed the letter to the niece.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/1/PO_plausible.none,chen2023/dopo_to/1/PO_plausible.none,The sister mailed the letter to the niece.,none,,,,,1
+chen2023,chen2023/dopo_to/1/PO_implausible.none,chen2023/dopo_to/1/DO_plausible.none,The sister mailed the niece the letter.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/2/DO_plausible.none,chen2023/dopo_to/2/DO_plausible.none,The mother gave the daughter the candle.,none,,,,,1
+chen2023,chen2023/dopo_to/2/DO_implausible.none,chen2023/dopo_to/2/PO_plausible.none,The mother gave the candle to the daughter.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/2/PO_plausible.none,chen2023/dopo_to/2/PO_plausible.none,The mother gave the candle to the daughter.,none,,,,,1
+chen2023,chen2023/dopo_to/2/PO_implausible.none,chen2023/dopo_to/2/DO_plausible.none,The mother gave the daughter the candle.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/3/DO_plausible.none,chen2023/dopo_to/3/DO_plausible.none,The uncle sold the father the truck.,none,,,,,1
+chen2023,chen2023/dopo_to/3/DO_implausible.none,chen2023/dopo_to/3/PO_plausible.none,The uncle sold the truck to the father.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/3/PO_plausible.none,chen2023/dopo_to/3/PO_plausible.none,The uncle sold the truck to the father.,none,,,,,1
+chen2023,chen2023/dopo_to/3/PO_implausible.none,chen2023/dopo_to/3/DO_plausible.none,The uncle sold the father the truck.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/4/DO_plausible.none,chen2023/dopo_to/4/DO_plausible.none,The contractor lent the homeowner the saw.,none,,,,,1
+chen2023,chen2023/dopo_to/4/DO_implausible.none,chen2023/dopo_to/4/PO_plausible.none,The contractor lent the saw to the homeowner.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/4/PO_plausible.none,chen2023/dopo_to/4/PO_plausible.none,The contractor lent the saw to the homeowner.,none,,,,,1
+chen2023,chen2023/dopo_to/4/PO_implausible.none,chen2023/dopo_to/4/DO_plausible.none,The contractor lent the homeowner the saw.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/5/DO_plausible.none,chen2023/dopo_to/5/DO_plausible.none,The sailing club leased the man the boat.,none,,,,,1
+chen2023,chen2023/dopo_to/5/DO_implausible.none,chen2023/dopo_to/5/PO_plausible.none,The sailing club leased the boat to the man.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/5/PO_plausible.none,chen2023/dopo_to/5/PO_plausible.none,The sailing club leased the boat to the man.,none,,,,,1
+chen2023,chen2023/dopo_to/5/PO_implausible.none,chen2023/dopo_to/5/DO_plausible.none,The sailing club leased the man the boat.,del,del,to,,6,1
+chen2023,chen2023/dopo_to/6/DO_plausible.none,chen2023/dopo_to/6/DO_plausible.none,The girl tossed the boy the apple.,none,,,,,1
+chen2023,chen2023/dopo_to/6/DO_implausible.none,chen2023/dopo_to/6/PO_plausible.none,The girl tossed the apple to the boy.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/6/PO_plausible.none,chen2023/dopo_to/6/PO_plausible.none,The girl tossed the apple to the boy.,none,,,,,1
+chen2023,chen2023/dopo_to/6/PO_implausible.none,chen2023/dopo_to/6/DO_plausible.none,The girl tossed the boy the apple.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/7/DO_plausible.none,chen2023/dopo_to/7/DO_plausible.none,The daughter passed the mother the bowl.,none,,,,,1
+chen2023,chen2023/dopo_to/7/DO_implausible.none,chen2023/dopo_to/7/PO_plausible.none,The daughter passed the bowl to the mother.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/7/PO_plausible.none,chen2023/dopo_to/7/PO_plausible.none,The daughter passed the bowl to the mother.,none,,,,,1
+chen2023,chen2023/dopo_to/7/PO_implausible.none,chen2023/dopo_to/7/DO_plausible.none,The daughter passed the mother the bowl.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/8/DO_plausible.none,chen2023/dopo_to/8/DO_plausible.none,The scuba instructor rented the tourist the equipment.,none,,,,,1
+chen2023,chen2023/dopo_to/8/DO_implausible.none,chen2023/dopo_to/8/PO_plausible.none,The scuba instructor rented the equipment to the tourist.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/8/PO_plausible.none,chen2023/dopo_to/8/PO_plausible.none,The scuba instructor rented the equipment to the tourist.,none,,,,,1
+chen2023,chen2023/dopo_to/8/PO_implausible.none,chen2023/dopo_to/8/DO_plausible.none,The scuba instructor rented the tourist the equipment.,del,del,to,,6,1
+chen2023,chen2023/dopo_to/9/DO_plausible.none,chen2023/dopo_to/9/DO_plausible.none,The boy handed the girl the pencil.,none,,,,,1
+chen2023,chen2023/dopo_to/9/DO_implausible.none,chen2023/dopo_to/9/PO_plausible.none,The boy handed the pencil to the girl.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/9/PO_plausible.none,chen2023/dopo_to/9/PO_plausible.none,The boy handed the pencil to the girl.,none,,,,,1
+chen2023,chen2023/dopo_to/9/PO_implausible.none,chen2023/dopo_to/9/DO_plausible.none,The boy handed the girl the pencil.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/10/DO_plausible.none,chen2023/dopo_to/10/DO_plausible.none,The nanny threw the child the toy.,none,,,,,1
+chen2023,chen2023/dopo_to/10/DO_implausible.none,chen2023/dopo_to/10/PO_plausible.none,The nanny threw the toy to the child.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/10/PO_plausible.none,chen2023/dopo_to/10/PO_plausible.none,The nanny threw the toy to the child.,none,,,,,1
+chen2023,chen2023/dopo_to/10/PO_implausible.none,chen2023/dopo_to/10/DO_plausible.none,The nanny threw the child the toy.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/11/DO_plausible.none,chen2023/dopo_to/11/DO_plausible.none,The nephew mailed the aunt the postcard.,none,,,,,1
+chen2023,chen2023/dopo_to/11/DO_implausible.none,chen2023/dopo_to/11/PO_plausible.none,The nephew mailed the postcard to the aunt.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/11/PO_plausible.none,chen2023/dopo_to/11/PO_plausible.none,The nephew mailed the postcard to the aunt.,none,,,,,1
+chen2023,chen2023/dopo_to/11/PO_implausible.none,chen2023/dopo_to/11/DO_plausible.none,The nephew mailed the aunt the postcard.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/12/DO_plausible.none,chen2023/dopo_to/12/DO_plausible.none,The father gave the son the car.,none,,,,,1
+chen2023,chen2023/dopo_to/12/DO_implausible.none,chen2023/dopo_to/12/PO_plausible.none,The father gave the car to the son.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/12/PO_plausible.none,chen2023/dopo_to/12/PO_plausible.none,The father gave the car to the son.,none,,,,,1
+chen2023,chen2023/dopo_to/12/PO_implausible.none,chen2023/dopo_to/12/DO_plausible.none,The father gave the son the car.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/13/DO_plausible.none,chen2023/dopo_to/13/DO_plausible.none,The shop sold the student the bike.,none,,,,,1
+chen2023,chen2023/dopo_to/13/DO_implausible.none,chen2023/dopo_to/13/PO_plausible.none,The shop sold the bike to the student.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/13/PO_plausible.none,chen2023/dopo_to/13/PO_plausible.none,The shop sold the bike to the student.,none,,,,,1
+chen2023,chen2023/dopo_to/13/PO_implausible.none,chen2023/dopo_to/13/DO_plausible.none,The shop sold the student the bike.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/14/DO_plausible.none,chen2023/dopo_to/14/DO_plausible.none,The janitor lent the teacher the mop.,none,,,,,1
+chen2023,chen2023/dopo_to/14/DO_implausible.none,chen2023/dopo_to/14/PO_plausible.none,The janitor lent the mop to the teacher.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/14/PO_plausible.none,chen2023/dopo_to/14/PO_plausible.none,The janitor lent the mop to the teacher.,none,,,,,1
+chen2023,chen2023/dopo_to/14/PO_implausible.none,chen2023/dopo_to/14/DO_plausible.none,The janitor lent the teacher the mop.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/15/DO_plausible.none,chen2023/dopo_to/15/DO_plausible.none,The car dealer leased the plumber the SUV.,none,,,,,1
+chen2023,chen2023/dopo_to/15/DO_implausible.none,chen2023/dopo_to/15/PO_plausible.none,The car dealer leased the SUV to the plumber.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/15/PO_plausible.none,chen2023/dopo_to/15/PO_plausible.none,The car dealer leased the SUV to the plumber.,none,,,,,1
+chen2023,chen2023/dopo_to/15/PO_implausible.none,chen2023/dopo_to/15/DO_plausible.none,The car dealer leased the plumber the SUV.,del,del,to,,6,1
+chen2023,chen2023/dopo_to/16/DO_plausible.none,chen2023/dopo_to/16/DO_plausible.none,The host tossed the contestant the microphone.,none,,,,,1
+chen2023,chen2023/dopo_to/16/DO_implausible.none,chen2023/dopo_to/16/PO_plausible.none,The host tossed the microphone to the contestant.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/16/PO_plausible.none,chen2023/dopo_to/16/PO_plausible.none,The host tossed the microphone to the contestant.,none,,,,,1
+chen2023,chen2023/dopo_to/16/PO_implausible.none,chen2023/dopo_to/16/DO_plausible.none,The host tossed the contestant the microphone.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/17/DO_plausible.none,chen2023/dopo_to/17/DO_plausible.none,The quarterback passed the receiver the ball.,none,,,,,1
+chen2023,chen2023/dopo_to/17/DO_implausible.none,chen2023/dopo_to/17/PO_plausible.none,The quarterback passed the ball to the receiver.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/17/PO_plausible.none,chen2023/dopo_to/17/PO_plausible.none,The quarterback passed the ball to the receiver.,none,,,,,1
+chen2023,chen2023/dopo_to/17/PO_implausible.none,chen2023/dopo_to/17/DO_plausible.none,The quarterback passed the receiver the ball.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/18/DO_plausible.none,chen2023/dopo_to/18/DO_plausible.none,The videostore rented the customer the DVD.,none,,,,,1
+chen2023,chen2023/dopo_to/18/DO_implausible.none,chen2023/dopo_to/18/PO_plausible.none,The videostore rented the DVD to the customer.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/18/PO_plausible.none,chen2023/dopo_to/18/PO_plausible.none,The videostore rented the DVD to the customer.,none,,,,,1
+chen2023,chen2023/dopo_to/18/PO_implausible.none,chen2023/dopo_to/18/DO_plausible.none,The videostore rented the customer the DVD.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/19/DO_plausible.none,chen2023/dopo_to/19/DO_plausible.none,The bartender handed the lady the drink.,none,,,,,1
+chen2023,chen2023/dopo_to/19/DO_implausible.none,chen2023/dopo_to/19/PO_plausible.none,The bartender handed the drink to the lady.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/19/PO_plausible.none,chen2023/dopo_to/19/PO_plausible.none,The bartender handed the drink to the lady.,none,,,,,1
+chen2023,chen2023/dopo_to/19/PO_implausible.none,chen2023/dopo_to/19/DO_plausible.none,The bartender handed the lady the drink.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/20/DO_plausible.none,chen2023/dopo_to/20/DO_plausible.none,The magician threw the assistant the hat.,none,,,,,1
+chen2023,chen2023/dopo_to/20/DO_implausible.none,chen2023/dopo_to/20/PO_plausible.none,The magician threw the hat to the assistant.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/20/PO_plausible.none,chen2023/dopo_to/20/PO_plausible.none,The magician threw the hat to the assistant.,none,,,,,1
+chen2023,chen2023/dopo_to/20/PO_implausible.none,chen2023/dopo_to/20/DO_plausible.none,The magician threw the assistant the hat.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/1/DO_plausible.supportive,chen2023/dopo_to/1/DO_plausible.supportive,The sister mailed the niece the letter.,none,,,,,1
+chen2023,chen2023/dopo_to/1/DO_implausible.supportive,chen2023/dopo_to/1/PO_plausible.supportive,The sister mailed the letter to the niece.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/1/PO_plausible.supportive,chen2023/dopo_to/1/PO_plausible.supportive,The sister mailed the letter to the niece.,none,,,,,1
+chen2023,chen2023/dopo_to/1/PO_implausible.supportive,chen2023/dopo_to/1/DO_plausible.supportive,The sister mailed the niece the letter.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/2/DO_plausible.supportive,chen2023/dopo_to/2/DO_plausible.supportive,The mother gave the daughter the candle.,none,,,,,1
+chen2023,chen2023/dopo_to/2/DO_implausible.supportive,chen2023/dopo_to/2/PO_plausible.supportive,The mother gave the candle to the daughter.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/2/PO_plausible.supportive,chen2023/dopo_to/2/PO_plausible.supportive,The mother gave the candle to the daughter.,none,,,,,1
+chen2023,chen2023/dopo_to/2/PO_implausible.supportive,chen2023/dopo_to/2/DO_plausible.supportive,The mother gave the daughter the candle.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/3/DO_plausible.supportive,chen2023/dopo_to/3/DO_plausible.supportive,The uncle sold the father the truck.,none,,,,,1
+chen2023,chen2023/dopo_to/3/DO_implausible.supportive,chen2023/dopo_to/3/PO_plausible.supportive,The uncle sold the truck to the father.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/3/PO_plausible.supportive,chen2023/dopo_to/3/PO_plausible.supportive,The uncle sold the truck to the father.,none,,,,,1
+chen2023,chen2023/dopo_to/3/PO_implausible.supportive,chen2023/dopo_to/3/DO_plausible.supportive,The uncle sold the father the truck.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/4/DO_plausible.supportive,chen2023/dopo_to/4/DO_plausible.supportive,The contractor lent the homeowner the saw.,none,,,,,1
+chen2023,chen2023/dopo_to/4/DO_implausible.supportive,chen2023/dopo_to/4/PO_plausible.supportive,The contractor lent the saw to the homeowner.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/4/PO_plausible.supportive,chen2023/dopo_to/4/PO_plausible.supportive,The contractor lent the saw to the homeowner.,none,,,,,1
+chen2023,chen2023/dopo_to/4/PO_implausible.supportive,chen2023/dopo_to/4/DO_plausible.supportive,The contractor lent the homeowner the saw.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/5/DO_plausible.supportive,chen2023/dopo_to/5/DO_plausible.supportive,The sailing club leased the man the boat.,none,,,,,1
+chen2023,chen2023/dopo_to/5/DO_implausible.supportive,chen2023/dopo_to/5/PO_plausible.supportive,The sailing club leased the boat to the man.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/5/PO_plausible.supportive,chen2023/dopo_to/5/PO_plausible.supportive,The sailing club leased the boat to the man.,none,,,,,1
+chen2023,chen2023/dopo_to/5/PO_implausible.supportive,chen2023/dopo_to/5/DO_plausible.supportive,The sailing club leased the man the boat.,del,del,to,,6,1
+chen2023,chen2023/dopo_to/6/DO_plausible.supportive,chen2023/dopo_to/6/DO_plausible.supportive,The girl tossed the boy the apple.,none,,,,,1
+chen2023,chen2023/dopo_to/6/DO_implausible.supportive,chen2023/dopo_to/6/PO_plausible.supportive,The girl tossed the apple to the boy.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/6/PO_plausible.supportive,chen2023/dopo_to/6/PO_plausible.supportive,The girl tossed the apple to the boy.,none,,,,,1
+chen2023,chen2023/dopo_to/6/PO_implausible.supportive,chen2023/dopo_to/6/DO_plausible.supportive,The girl tossed the boy the apple.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/7/DO_plausible.supportive,chen2023/dopo_to/7/DO_plausible.supportive,The daughter passed the mother the bowl.,none,,,,,1
+chen2023,chen2023/dopo_to/7/DO_implausible.supportive,chen2023/dopo_to/7/PO_plausible.supportive,The daughter passed the bowl to the mother.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/7/PO_plausible.supportive,chen2023/dopo_to/7/PO_plausible.supportive,The daughter passed the bowl to the mother.,none,,,,,1
+chen2023,chen2023/dopo_to/7/PO_implausible.supportive,chen2023/dopo_to/7/DO_plausible.supportive,The daughter passed the mother the bowl.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/8/DO_plausible.supportive,chen2023/dopo_to/8/DO_plausible.supportive,The scuba instructor rented the tourist the equipment.,none,,,,,1
+chen2023,chen2023/dopo_to/8/DO_implausible.supportive,chen2023/dopo_to/8/PO_plausible.supportive,The scuba instructor rented the equipment to the tourist.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/8/PO_plausible.supportive,chen2023/dopo_to/8/PO_plausible.supportive,The scuba instructor rented the equipment to the tourist.,none,,,,,1
+chen2023,chen2023/dopo_to/8/PO_implausible.supportive,chen2023/dopo_to/8/DO_plausible.supportive,The scuba instructor rented the tourist the equipment.,del,del,to,,6,1
+chen2023,chen2023/dopo_to/9/DO_plausible.supportive,chen2023/dopo_to/9/DO_plausible.supportive,The boy handed the girl the pencil.,none,,,,,1
+chen2023,chen2023/dopo_to/9/DO_implausible.supportive,chen2023/dopo_to/9/PO_plausible.supportive,The boy handed the pencil to the girl.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/9/PO_plausible.supportive,chen2023/dopo_to/9/PO_plausible.supportive,The boy handed the pencil to the girl.,none,,,,,1
+chen2023,chen2023/dopo_to/9/PO_implausible.supportive,chen2023/dopo_to/9/DO_plausible.supportive,The boy handed the girl the pencil.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/10/DO_plausible.supportive,chen2023/dopo_to/10/DO_plausible.supportive,The nanny threw the child the toy.,none,,,,,1
+chen2023,chen2023/dopo_to/10/DO_implausible.supportive,chen2023/dopo_to/10/PO_plausible.supportive,The nanny threw the toy to the child.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/10/PO_plausible.supportive,chen2023/dopo_to/10/PO_plausible.supportive,The nanny threw the toy to the child.,none,,,,,1
+chen2023,chen2023/dopo_to/10/PO_implausible.supportive,chen2023/dopo_to/10/DO_plausible.supportive,The nanny threw the child the toy.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/11/DO_plausible.supportive,chen2023/dopo_to/11/DO_plausible.supportive,The nephew mailed the aunt the postcard.,none,,,,,1
+chen2023,chen2023/dopo_to/11/DO_implausible.supportive,chen2023/dopo_to/11/PO_plausible.supportive,The nephew mailed the postcard to the aunt.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/11/PO_plausible.supportive,chen2023/dopo_to/11/PO_plausible.supportive,The nephew mailed the postcard to the aunt.,none,,,,,1
+chen2023,chen2023/dopo_to/11/PO_implausible.supportive,chen2023/dopo_to/11/DO_plausible.supportive,The nephew mailed the aunt the postcard.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/12/DO_plausible.supportive,chen2023/dopo_to/12/DO_plausible.supportive,The father gave the son the car.,none,,,,,1
+chen2023,chen2023/dopo_to/12/DO_implausible.supportive,chen2023/dopo_to/12/PO_plausible.supportive,The father gave the car to the son.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/12/PO_plausible.supportive,chen2023/dopo_to/12/PO_plausible.supportive,The father gave the car to the son.,none,,,,,1
+chen2023,chen2023/dopo_to/12/PO_implausible.supportive,chen2023/dopo_to/12/DO_plausible.supportive,The father gave the son the car.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/13/DO_plausible.supportive,chen2023/dopo_to/13/DO_plausible.supportive,The shop sold the student the bike.,none,,,,,1
+chen2023,chen2023/dopo_to/13/DO_implausible.supportive,chen2023/dopo_to/13/PO_plausible.supportive,The shop sold the bike to the student.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/13/PO_plausible.supportive,chen2023/dopo_to/13/PO_plausible.supportive,The shop sold the bike to the student.,none,,,,,1
+chen2023,chen2023/dopo_to/13/PO_implausible.supportive,chen2023/dopo_to/13/DO_plausible.supportive,The shop sold the student the bike.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/14/DO_plausible.supportive,chen2023/dopo_to/14/DO_plausible.supportive,The janitor lent the teacher the mop.,none,,,,,1
+chen2023,chen2023/dopo_to/14/DO_implausible.supportive,chen2023/dopo_to/14/PO_plausible.supportive,The janitor lent the mop to the teacher.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/14/PO_plausible.supportive,chen2023/dopo_to/14/PO_plausible.supportive,The janitor lent the mop to the teacher.,none,,,,,1
+chen2023,chen2023/dopo_to/14/PO_implausible.supportive,chen2023/dopo_to/14/DO_plausible.supportive,The janitor lent the teacher the mop.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/15/DO_plausible.supportive,chen2023/dopo_to/15/DO_plausible.supportive,The car dealer leased the plumber the SUV.,none,,,,,1
+chen2023,chen2023/dopo_to/15/DO_implausible.supportive,chen2023/dopo_to/15/PO_plausible.supportive,The car dealer leased the SUV to the plumber.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/15/PO_plausible.supportive,chen2023/dopo_to/15/PO_plausible.supportive,The car dealer leased the SUV to the plumber.,none,,,,,1
+chen2023,chen2023/dopo_to/15/PO_implausible.supportive,chen2023/dopo_to/15/DO_plausible.supportive,The car dealer leased the plumber the SUV.,del,del,to,,6,1
+chen2023,chen2023/dopo_to/16/DO_plausible.supportive,chen2023/dopo_to/16/DO_plausible.supportive,The host tossed the contestant the microphone.,none,,,,,1
+chen2023,chen2023/dopo_to/16/DO_implausible.supportive,chen2023/dopo_to/16/PO_plausible.supportive,The host tossed the microphone to the contestant.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/16/PO_plausible.supportive,chen2023/dopo_to/16/PO_plausible.supportive,The host tossed the microphone to the contestant.,none,,,,,1
+chen2023,chen2023/dopo_to/16/PO_implausible.supportive,chen2023/dopo_to/16/DO_plausible.supportive,The host tossed the contestant the microphone.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/17/DO_plausible.supportive,chen2023/dopo_to/17/DO_plausible.supportive,The quarterback passed the receiver the ball.,none,,,,,1
+chen2023,chen2023/dopo_to/17/DO_implausible.supportive,chen2023/dopo_to/17/PO_plausible.supportive,The quarterback passed the ball to the receiver.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/17/PO_plausible.supportive,chen2023/dopo_to/17/PO_plausible.supportive,The quarterback passed the ball to the receiver.,none,,,,,1
+chen2023,chen2023/dopo_to/17/PO_implausible.supportive,chen2023/dopo_to/17/DO_plausible.supportive,The quarterback passed the receiver the ball.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/18/DO_plausible.supportive,chen2023/dopo_to/18/DO_plausible.supportive,The videostore rented the customer the DVD.,none,,,,,1
+chen2023,chen2023/dopo_to/18/DO_implausible.supportive,chen2023/dopo_to/18/PO_plausible.supportive,The videostore rented the DVD to the customer.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/18/PO_plausible.supportive,chen2023/dopo_to/18/PO_plausible.supportive,The videostore rented the DVD to the customer.,none,,,,,1
+chen2023,chen2023/dopo_to/18/PO_implausible.supportive,chen2023/dopo_to/18/DO_plausible.supportive,The videostore rented the customer the DVD.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/19/DO_plausible.supportive,chen2023/dopo_to/19/DO_plausible.supportive,The bartender handed the lady the drink.,none,,,,,1
+chen2023,chen2023/dopo_to/19/DO_implausible.supportive,chen2023/dopo_to/19/PO_plausible.supportive,The bartender handed the drink to the lady.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/19/PO_plausible.supportive,chen2023/dopo_to/19/PO_plausible.supportive,The bartender handed the drink to the lady.,none,,,,,1
+chen2023,chen2023/dopo_to/19/PO_implausible.supportive,chen2023/dopo_to/19/DO_plausible.supportive,The bartender handed the lady the drink.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/20/DO_plausible.supportive,chen2023/dopo_to/20/DO_plausible.supportive,The magician threw the assistant the hat.,none,,,,,1
+chen2023,chen2023/dopo_to/20/DO_implausible.supportive,chen2023/dopo_to/20/PO_plausible.supportive,The magician threw the hat to the assistant.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/20/PO_plausible.supportive,chen2023/dopo_to/20/PO_plausible.supportive,The magician threw the hat to the assistant.,none,,,,,1
+chen2023,chen2023/dopo_to/20/PO_implausible.supportive,chen2023/dopo_to/20/DO_plausible.supportive,The magician threw the assistant the hat.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/1/DO_plausible.non_supportive,chen2023/dopo_to/1/DO_plausible.non_supportive,The sister mailed the niece the letter.,none,,,,,1
+chen2023,chen2023/dopo_to/1/DO_implausible.non_supportive,chen2023/dopo_to/1/PO_plausible.non_supportive,The sister mailed the letter to the niece.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/1/PO_plausible.non_supportive,chen2023/dopo_to/1/PO_plausible.non_supportive,The sister mailed the letter to the niece.,none,,,,,1
+chen2023,chen2023/dopo_to/1/PO_implausible.non_supportive,chen2023/dopo_to/1/DO_plausible.non_supportive,The sister mailed the niece the letter.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/2/DO_plausible.non_supportive,chen2023/dopo_to/2/DO_plausible.non_supportive,The mother gave the daughter the candle.,none,,,,,1
+chen2023,chen2023/dopo_to/2/DO_implausible.non_supportive,chen2023/dopo_to/2/PO_plausible.non_supportive,The mother gave the candle to the daughter.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/2/PO_plausible.non_supportive,chen2023/dopo_to/2/PO_plausible.non_supportive,The mother gave the candle to the daughter.,none,,,,,1
+chen2023,chen2023/dopo_to/2/PO_implausible.non_supportive,chen2023/dopo_to/2/DO_plausible.non_supportive,The mother gave the daughter the candle.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/3/DO_plausible.non_supportive,chen2023/dopo_to/3/DO_plausible.non_supportive,The uncle sold the father the truck.,none,,,,,1
+chen2023,chen2023/dopo_to/3/DO_implausible.non_supportive,chen2023/dopo_to/3/PO_plausible.non_supportive,The uncle sold the truck to the father.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/3/PO_plausible.non_supportive,chen2023/dopo_to/3/PO_plausible.non_supportive,The uncle sold the truck to the father.,none,,,,,1
+chen2023,chen2023/dopo_to/3/PO_implausible.non_supportive,chen2023/dopo_to/3/DO_plausible.non_supportive,The uncle sold the father the truck.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/4/DO_plausible.non_supportive,chen2023/dopo_to/4/DO_plausible.non_supportive,The contractor lent the homeowner the saw.,none,,,,,1
+chen2023,chen2023/dopo_to/4/DO_implausible.non_supportive,chen2023/dopo_to/4/PO_plausible.non_supportive,The contractor lent the saw to the homeowner.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/4/PO_plausible.non_supportive,chen2023/dopo_to/4/PO_plausible.non_supportive,The contractor lent the saw to the homeowner.,none,,,,,1
+chen2023,chen2023/dopo_to/4/PO_implausible.non_supportive,chen2023/dopo_to/4/DO_plausible.non_supportive,The contractor lent the homeowner the saw.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/5/DO_plausible.non_supportive,chen2023/dopo_to/5/DO_plausible.non_supportive,The sailing club leased the man the boat.,none,,,,,1
+chen2023,chen2023/dopo_to/5/DO_implausible.non_supportive,chen2023/dopo_to/5/PO_plausible.non_supportive,The sailing club leased the boat to the man.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/5/PO_plausible.non_supportive,chen2023/dopo_to/5/PO_plausible.non_supportive,The sailing club leased the boat to the man.,none,,,,,1
+chen2023,chen2023/dopo_to/5/PO_implausible.non_supportive,chen2023/dopo_to/5/DO_plausible.non_supportive,The sailing club leased the man the boat.,del,del,to,,6,1
+chen2023,chen2023/dopo_to/6/DO_plausible.non_supportive,chen2023/dopo_to/6/DO_plausible.non_supportive,The girl tossed the boy the apple.,none,,,,,1
+chen2023,chen2023/dopo_to/6/DO_implausible.non_supportive,chen2023/dopo_to/6/PO_plausible.non_supportive,The girl tossed the apple to the boy.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/6/PO_plausible.non_supportive,chen2023/dopo_to/6/PO_plausible.non_supportive,The girl tossed the apple to the boy.,none,,,,,1
+chen2023,chen2023/dopo_to/6/PO_implausible.non_supportive,chen2023/dopo_to/6/DO_plausible.non_supportive,The girl tossed the boy the apple.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/7/DO_plausible.non_supportive,chen2023/dopo_to/7/DO_plausible.non_supportive,The daughter passed the mother the bowl.,none,,,,,1
+chen2023,chen2023/dopo_to/7/DO_implausible.non_supportive,chen2023/dopo_to/7/PO_plausible.non_supportive,The daughter passed the bowl to the mother.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/7/PO_plausible.non_supportive,chen2023/dopo_to/7/PO_plausible.non_supportive,The daughter passed the bowl to the mother.,none,,,,,1
+chen2023,chen2023/dopo_to/7/PO_implausible.non_supportive,chen2023/dopo_to/7/DO_plausible.non_supportive,The daughter passed the mother the bowl.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/8/DO_plausible.non_supportive,chen2023/dopo_to/8/DO_plausible.non_supportive,The scuba instructor rented the tourist the equipment.,none,,,,,1
+chen2023,chen2023/dopo_to/8/DO_implausible.non_supportive,chen2023/dopo_to/8/PO_plausible.non_supportive,The scuba instructor rented the equipment to the tourist.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/8/PO_plausible.non_supportive,chen2023/dopo_to/8/PO_plausible.non_supportive,The scuba instructor rented the equipment to the tourist.,none,,,,,1
+chen2023,chen2023/dopo_to/8/PO_implausible.non_supportive,chen2023/dopo_to/8/DO_plausible.non_supportive,The scuba instructor rented the tourist the equipment.,del,del,to,,6,1
+chen2023,chen2023/dopo_to/9/DO_plausible.non_supportive,chen2023/dopo_to/9/DO_plausible.non_supportive,The boy handed the girl the pencil.,none,,,,,1
+chen2023,chen2023/dopo_to/9/DO_implausible.non_supportive,chen2023/dopo_to/9/PO_plausible.non_supportive,The boy handed the pencil to the girl.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/9/PO_plausible.non_supportive,chen2023/dopo_to/9/PO_plausible.non_supportive,The boy handed the pencil to the girl.,none,,,,,1
+chen2023,chen2023/dopo_to/9/PO_implausible.non_supportive,chen2023/dopo_to/9/DO_plausible.non_supportive,The boy handed the girl the pencil.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/10/DO_plausible.non_supportive,chen2023/dopo_to/10/DO_plausible.non_supportive,The nanny threw the child the toy.,none,,,,,1
+chen2023,chen2023/dopo_to/10/DO_implausible.non_supportive,chen2023/dopo_to/10/PO_plausible.non_supportive,The nanny threw the toy to the child.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/10/PO_plausible.non_supportive,chen2023/dopo_to/10/PO_plausible.non_supportive,The nanny threw the toy to the child.,none,,,,,1
+chen2023,chen2023/dopo_to/10/PO_implausible.non_supportive,chen2023/dopo_to/10/DO_plausible.non_supportive,The nanny threw the child the toy.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/11/DO_plausible.non_supportive,chen2023/dopo_to/11/DO_plausible.non_supportive,The nephew mailed the aunt the postcard.,none,,,,,1
+chen2023,chen2023/dopo_to/11/DO_implausible.non_supportive,chen2023/dopo_to/11/PO_plausible.non_supportive,The nephew mailed the postcard to the aunt.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/11/PO_plausible.non_supportive,chen2023/dopo_to/11/PO_plausible.non_supportive,The nephew mailed the postcard to the aunt.,none,,,,,1
+chen2023,chen2023/dopo_to/11/PO_implausible.non_supportive,chen2023/dopo_to/11/DO_plausible.non_supportive,The nephew mailed the aunt the postcard.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/12/DO_plausible.non_supportive,chen2023/dopo_to/12/DO_plausible.non_supportive,The father gave the son the car.,none,,,,,1
+chen2023,chen2023/dopo_to/12/DO_implausible.non_supportive,chen2023/dopo_to/12/PO_plausible.non_supportive,The father gave the car to the son.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/12/PO_plausible.non_supportive,chen2023/dopo_to/12/PO_plausible.non_supportive,The father gave the car to the son.,none,,,,,1
+chen2023,chen2023/dopo_to/12/PO_implausible.non_supportive,chen2023/dopo_to/12/DO_plausible.non_supportive,The father gave the son the car.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/13/DO_plausible.non_supportive,chen2023/dopo_to/13/DO_plausible.non_supportive,The shop sold the student the bike.,none,,,,,1
+chen2023,chen2023/dopo_to/13/DO_implausible.non_supportive,chen2023/dopo_to/13/PO_plausible.non_supportive,The shop sold the bike to the student.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/13/PO_plausible.non_supportive,chen2023/dopo_to/13/PO_plausible.non_supportive,The shop sold the bike to the student.,none,,,,,1
+chen2023,chen2023/dopo_to/13/PO_implausible.non_supportive,chen2023/dopo_to/13/DO_plausible.non_supportive,The shop sold the student the bike.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/14/DO_plausible.non_supportive,chen2023/dopo_to/14/DO_plausible.non_supportive,The janitor lent the teacher the mop.,none,,,,,1
+chen2023,chen2023/dopo_to/14/DO_implausible.non_supportive,chen2023/dopo_to/14/PO_plausible.non_supportive,The janitor lent the mop to the teacher.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/14/PO_plausible.non_supportive,chen2023/dopo_to/14/PO_plausible.non_supportive,The janitor lent the mop to the teacher.,none,,,,,1
+chen2023,chen2023/dopo_to/14/PO_implausible.non_supportive,chen2023/dopo_to/14/DO_plausible.non_supportive,The janitor lent the teacher the mop.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/15/DO_plausible.non_supportive,chen2023/dopo_to/15/DO_plausible.non_supportive,The car dealer leased the plumber the SUV.,none,,,,,1
+chen2023,chen2023/dopo_to/15/DO_implausible.non_supportive,chen2023/dopo_to/15/PO_plausible.non_supportive,The car dealer leased the SUV to the plumber.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/15/PO_plausible.non_supportive,chen2023/dopo_to/15/PO_plausible.non_supportive,The car dealer leased the SUV to the plumber.,none,,,,,1
+chen2023,chen2023/dopo_to/15/PO_implausible.non_supportive,chen2023/dopo_to/15/DO_plausible.non_supportive,The car dealer leased the plumber the SUV.,del,del,to,,6,1
+chen2023,chen2023/dopo_to/16/DO_plausible.non_supportive,chen2023/dopo_to/16/DO_plausible.non_supportive,The host tossed the contestant the microphone.,none,,,,,1
+chen2023,chen2023/dopo_to/16/DO_implausible.non_supportive,chen2023/dopo_to/16/PO_plausible.non_supportive,The host tossed the microphone to the contestant.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/16/PO_plausible.non_supportive,chen2023/dopo_to/16/PO_plausible.non_supportive,The host tossed the microphone to the contestant.,none,,,,,1
+chen2023,chen2023/dopo_to/16/PO_implausible.non_supportive,chen2023/dopo_to/16/DO_plausible.non_supportive,The host tossed the contestant the microphone.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/17/DO_plausible.non_supportive,chen2023/dopo_to/17/DO_plausible.non_supportive,The quarterback passed the receiver the ball.,none,,,,,1
+chen2023,chen2023/dopo_to/17/DO_implausible.non_supportive,chen2023/dopo_to/17/PO_plausible.non_supportive,The quarterback passed the ball to the receiver.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/17/PO_plausible.non_supportive,chen2023/dopo_to/17/PO_plausible.non_supportive,The quarterback passed the ball to the receiver.,none,,,,,1
+chen2023,chen2023/dopo_to/17/PO_implausible.non_supportive,chen2023/dopo_to/17/DO_plausible.non_supportive,The quarterback passed the receiver the ball.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/18/DO_plausible.non_supportive,chen2023/dopo_to/18/DO_plausible.non_supportive,The videostore rented the customer the DVD.,none,,,,,1
+chen2023,chen2023/dopo_to/18/DO_implausible.non_supportive,chen2023/dopo_to/18/PO_plausible.non_supportive,The videostore rented the DVD to the customer.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/18/PO_plausible.non_supportive,chen2023/dopo_to/18/PO_plausible.non_supportive,The videostore rented the DVD to the customer.,none,,,,,1
+chen2023,chen2023/dopo_to/18/PO_implausible.non_supportive,chen2023/dopo_to/18/DO_plausible.non_supportive,The videostore rented the customer the DVD.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/19/DO_plausible.non_supportive,chen2023/dopo_to/19/DO_plausible.non_supportive,The bartender handed the lady the drink.,none,,,,,1
+chen2023,chen2023/dopo_to/19/DO_implausible.non_supportive,chen2023/dopo_to/19/PO_plausible.non_supportive,The bartender handed the drink to the lady.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/19/PO_plausible.non_supportive,chen2023/dopo_to/19/PO_plausible.non_supportive,The bartender handed the drink to the lady.,none,,,,,1
+chen2023,chen2023/dopo_to/19/PO_implausible.non_supportive,chen2023/dopo_to/19/DO_plausible.non_supportive,The bartender handed the lady the drink.,del,del,to,,5,1
+chen2023,chen2023/dopo_to/20/DO_plausible.non_supportive,chen2023/dopo_to/20/DO_plausible.non_supportive,The magician threw the assistant the hat.,none,,,,,1
+chen2023,chen2023/dopo_to/20/DO_implausible.non_supportive,chen2023/dopo_to/20/PO_plausible.non_supportive,The magician threw the hat to the assistant.,ins,ins,,to,,1
+chen2023,chen2023/dopo_to/20/PO_plausible.non_supportive,chen2023/dopo_to/20/PO_plausible.non_supportive,The magician threw the hat to the assistant.,none,,,,,1
+chen2023,chen2023/dopo_to/20/PO_implausible.non_supportive,chen2023/dopo_to/20/DO_plausible.non_supportive,The magician threw the assistant the hat.,del,del,to,,5,1
+chen2023,chen2023/active_passive/1/active_plausible.none,chen2023/active_passive/1/active_plausible.none,The girl kicked the ball.,none,,,,,1
+chen2023,chen2023/active_passive/1/active_implausible.none,chen2023/active_passive/1/passive_plausible.none,The ball was kicked by the girl.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/1/passive_implausible.none,chen2023/active_passive/1/active_plausible.none,The girl kicked the ball.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/1/passive_plausible.none,chen2023/active_passive/1/passive_plausible.none,The ball was kicked by the girl.,none,,,,,1
+chen2023,chen2023/active_passive/2/active_plausible.none,chen2023/active_passive/2/active_plausible.none,The plumber bought the watch.,none,,,,,1
+chen2023,chen2023/active_passive/2/active_implausible.none,chen2023/active_passive/2/passive_plausible.none,The watch was bought by the plumber.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/2/passive_implausible.none,chen2023/active_passive/2/active_plausible.none,The plumber bought the watch.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/2/passive_plausible.none,chen2023/active_passive/2/passive_plausible.none,The watch was bought by the plumber.,none,,,,,1
+chen2023,chen2023/active_passive/3/active_plausible.none,chen2023/active_passive/3/active_plausible.none,The man drove the truck.,none,,,,,1
+chen2023,chen2023/active_passive/3/active_implausible.none,chen2023/active_passive/3/passive_plausible.none,The truck was driven by the man.,sub,sub,drove,was driven by,2,1
+chen2023,chen2023/active_passive/3/passive_implausible.none,chen2023/active_passive/3/active_plausible.none,The man drove the truck.,sub,sub,was driven by,drove,2,1
+chen2023,chen2023/active_passive/3/passive_plausible.none,chen2023/active_passive/3/passive_plausible.none,The truck was driven by the man.,none,,,,,1
+chen2023,chen2023/active_passive/4/active_plausible.none,chen2023/active_passive/4/active_plausible.none,The secretary licked the stamp.,none,,,,,1
+chen2023,chen2023/active_passive/4/active_implausible.none,chen2023/active_passive/4/passive_plausible.none,The stamp was licked by the secretary.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/4/passive_implausible.none,chen2023/active_passive/4/active_plausible.none,The secretary licked the stamp.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/4/passive_plausible.none,chen2023/active_passive/4/passive_plausible.none,The stamp was licked by the secretary.,none,,,,,1
+chen2023,chen2023/active_passive/5/active_plausible.none,chen2023/active_passive/5/active_plausible.none,The mother set the table.,none,,,,,1
+chen2023,chen2023/active_passive/5/active_implausible.none,chen2023/active_passive/5/passive_plausible.none,The table was set by the mother.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/5/passive_implausible.none,chen2023/active_passive/5/active_plausible.none,The mother set the table.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/5/passive_plausible.none,chen2023/active_passive/5/passive_plausible.none,The table was set by the mother.,none,,,,,1
+chen2023,chen2023/active_passive/6/active_plausible.none,chen2023/active_passive/6/active_plausible.none,The daughter folded the blanket.,none,,,,,1
+chen2023,chen2023/active_passive/6/active_implausible.none,chen2023/active_passive/6/passive_plausible.none,The blanket was folded by the daughter.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/6/passive_implausible.none,chen2023/active_passive/6/active_plausible.none,The daughter folded the blanket.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/6/passive_plausible.none,chen2023/active_passive/6/passive_plausible.none,The blanket was folded by the daughter.,none,,,,,1
+chen2023,chen2023/active_passive/7/active_plausible.none,chen2023/active_passive/7/active_plausible.none,The father sharpened the saw.,none,,,,,1
+chen2023,chen2023/active_passive/7/active_implausible.none,chen2023/active_passive/7/passive_plausible.none,The saw was sharpened by the father.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/7/passive_implausible.none,chen2023/active_passive/7/active_plausible.none,The father sharpened the saw.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/7/passive_plausible.none,chen2023/active_passive/7/passive_plausible.none,The saw was sharpened by the father.,none,,,,,1
+chen2023,chen2023/active_passive/8/active_plausible.none,chen2023/active_passive/8/active_plausible.none,The niece opened the door.,none,,,,,1
+chen2023,chen2023/active_passive/8/active_implausible.none,chen2023/active_passive/8/passive_plausible.none,The door was opened by the niece.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/8/passive_implausible.none,chen2023/active_passive/8/active_plausible.none,The niece opened the door.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/8/passive_plausible.none,chen2023/active_passive/8/passive_plausible.none,The door was opened by the niece.,none,,,,,1
+chen2023,chen2023/active_passive/9/active_plausible.none,chen2023/active_passive/9/active_plausible.none,The boy ate the pizza.,none,,,,,1
+chen2023,chen2023/active_passive/9/active_implausible.none,chen2023/active_passive/9/passive_plausible.none,The pizza was eaten by the boy.,sub,sub,ate,was eaten by,2,1
+chen2023,chen2023/active_passive/9/passive_implausible.none,chen2023/active_passive/9/active_plausible.none,The boy ate the pizza.,sub,sub,was eaten by,ate,2,1
+chen2023,chen2023/active_passive/9/passive_plausible.none,chen2023/active_passive/9/passive_plausible.none,The pizza was eaten by the boy.,none,,,,,1
+chen2023,chen2023/active_passive/10/active_plausible.none,chen2023/active_passive/10/active_plausible.none,The grandfather broke the bowl.,none,,,,,1
+chen2023,chen2023/active_passive/10/active_implausible.none,chen2023/active_passive/10/passive_plausible.none,The bowl was broken by the grandfather.,sub,sub,broke,was broken by,2,1
+chen2023,chen2023/active_passive/10/passive_implausible.none,chen2023/active_passive/10/active_plausible.none,The grandfather broke the bowl.,sub,sub,was broken by,broke,2,1
+chen2023,chen2023/active_passive/10/passive_plausible.none,chen2023/active_passive/10/passive_plausible.none,The bowl was broken by the grandfather.,none,,,,,1
+chen2023,chen2023/active_passive/11/active_plausible.none,chen2023/active_passive/11/active_plausible.none,The woman lost the diamond.,none,,,,,1
+chen2023,chen2023/active_passive/11/active_implausible.none,chen2023/active_passive/11/passive_plausible.none,The diamond was lost by the woman.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/11/passive_implausible.none,chen2023/active_passive/11/active_plausible.none,The woman lost the diamond.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/11/passive_plausible.none,chen2023/active_passive/11/passive_plausible.none,The diamond was lost by the woman.,none,,,,,1
+chen2023,chen2023/active_passive/12/active_plausible.none,chen2023/active_passive/12/active_plausible.none,The grandmother cleaned the oven.,none,,,,,1
+chen2023,chen2023/active_passive/12/active_implausible.none,chen2023/active_passive/12/passive_plausible.none,The oven was cleaned by the grandmother.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/12/passive_implausible.none,chen2023/active_passive/12/active_plausible.none,The grandmother cleaned the oven.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/12/passive_plausible.none,chen2023/active_passive/12/passive_plausible.none,The oven was cleaned by the grandmother.,none,,,,,1
+chen2023,chen2023/active_passive/13/active_plausible.none,chen2023/active_passive/13/active_plausible.none,The electrician stole the hammer.,none,,,,,1
+chen2023,chen2023/active_passive/13/active_implausible.none,chen2023/active_passive/13/passive_plausible.none,The hammer was stolen by the electrician.,sub,sub,stole,was stolen by,2,1
+chen2023,chen2023/active_passive/13/passive_implausible.none,chen2023/active_passive/13/active_plausible.none,The electrician stole the hammer.,sub,sub,was stolen by,stole,2,1
+chen2023,chen2023/active_passive/13/passive_plausible.none,chen2023/active_passive/13/passive_plausible.none,The hammer was stolen by the electrician.,none,,,,,1
+chen2023,chen2023/active_passive/14/active_plausible.none,chen2023/active_passive/14/active_plausible.none,The sister closed the window.,none,,,,,1
+chen2023,chen2023/active_passive/14/active_implausible.none,chen2023/active_passive/14/passive_plausible.none,The window was closed by the sister.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/14/passive_implausible.none,chen2023/active_passive/14/active_plausible.none,The sister closed the window.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/14/passive_plausible.none,chen2023/active_passive/14/passive_plausible.none,The window was closed by the sister.,none,,,,,1
+chen2023,chen2023/active_passive/15/active_plausible.none,chen2023/active_passive/15/active_plausible.none,The grandson sipped the water.,none,,,,,1
+chen2023,chen2023/active_passive/15/active_implausible.none,chen2023/active_passive/15/passive_plausible.none,The water was sipped by the grandson.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/15/passive_implausible.none,chen2023/active_passive/15/active_plausible.none,The grandson sipped the water.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/15/passive_plausible.none,chen2023/active_passive/15/passive_plausible.none,The water was sipped by the grandson.,none,,,,,1
+chen2023,chen2023/active_passive/16/active_plausible.none,chen2023/active_passive/16/active_plausible.none,The granddaughter boarded the train.,none,,,,,1
+chen2023,chen2023/active_passive/16/active_implausible.none,chen2023/active_passive/16/passive_plausible.none,The train was boarded by the granddaughter.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/16/passive_implausible.none,chen2023/active_passive/16/active_plausible.none,The granddaughter boarded the train.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/16/passive_plausible.none,chen2023/active_passive/16/passive_plausible.none,The train was boarded by the granddaughter.,none,,,,,1
+chen2023,chen2023/active_passive/17/active_plausible.none,chen2023/active_passive/17/active_plausible.none,The aunt purchased the book.,none,,,,,1
+chen2023,chen2023/active_passive/17/active_implausible.none,chen2023/active_passive/17/passive_plausible.none,The book was purchased by the aunt.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/17/passive_implausible.none,chen2023/active_passive/17/active_plausible.none,The aunt purchased the book.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/17/passive_plausible.none,chen2023/active_passive/17/passive_plausible.none,The book was purchased by the aunt.,none,,,,,1
+chen2023,chen2023/active_passive/18/active_plausible.none,chen2023/active_passive/18/active_plausible.none,The uncle sailed the boat.,none,,,,,1
+chen2023,chen2023/active_passive/18/active_implausible.none,chen2023/active_passive/18/passive_plausible.none,The boat was sailed by the uncle.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/18/passive_implausible.none,chen2023/active_passive/18/active_plausible.none,The uncle sailed the boat.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/18/passive_plausible.none,chen2023/active_passive/18/passive_plausible.none,The boat was sailed by the uncle.,none,,,,,1
+chen2023,chen2023/active_passive/19/active_plausible.none,chen2023/active_passive/19/active_plausible.none,The wife lit the candle.,none,,,,,1
+chen2023,chen2023/active_passive/19/active_implausible.none,chen2023/active_passive/19/passive_plausible.none,The candle was lit by the wife.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/19/passive_implausible.none,chen2023/active_passive/19/active_plausible.none,The wife lit the candle.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/19/passive_plausible.none,chen2023/active_passive/19/passive_plausible.none,The candle was lit by the wife.,none,,,,,1
+chen2023,chen2023/active_passive/20/active_plausible.none,chen2023/active_passive/20/active_plausible.none,The husband wrote the letter.,none,,,,,1
+chen2023,chen2023/active_passive/20/active_implausible.none,chen2023/active_passive/20/passive_plausible.none,The letter was written by the husband.,sub,sub,wrote,was written by,2,1
+chen2023,chen2023/active_passive/20/passive_implausible.none,chen2023/active_passive/20/active_plausible.none,The husband wrote the letter.,sub,sub,was written by,wrote,2,1
+chen2023,chen2023/active_passive/20/passive_plausible.none,chen2023/active_passive/20/passive_plausible.none,The letter was written by the husband.,none,,,,,1
+chen2023,chen2023/active_passive/1/active_plausible.supportive,chen2023/active_passive/1/active_plausible.supportive,The girl kicked the ball.,none,,,,,1
+chen2023,chen2023/active_passive/1/active_implausible.supportive,chen2023/active_passive/1/passive_plausible.supportive,The ball was kicked by the girl.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/1/passive_implausible.supportive,chen2023/active_passive/1/active_plausible.supportive,The girl kicked the ball.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/1/passive_plausible.supportive,chen2023/active_passive/1/passive_plausible.supportive,The ball was kicked by the girl.,none,,,,,1
+chen2023,chen2023/active_passive/2/active_plausible.supportive,chen2023/active_passive/2/active_plausible.supportive,The plumber bought the watch.,none,,,,,1
+chen2023,chen2023/active_passive/2/active_implausible.supportive,chen2023/active_passive/2/passive_plausible.supportive,The watch was bought by the plumber.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/2/passive_implausible.supportive,chen2023/active_passive/2/active_plausible.supportive,The plumber bought the watch.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/2/passive_plausible.supportive,chen2023/active_passive/2/passive_plausible.supportive,The watch was bought by the plumber.,none,,,,,1
+chen2023,chen2023/active_passive/3/active_plausible.supportive,chen2023/active_passive/3/active_plausible.supportive,The man drove the truck.,none,,,,,1
+chen2023,chen2023/active_passive/3/active_implausible.supportive,chen2023/active_passive/3/passive_plausible.supportive,The truck was driven by the man.,sub,sub,drove,was driven by,2,1
+chen2023,chen2023/active_passive/3/passive_implausible.supportive,chen2023/active_passive/3/active_plausible.supportive,The man drove the truck.,sub,sub,was driven by,drove,2,1
+chen2023,chen2023/active_passive/3/passive_plausible.supportive,chen2023/active_passive/3/passive_plausible.supportive,The truck was driven by the man.,none,,,,,1
+chen2023,chen2023/active_passive/4/active_plausible.supportive,chen2023/active_passive/4/active_plausible.supportive,The secretary licked the stamp.,none,,,,,1
+chen2023,chen2023/active_passive/4/active_implausible.supportive,chen2023/active_passive/4/passive_plausible.supportive,The stamp was licked by the secretary.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/4/passive_implausible.supportive,chen2023/active_passive/4/active_plausible.supportive,The secretary licked the stamp.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/4/passive_plausible.supportive,chen2023/active_passive/4/passive_plausible.supportive,The stamp was licked by the secretary.,none,,,,,1
+chen2023,chen2023/active_passive/5/active_plausible.supportive,chen2023/active_passive/5/active_plausible.supportive,The mother set the table.,none,,,,,1
+chen2023,chen2023/active_passive/5/active_implausible.supportive,chen2023/active_passive/5/passive_plausible.supportive,The table was set by the mother.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/5/passive_implausible.supportive,chen2023/active_passive/5/active_plausible.supportive,The mother set the table.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/5/passive_plausible.supportive,chen2023/active_passive/5/passive_plausible.supportive,The table was set by the mother.,none,,,,,1
+chen2023,chen2023/active_passive/6/active_plausible.supportive,chen2023/active_passive/6/active_plausible.supportive,The daughter folded the blanket.,none,,,,,1
+chen2023,chen2023/active_passive/6/active_implausible.supportive,chen2023/active_passive/6/passive_plausible.supportive,The blanket was folded by the daughter.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/6/passive_implausible.supportive,chen2023/active_passive/6/active_plausible.supportive,The daughter folded the blanket.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/6/passive_plausible.supportive,chen2023/active_passive/6/passive_plausible.supportive,The blanket was folded by the daughter.,none,,,,,1
+chen2023,chen2023/active_passive/7/active_plausible.supportive,chen2023/active_passive/7/active_plausible.supportive,The father sharpened the saw.,none,,,,,1
+chen2023,chen2023/active_passive/7/active_implausible.supportive,chen2023/active_passive/7/passive_plausible.supportive,The saw was sharpened by the father.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/7/passive_implausible.supportive,chen2023/active_passive/7/active_plausible.supportive,The father sharpened the saw.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/7/passive_plausible.supportive,chen2023/active_passive/7/passive_plausible.supportive,The saw was sharpened by the father.,none,,,,,1
+chen2023,chen2023/active_passive/8/active_plausible.supportive,chen2023/active_passive/8/active_plausible.supportive,The niece opened the door.,none,,,,,1
+chen2023,chen2023/active_passive/8/active_implausible.supportive,chen2023/active_passive/8/passive_plausible.supportive,The door was opened by the niece.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/8/passive_implausible.supportive,chen2023/active_passive/8/active_plausible.supportive,The niece opened the door.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/8/passive_plausible.supportive,chen2023/active_passive/8/passive_plausible.supportive,The door was opened by the niece.,none,,,,,1
+chen2023,chen2023/active_passive/9/active_plausible.supportive,chen2023/active_passive/9/active_plausible.supportive,The boy ate the pizza.,none,,,,,1
+chen2023,chen2023/active_passive/9/active_implausible.supportive,chen2023/active_passive/9/passive_plausible.supportive,The pizza was eaten by the boy.,sub,sub,ate,was eaten by,2,1
+chen2023,chen2023/active_passive/9/passive_implausible.supportive,chen2023/active_passive/9/active_plausible.supportive,The boy ate the pizza.,sub,sub,was eaten by,ate,2,1
+chen2023,chen2023/active_passive/9/passive_plausible.supportive,chen2023/active_passive/9/passive_plausible.supportive,The pizza was eaten by the boy.,none,,,,,1
+chen2023,chen2023/active_passive/10/active_plausible.supportive,chen2023/active_passive/10/active_plausible.supportive,The grandfather broke the bowl.,none,,,,,1
+chen2023,chen2023/active_passive/10/active_implausible.supportive,chen2023/active_passive/10/passive_plausible.supportive,The bowl was broken by the grandfather.,sub,sub,broke,was broken by,2,1
+chen2023,chen2023/active_passive/10/passive_implausible.supportive,chen2023/active_passive/10/active_plausible.supportive,The grandfather broke the bowl.,sub,sub,was broken by,broke,2,1
+chen2023,chen2023/active_passive/10/passive_plausible.supportive,chen2023/active_passive/10/passive_plausible.supportive,The bowl was broken by the grandfather.,none,,,,,1
+chen2023,chen2023/active_passive/11/active_plausible.supportive,chen2023/active_passive/11/active_plausible.supportive,The woman lost the diamond.,none,,,,,1
+chen2023,chen2023/active_passive/11/active_implausible.supportive,chen2023/active_passive/11/passive_plausible.supportive,The diamond was lost by the woman.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/11/passive_implausible.supportive,chen2023/active_passive/11/active_plausible.supportive,The woman lost the diamond.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/11/passive_plausible.supportive,chen2023/active_passive/11/passive_plausible.supportive,The diamond was lost by the woman.,none,,,,,1
+chen2023,chen2023/active_passive/12/active_plausible.supportive,chen2023/active_passive/12/active_plausible.supportive,The grandmother cleaned the oven.,none,,,,,1
+chen2023,chen2023/active_passive/12/active_implausible.supportive,chen2023/active_passive/12/passive_plausible.supportive,The oven was cleaned by the grandmother.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/12/passive_implausible.supportive,chen2023/active_passive/12/active_plausible.supportive,The grandmother cleaned the oven.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/12/passive_plausible.supportive,chen2023/active_passive/12/passive_plausible.supportive,The oven was cleaned by the grandmother.,none,,,,,1
+chen2023,chen2023/active_passive/13/active_plausible.supportive,chen2023/active_passive/13/active_plausible.supportive,The electrician stole the hammer.,none,,,,,1
+chen2023,chen2023/active_passive/13/active_implausible.supportive,chen2023/active_passive/13/passive_plausible.supportive,The hammer was stolen by the electrician.,sub,sub,stole,was stolen by,2,1
+chen2023,chen2023/active_passive/13/passive_implausible.supportive,chen2023/active_passive/13/active_plausible.supportive,The electrician stole the hammer.,sub,sub,was stolen by,stole,2,1
+chen2023,chen2023/active_passive/13/passive_plausible.supportive,chen2023/active_passive/13/passive_plausible.supportive,The hammer was stolen by the electrician.,none,,,,,1
+chen2023,chen2023/active_passive/14/active_plausible.supportive,chen2023/active_passive/14/active_plausible.supportive,The sister closed the window.,none,,,,,1
+chen2023,chen2023/active_passive/14/active_implausible.supportive,chen2023/active_passive/14/passive_plausible.supportive,The window was closed by the sister.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/14/passive_implausible.supportive,chen2023/active_passive/14/active_plausible.supportive,The sister closed the window.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/14/passive_plausible.supportive,chen2023/active_passive/14/passive_plausible.supportive,The window was closed by the sister.,none,,,,,1
+chen2023,chen2023/active_passive/15/active_plausible.supportive,chen2023/active_passive/15/active_plausible.supportive,The grandson sipped the water.,none,,,,,1
+chen2023,chen2023/active_passive/15/active_implausible.supportive,chen2023/active_passive/15/passive_plausible.supportive,The water was sipped by the grandson.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/15/passive_implausible.supportive,chen2023/active_passive/15/active_plausible.supportive,The grandson sipped the water.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/15/passive_plausible.supportive,chen2023/active_passive/15/passive_plausible.supportive,The water was sipped by the grandson.,none,,,,,1
+chen2023,chen2023/active_passive/16/active_plausible.supportive,chen2023/active_passive/16/active_plausible.supportive,The granddaughter boarded the train.,none,,,,,1
+chen2023,chen2023/active_passive/16/active_implausible.supportive,chen2023/active_passive/16/passive_plausible.supportive,The train was boarded by the granddaughter.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/16/passive_implausible.supportive,chen2023/active_passive/16/active_plausible.supportive,The granddaughter boarded the train.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/16/passive_plausible.supportive,chen2023/active_passive/16/passive_plausible.supportive,The train was boarded by the granddaughter.,none,,,,,1
+chen2023,chen2023/active_passive/17/active_plausible.supportive,chen2023/active_passive/17/active_plausible.supportive,The aunt purchased the book.,none,,,,,1
+chen2023,chen2023/active_passive/17/active_implausible.supportive,chen2023/active_passive/17/passive_plausible.supportive,The book was purchased by the aunt.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/17/passive_implausible.supportive,chen2023/active_passive/17/active_plausible.supportive,The aunt purchased the book.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/17/passive_plausible.supportive,chen2023/active_passive/17/passive_plausible.supportive,The book was purchased by the aunt.,none,,,,,1
+chen2023,chen2023/active_passive/18/active_plausible.supportive,chen2023/active_passive/18/active_plausible.supportive,The uncle sailed the boat.,none,,,,,1
+chen2023,chen2023/active_passive/18/active_implausible.supportive,chen2023/active_passive/18/passive_plausible.supportive,The boat was sailed by the uncle.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/18/passive_implausible.supportive,chen2023/active_passive/18/active_plausible.supportive,The uncle sailed the boat.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/18/passive_plausible.supportive,chen2023/active_passive/18/passive_plausible.supportive,The boat was sailed by the uncle.,none,,,,,1
+chen2023,chen2023/active_passive/19/active_plausible.supportive,chen2023/active_passive/19/active_plausible.supportive,The wife lit the candle.,none,,,,,1
+chen2023,chen2023/active_passive/19/active_implausible.supportive,chen2023/active_passive/19/passive_plausible.supportive,The candle was lit by the wife.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/19/passive_implausible.supportive,chen2023/active_passive/19/active_plausible.supportive,The wife lit the candle.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/19/passive_plausible.supportive,chen2023/active_passive/19/passive_plausible.supportive,The candle was lit by the wife.,none,,,,,1
+chen2023,chen2023/active_passive/20/active_plausible.supportive,chen2023/active_passive/20/active_plausible.supportive,The husband wrote the letter.,none,,,,,1
+chen2023,chen2023/active_passive/20/active_implausible.supportive,chen2023/active_passive/20/passive_plausible.supportive,The letter was written by the husband.,sub,sub,wrote,was written by,2,1
+chen2023,chen2023/active_passive/20/passive_implausible.supportive,chen2023/active_passive/20/active_plausible.supportive,The husband wrote the letter.,sub,sub,was written by,wrote,2,1
+chen2023,chen2023/active_passive/20/passive_plausible.supportive,chen2023/active_passive/20/passive_plausible.supportive,The letter was written by the husband.,none,,,,,1
+chen2023,chen2023/active_passive/1/active_plausible.non_supportive,chen2023/active_passive/1/active_plausible.non_supportive,The girl kicked the ball.,none,,,,,1
+chen2023,chen2023/active_passive/1/active_implausible.non_supportive,chen2023/active_passive/1/passive_plausible.non_supportive,The ball was kicked by the girl.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/1/passive_implausible.non_supportive,chen2023/active_passive/1/active_plausible.non_supportive,The girl kicked the ball.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/1/passive_plausible.non_supportive,chen2023/active_passive/1/passive_plausible.non_supportive,The ball was kicked by the girl.,none,,,,,1
+chen2023,chen2023/active_passive/2/active_plausible.non_supportive,chen2023/active_passive/2/active_plausible.non_supportive,The plumber bought the watch.,none,,,,,1
+chen2023,chen2023/active_passive/2/active_implausible.non_supportive,chen2023/active_passive/2/passive_plausible.non_supportive,The watch was bought by the plumber.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/2/passive_implausible.non_supportive,chen2023/active_passive/2/active_plausible.non_supportive,The plumber bought the watch.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/2/passive_plausible.non_supportive,chen2023/active_passive/2/passive_plausible.non_supportive,The watch was bought by the plumber.,none,,,,,1
+chen2023,chen2023/active_passive/3/active_plausible.non_supportive,chen2023/active_passive/3/active_plausible.non_supportive,The man drove the truck.,none,,,,,1
+chen2023,chen2023/active_passive/3/active_implausible.non_supportive,chen2023/active_passive/3/passive_plausible.non_supportive,The truck was driven by the man.,sub,sub,drove,was driven by,2,1
+chen2023,chen2023/active_passive/3/passive_implausible.non_supportive,chen2023/active_passive/3/active_plausible.non_supportive,The man drove the truck.,sub,sub,was driven by,drove,2,1
+chen2023,chen2023/active_passive/3/passive_plausible.non_supportive,chen2023/active_passive/3/passive_plausible.non_supportive,The truck was driven by the man.,none,,,,,1
+chen2023,chen2023/active_passive/4/active_plausible.non_supportive,chen2023/active_passive/4/active_plausible.non_supportive,The secretary licked the stamp.,none,,,,,1
+chen2023,chen2023/active_passive/4/active_implausible.non_supportive,chen2023/active_passive/4/passive_plausible.non_supportive,The stamp was licked by the secretary.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/4/passive_implausible.non_supportive,chen2023/active_passive/4/active_plausible.non_supportive,The secretary licked the stamp.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/4/passive_plausible.non_supportive,chen2023/active_passive/4/passive_plausible.non_supportive,The stamp was licked by the secretary.,none,,,,,1
+chen2023,chen2023/active_passive/5/active_plausible.non_supportive,chen2023/active_passive/5/active_plausible.non_supportive,The mother set the table.,none,,,,,1
+chen2023,chen2023/active_passive/5/active_implausible.non_supportive,chen2023/active_passive/5/passive_plausible.non_supportive,The table was set by the mother.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/5/passive_implausible.non_supportive,chen2023/active_passive/5/active_plausible.non_supportive,The mother set the table.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/5/passive_plausible.non_supportive,chen2023/active_passive/5/passive_plausible.non_supportive,The table was set by the mother.,none,,,,,1
+chen2023,chen2023/active_passive/6/active_plausible.non_supportive,chen2023/active_passive/6/active_plausible.non_supportive,The daughter folded the blanket.,none,,,,,1
+chen2023,chen2023/active_passive/6/active_implausible.non_supportive,chen2023/active_passive/6/passive_plausible.non_supportive,The blanket was folded by the daughter.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/6/passive_implausible.non_supportive,chen2023/active_passive/6/active_plausible.non_supportive,The daughter folded the blanket.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/6/passive_plausible.non_supportive,chen2023/active_passive/6/passive_plausible.non_supportive,The blanket was folded by the daughter.,none,,,,,1
+chen2023,chen2023/active_passive/7/active_plausible.non_supportive,chen2023/active_passive/7/active_plausible.non_supportive,The father sharpened the saw.,none,,,,,1
+chen2023,chen2023/active_passive/7/active_implausible.non_supportive,chen2023/active_passive/7/passive_plausible.non_supportive,The saw was sharpened by the father.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/7/passive_implausible.non_supportive,chen2023/active_passive/7/active_plausible.non_supportive,The father sharpened the saw.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/7/passive_plausible.non_supportive,chen2023/active_passive/7/passive_plausible.non_supportive,The saw was sharpened by the father.,none,,,,,1
+chen2023,chen2023/active_passive/8/active_plausible.non_supportive,chen2023/active_passive/8/active_plausible.non_supportive,The niece opened the door.,none,,,,,1
+chen2023,chen2023/active_passive/8/active_implausible.non_supportive,chen2023/active_passive/8/passive_plausible.non_supportive,The door was opened by the niece.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/8/passive_implausible.non_supportive,chen2023/active_passive/8/active_plausible.non_supportive,The niece opened the door.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/8/passive_plausible.non_supportive,chen2023/active_passive/8/passive_plausible.non_supportive,The door was opened by the niece.,none,,,,,1
+chen2023,chen2023/active_passive/9/active_plausible.non_supportive,chen2023/active_passive/9/active_plausible.non_supportive,The boy ate the pizza.,none,,,,,1
+chen2023,chen2023/active_passive/9/active_implausible.non_supportive,chen2023/active_passive/9/passive_plausible.non_supportive,The pizza was eaten by the boy.,sub,sub,ate,was eaten by,2,1
+chen2023,chen2023/active_passive/9/passive_implausible.non_supportive,chen2023/active_passive/9/active_plausible.non_supportive,The boy ate the pizza.,sub,sub,was eaten by,ate,2,1
+chen2023,chen2023/active_passive/9/passive_plausible.non_supportive,chen2023/active_passive/9/passive_plausible.non_supportive,The pizza was eaten by the boy.,none,,,,,1
+chen2023,chen2023/active_passive/10/active_plausible.non_supportive,chen2023/active_passive/10/active_plausible.non_supportive,The grandfather broke the bowl.,none,,,,,1
+chen2023,chen2023/active_passive/10/active_implausible.non_supportive,chen2023/active_passive/10/passive_plausible.non_supportive,The bowl was broken by the grandfather.,sub,sub,broke,was broken by,2,1
+chen2023,chen2023/active_passive/10/passive_implausible.non_supportive,chen2023/active_passive/10/active_plausible.non_supportive,The grandfather broke the bowl.,sub,sub,was broken by,broke,2,1
+chen2023,chen2023/active_passive/10/passive_plausible.non_supportive,chen2023/active_passive/10/passive_plausible.non_supportive,The bowl was broken by the grandfather.,none,,,,,1
+chen2023,chen2023/active_passive/11/active_plausible.non_supportive,chen2023/active_passive/11/active_plausible.non_supportive,The woman lost the diamond.,none,,,,,1
+chen2023,chen2023/active_passive/11/active_implausible.non_supportive,chen2023/active_passive/11/passive_plausible.non_supportive,The diamond was lost by the woman.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/11/passive_implausible.non_supportive,chen2023/active_passive/11/active_plausible.non_supportive,The woman lost the diamond.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/11/passive_plausible.non_supportive,chen2023/active_passive/11/passive_plausible.non_supportive,The diamond was lost by the woman.,none,,,,,1
+chen2023,chen2023/active_passive/12/active_plausible.non_supportive,chen2023/active_passive/12/active_plausible.non_supportive,The grandmother cleaned the oven.,none,,,,,1
+chen2023,chen2023/active_passive/12/active_implausible.non_supportive,chen2023/active_passive/12/passive_plausible.non_supportive,The oven was cleaned by the grandmother.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/12/passive_implausible.non_supportive,chen2023/active_passive/12/active_plausible.non_supportive,The grandmother cleaned the oven.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/12/passive_plausible.non_supportive,chen2023/active_passive/12/passive_plausible.non_supportive,The oven was cleaned by the grandmother.,none,,,,,1
+chen2023,chen2023/active_passive/13/active_plausible.non_supportive,chen2023/active_passive/13/active_plausible.non_supportive,The electrician stole the hammer.,none,,,,,1
+chen2023,chen2023/active_passive/13/active_implausible.non_supportive,chen2023/active_passive/13/passive_plausible.non_supportive,The hammer was stolen by the electrician.,sub,sub,stole,was stolen by,2,1
+chen2023,chen2023/active_passive/13/passive_implausible.non_supportive,chen2023/active_passive/13/active_plausible.non_supportive,The electrician stole the hammer.,sub,sub,was stolen by,stole,2,1
+chen2023,chen2023/active_passive/13/passive_plausible.non_supportive,chen2023/active_passive/13/passive_plausible.non_supportive,The hammer was stolen by the electrician.,none,,,,,1
+chen2023,chen2023/active_passive/14/active_plausible.non_supportive,chen2023/active_passive/14/active_plausible.non_supportive,The sister closed the window.,none,,,,,1
+chen2023,chen2023/active_passive/14/active_implausible.non_supportive,chen2023/active_passive/14/passive_plausible.non_supportive,The window was closed by the sister.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/14/passive_implausible.non_supportive,chen2023/active_passive/14/active_plausible.non_supportive,The sister closed the window.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/14/passive_plausible.non_supportive,chen2023/active_passive/14/passive_plausible.non_supportive,The window was closed by the sister.,none,,,,,1
+chen2023,chen2023/active_passive/15/active_plausible.non_supportive,chen2023/active_passive/15/active_plausible.non_supportive,The grandson sipped the water.,none,,,,,1
+chen2023,chen2023/active_passive/15/active_implausible.non_supportive,chen2023/active_passive/15/passive_plausible.non_supportive,The water was sipped by the grandson.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/15/passive_implausible.non_supportive,chen2023/active_passive/15/active_plausible.non_supportive,The grandson sipped the water.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/15/passive_plausible.non_supportive,chen2023/active_passive/15/passive_plausible.non_supportive,The water was sipped by the grandson.,none,,,,,1
+chen2023,chen2023/active_passive/16/active_plausible.non_supportive,chen2023/active_passive/16/active_plausible.non_supportive,The granddaughter boarded the train.,none,,,,,1
+chen2023,chen2023/active_passive/16/active_implausible.non_supportive,chen2023/active_passive/16/passive_plausible.non_supportive,The train was boarded by the granddaughter.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/16/passive_implausible.non_supportive,chen2023/active_passive/16/active_plausible.non_supportive,The granddaughter boarded the train.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/16/passive_plausible.non_supportive,chen2023/active_passive/16/passive_plausible.non_supportive,The train was boarded by the granddaughter.,none,,,,,1
+chen2023,chen2023/active_passive/17/active_plausible.non_supportive,chen2023/active_passive/17/active_plausible.non_supportive,The aunt purchased the book.,none,,,,,1
+chen2023,chen2023/active_passive/17/active_implausible.non_supportive,chen2023/active_passive/17/passive_plausible.non_supportive,The book was purchased by the aunt.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/17/passive_implausible.non_supportive,chen2023/active_passive/17/active_plausible.non_supportive,The aunt purchased the book.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/17/passive_plausible.non_supportive,chen2023/active_passive/17/passive_plausible.non_supportive,The book was purchased by the aunt.,none,,,,,1
+chen2023,chen2023/active_passive/18/active_plausible.non_supportive,chen2023/active_passive/18/active_plausible.non_supportive,The uncle sailed the boat.,none,,,,,1
+chen2023,chen2023/active_passive/18/active_implausible.non_supportive,chen2023/active_passive/18/passive_plausible.non_supportive,The boat was sailed by the uncle.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/18/passive_implausible.non_supportive,chen2023/active_passive/18/active_plausible.non_supportive,The uncle sailed the boat.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/18/passive_plausible.non_supportive,chen2023/active_passive/18/passive_plausible.non_supportive,The boat was sailed by the uncle.,none,,,,,1
+chen2023,chen2023/active_passive/19/active_plausible.non_supportive,chen2023/active_passive/19/active_plausible.non_supportive,The wife lit the candle.,none,,,,,1
+chen2023,chen2023/active_passive/19/active_implausible.non_supportive,chen2023/active_passive/19/passive_plausible.non_supportive,The candle was lit by the wife.,multi,ins;ins,,was,,1
+chen2023,chen2023/active_passive/19/passive_implausible.non_supportive,chen2023/active_passive/19/active_plausible.non_supportive,The wife lit the candle.,multi,del;del,was,,2,1
+chen2023,chen2023/active_passive/19/passive_plausible.non_supportive,chen2023/active_passive/19/passive_plausible.non_supportive,The candle was lit by the wife.,none,,,,,1
+chen2023,chen2023/active_passive/20/active_plausible.non_supportive,chen2023/active_passive/20/active_plausible.non_supportive,The husband wrote the letter.,none,,,,,1
+chen2023,chen2023/active_passive/20/active_implausible.non_supportive,chen2023/active_passive/20/passive_plausible.non_supportive,The letter was written by the husband.,sub,sub,wrote,was written by,2,1
+chen2023,chen2023/active_passive/20/passive_implausible.non_supportive,chen2023/active_passive/20/active_plausible.non_supportive,The husband wrote the letter.,sub,sub,was written by,wrote,2,1
+chen2023,chen2023/active_passive/20/passive_plausible.non_supportive,chen2023/active_passive/20/passive_plausible.non_supportive,The letter was written by the husband.,none,,,,,1

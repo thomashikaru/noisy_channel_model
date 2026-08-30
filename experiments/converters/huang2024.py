@@ -59,7 +59,7 @@ def convert():
             sentence_norm=normalize(r["Sentence"]),
             model_input=model_input,
             contrast="disambiguator",
-            intended_uid=uid("huang2024", r["item"], f"{construction}_UAMB"),
+            intended_uids=[uid("huang2024", r["item"], f"{construction}_UAMB")],
             critical_word_idx=idx,
             meta={
                 "construction": construction,

@@ -70,6 +70,8 @@ is recorded alongside for human orientation; the commit carrying the manifest is
 - **`<dataset>.stimuli.csv`** — one row per (item, condition) in the common schema below.
 - **`<dataset>.input.jsonl`** — what the model actually reads: the unique `(context, model_input)` pairs,
   one JSON record per line, `{"sentence_id", "text", "context"}`.
+- **`<dataset>.repairs.csv`** — one row per (stimulus, admissible repair): `intended_uid`,
+  `intended_text`, `edit_type`, `edit_ops`, `edit_from`, `edit_to`, `edit_obs_idx`.
 
 plus `smoke.*` (one item per phenomenon, for the pipeline smoke test), `probe.*` (the worst case for
 runtime and memory, for the cost probe) and `MANIFEST.json`.
@@ -94,9 +96,8 @@ discarded.
 | `sentence_id` | index into `<dataset>.input.jsonl`; rows with identical `(context, model_input)` share one |
 | `plausibility`, `is_grammatical` | whichever the study manipulates; empty when it manipulates neither |
 | `contrast` | the **design-level** relation to the counterpart (see below) |
-| `intended_uid`, `intended_text` | the counterpart row and its `model_input`; empty when the design defines none |
-| `edit_type`, `edit_ops`, `edit_from`, `edit_to` | the **word-level** difference from difflib |
-| `critical_word_idx` | 0-based index into `model_input`'s whitespace tokens |
+| `intended_uids`, `n_intended` | every reading a noisy-channel reader could recover, `;`-joined, **with no ordering or primacy**; empty when the design defines none. The per-repair detail is in `<dataset>.repairs.csv` |
+| `critical_word_idx` | 0-based index into `model_input`'s whitespace tokens; empty when the repairs disagree about which word is at fault (all 240 ungrammatical qian2023 rows) |
 | `comprehension_q`, `correct_answer` | gibson2013 / chen2023 / tabor2004 — a normative answer key, not human data |
 | `meta` | JSON of the dataset-specific source columns |
 
@@ -199,22 +200,24 @@ disagrees" from "the model was never asked".
 | chen2023 | 0/30 | those 30 are the irregular-verb voice pairs, which are multi-word by design |
 | gibson2013, tabor2004, moses | — | their repairs are insertions/deletions, not substitutions |
 
-### qian2023 encodes the harder of two repairs
+### qian2023 admits two repairs, and neither is "the" intended one
 
-An ungrammatical qian row admits two readings, and they are not equally reachable:
+An ungrammatical qian row is genuinely ambiguous about which word carries the error:
 
 ```
-observed   The gifts for the kid is hidden under the bed.
-A (encoded)  fix the VERB   -> "...the kid are hidden..."     is -> are     reachable  38/240
-B            fix the NOUN   -> "The gift for the kid is..."   gifts -> gift reachable 234/240
+observed   The gifts for the kid is hidden under the bed.        (cond "pss")
+verb       The gifts for the kid are hidden under the bed.       is -> are      reachable  38/240
+noun       The gift  for the kid is  hidden under the bed.       gifts -> gift  reachable 234/240
 ```
 
-`intended_uid` currently encodes **A**, following the plan's "verb number := N1 number". Both are
-legitimate noisy-channel readings — B is arguably the more standard account of agreement attraction, where
-the reader mis-perceives the noun's number — but the substitution channel can essentially only propose B.
-An analysis that scores qian2023 against A alone will read as a near-total failure for reasons that have
-nothing to do with the model's inferences. **This is an open decision, not a settled one**; `reachability.json`
-records both counts so it stays visible.
+`intended_uids` carries **both**, with nothing ranking them, and `critical_word_idx` is empty for these
+rows because the two readings blame different words. An analysis that wants a single target must say so
+and say why.
+
+The two are very unevenly reachable by the substitution channel, but that is a fact about the model, not a
+reason to call one correct. Counting per stimulus rather than per repair, **236 of 240** ungrammatical rows
+have at least one repair the channel can propose — the apparent 16 % ceiling was an artifact of scoring
+only the verb route.
 
 ## Known defects in the published materials
 

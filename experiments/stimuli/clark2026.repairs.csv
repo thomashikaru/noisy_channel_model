@@ -1,0 +1,217 @@
+dataset,stim_uid,intended_uid,intended_text,edit_type,edit_ops,edit_from,edit_to,edit_obs_idx,n_repairs_for_stim
+clark2026,clark2026//0/1.1,clark2026//0/1.1,The boy kicked the big round ball into the net.,none,,,,,1
+clark2026,clark2026//0/1.2,clark2026//0/2.2,The boy licked the big round lollipop with delight.,sub,sub,kicked,licked,2,1
+clark2026,clark2026//0/2.1,clark2026//0/1.1,The boy kicked the big round ball into the net.,sub,sub,licked,kicked,2,1
+clark2026,clark2026//0/2.2,clark2026//0/2.2,The boy licked the big round lollipop with delight.,none,,,,,1
+clark2026,clark2026//0/Typo1.1,clark2026//0/1.1,The boy kicked the big round ball into the net.,sub,sub,kjcked,kicked,2,1
+clark2026,clark2026//0/Typo2.2,clark2026//0/2.2,The boy licked the big round lollipop with delight.,sub,sub,ljcked,licked,2,1
+clark2026,clark2026//1/1.1,clark2026//1/1.1,His band was apparently no longer performing live.,none,,,,,1
+clark2026,clark2026//1/1.2,clark2026//1/2.2,His hand was apparently no longer bandaged tightly.,sub,sub,band,hand,1,1
+clark2026,clark2026//1/2.1,clark2026//1/1.1,His band was apparently no longer performing live.,sub,sub,hand,band,1,1
+clark2026,clark2026//1/2.2,clark2026//1/2.2,His hand was apparently no longer bandaged tightly.,none,,,,,1
+clark2026,clark2026//1/Typo1.1,clark2026//1/1.1,His band was apparently no longer performing live.,sub,sub,bnd,band,1,1
+clark2026,clark2026//1/Typo2.2,clark2026//1/2.2,His hand was apparently no longer bandaged tightly.,sub,sub,hnd,hand,1,1
+clark2026,clark2026//2/1.1,clark2026//2/1.1,In the base were a wide range of soldiers from all over.,none,,,,,1
+clark2026,clark2026//2/1.2,clark2026//2/2.2,In the vase were a wide range of flowers from my mom.,sub,sub,base,vase,2,1
+clark2026,clark2026//2/2.1,clark2026//2/1.1,In the base were a wide range of soldiers from all over.,sub,sub,vase,base,2,1
+clark2026,clark2026//2/2.2,clark2026//2/2.2,In the vase were a wide range of flowers from my mom.,none,,,,,1
+clark2026,clark2026//2/Typo1.1,clark2026//2/1.1,In the base were a wide range of soldiers from all over.,sub,sub,basse,base,2,1
+clark2026,clark2026//2/Typo2.2,clark2026//2/2.2,In the vase were a wide range of flowers from my mom.,sub,sub,vasse,vase,2,1
+clark2026,clark2026//3/1.1,clark2026//3/1.1,She got a lovely fan while spending some time in the gift shop this morning.,none,,,,,1
+clark2026,clark2026//3/1.2,clark2026//3/2.2,She got a lovely tan while spending some time in the sun over the holidays.,sub,sub,fan,tan,4,1
+clark2026,clark2026//3/2.1,clark2026//3/1.1,She got a lovely fan while spending some time in the gift shop this morning.,sub,sub,tan,fan,4,1
+clark2026,clark2026//3/2.2,clark2026//3/2.2,She got a lovely tan while spending some time in the sun over the holidays.,none,,,,,1
+clark2026,clark2026//3/Typo1.1,clark2026//3/1.1,She got a lovely fan while spending some time in the gift shop this morning.,sub,sub,faan,fan,4,1
+clark2026,clark2026//3/Typo2.2,clark2026//3/2.2,She got a lovely tan while spending some time in the sun over the holidays.,sub,sub,taan,tan,4,1
+clark2026,clark2026//4/1.1,clark2026//4/1.1,The car that was provided by the dealer was excellent.,none,,,,,1
+clark2026,clark2026//4/1.2,clark2026//4/2.2,The care that was provided by the doctor was excellent.,sub,sub,car,care,1,1
+clark2026,clark2026//4/2.1,clark2026//4/1.1,The car that was provided by the dealer was excellent.,sub,sub,care,car,1,1
+clark2026,clark2026//4/2.2,clark2026//4/2.2,The care that was provided by the doctor was excellent.,none,,,,,1
+clark2026,clark2026//4/Typo1.1,clark2026//4/1.1,The car that was provided by the dealer was excellent.,sub,sub,cxar,car,1,1
+clark2026,clark2026//4/Typo2.2,clark2026//4/2.2,The care that was provided by the doctor was excellent.,sub,sub,cxare,care,1,1
+clark2026,clark2026//5/1.1,clark2026//5/1.1,The doctor wired the heavily sedated patient's jaws shut during the surgery.,none,,,,,1
+clark2026,clark2026//5/1.2,clark2026//5/2.2,The doctor wiped the heavily sedated patient's blood off during the surgery.,sub,sub,wired,wiped,2,1
+clark2026,clark2026//5/2.1,clark2026//5/1.1,The doctor wired the heavily sedated patient's jaws shut during the surgery.,sub,sub,wiped,wired,2,1
+clark2026,clark2026//5/2.2,clark2026//5/2.2,The doctor wiped the heavily sedated patient's blood off during the surgery.,none,,,,,1
+clark2026,clark2026//5/Typo1.1,clark2026//5/1.1,The doctor wired the heavily sedated patient's jaws shut during the surgery.,sub,sub,wjred,wired,2,1
+clark2026,clark2026//5/Typo2.2,clark2026//5/2.2,The doctor wiped the heavily sedated patient's blood off during the surgery.,sub,sub,wjped,wiped,2,1
+clark2026,clark2026//6/1.1,clark2026//6/1.1,Can you please dip that big black brush into the paint?,none,,,,,1
+clark2026,clark2026//6/1.2,clark2026//6/2.2,Can you please zip that big black bag up?,sub,sub,dip,zip,3,1
+clark2026,clark2026//6/2.1,clark2026//6/1.1,Can you please dip that big black brush into the paint?,sub,sub,zip,dip,3,1
+clark2026,clark2026//6/2.2,clark2026//6/2.2,Can you please zip that big black bag up?,none,,,,,1
+clark2026,clark2026//6/Typo1.1,clark2026//6/1.1,Can you please dip that big black brush into the paint?,sub,sub,djp,dip,3,1
+clark2026,clark2026//6/Typo2.2,clark2026//6/2.2,Can you please zip that big black bag up?,sub,sub,zjp,zip,3,1
+clark2026,clark2026//7/1.1,clark2026//7/1.1,The student scored a very difficult goal with a header.,none,,,,,1
+clark2026,clark2026//7/1.2,clark2026//7/2.2,The student scared a very difficult teacher with a prank.,sub,sub,scored,scared,2,1
+clark2026,clark2026//7/2.1,clark2026//7/1.1,The student scored a very difficult goal with a header.,sub,sub,scared,scored,2,1
+clark2026,clark2026//7/2.2,clark2026//7/2.2,The student scared a very difficult teacher with a prank.,none,,,,,1
+clark2026,clark2026//7/Typo1.1,clark2026//7/1.1,The student scored a very difficult goal with a header.,sub,sub,scroed,scored,2,1
+clark2026,clark2026//7/Typo2.2,clark2026//7/2.2,The student scared a very difficult teacher with a prank.,sub,sub,scraed,scared,2,1
+clark2026,clark2026//8/1.1,clark2026//8/1.1,The tires were quickly and efficiently pumped up by the mechanic.,none,,,,,1
+clark2026,clark2026//8/1.2,clark2026//8/2.2,The fires were quickly and efficiently extinguished by the firefighters.,sub,sub,tires,fires,1,1
+clark2026,clark2026//8/2.1,clark2026//8/1.1,The tires were quickly and efficiently pumped up by the mechanic.,sub,sub,fires,tires,1,1
+clark2026,clark2026//8/2.2,clark2026//8/2.2,The fires were quickly and efficiently extinguished by the firefighters.,none,,,,,1
+clark2026,clark2026//8/Typo1.1,clark2026//8/1.1,The tires were quickly and efficiently pumped up by the mechanic.,sub,sub,tjres,tires,1,1
+clark2026,clark2026//8/Typo2.2,clark2026//8/2.2,The fires were quickly and efficiently extinguished by the firefighters.,sub,sub,fjres,fires,1,1
+clark2026,clark2026//9/1.1,clark2026//9/1.1,The bears were last seen roaming in the forest.,none,,,,,1
+clark2026,clark2026//9/1.2,clark2026//9/2.2,The beers were last seen chilling in the freezer.,sub,sub,bears,beers,1,1
+clark2026,clark2026//9/2.1,clark2026//9/1.1,The bears were last seen roaming in the forest.,sub,sub,beers,bears,1,1
+clark2026,clark2026//9/2.2,clark2026//9/2.2,The beers were last seen chilling in the freezer.,none,,,,,1
+clark2026,clark2026//9/Typo1.1,clark2026//9/1.1,The bears were last seen roaming in the forest.,sub,sub,bearrs,bears,1,1
+clark2026,clark2026//9/Typo2.2,clark2026//9/2.2,The beers were last seen chilling in the freezer.,sub,sub,beerrs,beers,1,1
+clark2026,clark2026//10/1.1,clark2026//10/1.1,The driver bumped the bright red traffic cone with his car.,none,,,,,1
+clark2026,clark2026//10/1.2,clark2026//10/2.2,The driver pumped the bright red tank full of gas.,sub,sub,bumped,pumped,2,1
+clark2026,clark2026//10/2.1,clark2026//10/1.1,The driver bumped the bright red traffic cone with his car.,sub,sub,pumped,bumped,2,1
+clark2026,clark2026//10/2.2,clark2026//10/2.2,The driver pumped the bright red tank full of gas.,none,,,,,1
+clark2026,clark2026//10/Typo1.1,clark2026//10/1.1,The driver bumped the bright red traffic cone with his car.,sub,sub,brmped,bumped,2,1
+clark2026,clark2026//10/Typo2.2,clark2026//10/2.2,The driver pumped the bright red tank full of gas.,sub,sub,prmped,pumped,2,1
+clark2026,clark2026//11/1.1,clark2026//11/1.1,Why did you shave your really nice beard for no reason?,none,,,,,1
+clark2026,clark2026//11/1.2,clark2026//11/2.2,Why did you shove your really nice teammate for no reason?,sub,sub,shave,shove,3,1
+clark2026,clark2026//11/2.1,clark2026//11/1.1,Why did you shave your really nice beard for no reason?,sub,sub,shove,shave,3,1
+clark2026,clark2026//11/2.2,clark2026//11/2.2,Why did you shove your really nice teammate for no reason?,none,,,,,1
+clark2026,clark2026//11/Typo1.1,clark2026//11/1.1,Why did you shave your really nice beard for no reason?,sub,sub,shavve,shave,3,1
+clark2026,clark2026//11/Typo2.2,clark2026//11/2.2,Why did you shove your really nice teammate for no reason?,sub,sub,shovve,shove,3,1
+clark2026,clark2026//12/1.1,clark2026//12/1.1,The checks were unexpectedly cashed on Monday.,none,,,,,1
+clark2026,clark2026//12/1.2,clark2026//12/2.2,The chicks were unexpectedly hatched on Monday.,sub,sub,checks,chicks,1,1
+clark2026,clark2026//12/2.1,clark2026//12/1.1,The checks were unexpectedly cashed on Monday.,sub,sub,chicks,checks,1,1
+clark2026,clark2026//12/2.2,clark2026//12/2.2,The chicks were unexpectedly hatched on Monday.,none,,,,,1
+clark2026,clark2026//12/Typo1.1,clark2026//12/1.1,The checks were unexpectedly cashed on Monday.,sub,sub,chekcs,checks,1,1
+clark2026,clark2026//12/Typo2.2,clark2026//12/2.2,The chicks were unexpectedly hatched on Monday.,sub,sub,chikcs,chicks,1,1
+clark2026,clark2026//13/1.1,clark2026//13/1.1,I watched as a tune was quite masterfully played by the pianist.,none,,,,,1
+clark2026,clark2026//13/1.2,clark2026//13/2.2,I watched as a tube was quite masterfully installed by the plumber.,sub,sub,tune,tube,4,1
+clark2026,clark2026//13/2.1,clark2026//13/1.1,I watched as a tune was quite masterfully played by the pianist.,sub,sub,tube,tune,4,1
+clark2026,clark2026//13/2.2,clark2026//13/2.2,I watched as a tube was quite masterfully installed by the plumber.,none,,,,,1
+clark2026,clark2026//13/Typo1.1,clark2026//13/1.1,I watched as a tune was quite masterfully played by the pianist.,sub,sub,tiune,tune,4,1
+clark2026,clark2026//13/Typo2.2,clark2026//13/2.2,I watched as a tube was quite masterfully installed by the plumber.,sub,sub,tiube,tube,4,1
+clark2026,clark2026//14/1.1,clark2026//14/1.1,The doctor sees patients with mental or other kinds of illnesses affecting them.,none,,,,,1
+clark2026,clark2026//14/1.2,clark2026//14/2.2,The doctor sees patients with metal or other kinds of fragments in their bodies.,sub,sub,mental,metal,5,1
+clark2026,clark2026//14/2.1,clark2026//14/1.1,The doctor sees patients with mental or other kinds of illnesses affecting them.,sub,sub,metal,mental,5,1
+clark2026,clark2026//14/2.2,clark2026//14/2.2,The doctor sees patients with metal or other kinds of fragments in their bodies.,none,,,,,1
+clark2026,clark2026//14/Typo1.1,clark2026//14/1.1,The doctor sees patients with mental or other kinds of illnesses affecting them.,sub,sub,metnal,mental,5,1
+clark2026,clark2026//14/Typo2.2,clark2026//14/2.2,The doctor sees patients with metal or other kinds of fragments in their bodies.,sub,sub,meatl,metal,5,1
+clark2026,clark2026//15/1.1,clark2026//15/1.1,With two strong wings this very powerful bird can fly for hours.,none,,,,,1
+clark2026,clark2026//15/1.2,clark2026//15/2.2,With two strong wins this very powerful team can qualify for the finals.,sub,sub,wings,wins,3,1
+clark2026,clark2026//15/2.1,clark2026//15/1.1,With two strong wings this very powerful bird can fly for hours.,sub,sub,wins,wings,3,1
+clark2026,clark2026//15/2.2,clark2026//15/2.2,With two strong wins this very powerful team can qualify for the finals.,none,,,,,1
+clark2026,clark2026//15/Typo1.1,clark2026//15/1.1,With two strong wings this very powerful bird can fly for hours.,sub,sub,wjngs,wings,3,1
+clark2026,clark2026//15/Typo2.2,clark2026//15/2.2,With two strong wins this very powerful team can qualify for the finals.,sub,sub,wjns,wins,3,1
+clark2026,clark2026//16/1.1,clark2026//16/1.1,"These bills definitely appear to be counterfeit, unfortunately.",none,,,,,1
+clark2026,clark2026//16/1.2,clark2026//16/2.2,"These hills definitely appear to be steep, unfortunately.",sub,sub,bills,hills,1,1
+clark2026,clark2026//16/2.1,clark2026//16/1.1,"These bills definitely appear to be counterfeit, unfortunately.",sub,sub,hills,bills,1,1
+clark2026,clark2026//16/2.2,clark2026//16/2.2,"These hills definitely appear to be steep, unfortunately.",none,,,,,1
+clark2026,clark2026//16/Typo1.1,clark2026//16/1.1,"These bills definitely appear to be counterfeit, unfortunately.",sub,sub,bklls,bills,1,1
+clark2026,clark2026//16/Typo2.2,clark2026//16/2.2,"These hills definitely appear to be steep, unfortunately.",sub,sub,hklls,hills,1,1
+clark2026,clark2026//17/1.1,clark2026//17/1.1,The facts and other details of the case were published.,none,,,,,1
+clark2026,clark2026//17/1.2,clark2026//17/2.2,The faces and other details of the people were blurred.,sub,sub,facts,faces,1,1
+clark2026,clark2026//17/2.1,clark2026//17/1.1,The facts and other details of the case were published.,sub,sub,faces,facts,1,1
+clark2026,clark2026//17/2.2,clark2026//17/2.2,The faces and other details of the people were blurred.,none,,,,,1
+clark2026,clark2026//17/Typo1.1,clark2026//17/1.1,The facts and other details of the case were published.,sub,sub,fscts,facts,1,1
+clark2026,clark2026//17/Typo2.2,clark2026//17/2.2,The faces and other details of the people were blurred.,sub,sub,fsces,faces,1,1
+clark2026,clark2026//18/1.1,clark2026//18/1.1,The rules state that the loser of the two relevant matches would be eliminated.,none,,,,,1
+clark2026,clark2026//18/1.2,clark2026//18/2.2,The rules state that the lower of the two relevant amounts would be considered.,sub,sub,loser,lower,5,1
+clark2026,clark2026//18/2.1,clark2026//18/1.1,The rules state that the loser of the two relevant matches would be eliminated.,sub,sub,lower,loser,5,1
+clark2026,clark2026//18/2.2,clark2026//18/2.2,The rules state that the lower of the two relevant amounts would be considered.,none,,,,,1
+clark2026,clark2026//18/Typo1.1,clark2026//18/1.1,The rules state that the loser of the two relevant matches would be eliminated.,sub,sub,loseer,loser,5,1
+clark2026,clark2026//18/Typo2.2,clark2026//18/2.2,The rules state that the lower of the two relevant amounts would be considered.,sub,sub,loweer,lower,5,1
+clark2026,clark2026//19/1.1,clark2026//19/1.1,The garbage definitely needs to be tossed out due to its smell.,none,,,,,1
+clark2026,clark2026//19/1.2,clark2026//19/2.2,The garage definitely needs to be renovated due to its leaks.,sub,sub,garbage,garage,1,1
+clark2026,clark2026//19/2.1,clark2026//19/1.1,The garbage definitely needs to be tossed out due to its smell.,sub,sub,garage,garbage,1,1
+clark2026,clark2026//19/2.2,clark2026//19/2.2,The garage definitely needs to be renovated due to its leaks.,none,,,,,1
+clark2026,clark2026//19/Typo1.1,clark2026//19/1.1,The garbage definitely needs to be tossed out due to its smell.,sub,sub,garbge,garbage,1,1
+clark2026,clark2026//19/Typo2.2,clark2026//19/2.2,The garage definitely needs to be renovated due to its leaks.,sub,sub,garge,garage,1,1
+clark2026,clark2026//20/1.1,clark2026//20/1.1,This wind is most definitely blowing from the west.,none,,,,,1
+clark2026,clark2026//20/1.2,clark2026//20/2.2,This wine is most definitely delicious with steak.,sub,sub,wind,wine,1,1
+clark2026,clark2026//20/2.1,clark2026//20/1.1,This wind is most definitely blowing from the west.,sub,sub,wine,wind,1,1
+clark2026,clark2026//20/2.2,clark2026//20/2.2,This wine is most definitely delicious with steak.,none,,,,,1
+clark2026,clark2026//20/Typo1.1,clark2026//20/1.1,This wind is most definitely blowing from the west.,sub,sub,wjnd,wind,1,1
+clark2026,clark2026//20/Typo2.2,clark2026//20/2.2,This wine is most definitely delicious with steak.,sub,sub,wjne,wine,1,1
+clark2026,clark2026//21/1.1,clark2026//21/1.1,Thank you for taking such good care of her yesterday.,none,,,,,1
+clark2026,clark2026//21/1.2,clark2026//21/2.2,Thank you for making such good pancakes for breakfast.,sub,sub,taking,making,3,1
+clark2026,clark2026//21/2.1,clark2026//21/1.1,Thank you for taking such good care of her yesterday.,sub,sub,making,taking,3,1
+clark2026,clark2026//21/2.2,clark2026//21/2.2,Thank you for making such good pancakes for breakfast.,none,,,,,1
+clark2026,clark2026//21/Typo1.1,clark2026//21/1.1,Thank you for taking such good care of her yesterday.,sub,sub,trking,taking,3,1
+clark2026,clark2026//21/Typo2.2,clark2026//21/2.2,Thank you for making such good pancakes for breakfast.,sub,sub,mrking,making,3,1
+clark2026,clark2026//22/1.1,clark2026//22/1.1,"After being seated carefully in the small theater, the audience fell silent.",none,,,,,1
+clark2026,clark2026//22/1.2,clark2026//22/2.2,"After being sealed carefully in the small jar, the jam was sold.",sub,sub,seated,sealed,2,1
+clark2026,clark2026//22/2.1,clark2026//22/1.1,"After being seated carefully in the small theater, the audience fell silent.",sub,sub,sealed,seated,2,1
+clark2026,clark2026//22/2.2,clark2026//22/2.2,"After being sealed carefully in the small jar, the jam was sold.",none,,,,,1
+clark2026,clark2026//22/Typo1.1,clark2026//22/1.1,"After being seated carefully in the small theater, the audience fell silent.",sub,sub,seateed,seated,2,1
+clark2026,clark2026//22/Typo2.2,clark2026//22/2.2,"After being sealed carefully in the small jar, the jam was sold.",sub,sub,sealeed,sealed,2,1
+clark2026,clark2026//23/1.1,clark2026//23/1.1,Because of all the treats my dog has become very overweight and unhealthy.,none,,,,,1
+clark2026,clark2026//23/1.2,clark2026//23/2.2,Because of all the threats my dog has become very scared and timid.,sub,sub,treats,threats,4,1
+clark2026,clark2026//23/2.1,clark2026//23/1.1,Because of all the treats my dog has become very overweight and unhealthy.,sub,sub,threats,treats,4,1
+clark2026,clark2026//23/2.2,clark2026//23/2.2,Because of all the threats my dog has become very scared and timid.,none,,,,,1
+clark2026,clark2026//23/Typo1.1,clark2026//23/1.1,Because of all the treats my dog has become very overweight and unhealthy.,sub,sub,traets,treats,4,1
+clark2026,clark2026//23/Typo2.2,clark2026//23/2.2,Because of all the threats my dog has become very scared and timid.,sub,sub,thraets,threats,4,1
+clark2026,clark2026//24/1.1,clark2026//24/1.1,The chart contained lots of data and statistics.,none,,,,,1
+clark2026,clark2026//24/1.2,clark2026//24/2.2,The cart contained lots of fruits and vegetables.,sub,sub,chart,cart,1,1
+clark2026,clark2026//24/2.1,clark2026//24/1.1,The chart contained lots of data and statistics.,sub,sub,cart,chart,1,1
+clark2026,clark2026//24/2.2,clark2026//24/2.2,The cart contained lots of fruits and vegetables.,none,,,,,1
+clark2026,clark2026//24/Typo1.1,clark2026//24/1.1,The chart contained lots of data and statistics.,sub,sub,chatr,chart,1,1
+clark2026,clark2026//24/Typo2.2,clark2026//24/2.2,The cart contained lots of fruits and vegetables.,sub,sub,catr,cart,1,1
+clark2026,clark2026//25/1.1,clark2026//25/1.1,These saints had been talked about and venerated by the worshippers.,none,,,,,1
+clark2026,clark2026//25/1.2,clark2026//25/2.2,These stains had been talked about and removed by the cleaners.,sub,sub,saints,stains,1,1
+clark2026,clark2026//25/2.1,clark2026//25/1.1,These saints had been talked about and venerated by the worshippers.,sub,sub,stains,saints,1,1
+clark2026,clark2026//25/2.2,clark2026//25/2.2,These stains had been talked about and removed by the cleaners.,none,,,,,1
+clark2026,clark2026//25/Typo1.1,clark2026//25/1.1,These saints had been talked about and venerated by the worshippers.,sub,sub,siants,saints,1,1
+clark2026,clark2026//25/Typo2.2,clark2026//25/2.2,These stains had been talked about and removed by the cleaners.,sub,sub,stians,stains,1,1
+clark2026,clark2026//26/1.1,clark2026//26/1.1,She knew how to untie every single one of the knots for the sailboat.,none,,,,,1
+clark2026,clark2026//26/1.2,clark2026//26/2.2,She knew how to unite every single one of the community members.,sub,sub,untie,unite,4,1
+clark2026,clark2026//26/2.1,clark2026//26/1.1,She knew how to untie every single one of the knots for the sailboat.,sub,sub,unite,untie,4,1
+clark2026,clark2026//26/2.2,clark2026//26/2.2,She knew how to unite every single one of the community members.,none,,,,,1
+clark2026,clark2026//26/Typo1.1,clark2026//26/1.1,She knew how to untie every single one of the knots for the sailboat.,sub,sub,unntie,untie,4,1
+clark2026,clark2026//26/Typo2.2,clark2026//26/2.2,She knew how to unite every single one of the community members.,sub,sub,unnite,unite,4,1
+clark2026,clark2026//27/1.1,clark2026//27/1.1,Are you able to reverse both of these transactions over the phone?,none,,,,,1
+clark2026,clark2026//27/1.2,clark2026//27/2.2,Are you able to reserve both of these rooms in the hotel?,sub,sub,reverse,reserve,4,1
+clark2026,clark2026//27/2.1,clark2026//27/1.1,Are you able to reverse both of these transactions over the phone?,sub,sub,reserve,reverse,4,1
+clark2026,clark2026//27/2.2,clark2026//27/2.2,Are you able to reserve both of these rooms in the hotel?,none,,,,,1
+clark2026,clark2026//27/Typo1.1,clark2026//27/1.1,Are you able to reverse both of these transactions over the phone?,sub,sub,revverse,reverse,4,1
+clark2026,clark2026//27/Typo2.2,clark2026//27/2.2,Are you able to reserve both of these rooms in the hotel?,sub,sub,resserve,reserve,4,1
+clark2026,clark2026//28/1.1,clark2026//28/1.1,The documents were stored by the intern in filing cabinets.,none,,,,,1
+clark2026,clark2026//28/1.2,clark2026//28/2.2,The documents were sorted by the intern in alphabetical order.,sub,sub,stored,sorted,3,1
+clark2026,clark2026//28/2.1,clark2026//28/1.1,The documents were stored by the intern in filing cabinets.,sub,sub,sorted,stored,3,1
+clark2026,clark2026//28/2.2,clark2026//28/2.2,The documents were sorted by the intern in alphabetical order.,none,,,,,1
+clark2026,clark2026//28/Typo1.1,clark2026//28/1.1,The documents were stored by the intern in filing cabinets.,sub,sub,stjred,stored,3,1
+clark2026,clark2026//28/Typo2.2,clark2026//28/2.2,The documents were sorted by the intern in alphabetical order.,sub,sub,sjrted,sorted,3,1
+clark2026,clark2026//29/1.1,clark2026//29/1.1,He was tired a long while after his shift ended.,none,,,,,1
+clark2026,clark2026//29/1.2,clark2026//29/2.2,He was tried a long while after his arrest and indictment.,sub,sub,tired,tried,2,1
+clark2026,clark2026//29/2.1,clark2026//29/1.1,He was tired a long while after his shift ended.,sub,sub,tried,tired,2,1
+clark2026,clark2026//29/2.2,clark2026//29/2.2,He was tried a long while after his arrest and indictment.,none,,,,,1
+clark2026,clark2026//29/Typo1.1,clark2026//29/1.1,He was tired a long while after his shift ended.,sub,sub,tirxd,tired,2,1
+clark2026,clark2026//29/Typo2.2,clark2026//29/2.2,He was tried a long while after his arrest and indictment.,sub,sub,trixd,tried,2,1
+clark2026,clark2026//30/1.1,clark2026//30/1.1,My friend is carving a massive marble statue.,none,,,,,1
+clark2026,clark2026//30/1.2,clark2026//30/2.2,My friend is craving a massive cheeseburger and fries.,sub,sub,carving,craving,3,1
+clark2026,clark2026//30/2.1,clark2026//30/1.1,My friend is carving a massive marble statue.,sub,sub,craving,carving,3,1
+clark2026,clark2026//30/2.2,clark2026//30/2.2,My friend is craving a massive cheeseburger and fries.,none,,,,,1
+clark2026,clark2026//30/Typo1.1,clark2026//30/1.1,My friend is carving a massive marble statue.,sub,sub,csrving,carving,3,1
+clark2026,clark2026//30/Typo2.2,clark2026//30/2.2,My friend is craving a massive cheeseburger and fries.,sub,sub,crsving,craving,3,1
+clark2026,clark2026//31/1.1,clark2026//31/1.1,She fried every single one of the chicken nuggets.,none,,,,,1
+clark2026,clark2026//31/1.2,clark2026//31/2.2,She fired every single one of the employees and consultants.,sub,sub,fried,fired,1,1
+clark2026,clark2026//31/2.1,clark2026//31/1.1,She fried every single one of the chicken nuggets.,sub,sub,fired,fried,1,1
+clark2026,clark2026//31/2.2,clark2026//31/2.2,She fired every single one of the employees and consultants.,none,,,,,1
+clark2026,clark2026//31/Typo1.1,clark2026//31/1.1,She fried every single one of the chicken nuggets.,sub,sub,ffried,fried,1,1
+clark2026,clark2026//31/Typo2.2,clark2026//31/2.2,She fired every single one of the employees and consultants.,sub,sub,ffired,fired,1,1
+clark2026,clark2026//32/1.1,clark2026//32/1.1,The trial that was located in the courthouse attracted media attention.,none,,,,,1
+clark2026,clark2026//32/1.2,clark2026//32/2.2,The trail that was located in the woods attracted hikers and campers.,sub,sub,trial,trail,1,1
+clark2026,clark2026//32/2.1,clark2026//32/1.1,The trial that was located in the courthouse attracted media attention.,sub,sub,trail,trial,1,1
+clark2026,clark2026//32/2.2,clark2026//32/2.2,The trail that was located in the woods attracted hikers and campers.,none,,,,,1
+clark2026,clark2026//32/Typo1.1,clark2026//32/1.1,The trial that was located in the courthouse attracted media attention.,sub,sub,trjal,trial,1,1
+clark2026,clark2026//32/Typo2.2,clark2026//32/2.2,The trail that was located in the woods attracted hikers and campers.,sub,sub,trajl,trail,1,1
+clark2026,clark2026//33/1.1,clark2026//33/1.1,Unlike the males we discovered that the females have dull feathers.,none,,,,,1
+clark2026,clark2026//33/1.2,clark2026//33/2.2,Unlike the meals we discovered that the transportation was not reimbursed.,sub,sub,males,meals,2,1
+clark2026,clark2026//33/2.1,clark2026//33/1.1,Unlike the males we discovered that the females have dull feathers.,sub,sub,meals,males,2,1
+clark2026,clark2026//33/2.2,clark2026//33/2.2,Unlike the meals we discovered that the transportation was not reimbursed.,none,,,,,1
+clark2026,clark2026//33/Typo1.1,clark2026//33/1.1,Unlike the males we discovered that the females have dull feathers.,sub,sub,mmales,males,2,1
+clark2026,clark2026//33/Typo2.2,clark2026//33/2.2,Unlike the meals we discovered that the transportation was not reimbursed.,sub,sub,mmeals,meals,2,1
+clark2026,clark2026//34/1.1,clark2026//34/1.1,The chef's boss said his bread definitely needs to be baked at four hundred degrees.,none,,,,,1
+clark2026,clark2026//34/1.2,clark2026//34/2.2,The chef's boss said his beard definitely needs to be shaved off completely.,sub,sub,bread,beard,5,1
+clark2026,clark2026//34/2.1,clark2026//34/1.1,The chef's boss said his bread definitely needs to be baked at four hundred degrees.,sub,sub,beard,bread,5,1
+clark2026,clark2026//34/2.2,clark2026//34/2.2,The chef's boss said his beard definitely needs to be shaved off completely.,none,,,,,1
+clark2026,clark2026//34/Typo1.1,clark2026//34/1.1,The chef's boss said his bread definitely needs to be baked at four hundred degrees.,sub,sub,vread,bread,5,1
+clark2026,clark2026//34/Typo2.2,clark2026//34/2.2,The chef's boss said his beard definitely needs to be shaved off completely.,sub,sub,veard,beard,5,1
+clark2026,clark2026//35/1.1,clark2026//35/1.1,These genes can be quickly and cheaply sequenced by a lab.,none,,,,,1
+clark2026,clark2026//35/1.2,clark2026//35/2.2,These jeans can be quickly and cheaply washed at the laundromat.,sub,sub,genes,jeans,1,1
+clark2026,clark2026//35/2.1,clark2026//35/1.1,These genes can be quickly and cheaply sequenced by a lab.,sub,sub,jeans,genes,1,1
+clark2026,clark2026//35/2.2,clark2026//35/2.2,These jeans can be quickly and cheaply washed at the laundromat.,none,,,,,1
+clark2026,clark2026//35/Typo1.1,clark2026//35/1.1,These genes can be quickly and cheaply sequenced by a lab.,sub,sub,geenes,genes,1,1
+clark2026,clark2026//35/Typo2.2,clark2026//35/2.2,These jeans can be quickly and cheaply washed at the laundromat.,sub,sub,jeens,jeans,1,1

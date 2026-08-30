@@ -63,25 +63,34 @@ def classify(edit_from: str, edit_to: str, max_dist: int) -> tuple[str, int | No
     return ("reachable" if ok else why, dist)
 
 
-def probe_dataset(path: Path, max_dist: int) -> dict:
-    rows = list(csv.DictReader(path.open()))
+def probe_dataset(name: str, max_dist: int) -> dict:
+    """One verdict per (stimulus, repair) -- a stimulus with two repairs gets two."""
+    stim = {r["stim_uid"]: r for r in csv.DictReader((STIMULI / f"{name}.stimuli.csv").open())}
+    repairs = list(csv.DictReader((STIMULI / f"{name}.repairs.csv").open()))
     per_condition: dict[str, collections.Counter] = collections.defaultdict(collections.Counter)
     unreachable: list[dict] = []
-    for r in rows:
-        if r["edit_type"] != "sub":
+    reachable_by_stim: dict[str, bool] = {}
+    for e in repairs:
+        if e["edit_type"] != "sub":
             continue
-        verdict, dist = classify(r["edit_from"], r["edit_to"], max_dist)
+        r = stim[e["stim_uid"]]
+        verdict, dist = classify(e["edit_from"], e["edit_to"], max_dist)
         key = f"{r['subset']}/{r['condition']}" if r["subset"] else r["condition"]
         per_condition[key][verdict] += 1
+        reachable_by_stim[e["stim_uid"]] = (reachable_by_stim.get(e["stim_uid"], False)
+                                            or verdict == "reachable")
         if verdict != "reachable":
-            unreachable.append({"stim_uid": r["stim_uid"], "verdict": verdict,
-                                "from": r["edit_from"], "to": r["edit_to"], "char_dist": dist})
+            unreachable.append({"stim_uid": e["stim_uid"], "intended_uid": e["intended_uid"],
+                                "verdict": verdict, "from": e["edit_from"], "to": e["edit_to"],
+                                "char_dist": dist})
     totals = collections.Counter()
     for counts in per_condition.values():
         totals.update(counts)
     return {
         "n_sub_rows": sum(totals.values()),
         "n_reachable": totals["reachable"],
+        "n_stimuli_with_any_reachable_repair": sum(reachable_by_stim.values()),
+        "n_stimuli_with_a_sub_repair": len(reachable_by_stim),
         "verdicts": dict(sorted(totals.items())),
         "per_condition": {k: dict(sorted(v.items())) for k, v in sorted(per_condition.items())},
         "unreachable": unreachable,
@@ -94,31 +103,28 @@ def qian_alternative_route(max_dist: int) -> dict:
     An ungrammatical row like "The gifts for the kid is hidden under the bed." can be repaired
     two ways, and the stimuli encode only the first:
 
-      A  fix the VERB   -> "The gifts for the kid are hidden..."   (is -> are, what intended_uid says)
+      A  fix the VERB   -> "The gifts for the kid are hidden..."   (is -> are)
       B  fix the NOUN   -> "The gift  for the kid is  hidden..."   (gifts -> gift)
 
-    Both are legitimate noisy-channel readings. They differ sharply in whether the substitution
-    channel can propose them at all, so which one the analysis treats as "the" intended sentence
-    decides what a qian2023 result means.
+    Both are legitimate noisy-channel readings, and the stimuli carry both with no primacy --
+    the sentence really is ambiguous about which word is wrong. They differ sharply in whether
+    the substitution channel can propose them at all, which is a fact about the model, not a
+    reason to treat one as correct.
     """
-    rows = list(csv.DictReader((STIMULI / "qian2023.stimuli.csv").open()))
-    by = {(r["item_id"], r["condition"]): r for r in rows}
+    stim = {r["stim_uid"]: r for r in csv.DictReader((STIMULI / "qian2023.stimuli.csv").open())}
     out = collections.Counter()
-    for r in rows:
-        cond = r["condition"]
-        if cond[0] == cond[2]:                       # already grammatical
+    seen: set[str] = set()
+    for e in csv.DictReader((STIMULI / "qian2023.repairs.csv").open()):
+        cond = stim[e["stim_uid"]]["condition"]
+        if cond[0] == cond[2]:                       # already grammatical: one repair, itself
             continue
-        out["ungrammatical_rows"] += 1
-        if classify(r["edit_from"], r["edit_to"], max_dist)[0] == "reachable":
-            out["route_A_verb_reachable"] += 1
-        alt = by[(r["item_id"], cond[2] + cond[1] + cond[2])]
-        ow, iw = r["model_input"].split(), alt["model_input"].split()
-        ops = [o for o in difflib.SequenceMatcher(a=ow, b=iw, autojunk=False).get_opcodes()
-               if o[0] != "equal"]
-        if len(ops) == 1 and ops[0][0] == "replace" and ops[0][2] - ops[0][1] == 1:
-            frm, to = ow[ops[0][1]], iw[ops[0][3]]
-            if classify(frm, to, max_dist)[0] == "reachable":
-                out["route_B_noun_reachable"] += 1
+        if e["stim_uid"] not in seen:
+            seen.add(e["stim_uid"]); out["ungrammatical_stimuli"] += 1
+        target_cond = e["intended_uid"].rsplit("/", 1)[1]
+        route = "A_verb" if target_cond == cond[0] + cond[1] + cond[0] else "B_noun"
+        ok = classify(e["edit_from"], e["edit_to"], max_dist)[0] == "reachable"
+        out[f"route_{route}_reachable"] += ok
+        out[f"route_{route}_total"] += 1
     return dict(out)
 
 
@@ -131,13 +137,17 @@ def main() -> None:
                                                           "(SymSpell + wordfreq multi-token)",
               "datasets": {}}
     for name in datasets:
-        res = probe_dataset(STIMULI / f"{name}.stimuli.csv", max_dist)
+        res = probe_dataset(name, max_dist)
         report["datasets"][name] = res
         n, ok = res["n_sub_rows"], res["n_reachable"]
         if not n:
             print(f"{name:12s} no single-substitution repairs")
             continue
-        print(f"{name:12s} {ok:4d}/{n:<4d} reachable ({100 * ok / n:3.0f}%)   {res['verdicts']}")
+        any_ok, n_stim = res["n_stimuli_with_any_reachable_repair"], res["n_stimuli_with_a_sub_repair"]
+        extra = (f"   |  {any_ok}/{n_stim} stimuli have >=1 reachable repair"
+                 if n_stim != n else "")
+        print(f"{name:12s} {ok:4d}/{n:<4d} repairs reachable ({100 * ok / n:3.0f}%)"
+              f"   {res['verdicts']}{extra}")
         for cond, counts in res["per_condition"].items():
             tot = sum(counts.values())
             print(f"             {cond:24s} {counts.get('reachable', 0):3d}/{tot:<3d}  "
