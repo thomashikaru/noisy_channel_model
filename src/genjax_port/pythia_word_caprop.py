@@ -21,6 +21,7 @@ import jax.numpy as jnp
 from jax.scipy.special import logsumexp
 
 from genjax_port import lm_penzai, tokenizer, pairhmm_smc, cache_dedup
+from genjax_port import morphology
 from genjax_port.noise_word import (word_sub_candidates, word_sub_candidates_multitoken,
                                      segment_words)
 from genjax_port.noise import insertion_loglik
@@ -148,17 +149,44 @@ def _check_rejuv(rejuv):
         raise ValueError(f"rejuv must be one of {REJUV_CHOICES}, got {rejuv!r}")
     return rejuv
 
-# Closed-class function words the indel rejuv move (bd_mode="gibbs") may always insert, so a dropped
-# function word is restorable even when it is not a local top-J LM bridge (see pairhmm_smc pool part 3).
-# Single-token (leading-space) only; the channel treats an inserted intended word as a deletion event.
-FUNCWORDS = ("the", "a", "an", "of", "to", "for", "from", "in", "on", "at", "by", "with", "and", "that", "as")
+# Closed-class units the indel rejuv move (bd_mode="gibbs") may always insert, so a dropped one is
+# restorable even when it is not a local top-J LM bridge (see pairhmm_smc pool part 3). Single-token
+# only; the channel treats an inserted intended word as a deletion event.
+#
+# The comma is here for the same reason the function words are: it is a closed-class unit that
+# readers routinely drop and restore, and ``_obs_word_units`` already segments it as its OWN unit,
+# so restoring it is an ordinary word insertion rather than a new kind of operation. Without it the
+# NP/Z garden path ("Because the suspect changed the file deserved...") can only recover its comma
+# through a top-J LM bridge, which is why that repair was previously unreachable. Being in the pool
+# does not make a comma cheap -- the move still scores it against the LM and the channel like any
+# other candidate; it only makes it CONSIDERED.
+FUNCWORDS = ("the", "a", "an", "of", "to", "for", "from", "in", "on", "at", "by", "with", "and",
+             "that", "as", ",")
 def _funcword_ids():
+    """Token ids for the insertion pool. Words take the word-initial (leading-space) form; a
+    punctuation unit like "," is observed attached to the previous word, so it is encoded bare."""
     ids = []
     for w in FUNCWORDS:
-        enc = tokenizer.encode(" " + w)
+        enc = tokenizer.encode(w if not w[0].isalnum() else " " + w)
         if len(enc) == 1:
             ids.append(int(enc[0]))
     return ids
+
+
+@functools.lru_cache(maxsize=100_000)
+def _morph_variant_ids(word):
+    """Single-token, word-initial ids for *word*'s inflectional alternants (see ``morphology``).
+
+    Restricted to variants that are ONE word-initial token, because that is what can be patched
+    into an existing ``emit_full`` column. A multi-token alternant is simply not offered the
+    morphological rate and falls back to the character channel, which is a conservative loss.
+    """
+    out = []
+    for variant in sorted(morphology.morph_variants(word)):
+        enc = tokenizer.encode(" " + variant)
+        if len(enc) == 1:
+            out.append(int(enc[0]))
+    return tuple(out)
 
 
 def _char_ids(s):
@@ -284,7 +312,7 @@ def _obs_word_spans(observed):
     return [tuple(int(t) for t in ids) for ids, _unit_str in segment_words(obs_ids)]
 
 
-def _candidate_words(word, obs_span, max_dist, Ke):
+def _candidate_words(word, obs_span, max_dist, Ke, morph=False):
     """Candidate intended words for an observed word, each a ``(token-span tuple, surface str)``.
 
     The COPY comes FIRST so a correctly-spelled word can always be emitted verbatim, and it is now the
@@ -312,6 +340,13 @@ def _candidate_words(word, obs_span, max_dist, Ke):
         if body and body[0].isalpha() and not tokenizer.surface(lit[0]).startswith(" "):
             lit = tuple(tokenizer.encode(" " + body))            # sentence-initial word: restore the space
     cands = [(lit, body, 0)]                                      # COPY, distance 0 (kept first)
+    if morph:
+        # Inflectional alternants, ranked just after the COPY: a suppletive pair like is/are is
+        # three character edits apart and would never survive the distance sort or the Ke cap,
+        # yet under the morphological channel it is one edit. Sorting them at 0.5 is what makes
+        # the emission patch in pairhmm_smc.run reachable at all.
+        for tid in _morph_variant_ids(sub_body):
+            cands.append(((tid,), tokenizer.surface(tid).strip(), 0.5))
     for tid, d in word_sub_candidates(sub_body, max_dist=max_dist):
         cands.append(((tid,), tokenizer.surface(tid).strip(), d))   # single-token neighbours
     for span, surf, d in word_sub_candidates_multitoken(sub_body, max_dist=max_dist):
@@ -328,7 +363,8 @@ def _candidate_words(word, obs_span, max_dist, Ke):
 
 
 @functools.lru_cache(maxsize=8)
-def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False, align_slope=None):
+def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False, align_slope=None,
+                  morph=False):
     """Build the Pythia :class:`pairhmm_smc.PairHMMModel`. Cached per prime so the vocab char table
     + seed are reused across runs. ``lm_logprobs_fn`` defaults to the loaded penzai model.
 
@@ -361,7 +397,11 @@ def _pythia_model(prime, lm_logprobs_fn=None, use_word_mask=False, dedup=False, 
         vocab_char=vocab_char, vocab_clen=vocab_clen, channel_logpdf=channel_logpdf,
         channel_form=channel_form_logpdf,   # word-action FORM channel (COPY_LP=0); used iff action_alpha set
         channel_form_align=align_form_logpdf(ALIGN_SLOPE if align_slope is None else align_slope),
-        char_ids=_char_ids, candidate_words=_candidate_words, obs_words=_obs_word_units,
+        char_ids=_char_ids,
+        candidate_words=(functools.partial(_candidate_words, morph=True) if morph
+                         else _candidate_words),
+        morph_variant_ids=(_morph_variant_ids if morph else None),
+        obs_words=_obs_word_units,
         obs_spans=_obs_word_spans,
         decode_ids=lambda t: tokenizer.decode(t).strip(), tail_logprobs=tail_fn,
         seq_token_logprobs=(None if lm_logprobs_fn else lm_penzai.seq_token_logprobs),
@@ -372,7 +412,8 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         max_dist=2, Ke=12, J=8, cwin=1, prime=PRIME, lm_logprobs_fn=None, use_word_mask=False,
         rejuv=REJUV_REQUIRED, rejuv_lookback=3, rejuv_Ke=8, rejuv_stats=None, trace=None, dedup=False,
         lm_temp=1.0, ins_rate=0.02, uniform_ins=False, action_alpha=None, channel=None,
-        align_slope=None, bd_bridge_j=0, bd_pool_cap=None, bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1,
+        align_slope=None, morph=True, bd_bridge_j=0, bd_pool_cap=None, bd_p_stay=0.0, bd_mode="gibbs",
+        bd_attempts=1,
         bd_funcwords=True):
     """Channel-aware RB-SMC on Pythia via the shared filter. Returns (state, log_w, logZ, seed_len).
 
@@ -428,7 +469,7 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         action_alpha = None
     if lm_logprobs_fn is None:
         lm_penzai.load_model()
-    model = _pythia_model(prime, lm_logprobs_fn, use_word_mask, dedup, align_slope)
+    model = _pythia_model(prime, lm_logprobs_fn, use_word_mask, dedup, align_slope, morph)
     ntok = model.emit_vocab
     obs_words = model.obs_words(observed)
     WDEL = WDEL_DEFAULT if wdel is None else wdel
@@ -460,7 +501,8 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
                            rejuv_dedup=dedup, lm_temp=lm_temp, action_alpha=action_alpha, channel=channel,
                            bd_bridge_j=bd_bridge_j, bd_pool_cap=bd_pool_cap, bd_p_stay=bd_p_stay,
                            bd_mode=bd_mode, bd_attempts=bd_attempts,
-                           bd_funcword_ids=_funcword_ids() if bd_funcwords else None)
+                           bd_funcword_ids=_funcword_ids() if bd_funcwords else None,
+                           morph_lp=(morphology.MORPH_LP if morph else None))
 
 
 def decode(state, log_w, skip=1, key=jax.random.PRNGKey(0), top=3):

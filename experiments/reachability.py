@@ -33,7 +33,7 @@ REPO_ROOT = EXPERIMENTS.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(EXPERIMENTS))
 
-from genjax_port import calibration_gate, pythia_word_caprop  # noqa: E402
+from genjax_port import calibration_gate, morphology, pythia_word_caprop  # noqa: E402
 
 
 def deployed_max_dist() -> int:
@@ -52,13 +52,36 @@ def _body(word: str) -> str:
     return "".join(c for c in word if c.isalpha()).lower()
 
 
+def _punctuation_delta(edit_from: str, edit_to: str) -> set[str]:
+    """The punctuation characters one side has and the other lacks."""
+    pa = {c for c in edit_from if not c.isalnum()}
+    pb = {c for c in edit_to if not c.isalnum()}
+    return pa ^ pb
+
+
 def classify(edit_from: str, edit_to: str, max_dist: int) -> tuple[str, int | None]:
-    """Return (verdict, char_distance) for one word-level repair."""
+    """Return (verdict, char_distance) for one word-level repair.
+
+    Three routes count as reachable, because the channel now has three:
+
+    * ``reachable`` -- the character substitution channel proposes it (SymSpell within max_dist).
+    * ``reachable_morph`` -- the words stand in the inflectional-alternation relation, so the
+      morphological edit class proposes it at a flat rate regardless of character distance.
+    * ``reachable_insertion`` -- the two differ only by a punctuation unit that is in the indel
+      move's insertion pool. These look like substitutions at the whitespace-token level
+      ("changed" -> "changed,") but the model segments punctuation as its own unit, so restoring
+      one is a word INSERTION, not a substitution.
+    """
     if len(edit_from.split()) != 1 or len(edit_to.split()) != 1:
         return ("multiword", None)          # a voice alternation, not a word substitution
     a, b = _body(edit_from), _body(edit_to)
     if a == b:
-        return ("punctuation_only", 0)      # huang2024's comma: not a word substitution at all
+        delta = _punctuation_delta(edit_from, edit_to)
+        if delta and delta <= set(pythia_word_caprop.FUNCWORDS):
+            return ("reachable_insertion", 0)
+        return ("punctuation_only", 0)
+    if morphology.alternates(a, b):
+        return ("reachable_morph", None)
     ok, dist, why = calibration_gate.reachable(a, b, max_dist=max_dist)
     return ("reachable" if ok else why, dist)
 
@@ -77,18 +100,19 @@ def probe_dataset(name: str, max_dist: int) -> dict:
         verdict, dist = classify(e["edit_from"], e["edit_to"], max_dist)
         key = f"{r['subset']}/{r['condition']}" if r["subset"] else r["condition"]
         per_condition[key][verdict] += 1
-        reachable_by_stim[e["stim_uid"]] = (reachable_by_stim.get(e["stim_uid"], False)
-                                            or verdict == "reachable")
-        if verdict != "reachable":
+        good = verdict.startswith("reachable")
+        reachable_by_stim[e["stim_uid"]] = reachable_by_stim.get(e["stim_uid"], False) or good
+        if not good:
             unreachable.append({"stim_uid": e["stim_uid"], "intended_uid": e["intended_uid"],
                                 "verdict": verdict, "from": e["edit_from"], "to": e["edit_to"],
                                 "char_dist": dist})
     totals = collections.Counter()
     for counts in per_condition.values():
         totals.update(counts)
+    n_reachable = sum(v for k, v in totals.items() if k.startswith("reachable"))
     return {
         "n_sub_rows": sum(totals.values()),
-        "n_reachable": totals["reachable"],
+        "n_reachable": n_reachable,
         "n_stimuli_with_any_reachable_repair": sum(reachable_by_stim.values()),
         "n_stimuli_with_a_sub_repair": len(reachable_by_stim),
         "verdicts": dict(sorted(totals.items())),
@@ -122,7 +146,7 @@ def qian_alternative_route(max_dist: int) -> dict:
             seen.add(e["stim_uid"]); out["ungrammatical_stimuli"] += 1
         target_cond = e["intended_uid"].rsplit("/", 1)[1]
         route = "A_verb" if target_cond == cond[0] + cond[1] + cond[0] else "B_noun"
-        ok = classify(e["edit_from"], e["edit_to"], max_dist)[0] == "reachable"
+        ok = classify(e["edit_from"], e["edit_to"], max_dist)[0].startswith("reachable")
         out[f"route_{route}_reachable"] += ok
         out[f"route_{route}_total"] += 1
     return dict(out)
@@ -150,8 +174,9 @@ def main() -> None:
               f"   {res['verdicts']}{extra}")
         for cond, counts in res["per_condition"].items():
             tot = sum(counts.values())
-            print(f"             {cond:24s} {counts.get('reachable', 0):3d}/{tot:<3d}  "
-                  f"{ {k: v for k, v in counts.items() if k != 'reachable'} or ''}")
+            ok_c = sum(v for k, v in counts.items() if k.startswith("reachable"))
+            print(f"             {cond:24s} {ok_c:3d}/{tot:<3d}  "
+                  f"{ {k: v for k, v in counts.items()} }")
 
     report["qian2023_repair_routes"] = qian_alternative_route(max_dist)
     print(f"\nqian2023 repair routes: {report['qian2023_repair_routes']}")

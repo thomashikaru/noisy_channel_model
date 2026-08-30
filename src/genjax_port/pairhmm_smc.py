@@ -93,6 +93,11 @@ class PairHMMModel:
     #                                WORD_ACTION_CHANNEL_PLAN sec 2/3). Used iff run(action_alpha=...) is
     #                                set; the per-word action cost (log p_copy / log p_sub) is added on
     #                                the column. None => word-action unsupported (the OFF / certified path).
+    morph_variant_ids: Callable = None  # word -> single-token ids of its inflectional alternants
+    #                                (genjax_port.morphology). When set AND run(morph_lp=...) is given,
+    #                                those emission cells get a FLAT morphological rate in addition to
+    #                                the character cost. None => no morphological channel (the certified
+    #                                path; bit-identical).
     channel_form_align: Callable = None  # the ALIGN channel's FORM table (plan ALIGN_ACTION_CHANNEL_PLAN):
     #                                like ``channel_form`` but its per-edit cost is the sweepable slope K
     #                                (=ALIGN_SLOPE) rather than the fixed log(1/26), so smooth edit-distance
@@ -469,7 +474,7 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
         max_dist=2, Ke=6, J=4, cwin=1, proposal="caprop", enable_indel=True,
         rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False,
         lm_temp=1.0, action_alpha=None, channel=None, bd_min_done=0.0, bd_bridge_j=0, bd_pool_cap=None,
-        bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1, bd_funcword_ids=None):
+        bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1, bd_funcword_ids=None, morph_lp=None):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
@@ -581,6 +586,23 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                else model.channel_form if ON else model.channel_logpdf)
     emit_full = jax.vmap(jax.vmap(chan_fn, in_axes=(None, 0, 0)),
                          in_axes=(0, None, None))(obs_char, model.vocab_char, model.vocab_clen)
+    # MORPHOLOGICAL edit class. The form table above scores an intended word by CHARACTER distance,
+    # which is the wrong model for inflection: is/are and was/were are three character edits apart
+    # (13.5 nats at K=-4.5) but one step in a paradigm. Where the observed unit and a vocab token
+    # stand in the inflectional-alternation relation, add a FLAT rate that does not depend on d --
+    # a second, independent noise route to the same observation, hence logaddexp rather than a
+    # replacement. A one-character alternation (gift/gifts) is reachable both ways and simply scores
+    # slightly better; a suppletive one becomes reachable at all. morph_lp=None => untouched.
+    if morph_lp is not None and model.morph_variant_ids is not None:
+        rows, cols = [], []
+        for m, w in enumerate(obs_words):
+            for tid in model.morph_variant_ids(w.strip().lower()):
+                rows.append(m)
+                cols.append(int(tid))
+        if rows:
+            idx = (jnp.asarray(rows, jnp.int32), jnp.asarray(cols, jnp.int32))
+            emit_full = emit_full.at[idx].set(
+                jnp.logaddexp(emit_full[idx], jnp.asarray(morph_lp, emit_full.dtype)))
     # copy_mask (M, Vc_aug): the CASE-INSENSITIVE copy classifier for the word-action emission offset
     # (a capitalization 'she'->'She' is a copy, not a sub -- the bug the word-action path silently had).
     (emit_first, emit_surf, emit_mtidx, mt_span, mt_len, emit_full, copy_mask, T_max, n_mt) = _build_candidates(

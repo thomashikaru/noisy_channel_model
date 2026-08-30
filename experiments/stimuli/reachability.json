@@ -404,203 +404,18 @@
     },
     "huang2024": {
       "n_sub_rows": 23,
-      "n_reachable": 0,
-      "n_stimuli_with_any_reachable_repair": 0,
+      "n_reachable": 23,
+      "n_stimuli_with_any_reachable_repair": 23,
       "n_stimuli_with_a_sub_repair": 23,
       "verdicts": {
-        "punctuation_only": 23
+        "reachable_insertion": 23
       },
       "per_condition": {
         "NPZ_AMB": {
-          "punctuation_only": 23
+          "reachable_insertion": 23
         }
       },
-      "unreachable": [
-        {
-          "stim_uid": "huang2024//1/NPZ_AMB",
-          "intended_uid": "huang2024//1/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "changed",
-          "to": "changed,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//2/NPZ_AMB",
-          "intended_uid": "huang2024//2/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "signed",
-          "to": "signed,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//3/NPZ_AMB",
-          "intended_uid": "huang2024//3/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "moved",
-          "to": "moved,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//4/NPZ_AMB",
-          "intended_uid": "huang2024//4/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "attacked",
-          "to": "attacked,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//5/NPZ_AMB",
-          "intended_uid": "huang2024//5/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "left",
-          "to": "left,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//6/NPZ_AMB",
-          "intended_uid": "huang2024//6/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "read",
-          "to": "read,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//7/NPZ_AMB",
-          "intended_uid": "huang2024//7/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "called",
-          "to": "called,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//8/NPZ_AMB",
-          "intended_uid": "huang2024//8/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "stopped",
-          "to": "stopped,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//9/NPZ_AMB",
-          "intended_uid": "huang2024//9/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "began",
-          "to": "began,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//10/NPZ_AMB",
-          "intended_uid": "huang2024//10/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "lost",
-          "to": "lost,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//11/NPZ_AMB",
-          "intended_uid": "huang2024//11/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "started",
-          "to": "started,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//12/NPZ_AMB",
-          "intended_uid": "huang2024//12/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "worked",
-          "to": "worked,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//13/NPZ_AMB",
-          "intended_uid": "huang2024//13/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "changed",
-          "to": "changed,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//15/NPZ_AMB",
-          "intended_uid": "huang2024//15/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "moved",
-          "to": "moved,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//16/NPZ_AMB",
-          "intended_uid": "huang2024//16/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "attacked",
-          "to": "attacked,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//17/NPZ_AMB",
-          "intended_uid": "huang2024//17/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "left",
-          "to": "left,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//18/NPZ_AMB",
-          "intended_uid": "huang2024//18/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "read",
-          "to": "read,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//19/NPZ_AMB",
-          "intended_uid": "huang2024//19/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "called",
-          "to": "called,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//20/NPZ_AMB",
-          "intended_uid": "huang2024//20/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "stopped",
-          "to": "stopped,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//21/NPZ_AMB",
-          "intended_uid": "huang2024//21/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "began",
-          "to": "began,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//22/NPZ_AMB",
-          "intended_uid": "huang2024//22/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "lost",
-          "to": "lost,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//23/NPZ_AMB",
-          "intended_uid": "huang2024//23/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "started",
-          "to": "started,",
-          "char_dist": 0
-        },
-        {
-          "stim_uid": "huang2024//24/NPZ_AMB",
-          "intended_uid": "huang2024//24/NPZ_UAMB",
-          "verdict": "punctuation_only",
-          "from": "worked",
-          "to": "worked,",
-          "char_dist": 0
-        }
-      ]
+      "unreachable": []
     },
     "moses": {
       "n_sub_rows": 0,
@@ -613,1713 +428,39 @@
     },
     "qian2023": {
       "n_sub_rows": 480,
-      "n_reachable": 272,
-      "n_stimuli_with_any_reachable_repair": 236,
+      "n_reachable": 480,
+      "n_stimuli_with_any_reachable_repair": 240,
       "n_stimuli_with_a_sub_repair": 240,
       "verdicts": {
-        "dist>max_dist": 176,
-        "not_retrieved": 32,
-        "reachable": 272
+        "reachable_morph": 480
       },
       "per_condition": {
         "pps": {
-          "dist>max_dist": 44,
-          "not_retrieved": 15,
-          "reachable": 61
+          "reachable_morph": 120
         },
         "pss": {
-          "dist>max_dist": 44,
-          "not_retrieved": 15,
-          "reachable": 61
+          "reachable_morph": 120
         },
         "spp": {
-          "dist>max_dist": 44,
-          "not_retrieved": 1,
-          "reachable": 75
+          "reachable_morph": 120
         },
         "ssp": {
-          "dist>max_dist": 44,
-          "not_retrieved": 1,
-          "reachable": 75
+          "reachable_morph": 120
         }
       },
-      "unreachable": [
-        {
-          "stim_uid": "qian2023//0/pss",
-          "intended_uid": "qian2023//0/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//0/pps",
-          "intended_uid": "qian2023//0/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//1/ssp",
-          "intended_uid": "qian2023//1/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//1/spp",
-          "intended_uid": "qian2023//1/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//1/pss",
-          "intended_uid": "qian2023//1/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//1/pps",
-          "intended_uid": "qian2023//1/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//2/ssp",
-          "intended_uid": "qian2023//2/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//2/spp",
-          "intended_uid": "qian2023//2/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//2/pss",
-          "intended_uid": "qian2023//2/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//2/pps",
-          "intended_uid": "qian2023//2/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//3/ssp",
-          "intended_uid": "qian2023//3/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//3/spp",
-          "intended_uid": "qian2023//3/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//3/pss",
-          "intended_uid": "qian2023//3/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//3/pps",
-          "intended_uid": "qian2023//3/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//4/ssp",
-          "intended_uid": "qian2023//4/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//4/spp",
-          "intended_uid": "qian2023//4/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//4/pss",
-          "intended_uid": "qian2023//4/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//4/pps",
-          "intended_uid": "qian2023//4/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//5/ssp",
-          "intended_uid": "qian2023//5/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//5/spp",
-          "intended_uid": "qian2023//5/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//5/pss",
-          "intended_uid": "qian2023//5/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//5/pps",
-          "intended_uid": "qian2023//5/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//6/pss",
-          "intended_uid": "qian2023//6/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//6/pps",
-          "intended_uid": "qian2023//6/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//7/ssp",
-          "intended_uid": "qian2023//7/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//7/spp",
-          "intended_uid": "qian2023//7/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//7/pss",
-          "intended_uid": "qian2023//7/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//7/pps",
-          "intended_uid": "qian2023//7/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//8/ssp",
-          "intended_uid": "qian2023//8/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//8/spp",
-          "intended_uid": "qian2023//8/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//8/pss",
-          "intended_uid": "qian2023//8/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//8/pps",
-          "intended_uid": "qian2023//8/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//9/pss",
-          "intended_uid": "qian2023//9/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//9/pps",
-          "intended_uid": "qian2023//9/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//10/ssp",
-          "intended_uid": "qian2023//10/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//10/spp",
-          "intended_uid": "qian2023//10/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//10/pss",
-          "intended_uid": "qian2023//10/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//10/pps",
-          "intended_uid": "qian2023//10/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//11/ssp",
-          "intended_uid": "qian2023//11/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//11/spp",
-          "intended_uid": "qian2023//11/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//11/pss",
-          "intended_uid": "qian2023//11/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//11/pps",
-          "intended_uid": "qian2023//11/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//12/pss",
-          "intended_uid": "qian2023//12/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//12/pps",
-          "intended_uid": "qian2023//12/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//13/ssp",
-          "intended_uid": "qian2023//13/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//13/spp",
-          "intended_uid": "qian2023//13/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//13/pss",
-          "intended_uid": "qian2023//13/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//13/pps",
-          "intended_uid": "qian2023//13/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//14/ssp",
-          "intended_uid": "qian2023//14/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//14/spp",
-          "intended_uid": "qian2023//14/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//14/pss",
-          "intended_uid": "qian2023//14/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//14/pps",
-          "intended_uid": "qian2023//14/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//15/ssp",
-          "intended_uid": "qian2023//15/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//15/spp",
-          "intended_uid": "qian2023//15/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//15/pss",
-          "intended_uid": "qian2023//15/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//15/pps",
-          "intended_uid": "qian2023//15/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//16/ssp",
-          "intended_uid": "qian2023//16/psp",
-          "verdict": "dist>max_dist",
-          "from": "story",
-          "to": "stories",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//16/spp",
-          "intended_uid": "qian2023//16/ppp",
-          "verdict": "dist>max_dist",
-          "from": "story",
-          "to": "stories",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//16/pss",
-          "intended_uid": "qian2023//16/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//16/pss",
-          "intended_uid": "qian2023//16/sss",
-          "verdict": "dist>max_dist",
-          "from": "stories",
-          "to": "story",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//16/pps",
-          "intended_uid": "qian2023//16/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//16/pps",
-          "intended_uid": "qian2023//16/sps",
-          "verdict": "dist>max_dist",
-          "from": "stories",
-          "to": "story",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//17/pss",
-          "intended_uid": "qian2023//17/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//17/pps",
-          "intended_uid": "qian2023//17/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//18/ssp",
-          "intended_uid": "qian2023//18/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//18/spp",
-          "intended_uid": "qian2023//18/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//18/pss",
-          "intended_uid": "qian2023//18/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//18/pps",
-          "intended_uid": "qian2023//18/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//19/ssp",
-          "intended_uid": "qian2023//19/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//19/spp",
-          "intended_uid": "qian2023//19/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//19/pss",
-          "intended_uid": "qian2023//19/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//19/pps",
-          "intended_uid": "qian2023//19/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//21/pss",
-          "intended_uid": "qian2023//21/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//21/pps",
-          "intended_uid": "qian2023//21/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//22/ssp",
-          "intended_uid": "qian2023//22/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//22/spp",
-          "intended_uid": "qian2023//22/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//22/pss",
-          "intended_uid": "qian2023//22/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//22/pps",
-          "intended_uid": "qian2023//22/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//23/ssp",
-          "intended_uid": "qian2023//23/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//23/spp",
-          "intended_uid": "qian2023//23/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//23/pss",
-          "intended_uid": "qian2023//23/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//23/pps",
-          "intended_uid": "qian2023//23/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//24/ssp",
-          "intended_uid": "qian2023//24/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//24/spp",
-          "intended_uid": "qian2023//24/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//24/pss",
-          "intended_uid": "qian2023//24/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//24/pps",
-          "intended_uid": "qian2023//24/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//25/pss",
-          "intended_uid": "qian2023//25/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//25/pps",
-          "intended_uid": "qian2023//25/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//26/pss",
-          "intended_uid": "qian2023//26/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//26/pps",
-          "intended_uid": "qian2023//26/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//27/ssp",
-          "intended_uid": "qian2023//27/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//27/spp",
-          "intended_uid": "qian2023//27/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//27/pss",
-          "intended_uid": "qian2023//27/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//27/pps",
-          "intended_uid": "qian2023//27/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//29/ssp",
-          "intended_uid": "qian2023//29/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//29/spp",
-          "intended_uid": "qian2023//29/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//29/pss",
-          "intended_uid": "qian2023//29/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//29/pps",
-          "intended_uid": "qian2023//29/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//30/pss",
-          "intended_uid": "qian2023//30/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//30/pps",
-          "intended_uid": "qian2023//30/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//31/ssp",
-          "intended_uid": "qian2023//31/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//31/spp",
-          "intended_uid": "qian2023//31/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//31/pss",
-          "intended_uid": "qian2023//31/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//31/pps",
-          "intended_uid": "qian2023//31/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//32/pss",
-          "intended_uid": "qian2023//32/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//32/pps",
-          "intended_uid": "qian2023//32/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//33/pss",
-          "intended_uid": "qian2023//33/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//33/pps",
-          "intended_uid": "qian2023//33/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//34/ssp",
-          "intended_uid": "qian2023//34/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//34/spp",
-          "intended_uid": "qian2023//34/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//34/pss",
-          "intended_uid": "qian2023//34/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//34/pps",
-          "intended_uid": "qian2023//34/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//35/ssp",
-          "intended_uid": "qian2023//35/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//35/spp",
-          "intended_uid": "qian2023//35/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//35/pss",
-          "intended_uid": "qian2023//35/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//35/pps",
-          "intended_uid": "qian2023//35/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//36/ssp",
-          "intended_uid": "qian2023//36/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//36/spp",
-          "intended_uid": "qian2023//36/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//36/pss",
-          "intended_uid": "qian2023//36/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//36/pps",
-          "intended_uid": "qian2023//36/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//37/ssp",
-          "intended_uid": "qian2023//37/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//37/spp",
-          "intended_uid": "qian2023//37/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//37/pss",
-          "intended_uid": "qian2023//37/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//37/pps",
-          "intended_uid": "qian2023//37/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//38/ssp",
-          "intended_uid": "qian2023//38/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//38/spp",
-          "intended_uid": "qian2023//38/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//38/pss",
-          "intended_uid": "qian2023//38/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//38/pps",
-          "intended_uid": "qian2023//38/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//39/ssp",
-          "intended_uid": "qian2023//39/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//39/spp",
-          "intended_uid": "qian2023//39/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//39/pss",
-          "intended_uid": "qian2023//39/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//39/pps",
-          "intended_uid": "qian2023//39/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//40/ssp",
-          "intended_uid": "qian2023//40/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//40/spp",
-          "intended_uid": "qian2023//40/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//40/pss",
-          "intended_uid": "qian2023//40/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//40/pps",
-          "intended_uid": "qian2023//40/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//41/ssp",
-          "intended_uid": "qian2023//41/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//41/spp",
-          "intended_uid": "qian2023//41/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//41/pss",
-          "intended_uid": "qian2023//41/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//41/pps",
-          "intended_uid": "qian2023//41/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//42/ssp",
-          "intended_uid": "qian2023//42/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//42/spp",
-          "intended_uid": "qian2023//42/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//42/pss",
-          "intended_uid": "qian2023//42/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//42/pps",
-          "intended_uid": "qian2023//42/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//43/ssp",
-          "intended_uid": "qian2023//43/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//43/spp",
-          "intended_uid": "qian2023//43/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//43/pss",
-          "intended_uid": "qian2023//43/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//43/pps",
-          "intended_uid": "qian2023//43/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//44/ssp",
-          "intended_uid": "qian2023//44/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//44/spp",
-          "intended_uid": "qian2023//44/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//44/pss",
-          "intended_uid": "qian2023//44/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//44/pps",
-          "intended_uid": "qian2023//44/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//45/ssp",
-          "intended_uid": "qian2023//45/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//45/spp",
-          "intended_uid": "qian2023//45/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//45/pss",
-          "intended_uid": "qian2023//45/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//45/pps",
-          "intended_uid": "qian2023//45/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//46/ssp",
-          "intended_uid": "qian2023//46/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//46/spp",
-          "intended_uid": "qian2023//46/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//46/pss",
-          "intended_uid": "qian2023//46/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//46/pps",
-          "intended_uid": "qian2023//46/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//47/ssp",
-          "intended_uid": "qian2023//47/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//47/spp",
-          "intended_uid": "qian2023//47/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//47/pss",
-          "intended_uid": "qian2023//47/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//47/pps",
-          "intended_uid": "qian2023//47/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//48/pss",
-          "intended_uid": "qian2023//48/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//48/pps",
-          "intended_uid": "qian2023//48/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//49/pss",
-          "intended_uid": "qian2023//49/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//49/pps",
-          "intended_uid": "qian2023//49/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//50/ssp",
-          "intended_uid": "qian2023//50/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//50/spp",
-          "intended_uid": "qian2023//50/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//50/pss",
-          "intended_uid": "qian2023//50/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//50/pps",
-          "intended_uid": "qian2023//50/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//51/ssp",
-          "intended_uid": "qian2023//51/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//51/spp",
-          "intended_uid": "qian2023//51/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//51/pss",
-          "intended_uid": "qian2023//51/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//51/pps",
-          "intended_uid": "qian2023//51/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//52/ssp",
-          "intended_uid": "qian2023//52/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//52/spp",
-          "intended_uid": "qian2023//52/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//52/pss",
-          "intended_uid": "qian2023//52/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//52/pps",
-          "intended_uid": "qian2023//52/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//53/ssp",
-          "intended_uid": "qian2023//53/sss",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//53/spp",
-          "intended_uid": "qian2023//53/sps",
-          "verdict": "dist>max_dist",
-          "from": "were",
-          "to": "was",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//53/pss",
-          "intended_uid": "qian2023//53/psp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//53/pps",
-          "intended_uid": "qian2023//53/ppp",
-          "verdict": "dist>max_dist",
-          "from": "was",
-          "to": "were",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//54/ssp",
-          "intended_uid": "qian2023//54/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//54/spp",
-          "intended_uid": "qian2023//54/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//54/pss",
-          "intended_uid": "qian2023//54/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//54/pps",
-          "intended_uid": "qian2023//54/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//55/pss",
-          "intended_uid": "qian2023//55/psp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//55/pps",
-          "intended_uid": "qian2023//55/ppp",
-          "verdict": "not_retrieved",
-          "from": "has",
-          "to": "have",
-          "char_dist": 2
-        },
-        {
-          "stim_uid": "qian2023//56/ssp",
-          "intended_uid": "qian2023//56/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//56/spp",
-          "intended_uid": "qian2023//56/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//56/pss",
-          "intended_uid": "qian2023//56/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//56/pps",
-          "intended_uid": "qian2023//56/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//57/ssp",
-          "intended_uid": "qian2023//57/psp",
-          "verdict": "not_retrieved",
-          "from": "rice",
-          "to": "rices",
-          "char_dist": 1
-        },
-        {
-          "stim_uid": "qian2023//57/ssp",
-          "intended_uid": "qian2023//57/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//57/spp",
-          "intended_uid": "qian2023//57/ppp",
-          "verdict": "not_retrieved",
-          "from": "rice",
-          "to": "rices",
-          "char_dist": 1
-        },
-        {
-          "stim_uid": "qian2023//57/spp",
-          "intended_uid": "qian2023//57/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//57/pss",
-          "intended_uid": "qian2023//57/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//57/pps",
-          "intended_uid": "qian2023//57/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//58/ssp",
-          "intended_uid": "qian2023//58/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//58/spp",
-          "intended_uid": "qian2023//58/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//58/pss",
-          "intended_uid": "qian2023//58/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//58/pps",
-          "intended_uid": "qian2023//58/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//59/ssp",
-          "intended_uid": "qian2023//59/sss",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//59/spp",
-          "intended_uid": "qian2023//59/sps",
-          "verdict": "dist>max_dist",
-          "from": "are",
-          "to": "is",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//59/pss",
-          "intended_uid": "qian2023//59/psp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        },
-        {
-          "stim_uid": "qian2023//59/pps",
-          "intended_uid": "qian2023//59/ppp",
-          "verdict": "dist>max_dist",
-          "from": "is",
-          "to": "are",
-          "char_dist": 3
-        }
-      ]
+      "unreachable": []
     },
     "ryskin2021": {
       "n_sub_rows": 378,
-      "n_reachable": 141,
-      "n_stimuli_with_any_reachable_repair": 141,
+      "n_reachable": 184,
+      "n_stimuli_with_any_reachable_repair": 184,
       "n_stimuli_with_a_sub_repair": 378,
       "verdicts": {
-        "dist>max_dist": 183,
+        "dist>max_dist": 160,
         "multiword": 17,
-        "not_retrieved": 37,
-        "reachable": 141
+        "not_retrieved": 17,
+        "reachable": 61,
+        "reachable_morph": 123
       },
       "per_condition": {
         "Sem": {
@@ -2333,9 +474,9 @@
           "reachable": 60
         },
         "Synt": {
-          "dist>max_dist": 23,
-          "not_retrieved": 22,
-          "reachable": 81
+          "not_retrieved": 2,
+          "reachable": 1,
+          "reachable_morph": 123
         }
       },
       "unreachable": [
@@ -2420,14 +561,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//7/Synt",
-          "intended_uid": "ryskin2021//7/Control",
-          "verdict": "not_retrieved",
-          "from": "anemone.",
-          "to": "anemones.",
-          "char_dist": 1
-        },
-        {
           "stim_uid": "ryskin2021//8/SemCrit",
           "intended_uid": "ryskin2021//8/Control",
           "verdict": "dist>max_dist",
@@ -2442,14 +575,6 @@
           "from": "lymph.",
           "to": "amenities.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//8/Synt",
-          "intended_uid": "ryskin2021//8/Control",
-          "verdict": "dist>max_dist",
-          "from": "amenity.",
-          "to": "amenities.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//9/Sem",
@@ -2516,14 +641,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//15/Synt",
-          "intended_uid": "ryskin2021//15/Control",
-          "verdict": "dist>max_dist",
-          "from": "cavalries.",
-          "to": "cavalry.",
-          "char_dist": 3
-        },
-        {
           "stim_uid": "ryskin2021//16/SemCrit",
           "intended_uid": "ryskin2021//16/Control",
           "verdict": "dist>max_dist",
@@ -2538,14 +655,6 @@
           "from": "petal.",
           "to": "cavity.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//16/Synt",
-          "intended_uid": "ryskin2021//16/Control",
-          "verdict": "dist>max_dist",
-          "from": "cavities.",
-          "to": "cavity.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//17/Sem",
@@ -2610,14 +719,6 @@
           "from": "captain.",
           "to": "rhinestone.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//24/Synt",
-          "intended_uid": "ryskin2021//24/Control",
-          "verdict": "not_retrieved",
-          "from": "rhinestones.",
-          "to": "rhinestone.",
-          "char_dist": 1
         },
         {
           "stim_uid": "ryskin2021//25/SemCrit",
@@ -2698,14 +799,6 @@
           "from": "admonition.",
           "to": "pheromone.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//29/Synt",
-          "intended_uid": "ryskin2021//29/Control",
-          "verdict": "not_retrieved",
-          "from": "pheromones.",
-          "to": "pheromone.",
-          "char_dist": 1
         },
         {
           "stim_uid": "ryskin2021//30/SemCrit",
@@ -2820,14 +913,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//42/Synt",
-          "intended_uid": "ryskin2021//42/Control",
-          "verdict": "not_retrieved",
-          "from": "exertions.",
-          "to": "exertion.",
-          "char_dist": 1
-        },
-        {
           "stim_uid": "ryskin2021//43/SemCrit",
           "intended_uid": "ryskin2021//43/Control",
           "verdict": "not_retrieved",
@@ -2842,14 +927,6 @@
           "from": "leisure.",
           "to": "phonology.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//43/Synt",
-          "intended_uid": "ryskin2021//43/Control",
-          "verdict": "dist>max_dist",
-          "from": "phonologies.",
-          "to": "phonology.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//44/SemCrit",
@@ -2868,14 +945,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//44/Synt",
-          "intended_uid": "ryskin2021//44/Control",
-          "verdict": "dist>max_dist",
-          "from": "phrenologies.",
-          "to": "phrenology.",
-          "char_dist": 3
-        },
-        {
           "stim_uid": "ryskin2021//45/SemCrit",
           "intended_uid": "ryskin2021//45/Control",
           "verdict": "not_retrieved",
@@ -2892,14 +961,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//45/Synt",
-          "intended_uid": "ryskin2021//45/Control",
-          "verdict": "not_retrieved",
-          "from": "hearses.",
-          "to": "hearse.",
-          "char_dist": 1
-        },
-        {
           "stim_uid": "ryskin2021//47/Sem",
           "intended_uid": "ryskin2021//47/Control",
           "verdict": "dist>max_dist",
@@ -2908,28 +969,12 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//47/Synt",
-          "intended_uid": "ryskin2021//47/Control",
-          "verdict": "dist>max_dist",
-          "from": "humidities.",
-          "to": "humidity.",
-          "char_dist": 3
-        },
-        {
           "stim_uid": "ryskin2021//48/Sem",
           "intended_uid": "ryskin2021//48/Control",
           "verdict": "dist>max_dist",
           "from": "alumni.",
           "to": "humility.",
           "char_dist": 6
-        },
-        {
-          "stim_uid": "ryskin2021//48/Synt",
-          "intended_uid": "ryskin2021//48/Control",
-          "verdict": "dist>max_dist",
-          "from": "humilities.",
-          "to": "humility.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//49/SemCrit",
@@ -2988,28 +1033,12 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//51/Synt",
-          "intended_uid": "ryskin2021//51/Control",
-          "verdict": "dist>max_dist",
-          "from": "immoralities.",
-          "to": "immorality.",
-          "char_dist": 3
-        },
-        {
           "stim_uid": "ryskin2021//52/Sem",
           "intended_uid": "ryskin2021//52/Control",
           "verdict": "dist>max_dist",
           "from": "dilation.",
           "to": "immortality.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//52/Synt",
-          "intended_uid": "ryskin2021//52/Control",
-          "verdict": "dist>max_dist",
-          "from": "immortalities.",
-          "to": "immortality.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//56/Sem",
@@ -3036,14 +1065,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//59/Synt",
-          "intended_uid": "ryskin2021//59/Control",
-          "verdict": "not_retrieved",
-          "from": "manatees.",
-          "to": "manatee.",
-          "char_dist": 1
-        },
-        {
           "stim_uid": "ryskin2021//60/SemCrit",
           "intended_uid": "ryskin2021//60/Control",
           "verdict": "dist>max_dist",
@@ -3058,14 +1079,6 @@
           "from": "sentiment.",
           "to": "matinee.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//60/Synt",
-          "intended_uid": "ryskin2021//60/Control",
-          "verdict": "not_retrieved",
-          "from": "matinees.",
-          "to": "matinee.",
-          "char_dist": 1
         },
         {
           "stim_uid": "ryskin2021//61/SemCrit",
@@ -3116,14 +1129,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//63/Synt",
-          "intended_uid": "ryskin2021//63/Control",
-          "verdict": "dist>max_dist",
-          "from": "peasantries.",
-          "to": "peasantry.",
-          "char_dist": 3
-        },
-        {
           "stim_uid": "ryskin2021//64/SemCrit",
           "intended_uid": "ryskin2021//64/Control",
           "verdict": "not_retrieved",
@@ -3138,14 +1143,6 @@
           "from": "escalator.",
           "to": "pleasantry.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//64/Synt",
-          "intended_uid": "ryskin2021//64/Control",
-          "verdict": "dist>max_dist",
-          "from": "pleasantries.",
-          "to": "pleasantry.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//65/SemCrit",
@@ -3164,14 +1161,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//65/Synt",
-          "intended_uid": "ryskin2021//65/Control",
-          "verdict": "not_retrieved",
-          "from": "sympathizers.",
-          "to": "sympathizer.",
-          "char_dist": 1
-        },
-        {
           "stim_uid": "ryskin2021//66/SemCrit",
           "intended_uid": "ryskin2021//66/Control",
           "verdict": "dist>max_dist",
@@ -3186,14 +1175,6 @@
           "from": "baloney.",
           "to": "synthesizer.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//66/Synt",
-          "intended_uid": "ryskin2021//66/Control",
-          "verdict": "not_retrieved",
-          "from": "synthesizers.",
-          "to": "synthesizer.",
-          "char_dist": 1
         },
         {
           "stim_uid": "ryskin2021//67/SemCrit",
@@ -3212,14 +1193,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//67/Synt",
-          "intended_uid": "ryskin2021//67/Control",
-          "verdict": "dist>max_dist",
-          "from": "tapestries.",
-          "to": "tapestry.",
-          "char_dist": 3
-        },
-        {
           "stim_uid": "ryskin2021//68/SemCrit",
           "intended_uid": "ryskin2021//68/Control",
           "verdict": "dist>max_dist",
@@ -3234,14 +1207,6 @@
           "from": "diploma.",
           "to": "travesty.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//68/Synt",
-          "intended_uid": "ryskin2021//68/Control",
-          "verdict": "dist>max_dist",
-          "from": "travesties.",
-          "to": "travesty.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//69/SemCrit",
@@ -3308,14 +1273,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//74/Synt",
-          "intended_uid": "ryskin2021//74/Control",
-          "verdict": "not_retrieved",
-          "from": "gazelles.",
-          "to": "gazelle.",
-          "char_dist": 1
-        },
-        {
           "stim_uid": "ryskin2021//75/Sem",
           "intended_uid": "ryskin2021//75/Control",
           "verdict": "multiword",
@@ -3348,28 +1305,12 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//79/Synt",
-          "intended_uid": "ryskin2021//79/Control",
-          "verdict": "dist>max_dist",
-          "from": "mobilities.",
-          "to": "mobility.",
-          "char_dist": 3
-        },
-        {
           "stim_uid": "ryskin2021//80/Sem",
           "intended_uid": "ryskin2021//80/Control",
           "verdict": "dist>max_dist",
           "from": "pheromone.",
           "to": "nobility.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//80/Synt",
-          "intended_uid": "ryskin2021//80/Control",
-          "verdict": "dist>max_dist",
-          "from": "nobilities.",
-          "to": "nobility.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//81/SemCrit",
@@ -3386,14 +1327,6 @@
           "from": "destiny.",
           "to": "nymph.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//81/Synt",
-          "intended_uid": "ryskin2021//81/Control",
-          "verdict": "not_retrieved",
-          "from": "nymphs.",
-          "to": "nymph.",
-          "char_dist": 1
         },
         {
           "stim_uid": "ryskin2021//82/Sem",
@@ -3436,14 +1369,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//88/Synt",
-          "intended_uid": "ryskin2021//88/Control",
-          "verdict": "not_retrieved",
-          "from": "spinsters.",
-          "to": "spinster.",
-          "char_dist": 1
-        },
-        {
           "stim_uid": "ryskin2021//90/Sem",
           "intended_uid": "ryskin2021//90/Control",
           "verdict": "dist>max_dist",
@@ -3466,14 +1391,6 @@
           "from": "a cartoon.",
           "to": "an immunity.",
           "char_dist": null
-        },
-        {
-          "stim_uid": "ryskin2021//91/Synt",
-          "intended_uid": "ryskin2021//91/Control",
-          "verdict": "dist>max_dist",
-          "from": "immunities.",
-          "to": "immunity.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//93/Sem",
@@ -3506,14 +1423,6 @@
           "from": "splinter.",
           "to": "inebriation.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//96/Synt",
-          "intended_uid": "ryskin2021//96/Control",
-          "verdict": "not_retrieved",
-          "from": "inebriations.",
-          "to": "inebriation.",
-          "char_dist": 1
         },
         {
           "stim_uid": "ryskin2021//97/Sem",
@@ -3578,14 +1487,6 @@
           "from": "callus.",
           "to": "carburetor.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//103/Synt",
-          "intended_uid": "ryskin2021//103/Control",
-          "verdict": "not_retrieved",
-          "from": "carburetors.",
-          "to": "carburetor.",
-          "char_dist": 1
         },
         {
           "stim_uid": "ryskin2021//104/SemCrit",
@@ -3684,14 +1585,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//111/Synt",
-          "intended_uid": "ryskin2021//111/Control",
-          "verdict": "not_retrieved",
-          "from": "radiums.",
-          "to": "radium.",
-          "char_dist": 1
-        },
-        {
           "stim_uid": "ryskin2021//112/Sem",
           "intended_uid": "ryskin2021//112/Control",
           "verdict": "dist>max_dist",
@@ -3714,14 +1607,6 @@
           "from": "adoration.",
           "to": "armaments.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//113/Synt",
-          "intended_uid": "ryskin2021//113/Control",
-          "verdict": "not_retrieved",
-          "from": "armament.",
-          "to": "armaments.",
-          "char_dist": 1
         },
         {
           "stim_uid": "ryskin2021//114/Sem",
@@ -3764,28 +1649,12 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//117/Synt",
-          "intended_uid": "ryskin2021//117/Control",
-          "verdict": "not_retrieved",
-          "from": "baloneys.",
-          "to": "baloney.",
-          "char_dist": 1
-        },
-        {
           "stim_uid": "ryskin2021//118/Sem",
           "intended_uid": "ryskin2021//118/Control",
           "verdict": "dist>max_dist",
           "from": "consciousness.",
           "to": "balcony.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//118/Synt",
-          "intended_uid": "ryskin2021//118/Control",
-          "verdict": "dist>max_dist",
-          "from": "balconies.",
-          "to": "balcony.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//120/SemCrit",
@@ -3802,14 +1671,6 @@
           "from": "an expedition.",
           "to": "a bounty.",
           "char_dist": null
-        },
-        {
-          "stim_uid": "ryskin2021//120/Synt",
-          "intended_uid": "ryskin2021//120/Control",
-          "verdict": "dist>max_dist",
-          "from": "bounties.",
-          "to": "bounty.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//121/SemCrit",
@@ -3892,14 +1753,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//127/Synt",
-          "intended_uid": "ryskin2021//127/Control",
-          "verdict": "not_retrieved",
-          "from": "consternations.",
-          "to": "consternation.",
-          "char_dist": 1
-        },
-        {
           "stim_uid": "ryskin2021//128/Sem",
           "intended_uid": "ryskin2021//128/Control",
           "verdict": "dist>max_dist",
@@ -3940,14 +1793,6 @@
           "char_dist": null
         },
         {
-          "stim_uid": "ryskin2021//131/Synt",
-          "intended_uid": "ryskin2021//131/Control",
-          "verdict": "dist>max_dist",
-          "from": "mercenaries.",
-          "to": "mercenary.",
-          "char_dist": 3
-        },
-        {
           "stim_uid": "ryskin2021//132/SemCrit",
           "intended_uid": "ryskin2021//132/Control",
           "verdict": "dist>max_dist",
@@ -3962,14 +1807,6 @@
           "from": "an admission.",
           "to": "a missionary.",
           "char_dist": null
-        },
-        {
-          "stim_uid": "ryskin2021//132/Synt",
-          "intended_uid": "ryskin2021//132/Control",
-          "verdict": "dist>max_dist",
-          "from": "missionaries.",
-          "to": "missionary.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//133/SemCrit",
@@ -4010,14 +1847,6 @@
           "from": "missionary.",
           "to": "density.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//135/Synt",
-          "intended_uid": "ryskin2021//135/Control",
-          "verdict": "dist>max_dist",
-          "from": "densities.",
-          "to": "density.",
-          "char_dist": 3
         },
         {
           "stim_uid": "ryskin2021//138/Sem",
@@ -4100,14 +1929,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//145/Synt",
-          "intended_uid": "ryskin2021//145/Control",
-          "verdict": "dist>max_dist",
-          "from": "dynasties.",
-          "to": "dynasty.",
-          "char_dist": 3
-        },
-        {
           "stim_uid": "ryskin2021//146/SemCrit",
           "intended_uid": "ryskin2021//146/Control",
           "verdict": "dist>max_dist",
@@ -4156,14 +1977,6 @@
           "char_dist": 4
         },
         {
-          "stim_uid": "ryskin2021//149/Synt",
-          "intended_uid": "ryskin2021//149/Control",
-          "verdict": "not_retrieved",
-          "from": "muskets.",
-          "to": "musket.",
-          "char_dist": 1
-        },
-        {
           "stim_uid": "ryskin2021//150/SemCrit",
           "intended_uid": "ryskin2021//150/Control",
           "verdict": "not_retrieved",
@@ -4178,14 +1991,6 @@
           "from": "collection.",
           "to": "muskrat.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//150/Synt",
-          "intended_uid": "ryskin2021//150/Control",
-          "verdict": "not_retrieved",
-          "from": "muskrats.",
-          "to": "muskrat.",
-          "char_dist": 1
         },
         {
           "stim_uid": "ryskin2021//154/Sem",
@@ -4226,14 +2031,6 @@
           "from": "excursion.",
           "to": "fallacy.",
           "char_dist": 4
-        },
-        {
-          "stim_uid": "ryskin2021//159/Synt",
-          "intended_uid": "ryskin2021//159/Control",
-          "verdict": "dist>max_dist",
-          "from": "fallacies.",
-          "to": "fallacy.",
-          "char_dist": 3
         }
       ]
     },
@@ -4249,9 +2046,9 @@
   },
   "qian2023_repair_routes": {
     "ungrammatical_stimuli": 240,
-    "route_B_noun_reachable": 234,
+    "route_B_noun_reachable": 240,
     "route_B_noun_total": 240,
-    "route_A_verb_reachable": 38,
+    "route_A_verb_reachable": 240,
     "route_A_verb_total": 240
   }
 }
