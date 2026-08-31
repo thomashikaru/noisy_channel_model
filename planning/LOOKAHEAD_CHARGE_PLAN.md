@@ -9,7 +9,7 @@ BEFORE any Phase-5 submission (option 2 of the findings doc).
 
 Mid-run, particles at the same intended-word step may have consumed different numbers of
 observed words, and a particle that is behind holds a weight that has not yet paid for the
-observed words it skipped. Fix: at每 resampling event, weight each particle's resampling
+observed words it skipped. Fix: at each resampling event, weight each particle's resampling
 probability by an estimate of that unpaid cost — the plain-LM baseline surprisal of the
 observed units past its position — then carry the inverse of that factor as residual weight so
 every estimator stays unbiased (the standard auxiliary-particle-filter arrangement). The
