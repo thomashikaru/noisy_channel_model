@@ -782,6 +782,99 @@ def test_channel_selector_validation():
     _assert_raises(lambda: run(channel="bogus"), "word_action")
 
 
+# ==================================================================================================
+# Lookahead charge at resampling (planning/LOOKAHEAD_CHARGE_PLAN.md). At each resample event the
+# filter may select on the CHARGED weights log_w + psi (psi = the alpha-weighted literal-LM cost of
+# the observed units a particle has not yet consumed) and carry -psi[anc] as residual -- the
+# auxiliary-particle-filter arrangement, which leaves every estimator unbiased for ANY psi. Gates:
+# (1) at psi == 0 (an all-zero charge vector) the twist plumbing collapses BIT-IDENTICALLY to the
+# certified path -- fold, residual, and ESS trigger all reduce exactly; (2) with the real
+# literal-reading charge the posterior still matches exact enumeration and logZ stays unbiased over
+# seeds (the plan's toy-exactness gate); (3) the input contract is enforced.
+# ==================================================================================================
+def _toy_literal_lp(observed, lm):
+    """Per-unit log-lik of reading ``observed`` LITERALLY under the toy bigram -- the toy analog of
+    ``pythia_word_caprop.lm_word_surprisals`` (EOS excluded; it cancels in the normalized weights).
+    An out-of-vocab observed word (the toy typo 'teh') is mapped to its NEAREST vocab word: unlike
+    Pythia's BPE, the toy bigram cannot score an arbitrary surface, and the charge only needs to be
+    a reasonable estimate -- ANY psi keeps the APF arrangement unbiased."""
+    lb = LOG_BIGRAM if lm is lm_logits else _bigram_table(lm)
+    ids = [WORD2IDX.get(w) if w in WORD2IDX else
+           min(range(V), key=lambda i: _damerau_levenshtein(w, VOCAB[i], 3))
+           for w in observed.split()]
+    prev, out = BOS, []
+    for i in ids:
+        out.append(float(lb[prev, i]))
+        prev = i
+    return jnp.array(out, jnp.float32)
+
+
+def test_lookahead_zero_charge_bit_identical():
+    """An all-zero ``lookahead_lp`` makes psi exactly 0, so the twisted resample block (charged
+    fold, residual -psi[anc], ESS trigger on the charged weights) must reduce BIT-IDENTICALLY to
+    the certified path given the same RNG -- the strongest form of the off-gate: it certifies the
+    new arithmetic, not just the None short-circuit."""
+    lm = _peaked()
+    model = _toy_model(lm)
+    M = len(_PEAKED_OBS.split())
+    st0, lw0, z0, _ = pairhmm_smc.run(_PEAKED_OBS, jax.random.PRNGKey(0), model, P=2000,
+                                      proposal="caprop", wdel=WDEL, wins=WINS, band=2)
+    st1, lw1, z1, _ = pairhmm_smc.run(_PEAKED_OBS, jax.random.PRNGKey(0), model, P=2000,
+                                      proposal="caprop", wdel=WDEL, wins=WINS, band=2,
+                                      lookahead_lp=jnp.zeros(M))
+    assert z0 == z1, f"zero-charge lookahead not bit-identical: logZ {z0} vs {z1}"
+    assert jnp.array_equal(lw0, lw1), "zero-charge lookahead changed the final weights"
+    assert jnp.array_equal(st0[0], st1[0]), "zero-charge lookahead changed the particle buffers"
+
+
+def test_lookahead_logZ_and_posterior_match_exact():
+    """With the literal-reading charge ON, the filter still targets the same posterior: logZ is
+    unbiased over seeds (the charge cancels through the residual) and the posterior matches exact
+    enumeration -- the plan's toy-exactness gate. Mirrors ``test_caprop_logZ_matches_exact`` /
+    ``test_posterior_mass_matches_exact`` with the twist active."""
+    lm, exact, exact_logZ = _peaked_exact()
+    model = _toy_model(lm)
+    target = exact_logZ - _a0_const(len(_PEAKED_OBS.split()))
+    la = _toy_literal_lp(_PEAKED_OBS, lm)
+    runs = [pairhmm_smc.run(_PEAKED_OBS, jax.random.PRNGKey(s), model, P=6000,
+                            proposal="caprop", wdel=WDEL, wins=WINS, lookahead_lp=la)
+            for s in range(4)]
+    zs = jnp.array([r[2] for r in runs])
+    assert abs(float(zs.mean()) - target) < 0.08, \
+        f"lookahead logZ {float(zs.mean()):.3f} != exact-rel {target:.3f}"
+    smc = {s: p for s, p in pairhmm_smc.decode(runs[0][0], runs[0][1], model, top=50)}
+    assert max(smc, key=smc.get) == max(exact, key=exact.get) == _PEAKED_TRUTH
+    assert tv_distance(exact, smc) < 0.15, \
+        f"lookahead posterior too far from exact: TV {tv_distance(exact, smc):.3f}"
+
+
+def test_lookahead_align_gibbs_end_to_end():
+    """The twist composes with the align channel + Gibbs rejuvenation (the deployment path): the
+    residual -psi[anc] is a per-particle constant in log_w, the sweep folds its own weight on top,
+    and the MAP is still recovered. Mirrors ``test_align_run_gibbs_end_to_end`` with the charge on."""
+    lm = _peaked()
+    model = _align_model(lm, _ALIGN_SLOPE)
+    la = _toy_literal_lp(_PEAKED_OBS, lm)
+    st, dw, _logZ, _sl = pairhmm_smc.run(_PEAKED_OBS, jax.random.PRNGKey(0), model, P=4000,
+                                         proposal="caprop", wdel=WDEL, wins=WINS, band=2,
+                                         rejuv="gibbs", channel="align",
+                                         action_alpha=[9.0, 0.5, 0.5], lookahead_lp=la)
+    smc = {s: p for s, p in pairhmm_smc.decode(st, dw, model, top=50)}
+    assert max(smc, key=smc.get) == _PEAKED_TRUTH, \
+        f"lookahead align run+gibbs MAP {max(smc, key=smc.get)!r}, expected {_PEAKED_TRUTH!r}"
+
+
+def test_lookahead_input_contract():
+    """The lookahead contract is enforced: one log-lik per observed unit, caprop only (bootstrap's
+    done particles have not paid the terminal correction, so the done-guard psi=0 would be wrong)."""
+    model = _toy_model(lm_logits)
+    obs, key = "teh cat sat", jax.random.PRNGKey(0)
+    run = lambda **kw: pairhmm_smc.run(obs, key, model, P=64, wdel=WDEL, wins=WINS, band=2, **kw)
+    _assert_raises(lambda: run(lookahead_lp=jnp.zeros(2)), "one log-lik per observed unit")
+    _assert_raises(lambda: run(lookahead_lp=jnp.zeros(3), proposal="bootstrap"),
+                   "requires proposal='caprop'")
+
+
 def test_dedup_forward_exact():
     """R3 item 1: ``cache_dedup.make_forward_dedup`` runs a batched forward on only the unique filled
     prefixes (keyed on ``buf[:i_len]``) and scatters back. EXACT -- the deduped output equals the raw

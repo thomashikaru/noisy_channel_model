@@ -476,7 +476,7 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
         rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False,
         lm_temp=1.0, action_alpha=None, channel=None, bd_min_done=0.0, bd_bridge_j=0, bd_pool_cap=None,
         bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1, bd_funcword_ids=None, morph_lp=None,
-        word_stats=None, diag=None):
+        word_stats=None, diag=None, lookahead_lp=None):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
@@ -554,6 +554,29 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     pieces (emission table, copy mask, per-particle costs) that the host-side alignment posterior
     ``word_stats.alignment_posteriors`` (§3.3) consumes in-process. ``None`` (default) is
     bit-identical to the certified path -- no extra RNG, no change inside the jitted code.
+
+    ``lookahead_lp`` (default ``None`` -- OFF, bit-identical by construction) is the lookahead
+    charge at resampling (planning/LOOKAHEAD_CHARGE_PLAN.md; the auxiliary-particle-filter twist).
+    Mid-run, particles at the same intended-word step may have consumed different numbers of
+    observed units, and a particle that is behind holds a weight that has not yet paid for the
+    units it skipped -- so at every resample the up-to-date particles look worse and the plain
+    literal parse can go extinct (the leading-deletion artifact,
+    planning/LEADING_DELETION_FINDINGS.md). ``lookahead_lp`` is an ``(M,)`` array of per-observed-
+    unit LOG-LIKELIHOODS of reading the sentence literally (``-surprisal_lm``, e.g. from
+    ``pythia_word_caprop.lm_word_surprisals``; EOS excluded -- it is a constant across particles
+    and cancels in the normalized resampling weights). Each resample then selects on the charged
+    weights ``log_w + psi`` -- ``psi`` = the alpha-weighted estimate of the unpaid cost,
+    ``logsumexp_k(log_alpha[k] + C[k]) - logsumexp_k(log_alpha[k])`` with the suffix charge
+    ``C[k] = lm_temp * sum_{i>k} lookahead_lp[i]`` (the tempering by ``lm_temp`` happens HERE, so
+    callers pass the untempered log-liks) -- and carries the inverse as residual weight
+    (``log_w = -psi[anc]``), so every estimator (logZ, the terminal posterior, the §3.1 prefix
+    masses) stays unbiased: selection ∝ w*e^psi with residual w/e^psi is the standard APF
+    arrangement. ``psi`` is forced to 0 for DONE particles (their EOS caprop score already folded
+    the full-consumption term ``alpha[M] - logsumexp(alpha)``, so their unpaid cost is exactly 0,
+    while their STORED alpha row is the stale pre-EOS one and would mis-charge them) and for
+    impossible parses (non-finite alpha total; they carry -inf weight anyway). Requires
+    ``proposal="caprop"`` (bootstrap's done particles have NOT paid the terminal term, so the
+    done-guard would be wrong there).
     """
     # Channel selector (plan WORD_ACTION_REJUV_PLAN Phase 3): ``"word_action"`` is THE model -- the
     # per-word Dirichlet action channel; ``"char_copy"`` is the deprecated bundled char channel, kept
@@ -663,6 +686,23 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
              a0p, jnp.zeros(P, bool))   # +word_len, +word_surf (R4)
     log_w = jnp.zeros(P)
     logZ = 0.0
+
+    # Lookahead charge at resampling (see the docstring): precompute the suffix vector
+    # C[k] = lm_temp * sum_{i>k} lookahead_lp[i] (C[M] = 0) once; the per-particle psi is read off
+    # log_alpha at each resample event. None => la_C is None => the resample block below is the
+    # certified path unchanged.
+    la_C = None
+    if lookahead_lp is not None:
+        if proposal != "caprop":
+            raise ValueError("lookahead_lp requires proposal='caprop' (bootstrap's done particles "
+                             "have not paid the terminal correction, so the done-guard psi=0 "
+                             "would be wrong)")
+        lk = jnp.asarray(lookahead_lp, jnp.float32).reshape(-1)
+        if lk.shape[0] != M:
+            raise ValueError(f"lookahead_lp must have one log-lik per observed unit: got "
+                             f"{lk.shape[0]}, M={M}")
+        la_C = jnp.concatenate([jnp.cumsum((lm_temp * lk)[::-1])[::-1],
+                                jnp.zeros((1,), jnp.float32)])            # (M+1,), C[M]=0
 
     # Multi-token LM scorer (Phase D): the injected KV/uncached chain-rule over a candidate's tokens.
     tail_fn = None
@@ -842,19 +882,32 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
             em = _ws.emission_masses(log_alpha, state[4], n_words, emit_full, copy_mask,
                                      lp_copy, lp_sub, wdel_p, wins_p, band=band)
             ws_acc.add(em, state[5], state[6], log_w, float(logZ))
-        ess_pre = float(_ess(log_w))     # the ESS that triggers/avoids resampling (recorded for the viz)
-        resampled, rejuv_info = False, None
+        if la_C is None:
+            psi, lsel = None, log_w
+        else:
+            # APF twist (docstring): psi = alpha-weighted unpaid literal-LM cost of the units not
+            # yet consumed. DONE particles already folded alpha[M]-logsumexp(alpha) at their EOS
+            # step (their stored alpha row is stale), so their unpaid cost is exactly 0; non-finite
+            # (impossible-parse) rows also get 0 (they carry -inf weight regardless).
+            tot = logsumexp(state[5], axis=1)
+            psi = logsumexp(state[5] + la_C[None, :], axis=1) - tot
+            psi = jnp.where(state[6] | ~jnp.isfinite(psi), 0.0, psi)
+            lsel = log_w + psi
+        ess_pre = float(_ess(lsel))      # the ESS that triggers/avoids resampling (recorded for the
+        resampled, rejuv_info = False, None                    # viz); on the weights we would sample
         if ess_pre < 0.5 * P:            # ESS-triggered resampling keeps early diversity
             resampled = True
-            logZ = logZ + logsumexp(log_w) - jnp.log(P)
+            logZ = logZ + logsumexp(lsel) - jnp.log(P)
             key, sub = jax.random.split(key)
-            anc = jax.random.categorical(sub, log_w, shape=(P,))
+            anc = jax.random.categorical(sub, lsel, shape=(P,))
             state = jax.tree_util.tree_map(lambda a: a[anc], state)
             lp_copy, lp_sub = lp_copy[anc], lp_sub[anc]   # per-particle action costs follow the ancestors
             wdel_p, wins_p = wdel_p[anc], wins_p[anc]
             if theta is not None:
                 theta = theta[anc]
-            log_w = jnp.zeros(P)
+            # Residual: undo the charge after selection so every later fold stays unbiased (the
+            # APF arrangement -- selection ∝ w*e^psi, residual w/e^psi; psi=None => zeros, certified).
+            log_w = jnp.zeros(P) if psi is None else -psi[anc]
             if rj_sweep is not None:     # SWEEP-THEN-REFRESH (plan sec 3): run the theta-aware word move
                 ctx_buf, ctx_len, n_words, word_len, word_surf, _, done = state  # pre-resample (GOAL3 b)
                 hi = min(s + 1, M + slack)                   # frontier word count (upper bound)
