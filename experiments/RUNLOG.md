@@ -106,3 +106,12 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
   indel move n_chosen_del 3–7/seed). 5/8 smoke items are affected in the off arm.
 - Phase 5 (both arms, all datasets) is NOT submitted; whether to run as-is, fix the
   intermediate target, change band/α_del, or run bd-only is the user's decision.
+
+### 2026-08-31T18:20:00Z — decision + handoff (not a launch)
+
+- User chose to FIX the resampling weights before Phase 5 (option 2 of
+  `planning/LEADING_DELETION_FINDINGS.md`): a lookahead charge at resampling events, to be
+  implemented in a fresh session per `planning/LOOKAHEAD_CHARGE_PLAN.md` (design, exact math,
+  touch-points, gates, and the cluster state at handoff are all in that plan).
+- At handoff, smoke × main_bd job 21654049 shards 1 and 3 were still running; the next session
+  records their outcome on the 15:11:20Z entry above.
