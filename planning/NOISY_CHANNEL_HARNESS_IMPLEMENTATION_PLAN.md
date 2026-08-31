@@ -11,9 +11,9 @@ code-facts below (paths, line numbers) were verified against branch `rejuv-birth
 > |---|---|---|
 > | 0 branch + scaffold | — | **done** (`108beeb`) |
 > | 1 stimulus harmonization | §2 | **done** (`4f02275`) — **§2 is now a design record, not a spec.** Five details below were wrong about the data and the shipped converters deviate; `experiments/README.md` is authoritative for what exists |
-> | 2 per-word model outputs | §3 | **not started — this is next** |
+> | 2 per-word model outputs | §3 | **done** (`0684311`) — `word_stats.py` + `run(word_stats=, diag=)` hooks + `lm_word_surprisals` + rejuv stats; 5 new gates, suite 106 passed. §3.5's compile probe: see the note below the table |
 > | (out of band) channel additions | — | **done** (`3983533`, regression-checked `e8487ff`) — see below |
-> | 3 worker + output schema | §4 | not started |
+> | 3 worker + output schema | §4 | **not started — this is next** |
 > | 4 configs, smoke, cost probes | §5 | not started |
 > | 5 cluster runs | §6 | not started |
 > | 6 documentation | §7 | not started |
@@ -46,6 +46,14 @@ code-facts below (paths, line numbers) were verified against branch `rejuv-birth
 > that comma restoration is "reported as a model property, not patched" is therefore **superseded** —
 > it is now reachable. Open debts: `MORPH_LP` is uncalibrated and the comma pool is untested, both
 > because the battery has no agreement or punctuation items.
+>
+> **§3.5 probe result (2026-08-30, `planning/lctx_compile_probe.py`)**: one item (M≈9, P=64,
+> rejuv=off) at seed_len 2/9/20, first vs second call at the same shape: 17.4/12.7/14.5 s first vs
+> 7.5/8.5/10.4 s second — a NEW seed_len costs only ~4–5 s of one-time compile (the second-call
+> growth with seed_len is the genuine per-token forward cost of a longer context, not compile).
+> Mitigation (a) — the worker sorting each shard by exact `(seed_len, M)` — is sufficient; skip
+> `lctx_round` bucketing (mitigation b). Caveat: probed on the off arm; the gibbs+bd arm compiles
+> more pieces per shape, so read the first bd shard's log before assuming the same there.
 
 ## 0. What exists, what is missing
 
@@ -368,7 +376,7 @@ vocab tables are prime-independent). The real cost is indirect: `seed_len` sets 
 compiles per shard over ~160 contexts. Mitigation (a): the worker sorts each shard by exact
 `(seed_len, M)`. Mitigation (b), only if the probe says it is needed: opt-in `lctx_round` bucketing
 (right-pad with EOS past `ctx_len` — exact under causal attention; three places: `run :593`,
-`_tail_inputs`, `_kv_setup`; default `None` ⇒ bit-identical). Probe first: one item at three seed lengths,
+`_tail_inputs`, `_kv_setup`; default `None` ⇒ bit-identical). Probe first (DONE 2026-08-30 — result in the status banner: a new seed_len costs ~4–5 s of one-time compile; (a) suffices, skip (b)): one item at three seed lengths,
 first vs second call (~2 min).
 
 ### 3.6 Tests (`src/genjax_port/tests/test_word_stats.py`; register in `tests/run.py`)

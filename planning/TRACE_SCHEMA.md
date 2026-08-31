@@ -81,7 +81,11 @@ resample; the proper filtering weights otherwise).
   "rejuv": {
     "words": [1, 4],            // [lo, hi): the word-slot window the sweep revisited
     "ess_after": 39.7,          // ESS after the move's SMCP3 weight was folded in
-    "mean_abs_w": 0.0008        // mean |move_logw| (≈0 for a full-conditional Gibbs move)
+    "mean_abs_w": 0.0008,       // mean |move_logw| (≈0 for a full-conditional Gibbs move)
+    // per swept word slot (word_stats §3.4; present when a trace or word_stats is collected):
+    // change_rate = fraction of active particles that moved off their current word this event,
+    // stay_prob = mean full-conditional probability of keeping it, n = active particles.
+    "sub_words": {"1": {"n": 512, "change_rate": 0.04, "stay_prob": 0.97}, "…": {}}
   }
 }
 ```
@@ -94,7 +98,7 @@ resample; the proper filtering weights otherwise).
 | `dist` / `dist_residual` / `n_unique` | decode `ctx_buf[p][seed_len:ctx_len[p]]` per particle, group by string, sum `softmax(log_w)` |
 | `frontier` | `argmax(log_alpha, axis=1)` per particle (the channel pair-HMM consumption count), weighted |
 | `particles` | per-particle `{weight, k=frontier, done, prefix}`, capped to the heaviest 512 |
-| `rejuv` | the post-resample windowed sweep (R2/R3): window `[lo,hi)`, `ess_after`, `mean|move_logw|` |
+| `rejuv` | the post-resample windowed sweep (R2/R3): window `[lo,hi)`, `ess_after`, `mean|move_logw|`, per-slot `sub_words` (word_stats §3.4) |
 | `final` step | one extra snapshot after the **terminal full-consumption correction** — the true posterior |
 
 ### Notes / invariants
