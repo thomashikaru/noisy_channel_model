@@ -23,8 +23,10 @@ import re
 import sys
 
 # "SUBW-01a     edit    0.96   0.89  0.04 0.92 0.04  'obs' -> 'int'  (q_smc; 19s)"
+# Item ids are not uniformly upper-case-plus-number: the battery also has LADDER-give-1 and
+# DEL-to-05a, so the id pattern must allow lower-case and multi-segment names.
 ROW = re.compile(
-    r"^(?P<item>[A-Z][A-Z_]*-\d+[ab]?)\s+(?P<exp>edit|keep)\s+"
+    r"^(?P<item>[A-Za-z][A-Za-z_]*(?:-[A-Za-z0-9]+)+)\s+(?P<exp>edit|keep)\s+"
     r"(?P<metric>[-\d.]+|nan)\s+(?P<qref>[-\d.]+|nan)\s+"
     r"(?P<L>[-\d.]+)\s+(?P<E>[-\d.]+)\s+(?P<junk>[-\d.]+)\s")
 
