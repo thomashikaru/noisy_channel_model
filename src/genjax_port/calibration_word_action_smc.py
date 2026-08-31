@@ -71,6 +71,11 @@ BD_P_STAY = float(os.environ.get("NC_BD_P_STAY", "0.0"))
 BD_BRIDGE_J = int(os.environ.get("NC_BD_BRIDGE_J", "0"))
 BD_POOL_CAP = int(os.environ["NC_BD_POOL_CAP"]) if os.environ.get("NC_BD_POOL_CAP") else None
 BD_FUNCWORDS = os.environ.get("NC_BD_FUNCWORDS", "1") not in ("0", "false", "")  # fixed function-word insert pool
+# NC_MORPH=0 disables the inflectional edit class (genjax_port.morphology), reproducing the channel
+# as it was before that class existed. The A/B this exists for is the regression check: the class
+# adds cheap edit routes to a channel whose K/alpha were calibrated without them, so the question is
+# whether it makes the model edit-happy on the INS_DUP / CTRL families.
+MORPH = os.environ.get("NC_MORPH", "1") not in ("0", "false", "")
 
 
 def _wellform(s):
@@ -97,7 +102,7 @@ def evaluate(item_id, P, seed, alpha, rejuv, dedup):
                              channel=CHANNEL, align_slope=ALIGN_SLOPE,
                              bd_bridge_j=BD_BRIDGE_J, bd_pool_cap=BD_POOL_CAP,
                              bd_p_stay=BD_P_STAY, bd_mode=BD_MODE, bd_attempts=BD_ATTEMPTS,
-                             bd_funcwords=BD_FUNCWORDS)
+                             bd_funcwords=BD_FUNCWORDS, morph=MORPH)
     top = W.decode(st, lw, skip=sl, top=60)
     lit_n, cor_n = _norm(observed), _norm(intended)
     lit = sum(p for s, p in top if _norm(s) == lit_n)
@@ -131,6 +136,7 @@ def main():
     lm_penzai.load_model()
     bd = f"  bd_mode={BD_MODE} bd_p_stay={BD_P_STAY} bd_bridge_j={BD_BRIDGE_J} bd_pool_cap={BD_POOL_CAP}" \
         if rejuv == "gibbs+bd" else ""
+    bd += f"  morph={MORPH}"
     print(f"LM={lm_penzai.MODEL_NAME}  P={P}  seed={seed}  channel={CHANNEL}  alpha={alpha}  "
           f"align_slope={ALIGN_SLOPE}  rejuv={rejuv}  dedup={dedup}  cap_initial={CAP}{bd}  "
           f"items={len(items)}\n", flush=True)
