@@ -14,7 +14,7 @@ code-facts below (paths, line numbers) were verified against branch `rejuv-birth
 > | 2 per-word model outputs | §3 | **done** (`0684311`) — `word_stats.py` + `run(word_stats=, diag=)` hooks + `lm_word_surprisals` + rejuv stats; 5 new gates, suite 106 passed. §3.5's compile probe: see the note below the table |
 > | (out of band) channel additions | — | **done** (`3983533`, regression-checked `e8487ff`) — see below |
 > | 3 worker + output schema | §4 | **done** (`1ecc87a`) — jsonl inputs + context prime + words block + `_merge_words` + `collect.py`; 7 new gates, suite 113 passed; smoke-set end-to-end verified locally |
-> | 4 configs, smoke, cost probes | §5 | **not started — this is next** |
+> | 4 configs, smoke, cost probes | §5 | **local half done** (`af29d70`) — configs (off/bd arms differ only in REJUV, enforced), `run.sh`, cost probe RUN (RUNLOG: off 22–40 s ≤7.3 GB; bd 134–440 s ≤15.6 GB → main_off MEM=16G SPI=120 shard=8; main_bd MEM=32G SPI=1320 shard=2), `smoke-local` verified incl. §8's candle/daughter gap mass (del_before 0.50, insertion chosen by 8/16 particles). **Remaining: the ORCD cluster smoke — needs the USER (ssh -fN orcd; push OK)** |
 > | 5 cluster runs | §6 | not started |
 > | 6 documentation | §7 | not started |
 >
