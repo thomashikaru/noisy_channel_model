@@ -157,3 +157,12 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
 - item 4: logZ −97.55, p_literal 0.0, runtime 3673 s for 4 seeds (~918 s per item×seed — the
   SECONDS_PER_ITEM=1320 sizing holds with margin).
 - Smoke set now 8/8 merged on BOTH arms; bd words table 430/430 finite surprisal_nc after pull.
+
+### 2026-08-31T18:13:46Z — battery A/B for the lookahead charge (gate 7), off arm × {la off, la on}
+- commit: `784b476` (local == cluster; pushed + ff-pulled this session)
+- input: `planning/calibration_battery_v0.txt` (87 items), P=64, N_SEEDS=2, band 2, lb 6, align, rejuv=off
+- sizing: MEM=24G SECONDS_PER_ITEM=120 SENTENCES_PER_SHARD=8 (13 shards/arm, --time 47:00)
+- baseline slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__nseed2` — job id 21666107
+- lookahead slug: `...__s0__la__nseed2` (LOOKAHEAD=1) — job id 21666110
+- purpose: LOOKAHEAD_CHARGE_PLAN gate 7 — "did anything else move"; decides LOOKAHEAD in main.env.
+- outcome: (append when finished)
