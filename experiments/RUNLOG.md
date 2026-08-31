@@ -248,3 +248,17 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
 - env: `INPUT=experiments/stimuli/ryskin2021.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
 - job id: 21676506
 - outcome: (append when finished)
+
+### 2026-08-31T21:09:46Z — chen2023 × main_off
+- commit: `2b59960` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 480
+- env: `INPUT=experiments/stimuli/chen2023.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21678760
+- outcome: (append when finished)
+
+### 2026-08-31T21:09:49Z — moses × main_bd
+- commit: `2b59960` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-gibbsbd__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 1
+- env: `INPUT=experiments/stimuli/moses.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=gibbs+bd REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=32G SECONDS_PER_ITEM=1320 SENTENCES_PER_SHARD=2`
+- job id: 21678765
+- outcome: (append when finished)
