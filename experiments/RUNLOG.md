@@ -199,3 +199,52 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
   repaired). logZ shifts −4..+4 vs the pre-fix bd smoke (seed noise + changed sampler);
   p_literal stable. off and bd configurations now AGREE on evidence for item 0 (−53.4 vs −53.7,
   previously −62.4 vs −49.5).
+
+### 2026-08-31T20:38:14Z — moses × main_off
+- commit: `f856895` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 1
+- env: `INPUT=experiments/stimuli/moses.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21676493
+- outcome: (append when finished)
+
+### 2026-08-31T20:38:16Z — tabor2004 × main_off
+- commit: `f856895` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 128
+- env: `INPUT=experiments/stimuli/tabor2004.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21676496
+- outcome: (append when finished)
+
+### 2026-08-31T20:38:18Z — huang2024 × main_off
+- commit: `f856895` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 144
+- env: `INPUT=experiments/stimuli/huang2024.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21676499
+- outcome: (append when finished)
+
+### 2026-08-31T20:38:19Z — gibson2013 × main_off
+- commit: `f856895` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 240
+- env: `INPUT=experiments/stimuli/gibson2013.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21676500
+- outcome: (append when finished)
+
+### 2026-08-31T20:38:21Z — clark2026 × main_off
+- commit: `f856895` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 360
+- env: `INPUT=experiments/stimuli/clark2026.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21676502
+- outcome: (append when finished)
+
+### 2026-08-31T20:38:22Z — qian2023 × main_off
+- commit: `f856895` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 472
+- env: `INPUT=experiments/stimuli/qian2023.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21676505
+- outcome: (append when finished)
+
+### 2026-08-31T20:38:24Z — ryskin2021 × main_off
+- commit: `f856895` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 504
+- env: `INPUT=experiments/stimuli/ryskin2021.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21676506
+- outcome: (append when finished)
