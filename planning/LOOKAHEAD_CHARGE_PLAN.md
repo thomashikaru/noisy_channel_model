@@ -191,7 +191,7 @@ terminal term, so psi=0 would be wrong there); enforced with a ValueError.
    | 4 suspect      | 0.00→0.00 | 0.0→0.0  | −103.0→−100.0 [−97.6] | unaffected item |
    | 5 licked       | 1.94→0.00 | 0.02→0.0 | −73.3→−72.2 [−59.6] | artifact gone; BAD la collapse |
    | 6 coach        | 2.00→0.00 | 0.51→0.0 | −91.2→−85.9 [−75.6] | artifact gone; literal lost |
-   | 7 candle+ctx   | 0.00→0.00 | 0.05→0.38 | −25.1→−26.4 | unaffected; bimodal as item 0 |
+   | 7 candle+ctx   | 0.00→0.00 | 0.05→0.38 | −25.1→−26.4 [−24.9] | unaffected; bimodal as item 0 |
 
    What the table says, honestly:
    - The leading-deletion artifact is ELIMINATED on 4 of the 5 affected items (0/1/5/6), with
