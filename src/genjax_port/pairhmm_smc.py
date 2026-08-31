@@ -44,6 +44,7 @@ from genjax import ChoiceMap
 
 from genjax_port.genjax_factor import factor
 from genjax_port.word_dp import _word_row_update, _ess, channel_carry
+from genjax_port import word_stats as _ws
 
 
 @dataclass
@@ -474,7 +475,8 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
         max_dist=2, Ke=6, J=4, cwin=1, proposal="caprop", enable_indel=True,
         rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False,
         lm_temp=1.0, action_alpha=None, channel=None, bd_min_done=0.0, bd_bridge_j=0, bd_pool_cap=None,
-        bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1, bd_funcword_ids=None, morph_lp=None):
+        bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1, bd_funcword_ids=None, morph_lp=None,
+        word_stats=None, diag=None):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
@@ -544,6 +546,14 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     (the certified path); ``< 1`` flattens the LM's over-confident preferences so plausible inputs are
     read more literally (curbs over-editing). Applies to ``proposal="caprop"`` (production); the
     ``"bootstrap"`` baseline samples from the raw LM and is meaningful only at ``lm_temp=1.0``.
+
+    ``word_stats`` / ``diag`` (optional dicts) are the Phase-2 per-word output hooks
+    (planning/NOISY_CHANNEL_HARNESS_IMPLEMENTATION_PLAN.md §3; :mod:`genjax_port.word_stats`). Both
+    are host-side OBSERVERS: ``word_stats`` is filled with the prefix-mass per-word surprisal
+    estimator (§3.1) and the per-word rejuvenation statistics (§3.4); ``diag`` with the channel
+    pieces (emission table, copy mask, per-particle costs) that the host-side alignment posterior
+    ``word_stats.alignment_posteriors`` (§3.3) consumes in-process. ``None`` (default) is
+    bit-identical to the certified path -- no extra RNG, no change inside the jitted code.
     """
     # Channel selector (plan WORD_ACTION_REJUV_PLAN Phase 3): ``"word_action"`` is THE model -- the
     # per-word Dirichlet action channel; ``"char_copy"`` is the deprecated bundled char channel, kept
@@ -637,6 +647,14 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     a0p = jax.vmap(lambda wn: band_mask(
         jnp.concatenate([jnp.zeros((1,), wn.dtype), jnp.cumsum(wn)]), 0))(wins_p)       # (P, M+1)
     a0 = a0p[0]                                                          # representative row (rejuv ctx)
+    # Phase-2 word_stats hooks (word_stats §3.1/§3.4): host-side observers; None => certified path.
+    ws_acc, rj_sub_acc, indel_stats = None, None, None
+    collect_rj = (word_stats is not None) or (trace is not None)
+    if word_stats is not None:
+        if lm_temp != 1.0:
+            raise ValueError("word_stats requires lm_temp == 1 (the prefix-mass estimator's "
+                             "convention; see word_stats.CONVENTION)")
+        ws_acc = _ws.PrefixAccumulator(a0p)
     ctx0 = jnp.full((P, LCTX), eos_id, jnp.int32)
     if seed_len:
         ctx0 = ctx0.at[:, :seed_len].set(jnp.array(seed_ids, jnp.int32))
@@ -820,6 +838,10 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
             state, incr = extend_bootstrap(keys, ctx_buf, ctx_len, n_words, word_len, word_surf,
                                            log_alpha, done, lmlog, lp_copy, lp_sub, wdel_p, wins_p)
         log_w = log_w + incr
+        if ws_acc is not None:   # §3.1: this step's emission-terminated row mass, PRE-resample
+            em = _ws.emission_masses(log_alpha, state[4], n_words, emit_full, copy_mask,
+                                     lp_copy, lp_sub, wdel_p, wins_p, band=band)
+            ws_acc.add(em, state[5], state[6], log_w, float(logZ))
         ess_pre = float(_ess(log_w))     # the ESS that triggers/avoids resampling (recorded for the viz)
         resampled, rejuv_info = False, None
         if ess_pre < 0.5 * P:            # ESS-triggered resampling keeps early diversity
@@ -845,13 +867,19 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                         jnp.concatenate([jnp.zeros((1,), wn.dtype), jnp.cumsum(wn)]), 0))(wins_p)  # (P,M+1)
                     theta_costs = (lp_copy, lp_sub, wdel_p, wins_p, a0p, copy_mask)
                 key, sub = jax.random.split(key)
+                sub_records = [] if collect_rj else None
                 cb, cl2, wl2, ws2, la, mlw = rj_sweep(sub, ctx_buf, ctx_len, word_len, word_surf,
                                                       positions=range(lo, hi), done=done,
-                                                      dedup_stats=rj_dedup_stats, theta_costs=theta_costs)
+                                                      dedup_stats=rj_dedup_stats, theta_costs=theta_costs,
+                                                      stats=sub_records)
                 state = (cb, cl2, n_words, wl2, ws2, la, done)   # word count fixed; spans/lengths may move
                 log_w = log_w + mlw
                 rejuv_info = {"words": [int(lo), int(hi)], "ess_after": float(_ess(log_w)),
                               "mean_abs_w": float(jnp.mean(jnp.abs(mlw)))}
+                if sub_records:                                  # word_stats §3.4: per-word sweep stats
+                    rejuv_info["sub_words"] = _ws.sub_sweep_event_summary(sub_records)
+                    if word_stats is not None:
+                        rj_sub_acc = _ws.accumulate_sub_events(rj_sub_acc, sub_records)
                 if rejuv_stats is not None:                   # KV scorer: 1 shared prefill/word/particle
                     window = hi - lo                          # (full forward) + cheap tail steps
                     rejuv_stats["sweep_prefills"] += window
@@ -909,7 +937,11 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                 jnp.concatenate([jnp.zeros((1,), wn.dtype), jnp.cumsum(wn)]), 0))(wins_p)
             bd_theta = (lp_copy, lp_sub, wdel_p, wins_p, a0p, copy_mask)
         key, sub = jax.random.split(key)
-        state, _ = bd_sweep(sub, ctx_buf, ctx_len, word_len, word_surf, done, theta_costs=bd_theta)
+        bd_records = [] if word_stats is not None else None
+        state, _ = bd_sweep(sub, ctx_buf, ctx_len, word_len, word_surf, done, theta_costs=bd_theta,
+                            stats=bd_records)
+        if bd_records:              # word_stats §3.4: weighted by softmax(log_w) HERE (the call site)
+            indel_stats = _ws.indel_summary(bd_records, np.asarray(jax.nn.softmax(log_w)))
 
     # Terminal full-consumption correction: caprop folds alpha[M] into the EOS candidate, so EOS'd
     # particles already paid it; both proposals still need it for particles live at the budget (else
@@ -920,6 +952,20 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     term = jnp.where(jnp.isnan(term), -jnp.inf, term)
     log_w = log_w + term
     logZ = logZ + logsumexp(log_w) - jnp.log(P)
+    if word_stats is not None:              # §3.1 outputs + §3.4 rejuvenation statistics
+        word_stats.update(ws_acc.finish(float(logZ)))
+        word_stats["convention"] = dict(_ws.CONVENTION)
+        rj = {}
+        if rj_sub_acc:
+            rj["sub"] = _ws.finalize_sub(rj_sub_acc)
+        if indel_stats:
+            rj["indel"] = indel_stats
+        if rj:
+            word_stats["rejuv"] = rj
+    if diag is not None:                    # §3.3: what alignment_posteriors needs (in-process only)
+        diag.update(emit_full=emit_full, copy_mask=copy_mask, lp_copy=lp_copy, lp_sub=lp_sub,
+                    wdel_p=wdel_p, wins_p=wins_p, theta=theta, band=band, M=M,
+                    obs_words=list(obs_words))
     if trace is not None:                # final snapshot: terminal-corrected weights (the true posterior)
         trace.append(_record_step(model, state, log_w, seed_len, len(trace), float(_ess(log_w)),
                                    False, logZ, None, final=True))

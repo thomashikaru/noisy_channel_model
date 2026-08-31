@@ -500,7 +500,7 @@ def test_gibbs_indel_dedup_equivalence():
 
     key = jax.random.PRNGKey(7)                                  # same key -> identical sampled edit
     (ft, _, _, fnw), _ = gibbs_indel_move(key, *state, done, score, None, cand_tok, cand_len, cand_surf)
-    (dt, _, _, dnw), mlw = _indel_apply(key, dedup, *state, cand_tok, cand_len, cand_surf)
+    (dt, _, _, dnw), mlw, _idx = _indel_apply(key, dedup, *state, cand_tok, cand_len, cand_surf)
     assert np.array_equal(np.asarray(fnw), np.asarray(dnw)), "dedup path must sample the identical move"
     assert np.array_equal(np.asarray(ft), np.asarray(dt))
     assert np.all(np.asarray(mlw) == 0.0), "Gibbs move must not reweight"

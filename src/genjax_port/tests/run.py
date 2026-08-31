@@ -5,8 +5,10 @@
 Certifies the path that is actually in production -- the unified pair-HMM RB-SMC filter:
 ``test_pairhmm_exact`` (exact-enumeration gates + rejuvenation/dedup parity + multi-token),
 ``test_pythia_word_caprop`` (the Pythia word-caprop smoke), ``test_unigram`` (the
-frequency-aware insertion-cost gate), and ``test_morphology`` (the inflectional edit class and
-the comma in the indel insertion pool). Each module's ``test_*`` functions are the assertions;
+frequency-aware insertion-cost gate), ``test_morphology`` (the inflectional edit class and
+the comma in the indel insertion pool), and ``test_word_stats`` (the Phase-2 per-word output
+hooks: prefix-mass surprisal, alignment posteriors, observer bit-identity). Each module's
+``test_*`` functions are the assertions;
 the modules' own ``main()``/``__main__`` blocks are print-only demos and are NOT run here.
 
 Exits non-zero if any assertion fails. See the package docstring for the pytest alternative.
@@ -19,6 +21,7 @@ from genjax_port.tests import test_pairhmm_exact as t_exact
 from genjax_port.tests import test_pythia_word_caprop as t_pythia
 from genjax_port.tests import test_morphology as t_morph
 from genjax_port.tests import test_unigram as t_unigram
+from genjax_port.tests import test_word_stats as t_wstats
 
 
 def _tests(module):
@@ -28,7 +31,7 @@ def _tests(module):
 def main():
     L.load_model()
     failures = 0
-    for module in (t_exact, t_pythia, t_unigram, t_morph):
+    for module in (t_exact, t_pythia, t_unigram, t_morph, t_wstats):
         for name, fn in _tests(module):
             try:
                 fn()

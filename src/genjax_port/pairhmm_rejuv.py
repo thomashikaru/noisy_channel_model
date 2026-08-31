@@ -361,7 +361,9 @@ def _tail_inputs(w, word_tok, word_len, cand_tok, cand_len, done, n_words,
 def _apply_move(key, target, w, cand_tok, cand_len, cand_surf, word_tok, word_len, word_surf,
                 move_logw, n_words, slot_model, slot_proposal):
     """Sample the per-particle SMCP3 move from ``target`` (P,Kt) and splice the chosen candidate into
-    slot w; accumulate the SMCP3 weight. The ``split(key, P)`` makes duplicate particles DIVERGE -- the
+    slot w; accumulate the SMCP3 weight. Also returns the sampled slot ``s_new`` (0 = keep the
+    current word) for the per-word sweep statistics (word_stats §3.4) -- an array the move already
+    computes, no new arithmetic. The ``split(key, P)`` makes duplicate particles DIVERGE -- the
     diversification dedup must leave untouched (it only dedups the deterministic ``target`` upstream)."""
     P = word_tok.shape[0]
     cur_tok, cur_len, cur_surf = word_tok[:, w, :], word_len[:, w], word_surf[:, w]
@@ -376,7 +378,7 @@ def _apply_move(key, target, w, cand_tok, cand_len, cand_surf, word_tok, word_le
     word_len = word_len.at[:, w].set(jnp.where(active, new_len, cur_len))
     word_surf = word_surf.at[:, w].set(jnp.where(active, new_surf, cur_surf))
     move_logw = move_logw + jnp.where(active, weight, 0.0)
-    return word_tok, word_len, word_surf, move_logw
+    return word_tok, word_len, word_surf, move_logw, s_new
 
 
 @functools.lru_cache(maxsize=64)
@@ -406,8 +408,10 @@ def _build_step(sl, Wmax, T, M, K, mt, eos_id, Vc, band, tail_fn):
             w, word_tok, word_len, cand_tok, cand_len, done, n_words, sl, Wmax, T, mt, eos_id, seed_ids)
         chain = tail_fn(ctx_bufs, ctx_lens, tail, tail_len)                         # (P, Kt) -- LM forward
         target = jnp.where(valid, lm_temp * chain + chan, -jnp.inf)
-        return _apply_move(key, target, w, cand_tok, cand_len, cand_surf,
-                           word_tok, word_len, word_surf, move_logw, n_words, slot_model, slot_proposal)
+        wt, wl, ws, mlw, s_new = _apply_move(key, target, w, cand_tok, cand_len, cand_surf,
+                                             word_tok, word_len, word_surf, move_logw, n_words,
+                                             slot_model, slot_proposal)
+        return wt, wl, ws, mlw, s_new, target
 
     return step
 
@@ -439,8 +443,10 @@ def _build_dedup_steps(sl, Wmax, T, M, K, mt, eos_id, Vc, band):
         chan = _chan_scores(w, word_len, word_surf, cand_len, cand_surf, done,
                             a0p, emit_full, wdel_p, wins_p, band, M, Wmax, lp_copy, lp_sub, copy_mask)
         target = jnp.where(valid, lm_temp * chain + chan, -jnp.inf)
-        return _apply_move(key, target, w, cand_tok, cand_len, cand_surf,
-                           word_tok, word_len, word_surf, move_logw, n_words, slot_model, slot_proposal)
+        wt, wl, ws, mlw, s_new = _apply_move(key, target, w, cand_tok, cand_len, cand_surf,
+                                             word_tok, word_len, word_surf, move_logw, n_words,
+                                             slot_model, slot_proposal)
+        return wt, wl, ws, mlw, s_new, target
 
     return emit_inputs, move
 
@@ -531,12 +537,14 @@ def make_sweep(ctx, pool_tok, pool_len, pool_surf=None, max_tail=None, dedup=Fal
     pool_tok, pool_len, pool_surf = jnp.asarray(pool_tok), jnp.asarray(pool_len), jnp.asarray(pool_surf)
 
     def sweep(key, ctx_buf, ctx_len, word_len=None, word_surf=None, positions=None, done=None,
-              dedup_stats=None, theta_costs=None):
+              dedup_stats=None, theta_costs=None, stats=None):
         """``theta_costs`` (None = char-copy / OFF) is the per-particle WORD-ACTION cost tuple
         ``(lp_copy (P,), lp_sub (P,), wdel_p (P,), wins_p (P,M), a0p (P,M+1), copy_mask (M,Vc_aug))`` --
         the SAME costs the forward filter carries from each particle's theta. Absent, the zero-action
         char-copy parameterization is built from ``ctx`` (``lp_copy=lp_sub=0``, global ``wdel``/``wins``,
-        ``ctx.a0``, all-zero ``copy_mask``) -> bit-identical to the pre-word-action sweep."""
+        ``ctx.a0``, all-zero ``copy_mask``) -> bit-identical to the pre-word-action sweep.
+        ``stats`` (optional list) appends one record ``{w, s_new, target, active}`` per swept
+        position -- quantities the move already computes (word_stats §3.4); None = record nothing."""
         P, LCTX = ctx_buf.shape
         done = jnp.ones(P, bool) if done is None else done
         if word_len is None:                                     # single-token default (toy / gibbs_sweep)
@@ -561,15 +569,18 @@ def make_sweep(ctx, pool_tok, pool_len, pool_surf=None, max_tail=None, dedup=Fal
                 ci = emit_inputs(wi, word_tok, word_len, word_surf, done, n_words,
                                  pool_tok, pool_len, pool_surf, seed_ids)  # (ctx_bufs,ctx_lens,tail,tail_len)
                 chain = _dedup_tail(tail_fn, *ci, stats=dedup_stats)    # host: unique tail_fn -> [P,Kt]
-                word_tok, word_len, word_surf, move_logw = move(
+                word_tok, word_len, word_surf, move_logw, s_new, target = move(
                     sub, chain, wi, word_tok, word_len, word_surf, move_logw, done, n_words,
                     emit_full, a0p, pool_tok, pool_len, pool_surf, wdel_p, wins_p, lm_temp,
                     lp_copy, lp_sub, copy_mask)
             else:
-                word_tok, word_len, word_surf, move_logw = step(
+                word_tok, word_len, word_surf, move_logw, s_new, target = step(
                     sub, wi, word_tok, word_len, word_surf, move_logw, done, n_words,
                     emit_full, a0p, pool_tok, pool_len, pool_surf, wdel_p, wins_p, seed_ids, lm_temp,
                     lp_copy, lp_sub, copy_mask)
+            if stats is not None:                       # word_stats §3.4: host-side, observer-only
+                stats.append({"w": w, "s_new": np.asarray(s_new), "target": np.asarray(target),
+                              "active": np.asarray(wi < n_words)})
         bufs, total = _flat_buffer(ctx, word_tok, word_len, LCTX, n_out)
         ctx_len2 = sl + total.astype(jnp.int32)                  # word lengths may have changed (multi-token)
         log_alpha = channel_carry(a0p, emit_full, ctx.band, M, word_surf, word_len,  # (P, M+1) for filter
@@ -1086,7 +1097,8 @@ def _indel_logits(word_tok, word_len, word_surf, n_words, done,
 def _indel_apply(key, logits, word_tok, word_len, word_surf, n_words,
                  cand_tok, cand_len, cand_surf, temp=1.0):
     """Sample the single edit from the move-conditional ``logits`` (categorical, per particle) and splice
-    it into the state. Returns ``((word_tok', word_len', word_surf', n_words'), move_logw=0)``. ``key`` seeds
+    it into the state. Returns ``((word_tok', word_len', word_surf', n_words'), move_logw=0, idx)``
+    (``idx`` = the sampled move column, for the word_stats §3.4 statistics). ``key`` seeds
     the whole ``(N, n_cands)`` Gumbel draw, so duplicate particles (identical logit rows) still DIVERGE."""
     P, Wmax, T = word_tok.shape
     Kc = cand_surf.shape[0]
@@ -1107,7 +1119,7 @@ def _indel_apply(key, logits, word_tok, word_len, word_surf, n_words,
     new_len = jnp.where(si2, il, jnp.where(sd2, dl, word_len))
     new_surf = jnp.where(si2, is_, jnp.where(sd2, ds, word_surf))
     new_nw = jnp.where(si, inw, jnp.where(sd, dnw, n_words))
-    return (new_tok, new_len, new_surf, new_nw), jnp.zeros(P)
+    return (new_tok, new_len, new_surf, new_nw), jnp.zeros(P), idx
 
 
 def gibbs_indel_move(key, word_tok, word_len, word_surf, n_words, done,
@@ -1123,8 +1135,9 @@ def gibbs_indel_move(key, word_tok, word_len, word_surf, n_words, done,
     all N at the native batch (the toy / test path)."""
     logits = _indel_logits(word_tok, word_len, word_surf, n_words, done, score, theta_costs,
                            cand_tok, cand_len, cand_surf)
-    return _indel_apply(key, logits, word_tok, word_len, word_surf, n_words,
-                        cand_tok, cand_len, cand_surf, temp=temp)
+    state, move_logw, _idx = _indel_apply(key, logits, word_tok, word_len, word_surf, n_words,
+                                          cand_tok, cand_len, cand_surf, temp=temp)
+    return state, move_logw
 
 
 def _dedup_indel_logits(logits_fn, word_tok, word_len, word_surf, n_words, done, theta_costs):
@@ -1195,14 +1208,18 @@ def make_gibbs_indel_sweep(ctx, cand_tok, cand_len, cand_surf, n_attempts=1, tem
     def _apply(key, logits, wt, wl, ws, nw):
         return _indel_apply(key, logits, wt, wl, ws, nw, cand_tok, cand_len, cand_surf, temp=temp)
 
-    def sweep(key, ctx_buf, ctx_len, word_len, word_surf, done, theta_costs=None):
+    def sweep(key, ctx_buf, ctx_len, word_len, word_surf, done, theta_costs=None, stats=None):
         P, LCTX = ctx_buf.shape
         wt, nw = _unpack(ctx_buf, word_len, sl, Wmax, T)
         wl, ws = word_len, word_surf
         for _ in range(n_attempts):
             key, sub = jax.random.split(key)
             logits = _dedup_indel_logits(_logits, wt, wl, ws, nw, done, theta_costs)
-            (nt, nl, ns, nnw), _ = _apply(sub, logits, wt, wl, ws, nw)
+            (nt, nl, ns, nnw), _mlw, idx = _apply(sub, logits, wt, wl, ws, nw)
+            if stats is not None:                       # word_stats §3.4: the conditional + the edit
+                stats.append({"logits": np.asarray(logits), "idx": np.asarray(idx),
+                              "done": np.asarray(done), "Kc": int(cand_surf.shape[0]),
+                              "Wmax": Wmax})
             m, m2, m3 = done, done[:, None], done[:, None, None]
             wt = jnp.where(m3, nt, wt); wl = jnp.where(m2, nl, wl)
             ws = jnp.where(m2, ns, ws); nw = jnp.where(m, nnw, nw)

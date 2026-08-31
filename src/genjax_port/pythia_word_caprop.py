@@ -312,6 +312,45 @@ def _obs_word_spans(observed):
     return [tuple(int(t) for t in ids) for ids, _unit_str in segment_words(obs_ids)]
 
 
+def _copy_span(word, obs_span):
+    """The COPY token span of an observed unit -- the exact span every verbatim-copy particle
+    scores (and therefore the span the plain-LM baseline :func:`lm_word_surprisals` must score, so
+    the two are comparable). It is the unit's actually observed tokens, except a sentence-initial
+    WORD, which has no leading space in the observed stream but is scored word-initial (the "."
+    prime severs it from one) -- see :func:`_candidate_words` for the full rationale.
+    ``obs_span=None`` (toy / non-Pythia callers) falls back to re-encoding the case-folded body."""
+    body = word.strip()
+    if obs_span is None:                                          # toy / non-Pythia: re-encode fallback
+        return tuple(tokenizer.encode(" " + body.lower()))
+    lit = tuple(int(t) for t in obs_span)                        # faithful COPY: the observed span itself
+    if body and body[0].isalpha() and not tokenizer.surface(lit[0]).startswith(" "):
+        lit = tuple(tokenizer.encode(" " + body))                # sentence-initial word: restore the space
+    return lit
+
+
+def lm_word_surprisals(observed, prime=PRIME):
+    """Plain-LM per-unit surprisal baseline (word_stats plan §3.2): the LM cost of reading the
+    observed sentence LITERALLY. Seeds ``[EOS] + encode(prime)`` exactly as ``_pythia_model`` does
+    and scores the model's COPY spans (:func:`_copy_span` -- the same token spans every
+    verbatim-copy particle scores, leading-space restoration included) with ONE
+    ``lm_penzai.seq_token_logprobs`` forward over ``seed + concat(spans) + [EOS]``. Unit surprisal
+    = −sum of its token logprobs; ``surprisal_end_lm = −log P(EOS | sentence)``. Returns
+    ``{"units", "surprisal_lm" (M,), "surprisal_end_lm"}`` (numpy, nats)."""
+    import numpy as np
+    lm_penzai.load_model()
+    seed = [EOS_ID] + (tokenizer.encode(prime) if prime else [])
+    units = _obs_word_units(observed)
+    spans = [_copy_span(u, sp) for u, sp in zip(units, _obs_word_spans(observed))]
+    toks = list(seed) + [int(t) for sp in spans for t in sp] + [EOS_ID]
+    lp = np.asarray(lm_penzai.seq_token_logprobs(jnp.asarray([toks], jnp.int32)))[0]
+    out, pos = [], len(seed)
+    for sp in spans:
+        out.append(-float(np.sum(lp[pos:pos + len(sp)])))
+        pos += len(sp)
+    return {"units": units, "surprisal_lm": np.asarray(out),
+            "surprisal_end_lm": -float(lp[pos])}
+
+
 def _candidate_words(word, obs_span, max_dist, Ke, morph=False):
     """Candidate intended words for an observed word, each a ``(token-span tuple, surface str)``.
 
@@ -333,12 +372,7 @@ def _candidate_words(word, obs_span, max_dist, Ke, morph=False):
     ``((t0,t1,...), surf)`` (e.g. a >=2-token correct word -- rarer words, names, morphology)."""
     body = word.strip()
     sub_body = body.lower()                                       # SymSpell matching stays case-folded
-    if obs_span is None:                                          # toy / non-Pythia: re-encode fallback
-        lit = tuple(tokenizer.encode(" " + sub_body))
-    else:
-        lit = tuple(int(t) for t in obs_span)                    # faithful COPY: the observed span itself
-        if body and body[0].isalpha() and not tokenizer.surface(lit[0]).startswith(" "):
-            lit = tuple(tokenizer.encode(" " + body))            # sentence-initial word: restore the space
+    lit = _copy_span(word, obs_span)                              # shared with lm_word_surprisals
     cands = [(lit, body, 0)]                                      # COPY, distance 0 (kept first)
     if morph:
         # Inflectional alternants, ranked just after the COPY: a suppletive pair like is/are is
@@ -414,7 +448,7 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         lm_temp=1.0, ins_rate=0.02, uniform_ins=False, action_alpha=None, channel=None,
         align_slope=None, morph=True, bd_bridge_j=0, bd_pool_cap=None, bd_p_stay=0.0, bd_mode="gibbs",
         bd_attempts=1,
-        bd_funcwords=True):
+        bd_funcwords=True, word_stats=None, diag=None):
     """Channel-aware RB-SMC on Pythia via the shared filter. Returns (state, log_w, logZ, seed_len).
 
     ``channel`` picks the noise model: ``"word_action"`` (the deployment model -- per-word 4-way Dirichlet
@@ -451,7 +485,10 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
     ``dedup=True`` (R3 item 1) dedups the LM forwards over the degenerate post-resample cloud (exact;
     bit-identical posterior given the same RNG): the filter's per-step forward (1a, :func:`_pythia_model`)
     AND the rejuv sweep's tail scorer (1b, via ``rejuv_dedup``). The sweep is the dominant single-sentence
-    cost (its prefills scale ~linearly with P), so 1b is the main wall-clock win."""
+    cost (its prefills scale ~linearly with P), so 1b is the main wall-clock win.
+
+    ``word_stats`` / ``diag`` are the Phase-2 per-word output hooks, passed through to
+    ``pairhmm_smc.run`` (see :mod:`genjax_port.word_stats`; None = bit-identical certified path)."""
     rejuv = _check_rejuv(rejuv)
     from genjax_port import pairhmm_rejuv as RJ
     # Channel selector (plan WORD_ACTION_REJUV_PLAN Phase 3): ``"word_action"`` is the model;
@@ -502,7 +539,8 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
                            bd_bridge_j=bd_bridge_j, bd_pool_cap=bd_pool_cap, bd_p_stay=bd_p_stay,
                            bd_mode=bd_mode, bd_attempts=bd_attempts,
                            bd_funcword_ids=_funcword_ids() if bd_funcwords else None,
-                           morph_lp=(morphology.MORPH_LP if morph else None))
+                           morph_lp=(morphology.MORPH_LP if morph else None),
+                           word_stats=word_stats, diag=diag)
 
 
 def decode(state, log_w, skip=1, key=jax.random.PRNGKey(0), top=3):
