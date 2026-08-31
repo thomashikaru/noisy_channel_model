@@ -12,6 +12,7 @@ code-facts below (paths, line numbers) were verified against branch `rejuv-birth
 > | 0 branch + scaffold | — | **done** (`108beeb`) |
 > | 1 stimulus harmonization | §2 | **done** (`4f02275`) — **§2 is now a design record, not a spec.** Five details below were wrong about the data and the shipped converters deviate; `experiments/README.md` is authoritative for what exists |
 > | 2 per-word model outputs | §3 | **not started — this is next** |
+> | (out of band) channel additions | — | **done** (`3983533`, regression-checked `e8487ff`) — see below |
 > | 3 worker + output schema | §4 | not started |
 > | 4 configs, smoke, cost probes | §5 | not started |
 > | 5 cluster runs | §6 | not started |
@@ -33,9 +34,18 @@ code-facts below (paths, line numbers) were verified against branch `rejuv-birth
 >    `model_input`, where punctuation stays attached; the off-by-one only affects the space-split
 >    `sentence_norm` form. §2.2's note to the contrary is wrong.
 >
-> The schema also gained `contrast` (design-level relation) plus `edit_ops` / `edit_from` / `edit_to`,
-> because `edit_type` alone splits chen2023's voice alternation arbitrarily (90 `multi` vs 30 `sub`,
-> depending only on whether the participle is irregular).
+> The schema also gained `contrast` (design-level relation), and the resolved per-repair detail now
+> lives in `<dataset>.repairs.csv` rather than the stimuli table: **qian2023 carries TWO co-equal
+> repairs** (fix the verb or fix the noun) because those sentences are genuinely ambiguous about which
+> word is wrong, and nothing may rank them (user decision, 2026-08-30).
+>
+> **The CHANNEL also changed, outside this plan's phase structure** (`3983533`): a general inflectional
+> edit class (`src/genjax_port/morphology.py` — an alternation costs one flat `MORPH_LP`, not `K*d`, so
+> `is`/`are` stops costing ~13.5 nats) and `","` added to the indel move's insertion pool. Both default
+> ON; the 87-item battery regression check passed (`planning/MORPH_REGRESSION_RESULTS.md`). §9's note
+> that comma restoration is "reported as a model property, not patched" is therefore **superseded** —
+> it is now reachable. Open debts: `MORPH_LP` is uncalibrated and the comma pool is untested, both
+> because the battery has no agreement or punctuation items.
 
 ## 0. What exists, what is missing
 
