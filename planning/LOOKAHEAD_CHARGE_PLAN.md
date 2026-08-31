@@ -172,6 +172,50 @@ terminal term, so psi=0 would be wrong there); enforced with a ValueError.
    experiment: with the twist, the OFF arm now reaches a mid-sentence deletion repair on this
    item — part of "rejuv=off cannot reach deletions" was this same mid-run weight artifact.
 
+4. §3.1 identity on disk: PASS, exact — `sum(S) + S_end == −logZ` with |diff| = 0.0 on all 8
+   records of a local lookahead-ON P16 off run. As derived before implementing: the accumulator
+   needed NO changes (its `add` runs pre-resample where the mapping is the identity, and the APF
+   residual keeps `(logZ, log_w)` properly weighted across the twisted resample; the on-disk
+   identity itself telescopes by construction).
+5. Full suite: PASS — 117 tests (the 113 + the 4 new lookahead gates),
+   `src/genjax_port/tests/ + experiments/tests/`.
+6. Smoke A/B (local, off arm at the MAIN operating point P=64 × 4 seeds, slug `...__la__nseed4`,
+   vs the pulled cluster off arm; bd-arm reference from cluster job 21654049 in brackets):
+
+   | item | del_before[0] off→la | p_literal off→la | logZ off→la [bd] | note |
+   |---|---|---|---|---|
+   | 0 candle       | 1.99→0.00 | 0.84→0.99 | −62.4→−53.4 [−49.5] | fixed |
+   | 1 daughter/candle | 0.32→0.00 | 0.15→1.00 | −57.5→−49.5 [−46.2] | fixed; junk MAP repaired |
+   | 2 Medics       | 1.72→1.99 | 0.0→0.0  | −89.4→−90.8 [−89.7] | NOT fixed — see below |
+   | 3 gifts        | 0.00→0.00 | 0.00→0.06 | −55.6→−54.2 [−52.0] | unaffected item; MAP improved |
+   | 4 suspect      | 0.00→0.00 | 0.0→0.0  | −103.0→−100.0 [−97.6] | unaffected item |
+   | 5 licked       | 1.94→0.00 | 0.02→0.0 | −73.3→−72.2 [−59.6] | artifact gone; BAD la collapse |
+   | 6 coach        | 2.00→0.00 | 0.51→0.0 | −91.2→−85.9 [−75.6] | artifact gone; literal lost |
+   | 7 candle+ctx   | 0.00→0.00 | 0.05→0.38 | −25.1→−26.4 | unaffected; bimodal as item 0 |
+
+   What the table says, honestly:
+   - The leading-deletion artifact is ELIMINATED on 4 of the 5 affected items (0/1/5/6), with
+     logZ up 1–9 nats and item 1's junk MAP ("gave birth to the daughter to the candle")
+     repaired to the plain sentence.
+   - **Item 2 is a DIFFERENT failure the twist cannot fix by design.** With no context, the
+     literal "Medics" costs ~14 nats at step 1, so the one-step fully-adapted proposal
+     essentially never proposes the COPY at P=64 — the plain-literal hypothesis is never
+     INSTANTIATED, and a resampling twist cannot resurrect a particle that does not exist.
+     Verified it is still an inference failure, not a model preference: the joint prefers the
+     plain sentence over both junk MAPs by ~17–18 nats (LM scored with the item's own prime;
+     "It was …" −7.5 LM gain − 9.25 deletions; "This article medic …" −4.7 LM − 13.75 channel).
+     gibbs+bd only PARTIALLY repairs it (del_before 0.83, p_literal 0.0). This is
+     proposal-support myopia (the step-1 intermediate target), out of this fix's scope.
+   - **New cost at P=64: heavier per-seed tails.** The residual −psi[anc] hands a surviving
+     laggard a large positive weight; the cloud then often ends the run collapsed on one mode
+     per seed. On item 5 all four la seeds lost both the literal and the "kicked" repair
+     (merged MAP "The boy looked licked from …", whose joint is ~19 nats WORSE than the kicked
+     repair — scored directly; seed logZ spread 2.4→7.0), and on item 6 the la cloud dropped
+     the literal (p_literal 0.51→0.0) for the "and"-repair while bd keeps p_literal 0.94.
+     Everything stays unbiased (logZ still rose on 6 of 8 items), but per-item posterior
+     quality at P=64 is noisier where several modes compete. The battery A/B (gate 7, the
+     user's call) is the arbiter of the net effect.
+
 ## Session bootstrap (state as of 2026-08-31, end of the finding session)
 
 - Branch `experiment-harness`, local HEAD ahead of the cluster: cluster is at `80a4722`;

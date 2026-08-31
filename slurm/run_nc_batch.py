@@ -99,6 +99,7 @@ def config_slug(a):
     if a.bd_mode != "gibbs":               parts.append(f"bd-{_san(a.bd_mode)}")
     if a.bd_attempts != 1:                 parts.append(f"bdatt{a.bd_attempts}")
     if a.no_bd_funcwords:                  parts.append("nofw")
+    if a.lookahead:                        parts.append("la")
     if not a.dedup:                        parts.append("nodedup")
     if a.n_seeds > 1:                      parts.append(f"nseed{a.n_seeds}")
     return "__".join(parts)
@@ -243,6 +244,7 @@ def _config_dict(a):
         "align_slope": a.align_slope, "action_alpha": a.action_alpha, "dedup": a.dedup,
         "bd_p_stay": a.bd_p_stay, "bd_mode": a.bd_mode, "bd_attempts": a.bd_attempts,
         "bd_funcwords": not a.no_bd_funcwords, "top": a.top, "n_seeds": a.n_seeds,
+        "lookahead": a.lookahead,
     }
 
 
@@ -486,16 +488,19 @@ def do_plan(a):
     print("SHARDS_WITH_WORK=" + ",".join(str(s) for s in shards_with_work))
 
 
-def _words_block(pwc, a, text, prime, state, log_w, ws, dg):
+def _words_block(pwc, a, text, prime, state, log_w, ws, dg, lm_base=None):
     """Assemble the per-observed-unit outputs (plan §4) from one run's ``word_stats`` + ``diag``:
     the prefix-mass surprisals (§3.1), the plain-LM baseline on the SAME copy spans (§3.2), the
     alignment posteriors (§3.3), and the per-slot rejuvenation statistics (§3.4 -- slot w maps to
     unit w POSITIONALLY, so under an indel-shifted parse read them as positional). Serialized via
-    :func:`_jsonable` (non-finite -> null)."""
+    :func:`_jsonable` (non-finite -> null). ``lm_base`` accepts a precomputed
+    :func:`pwc.lm_word_surprisals` dict (the --lookahead path computes it before the run; passing
+    it here avoids a second LM forward)."""
     import numpy as np
     from genjax_port import word_stats as WS
     post = WS.alignment_posteriors(state, log_w, dg)
-    lm_base = pwc.lm_word_surprisals(text, prime=prime)
+    if lm_base is None:
+        lm_base = pwc.lm_word_surprisals(text, prime=prime)
     units = lm_base["units"]
     umap = _unit_map(text, units, [len(sp) for sp in pwc._obs_word_spans(text)])
     M = len(units)
@@ -557,6 +562,9 @@ def _run_one(pwc, a, text, context, key, channel, action_alpha, want_viz):
         trace = [] if want_viz else None
         ws = {} if want_words else None
         dg = {} if want_words else None
+        # --lookahead: the literal-reading baseline is computed ONCE here, feeds the resampling
+        # charge (lookahead_lp = -surprisal_lm) AND the words block below (no second LM forward).
+        lm_base = pwc.lm_word_surprisals(text, prime=prime) if a.lookahead else None
         st, lw, logZ, sl = pwc.run(
             text, key, P=a.particles, band=a.band, max_dist=a.max_dist,
             wdel=a.wdel, wins=a.wins, rejuv=a.rejuv, rejuv_lookback=a.rejuv_lookback,
@@ -564,7 +572,8 @@ def _run_one(pwc, a, text, context, key, channel, action_alpha, want_viz):
             uniform_ins=a.uniform_ins, action_alpha=action_alpha, channel=channel,
             align_slope=a.align_slope, bd_p_stay=a.bd_p_stay, bd_mode=a.bd_mode,
             bd_attempts=a.bd_attempts, bd_funcwords=not a.no_bd_funcwords,
-            prime=prime, word_stats=ws, diag=dg)
+            prime=prime, word_stats=ws, diag=dg,
+            lookahead_lp=(None if lm_base is None else -lm_base["surprisal_lm"]))
         full = pwc.decode(st, lw, skip=sl, top=10 ** 9)   # full support: hypotheses + p_literal
         hyps = [{"sentence": s, "prob": float(p)} for s, p in full[:a.top]]
         p_literal = float(sum(p for s, p in full if s == text.strip()))
@@ -572,7 +581,7 @@ def _run_one(pwc, a, text, context, key, channel, action_alpha, want_viz):
                "hypotheses": hyps, "logZ": float(logZ), "p_literal": round(p_literal, 6)}
         if want_words:
             try:
-                res["words"] = _words_block(pwc, a, text, prime, st, lw, ws, dg)
+                res["words"] = _words_block(pwc, a, text, prime, st, lw, ws, dg, lm_base=lm_base)
             except Exception:
                 res["words"] = {"status": "error", "error": traceback.format_exc()}
         else:
@@ -875,6 +884,12 @@ def build_parser():
     p.add_argument("--bd-mode", default="gibbs")
     p.add_argument("--bd-attempts", type=int, default=1)
     p.add_argument("--no-bd-funcwords", action="store_true")
+    p.add_argument("--lookahead", action="store_true",
+                   help="lookahead charge at resampling (planning/LOOKAHEAD_CHARGE_PLAN.md): "
+                        "resample on weights charged with the literal-LM cost of the observed "
+                        "units each particle has not yet consumed, carrying the inverse as "
+                        "residual (unbiased; fixes the leading-deletion inference failure). "
+                        "Adds one plain-LM forward per item, reused by the words block.")
     return p
 
 

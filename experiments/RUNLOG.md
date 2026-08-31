@@ -83,7 +83,13 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
 - slug: `lm-pythia-70m__ch-align__rej-gibbsbd__P64__b2__d2__lb6__s0__nseed4`  remaining before submit: 8
 - env: `INPUT=experiments/stimuli/smoke.input.jsonl BAND=2 CHANNEL=align MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=gibbs+bd REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=32G SECONDS_PER_ITEM=1320 SENTENCES_PER_SHARD=2`
 - job id: 21654049
-- outcome: (append when finished)
+- outcome: shards 0–2 **COMPLETED** (elapsed 44:10 / 58:58 / 30:20, MaxRSS 12.67 / 11.65 / 10.71 GB,
+  exit 0); shard 3 still RUNNING at 2:06:10 elapsed as of 2026-08-31T17:19Z (on pace for its
+  ~3:11 estimate under the 3:59 cap). Pulled at 17:15Z: 7/8 merged items on disk (item 7 pending
+  in shard 3). bd-arm reference numbers for the lookahead A/B: item 0 logZ −49.48 p_lit 0.57,
+  item 1 −46.22 / 0.94, item 2 −89.72 / 0.00 (del_before[0] 0.83 — bd only PARTIALLY repairs the
+  Medics item), item 5 −59.55 / 0.51, item 6 −75.64 / 0.94; unit-0 del_before 0.0 everywhere but
+  item 2.
 
 ### 2026-08-31T15:11:21Z — smoke × main_off
 - commit: `80a4722` (local == cluster)
@@ -115,3 +121,28 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
   touch-points, gates, and the cluster state at handoff are all in that plan).
 - At handoff, smoke × main_bd job 21654049 shards 1 and 3 were still running; the next session
   records their outcome on the 15:11:20Z entry above.
+
+### 2026-08-31T17:25:00Z — lookahead charge implemented + local gates (not a launch)
+
+- `planning/LOOKAHEAD_CHARGE_PLAN.md` EXECUTED (P1–P3): `pairhmm_smc.run(lookahead_lp=)` APF
+  twist at the resample site, `pythia_word_caprop.run(lookahead=/lookahead_lp=)`, worker
+  `--lookahead` (slug suffix `la`), `LOOKAHEAD` env in submit_nc_batch.sh + run.sh CFG_VARS.
+  Default OFF everywhere; `configs/main.env` NOT changed (user's call after these gates).
+  One design correction (done-particle psi=0 guard, caprop-only) — see the plan's
+  "Execution results" section for all gate numbers.
+- Gates: off-path bit-identity PASS (toy 9-case + Pythia probe item byte-identical); toy
+  exactness PASS (4 new gates; suite 117 passed); probe flip PASS (del_before(The) 2.00→0.00 on
+  3/3 keys, logZ −63.6→≈−52.5; the candle posterior is genuinely BIMODAL — the to-repair ties
+  the literal, LM gain +4.62 vs deletion price −4.62); §3.1 identity on disk EXACT (8/8
+  lookahead-ON records, local P16 run).
+- Smoke A/B at the main operating point (local, off arm P=64 ×4 seeds, `la` slug vs the pulled
+  cluster off arm): leading-deletion artifact ELIMINATED on 4/5 affected items (unit-0
+  del_before →0.00; logZ +9.0/+8.0/+1.1/+5.3 on items 0/1/5/6; item 1's MAP repaired). Item 2
+  (Medics) NOT fixed — a DIFFERENT failure: with no context, the literal 'Medics' costs ~14 nats
+  at step 1, so the one-step caprop proposal never instantiates the literal at P=64 (verified
+  the joint prefers plain by ~17–18 nats over both junk MAPs); a resampling twist cannot
+  resurrect an un-instantiated hypothesis, and gibbs+bd only partially repairs it (del_before
+  0.83, p_lit 0.0). NEW COST at P=64: heavier-tailed seeds — on items 5/6 the la clouds
+  mode-collapsed onto joint-inferior parses in all 4 seeds (item 5 seed spread 2.4→7.0;
+  bd reference finds 10–13 more nats there and keeps the literal). Battery A/B = gate 7,
+  user's call.
