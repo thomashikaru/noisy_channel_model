@@ -25,6 +25,8 @@ Three outputs:
   ``(s_new, target)`` and the Gibbs indel move's ``(logits, idx)`` -- quantities the jitted moves
   already compute and previously discarded.
 
+**Plain-English guide for analysis-time readers: ``planning/WORD_STATS.md``.**
+
 Conventions (also emitted as the ``convention`` field): the FORM channel is an unnormalized edit
 kernel (sum_o e^{K*d} ~ 1.05-1.4 per word), so ``S_k`` carries a small near-constant offset -- the
 same convention ``logZ`` already uses; requires ``lm_temp == 1`` (asserted); ``prefix_logq[k] =
