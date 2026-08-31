@@ -216,6 +216,16 @@ terminal term, so psi=0 would be wrong there); enforced with a ValueError.
      quality at P=64 is noisier where several modes compete. The battery A/B (gate 7, the
      user's call) is the arbiter of the net effect.
 
+7. Battery A/B: RUN (user-approved; cluster jobs 21666107 baseline / 21666110 lookahead,
+   87 items, off arm, P=64, 2 seeds; diff `planning/la_vs_off_diff.py` →
+   `planning/calibration_la_vs_off.csv`; full outcome in the RUNLOG entry). Headline: the
+   artifact was on **46/87** baseline items — far beyond the smoke's 5/8 — and lookahead clears
+   it on 39, leaving 7 (Medics-class proposal-support failures and partial clears). logZ mean
+   +4.05 / median +1.49 (51 up, 14 down); matches-expected 42→44 exact / 47→49 case-insensitive;
+   edited-rate 32→28 with visibly junky MAPs cleaned. Cost confirmed but bounded: 11
+   newly-correct vs 9 newly-wrong MAPs (several of the losses are the P=64 heavy-tail collapse),
+   and the 2-seed logZ spread rose 2.72→2.99. Note the experiment runs 4 seeds, not 2.
+
 ## Session bootstrap (state as of 2026-08-31, end of the finding session)
 
 - Branch `experiment-harness`, local HEAD ahead of the cluster: cluster is at `80a4722`;

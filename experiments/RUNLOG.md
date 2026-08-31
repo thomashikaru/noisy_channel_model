@@ -165,4 +165,15 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
 - baseline slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__nseed2` — job id 21666107
 - lookahead slug: `...__s0__la__nseed2` (LOOKAHEAD=1) — job id 21666110
 - purpose: LOOKAHEAD_CHARGE_PLAN gate 7 — "did anything else move"; decides LOOKAHEAD in main.env.
-- outcome: (append when finished)
+- outcome: **both COMPLETED** (all 26 shards exit 0; per-shard 3:03–9:29, MaxRSS ≤ 9.0 GB — 24G
+  generous; wall ≈ 25 min from submit to last shard). 87/87 merged on both arms; pulled; diff =
+  `planning/la_vs_off_diff.py` → `planning/calibration_la_vs_off.csv`. HEADLINE: the
+  leading-deletion artifact was on **46/87** baseline items (far beyond the smoke's 5/8) and the
+  lookahead run clears it on 39 → **7 remain** (Medics-class proposal-support cases + partial
+  clears). logZ (la − off): mean +4.05, median +1.49, up 51 / down 14 / flat 22.
+  Matches-expected 42→44/87 exact, 47→49 case-insensitive; edited-rate 32→28 (junk MAPs like
+  '# They…', '- The clerk…', 'For the very tall man left.', spurious caps → cleaned). Cost:
+  MAP changed on 35 items = 11 newly-correct vs 9 newly-wrong, several of the wrong ones the
+  P=64 heavy-tail collapse ('The chef seasoned the author.', 'The Bakerite the children the
+  cake.'); 2-seed logZ spread 2.72→2.99 (la>off on 43/87). Stochastic eval at HALF the
+  experiment's seed count (2 vs main.env's 4) — the merge is stronger in the real config.
