@@ -146,3 +146,14 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
   mode-collapsed onto joint-inferior parses in all 4 seeds (item 5 seed spread 2.4→7.0;
   bd reference finds 10–13 more nats there and keeps the literal). Battery A/B = gate 7,
   user's call.
+
+### 2026-08-31T18:55:00Z — smoke × main_bd COMPLETION (appends the 15:11:20Z entry; source: this session's sacct watch)
+
+- shard 3 **COMPLETED**: elapsed 2:15:57, MaxRSS **14.35 GB**, exit 0 → all 4 shards done. bd-arm
+  memory peak on the smoke = 14.35 GB (the 32G budget is generous; 24G would also have held here).
+- item 7 (the 22-word context prime): merged 4/4 seeds → 'The mother gave the candle to the
+  daughter.' — p_literal 0.15, logZ −24.90, seed spread 0.6. The context drives a confident
+  "to" restoration.
+- item 4: logZ −97.55, p_literal 0.0, runtime 3673 s for 4 seeds (~918 s per item×seed — the
+  SECONDS_PER_ITEM=1320 sizing holds with margin).
+- Smoke set now 8/8 merged on BOTH arms; bd words table 430/430 finite surprisal_nc after pull.
