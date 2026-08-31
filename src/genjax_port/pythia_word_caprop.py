@@ -448,7 +448,7 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         lm_temp=1.0, ins_rate=0.02, uniform_ins=False, action_alpha=None, channel=None,
         align_slope=None, morph=True, bd_bridge_j=0, bd_pool_cap=None, bd_p_stay=0.0, bd_mode="gibbs",
         bd_attempts=1,
-        bd_funcwords=True, word_stats=None, diag=None):
+        bd_funcwords=True, word_stats=None, diag=None, lookahead=False, lookahead_lp=None):
     """Channel-aware RB-SMC on Pythia via the shared filter. Returns (state, log_w, logZ, seed_len).
 
     ``channel`` picks the noise model: ``"word_action"`` (the deployment model -- per-word 4-way Dirichlet
@@ -488,7 +488,17 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
     cost (its prefills scale ~linearly with P), so 1b is the main wall-clock win.
 
     ``word_stats`` / ``diag`` are the Phase-2 per-word output hooks, passed through to
-    ``pairhmm_smc.run`` (see :mod:`genjax_port.word_stats`; None = bit-identical certified path)."""
+    ``pairhmm_smc.run`` (see :mod:`genjax_port.word_stats`; None = bit-identical certified path).
+
+    ``lookahead`` (default OFF = bit-identical certified path) enables the lookahead charge at
+    resampling (planning/LOOKAHEAD_CHARGE_PLAN.md; the fix for the leading-deletion inference
+    failure, planning/LEADING_DELETION_FINDINGS.md): the per-unit literal-reading baseline
+    :func:`lm_word_surprisals` is computed here (one LM forward) and its negated surprisals are
+    passed down as ``pairhmm_smc.run(lookahead_lp=...)``. A caller that already has the baseline
+    (the batch worker computes it for the words block anyway) passes ``lookahead_lp=`` directly --
+    an ``(M,)`` array of per-unit log-liks, i.e. ``-surprisal_lm`` -- which takes precedence and
+    skips the extra forward. Tempering by ``lm_temp`` happens inside ``pairhmm_smc`` where the
+    suffix charge is built, so both routes pass UNtempered log-liks."""
     rejuv = _check_rejuv(rejuv)
     from genjax_port import pairhmm_rejuv as RJ
     # Channel selector (plan WORD_ACTION_REJUV_PLAN Phase 3): ``"word_action"`` is the model;
@@ -520,6 +530,11 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
     else:                                                # frequency-aware: log(rate) - unigram_surprisal,
         WINS = jnp.array([math.log(ins_rate) - unigram_surprisal(w)  # so rare words are dear to drop
                           for w in obs_words], jnp.float32)
+    if lookahead_lp is not None:                         # precomputed baseline (worker): use as-is
+        lookahead_lp = jnp.asarray(lookahead_lp, jnp.float32)
+    elif lookahead:                                      # compute the literal-reading baseline here
+        lookahead_lp = jnp.asarray(-lm_word_surprisals(observed, prime=prime)["surprisal_lm"],
+                                   jnp.float32)
     if rejuv in ("gibbs", "gibbs+bd"):    # gibbs+bd also runs the embedded sub-sweep, which needs the KV pre-warm
         Wmax = len(obs_words) + slack
         # The rejuvenation pool is now built INSIDE pairhmm_smc.run from the shared candidate inventory
@@ -540,7 +555,7 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
                            bd_mode=bd_mode, bd_attempts=bd_attempts,
                            bd_funcword_ids=_funcword_ids() if bd_funcwords else None,
                            morph_lp=(morphology.MORPH_LP if morph else None),
-                           word_stats=word_stats, diag=diag)
+                           word_stats=word_stats, diag=diag, lookahead_lp=lookahead_lp)
 
 
 def decode(state, log_w, skip=1, key=jax.random.PRNGKey(0), top=3):

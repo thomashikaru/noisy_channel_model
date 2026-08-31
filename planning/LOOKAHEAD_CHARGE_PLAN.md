@@ -130,6 +130,48 @@ gate will catch any error exactly.
   dirs, nothing overwritten), then resume the Phase-5 runbook in the harness memo
   (main_off with MEM=24G, then main_bd shortest-first at 32G).
 
+## Execution results (2026-08-31, the executing session)
+
+**One correction to the design above.** "Done particles need no special case: their alpha mass
+sits at k = M" is wrong: the kernel leaves `log_alpha` UNCHANGED when a particle chooses EOS
+(`jnp.where(advance, new_alpha, log_alpha)`), so a done particle's stored row is the stale
+pre-EOS one, spread over k < M. Under caprop the done particle already folded
+`alpha[M] − logsumexp(alpha)` into its EOS score, so its unpaid cost is exactly 0 — the twist
+therefore forces psi = 0 on done particles (still unbiased; without the guard the up-to-date
+literal parses would be mis-charged, partially recreating the artifact). Consequence:
+`lookahead_lp` requires `proposal="caprop"` (bootstrap's done particles have NOT paid the
+terminal term, so psi=0 would be wrong there); enforced with a ValueError.
+
+**Gate results.**
+
+1. Bit-identity (off): PASS — toy 9-case capture (peaked/band2/align, 3 seeds each, full log_w)
+   and the Pythia probe item (align/off/P=64, worker key, logZ −63.575538635253906) are
+   byte-identical before/after the change. Plus a stronger form: an all-ZERO charge vector
+   (psi ≡ 0 through the new arithmetic) is bit-identical to the certified path
+   (`test_lookahead_zero_charge_bit_identical`).
+2. Toy exactness: PASS — `test_lookahead_logZ_and_posterior_match_exact` (logZ unbiased over 4
+   seeds within the existing 0.08 tolerance; MAP + TV match enumeration), plus an
+   align+gibbs+lookahead end-to-end MAP gate and the input-contract gate.
+3. The probe flips: PASS in substance, with a finding the expectation missed. 3 keys at
+   align/band=2/P=64/off + lookahead on "The mother gave the candle the daughter.":
+
+   | key | logZ | w(plain literal) | del_before(The) | top hypothesis |
+   |-----|--------|------|------|----------------------------------------------|
+   | 0 | −53.82 | 0.875 | 0.00 | the plain sentence @0.88 |
+   | 1 | −51.45 | 0.000 | 0.00 | "…gave the candle TO the daughter." @1.00 |
+   | 2 | −54.45 | 0.000 | 0.00 | "…gave the candle TO the daughter." @1.00 |
+
+   The leading-deletion artifact is GONE on every key (del_before 2.00 → 0.00; no "\n" parses;
+   logZ up ~10 nats). The expectation "w(plain literal) ≥ 0.9" assumed the literal dominates
+   everything; it dominates the NEWLINE parse by 8.4 nats, but the findings never scored the
+   DATIVE REPAIR. Scoring it directly (penzai, prime "."): LM(to-sentence+EOS) − LM(plain+EOS)
+   = +4.62 nats, vs the align prior-mean deletion price log(2/204) = −4.62 — a numerical
+   coincidence, and a near-exact JOINT TIE. The posterior on this item is genuinely bimodal
+   (plain literal vs to-repair, ≈ 50/50); at P=64 each seed collapses onto one mode, and the
+   4-seed evidence merge is the mechanism that reports both. Note what this means for the
+   experiment: with the twist, the OFF arm now reaches a mid-sentence deletion repair on this
+   item — part of "rejuv=off cannot reach deletions" was this same mid-run weight artifact.
+
 ## Session bootstrap (state as of 2026-08-31, end of the finding session)
 
 - Branch `experiment-harness`, local HEAD ahead of the cluster: cluster is at `80a4722`;
