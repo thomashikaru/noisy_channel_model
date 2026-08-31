@@ -177,3 +177,25 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
   P=64 heavy-tail collapse ('The chef seasoned the author.', 'The Bakerite the children the
   cake.'); 2-seed logZ spread 2.72→2.99 (la>off on 43/87). Stochastic eval at HALF the
   experiment's seed count (2 vs main.env's 4) — the merge is stronger in the real config.
+
+### 2026-08-31T18:46:06Z — smoke × main_off
+- commit: `e70b8d1` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 8
+- env: `INPUT=experiments/stimuli/smoke.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120 SENTENCES_PER_SHARD=8`
+- job id: 21668423
+- outcome: **COMPLETED** (21668423_0, 19:02, MaxRSS 12.58 GB of 24G, exit 0). 8/8 ok; matches
+  the local gate-6 A/B to two decimals (x86 vs arm agreement); del_before[0] = 0 everywhere
+  except item 2 (Medics, 1.99 — the known proposal-support case).
+
+### 2026-08-31T18:46:22Z — smoke × main_bd
+- commit: `e70b8d1` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-gibbsbd__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 8
+- env: `INPUT=experiments/stimuli/smoke.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=gibbs+bd REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=32G SECONDS_PER_ITEM=1320 SENTENCES_PER_SHARD=2`
+- job id: 21668496
+- outcome: **COMPLETED** (21668496_0..3: 27:24/1:24:54/23:11/1:44:43, MaxRSS ≤ 14.1 GB of 32G,
+  exit 0 — every shard FASTER than its pre-fix counterpart, worst 2:16→1:45). 8/8 ok, all
+  surprisals finite, sum(S)+S_end == −logZ exact on merged records. del_before[0] = 0 on all
+  items incl. Medics (0.83 → 0.01 — the fix completes what rejuvenation only partially
+  repaired). logZ shifts −4..+4 vs the pre-fix bd smoke (seed noise + changed sampler);
+  p_literal stable. off and bd configurations now AGREE on evidence for item 0 (−53.4 vs −53.7,
+  previously −62.4 vs −49.5).
