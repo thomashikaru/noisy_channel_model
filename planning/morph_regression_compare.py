@@ -40,6 +40,12 @@ def parse(path: pathlib.Path) -> dict[str, dict]:
     return out
 
 
+#: Battery items with no morphological alternant on any word, so the class is provably a no-op
+#: on them. Computed once from genjax_port.morphology against calibration_battery_v0.csv; if the
+#: relation or the battery changes, recompute rather than trusting this list.
+INERT = ("SUBW-01a", "SUBW-06a", "SUBN-05a", "INS-03a", "INS-03b", "CTRL-03", "CTRL-04")
+
+
 def family(item: str) -> str:
     return item.split("-")[0]
 
@@ -96,6 +102,30 @@ def main(dirname: str) -> None:
               f"metric {arms[(0, s)][item]['metric']:.2f} -> {arms[(1, s)][item]['metric']:.2f}")
     if not consistent:
         print("  (none -- every flip is seed-dependent, i.e. inside the noise)")
+
+    # --- the sharp check: items the class provably cannot touch ---------------------------
+    # Seven battery items have no morphological alternant on ANY word, so both hooks (the
+    # candidate injection and the emission patch) are no-ops. At the same seed the two arms must
+    # be BIT-IDENTICAL on these, not merely similar -- a correctness check that owes nothing to
+    # the noise floor. A difference here means the class is leaking somewhere it should not.
+    print("\nInert items (no alternant anywhere) -- must be bit-identical across arms:")
+    bad = 0
+    for s_ in seeds:
+        off, on = arms.get((0, s_)), arms.get((1, s_))
+        if not (off and on):
+            continue
+        for item in INERT:
+            if item not in off or item not in on:
+                continue
+            a, b = off[item], on[item]
+            same = all(a[k] == b[k] or (a[k] != a[k] and b[k] != b[k])
+                       for k in ("metric", "L", "E", "junk"))
+            if not same:
+                bad += 1
+                print(f"  LEAK seed {s_} {item}: "
+                      f"metric {a['metric']} vs {b['metric']}, junk {a['junk']} vs {b['junk']}")
+    print(f"  {'all identical' if not bad else str(bad) + ' MISMATCHES'} "
+          f"({len(INERT)} items x {len(seeds)} seeds)")
 
     # --- the families that matter for over-editing ----------------------------------------
     print("\nOver-editing watch (junk mass, the families that would show it first):")
