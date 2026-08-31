@@ -337,8 +337,11 @@ def accumulate_sub_events(acc, records):
 
 
 def finalize_sub(acc):
-    """-> {word slot: {n_events, change_rate, stay_prob}} over all accumulated sweep events."""
-    return {w: {"n_events": a["n_events"],
+    """-> {word slot: {n_events, n_active, n_changed, stay_sum, change_rate, stay_prob}} over all
+    accumulated sweep events. The raw counts are kept alongside the rates so a multi-seed merge
+    can POOL them exactly (sum counts, recompute rates) instead of averaging rates."""
+    return {w: {"n_events": a["n_events"], "n_active": a["n_active"],
+                "n_changed": a["n_changed"], "stay_sum": a["stay_sum"],
                 "change_rate": a["n_changed"] / max(a["n_active"], 1),
                 "stay_prob": a["stay_sum"] / max(a["n_active"], 1)}
             for w, a in sorted(acc.items())}
