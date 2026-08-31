@@ -1,55 +1,71 @@
 # The forward filter loses the plain-literal parse under the deployed align channel
 
 **Date:** 2026-08-31 (found during the Phase-4 cluster smoke, before any Phase-5 submission).
-**Status: Phase-5 fan-out is ON HOLD pending a decision** (see "The decision" at the end).
+**Status: the full Phase-5 runs are ON HOLD pending a decision** (see the end).
 **Probes:** `planning/leading_del_probe/*.py` (run from the repo root in the `ncgenjax` env).
 
-## What was observed
+## The contradiction that started it
 
-The first cluster smoke records (align, P=64, band=2, rejuv=off, 4 seeds, item
-"The mother gave the candle the daughter.") report, in the per-word block:
-`del_before("The") = 1.99` and `p_err_positional ≈ 1` at almost every unit — while
-`p_literal = 0.84` and every top hypothesis reads as the literal sentence. Both are faithful:
-the final cloud's dominant particles are the intended sequence
+For the smoke item "The mother gave the candle the daughter." (align, P=64, band=2, rejuv=off,
+4 seeds), the record says two things at once: the posterior is 84% "the sentence is fine as
+written" (`p_literal`, and every printed hypothesis is the plain sentence) — and about two
+intended words were deleted before "The" (`del_before(unit 0) = 1.99`). Both cannot be true.
+
+Inspecting the particles resolves it: every surviving particle's intended sentence begins with
+two NEWLINE tokens —
 
 ```
 "\n" "\n" "The" mother gave the candle the daughter .     (token ids 187, 187, 510, ...)
 ```
 
-i.e. the literal sentence PLUS two deleted intended units that are newline tokens. The decoder's
-`.strip()` removes them from every reported string, so `map`/`hypotheses`/`p_literal` silently
-absorb the artifact; the alignment posteriors see it. 5 of the 8 smoke items carry it
+— marked as words the writer deleted. The decoder strips whitespace when printing, so these
+particles PRINT as the plain sentence. `map`/`hypotheses`/`p_literal` therefore hide the
+artifact; the per-word alignment posteriors expose it. 5 of the 8 smoke items carry it
 (unit-0 `del_before` = 1.99 / 0.32 / 1.72 / 0 / 0 / 1.94 / 2.0 / 0).
 
-## The model does NOT prefer that parse — this is an inference failure
+## This is an inference failure, not the model's preference
 
-Scoring both paths directly (probe `lm_paths.py`, pythia-70m, prime "<|endoftext|>."):
+Scoring both intended sentences under the model directly (probe `lm_paths.py`, pythia-70m,
+prime "<|endoftext|>."):
 
-- LM: literal −46.90, newline path −47.64 → the LM DISFAVORS the newline path by 0.74 nats.
-- Channel (from the run's own `diag`, probe `particles.py`): the newline particle pays
-  ~−7.9 nats (two deletions at `wdel_p = −3.81` under the align channel's Dirichlet θ).
-- So the model's joint prefers the plain literal by ≈ 8.4 nats (posterior odds ≈ 4,000 : 1) —
-  yet the plain-literal parse has **weight exactly 0** in the final cloud: **P = 16, 64, 256 ×
-  keys fold_in(PRNGKey(0|1|2), 0), every run** (probes `dedup_ab.py`, `mech_test.py`).
-- `dedup` is exonerated: on/off is bit-identical (same logZ, same cloud) in all six A/B runs.
-- logZ tells the same story: −63.58 (band=2) vs −53.13 (band=1). Band 2's path space strictly
-  contains band 1's, so its true log Z is ≥; an estimate 10.5 nats LOWER means the band-2
-  forward pass misses the dominant mode. (gibbs+bd on the same item: −49.5.)
+- The LM gives the newline version LOWER probability: −47.64 vs −46.90 (0.74 nats against it).
+- The channel charges it two deletions: ~−7.9 nats (per-particle `wdel_p = −3.81`, probe
+  `particles.py`).
+- So the model's joint prefers the plain sentence by ≈ 8.4 nats — posterior odds ≈ 4,000 : 1.
 
-## Mechanism: deletion-priced loitering in the intermediate targets
+Correct inference must return the plain sentence with nearly all the mass. Instead it ends with
+weight EXACTLY 0 — at P = 16, 64, and 256, under every random key tried (probes `dedup_ab.py`,
+`mech_test.py`). Two corroborating checks:
 
-The SMC is intended-word-synchronous: at step k, particles are compared after k intended words,
-however many OBSERVED words each has consumed. A particle that "deletes" (LM emits a word, no
-observation consumed) pays LM + log p_del but banks no observation cost; a punctual particle
-pays the observed word's full LM surprisal immediately ("mother" costs −8.6 here). With the
-align channel's deletion at `log p_del ≈ −4.6` (α = (200,2,2) ⇒ p_del ≈ 1%), loitering is
-cheap, and the band (2) lets a particle stay 2 observations behind for the whole sentence —
-a persistent head start roughly equal to the LM cost of 2 words (~10–15 nats) at every
-resampling event. The trace (probe `trace_steps.py`) shows it live: after 2 steps, 45% of the
-mass has consumed ZERO observed words; the punctual literal lineage is resampled away by step
-3; the loiterers pay their debt only at the terminal correction, when the literal is long gone.
+- Evidence: band=1 gives logZ −53.13; band=2 gives −63.58 for the SAME channel. Band 2 allows
+  strictly more alignments, so its true evidence cannot be lower; a 10.5-nat drop means the
+  sampler lost the dominant hypothesis. (gibbs+bd on the same item: −49.5.)
+- The dedup optimization is innocent: on/off is bit-identical in all six A/B runs.
 
-Direct tests of the mechanism (all on the same item/key unless noted; probe `mech_test.py`):
+## Mechanism: particles that fall behind on the observations look better mid-run
+
+The SMC extends particles one INTENDED word per step and resamples on the weights at that
+step — but particles at the same step may have consumed different numbers of OBSERVED words:
+
+- A particle that posits "a word was deleted here" adds an intended word without consuming an
+  observed word. It pays the deletion penalty plus that word's LM cost.
+- A particle that takes the sentence as written consumes one observed word per step and pays
+  its LM cost immediately ("mother" alone costs 8.6 nats here).
+
+Mid-sentence, a particle that has fallen 2 observed words behind (the most band=2 allows) holds
+a weight that has not yet paid for two observed words — worth roughly their LM cost, 10–15
+nats — while an up-to-date particle has paid in full. At every resampling step the up-to-date
+particles therefore look worse, and within two or three steps they are eliminated. The books
+balance only at the terminal step, and by then the correct hypothesis is extinct. More
+particles do not help: the ~e^10 mid-run weight gap applies at every resample regardless of P.
+The trace shows it live (probe `trace_steps.py`): after two steps, 45% of the mass has consumed
+ZERO observed words.
+
+Why align and not char_copy: char_copy charges a flat −9 per deletion, so falling 2 words
+behind costs ~18 nats — more than it buys. Align's Dirichlet prior α=(200,2,2) prices a
+deletion at ~−4.6 nats, so falling behind is a net win in the mid-run weights.
+
+Direct tests (probe `mech_test.py`; same item, worker key unless noted):
 
 | configuration                                | w(plain literal) | del_before(The) | logZ |
 |----------------------------------------------|-----------------|-----------------|--------|
@@ -62,45 +78,41 @@ Direct tests of the mechanism (all on the same item/key unless noted; probe `mec
 
 ¹ different channel ⇒ different Z; listed for the survival column, not the logZ comparison.
 
-Everything fits: expensive deletions (char_copy −9, or tiny α_del) price the head start out;
-band=1 halves the allowed lag; the Gibbs indel move REPAIRS the artifact post hoc (its full
-conditional deletes the "\n" units: `n_chosen_del` 3–7 per seed on item 0, del_before → 0).
+Everything fits: expensive deletions price the head start out; band=1 halves the allowed lag;
+and the Gibbs indel move REPAIRS the artifact after the fact (its full conditional deletes the
+"\n" units: `n_chosen_del` 3–7 per seed on item 0, `del_before` → 0).
 
 ## What this corrects
 
-- "Leading junk is an LM-prior/prime artifact" (earlier sessions; the P=16 '"- "' junk, the
-  no-structural-edit-bans discussion): for this class the LM actively disfavors the junk path —
-  the artifact is made by the SMC's intermediate target, not by the LM prior.
+- "Leading junk is an LM-prior/prime artifact" (earlier sessions): for this class the LM
+  actively disfavors the junk path — the artifact is made by the sampler's mid-run weights,
+  not by the LM prior.
 - The align channel's battery over-editing was attributed to SIGNAL (overlapping LM gains).
   At least the leading-deletion component is INFERENCE, and it does not heal with more
-  particles (P=256 identical). Some part of gibbs+bd's +15/87 on the battery is likely
-  "the indel move repairing the forward pass's own artifact".
-- More particles cannot fix it: the weight deficit during the lag (~e^10) dwarfs any
-  practical P; the mode dies at the first or second resampling event regardless.
+  particles. Some part of gibbs+bd's +15/87 on the battery is likely "the deletion move
+  repairing the forward pass's own artifact".
 
 ## Consequences for the experiment if run as-is (rejuv=off arm)
 
-- `surprisal_nc` for every word is computed under a cloud whose LM context is shifted by the
-  phantom "\n\n" (and by whatever mid-sentence loitering produced); the S_nc-vs-S_lm
-  comparison then mixes the artifact into the quantity of interest.
-- `p_literal` and the MAP strings overstate literalness (the junk is stripped from view).
-- logZ (the evidence) is underestimated by ~10 nats on affected items; the evidence-weighted
-  seed merge then weights seeds by how badly each failed.
+- `surprisal_nc` — the experiment's main output — is computed under a posterior whose intended
+  sentence starts with a phantom "\n\n". That changes the LM context for EVERY word, not just
+  the first, so the contamination is not confined to unit 0.
+- `p_literal` and the printed hypotheses overstate literalness (whitespace stripped from view).
+- logZ is underestimated by ~10 nats on affected items, and the evidence-weighted seed merge
+  then weights seeds by how badly each one failed.
 - The off-vs-bd contrast largely measures the repair of this artifact rather than
   "rejuvenation vs none" on equal footing.
 
 ## The decision (user's call — none of these is mine to make)
 
-1. **Run Phase 5 as configured anyway**: it measures the deployed system exactly as calibrated
-   (battery + calibration history carry the same artifact). Cheapest; interpretation caveats above.
-2. **Fix the intermediate target first** (e.g. charge each particle, at every resampling
-   event, an estimated LM cost of its unconsumed observed words — a lookahead/twist that
-   cancels at the terminal step and leaves log Z unbiased), then re-smoke and fan out.
-   An inference change, needs its own validation gate (toy exactness + battery A/B).
-3. **Change the operating point** (band=1, or a smaller α_del, or both): removes the artifact
-   in these probes but changes the model mid-experiment and shrinks the reachable edit space
-   (band=1 still reaches every single-word repair in the stimuli; band was 2 "to keep
-   everything else constant" with the benchmark).
+1. **Run Phase 5 as configured**: measures the deployed system exactly as calibrated (the
+   battery and calibration history carry the same artifact). Cheapest; caveats above apply.
+2. **Fix the resampling weights first**: charge each particle an LM-based estimate for the
+   observed words it has not yet consumed; the charge cancels at the terminal step, so logZ
+   stays unbiased. An inference change — needs its own validation (toy exactness + battery A/B).
+3. **Shrink the deletion allowance** (band=1 and/or a smaller α_del): removes the artifact in
+   these probes but changes the model mid-experiment (band=1 still reaches every single-word
+   repair in the stimuli; band was 2 to keep everything constant with the benchmark).
 4. **Run only the gibbs+bd arm** (it self-repairs here) and drop or postpone the off arm.
 
 Sizing facts for whichever run happens: main_off MEM should be 24G (cluster off-arm peak
