@@ -875,6 +875,79 @@ def test_lookahead_input_contract():
                    "requires proposal='caprop'")
 
 
+# ==================================================================================================
+# Lookahead charge in the PROPOSAL (planning/OFF_ARM_INFERENCE_FIX.md sec 5). ``lookahead_proposal``
+# tilts each caprop candidate's score by its own unpaid-cost estimate (the per-candidate psi read
+# off the row ``cand_dZ`` already computes) and corrects the incremental weight by -twist[action]:
+# q(i) ∝ e^{s_i+t_i} => proper weight e^{-t_i} * Σ_j e^{s_j+t_j}, unbiased for ANY twist. Gates
+# mirror the resample-twist ones: (1) an all-zero charge reduces BIT-IDENTICALLY to the certified
+# path (certifies the tilt arithmetic, not just the None short-circuit); (2) with the real charge
+# logZ stays unbiased over seeds and the posterior still matches exact enumeration -- the weight
+# correction is exactly what this gate would catch getting wrong; (3) it composes with the align
+# channel + Gibbs rejuvenation (the deployment path); (4) the input contract is enforced.
+# ==================================================================================================
+def test_lookahead_proposal_zero_charge_bit_identical():
+    """Zero charge + ``lookahead_proposal=True``: the twist vector is exactly 0, so the tilted
+    draw (``scores + 0``), the corrected weight (``incr - 0``), and the charged resample must all
+    reduce bit-identically to the certified path given the same RNG."""
+    lm = _peaked()
+    model = _toy_model(lm)
+    M = len(_PEAKED_OBS.split())
+    st0, lw0, z0, _ = pairhmm_smc.run(_PEAKED_OBS, jax.random.PRNGKey(0), model, P=2000,
+                                      proposal="caprop", wdel=WDEL, wins=WINS, band=2)
+    st1, lw1, z1, _ = pairhmm_smc.run(_PEAKED_OBS, jax.random.PRNGKey(0), model, P=2000,
+                                      proposal="caprop", wdel=WDEL, wins=WINS, band=2,
+                                      lookahead_lp=jnp.zeros(M), lookahead_proposal=True)
+    assert z0 == z1, f"zero-charge lookahead_proposal not bit-identical: logZ {z0} vs {z1}"
+    assert jnp.array_equal(lw0, lw1), "zero-charge lookahead_proposal changed the final weights"
+    assert jnp.array_equal(st0[0], st1[0]), "zero-charge lookahead_proposal changed the buffers"
+
+
+def test_lookahead_proposal_logZ_and_posterior_match_exact():
+    """With the real literal-reading charge tilting the proposal, the filter still targets the
+    same posterior: logZ unbiased over seeds and the posterior matches exact enumeration. This is
+    the gate on the ``-twist[action]`` weight correction -- an uncorrected tilt biases logZ."""
+    lm, exact, exact_logZ = _peaked_exact()
+    model = _toy_model(lm)
+    target = exact_logZ - _a0_const(len(_PEAKED_OBS.split()))
+    la = _toy_literal_lp(_PEAKED_OBS, lm)
+    runs = [pairhmm_smc.run(_PEAKED_OBS, jax.random.PRNGKey(s), model, P=6000,
+                            proposal="caprop", wdel=WDEL, wins=WINS, lookahead_lp=la,
+                            lookahead_proposal=True)
+            for s in range(4)]
+    zs = jnp.array([r[2] for r in runs])
+    assert abs(float(zs.mean()) - target) < 0.08, \
+        f"lookahead_proposal logZ {float(zs.mean()):.3f} != exact-rel {target:.3f}"
+    smc = {s: p for s, p in pairhmm_smc.decode(runs[0][0], runs[0][1], model, top=50)}
+    assert max(smc, key=smc.get) == max(exact, key=exact.get) == _PEAKED_TRUTH
+    assert tv_distance(exact, smc) < 0.15, \
+        f"lookahead_proposal posterior too far from exact: TV {tv_distance(exact, smc):.3f}"
+
+
+def test_lookahead_proposal_align_gibbs_end_to_end():
+    """The proposal tilt composes with the align channel + Gibbs rejuvenation (the deployment
+    path) and the MAP is still recovered."""
+    lm = _peaked()
+    model = _align_model(lm, _ALIGN_SLOPE)
+    la = _toy_literal_lp(_PEAKED_OBS, lm)
+    st, dw, _logZ, _sl = pairhmm_smc.run(_PEAKED_OBS, jax.random.PRNGKey(0), model, P=4000,
+                                         proposal="caprop", wdel=WDEL, wins=WINS, band=2,
+                                         rejuv="gibbs", channel="align",
+                                         action_alpha=[9.0, 0.5, 0.5], lookahead_lp=la,
+                                         lookahead_proposal=True)
+    smc = {s: p for s, p in pairhmm_smc.decode(st, dw, model, top=50)}
+    assert max(smc, key=smc.get) == _PEAKED_TRUTH, \
+        f"lookahead_proposal align run+gibbs MAP {max(smc, key=smc.get)!r}, expected {_PEAKED_TRUTH!r}"
+
+
+def test_lookahead_proposal_input_contract():
+    """``lookahead_proposal`` without the charge vector is a caller mistake, not a silent no-op."""
+    model = _toy_model(lm_logits)
+    obs, key = "teh cat sat", jax.random.PRNGKey(0)
+    run = lambda **kw: pairhmm_smc.run(obs, key, model, P=64, wdel=WDEL, wins=WINS, band=2, **kw)
+    _assert_raises(lambda: run(lookahead_proposal=True), "requires lookahead_lp")
+
+
 def test_dedup_forward_exact():
     """R3 item 1: ``cache_dedup.make_forward_dedup`` runs a batched forward on only the unique filled
     prefixes (keyed on ``buf[:i_len]``) and scatters back. EXACT -- the deduped output equals the raw

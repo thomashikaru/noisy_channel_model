@@ -448,7 +448,8 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
         lm_temp=1.0, ins_rate=0.02, uniform_ins=False, action_alpha=None, channel=None,
         align_slope=None, morph=True, bd_bridge_j=0, bd_pool_cap=None, bd_p_stay=0.0, bd_mode="gibbs",
         bd_attempts=1,
-        bd_funcwords=True, word_stats=None, diag=None, lookahead=False, lookahead_lp=None):
+        bd_funcwords=True, word_stats=None, diag=None, lookahead=False, lookahead_lp=None,
+        lookahead_proposal=False):
     """Channel-aware RB-SMC on Pythia via the shared filter. Returns (state, log_w, logZ, seed_len).
 
     ``channel`` picks the noise model: ``"word_action"`` (the deployment model -- per-word 4-way Dirichlet
@@ -498,7 +499,13 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
     (the batch worker computes it for the words block anyway) passes ``lookahead_lp=`` directly --
     an ``(M,)`` array of per-unit log-liks, i.e. ``-surprisal_lm`` -- which takes precedence and
     skips the extra forward. Tempering by ``lm_temp`` happens inside ``pairhmm_smc`` where the
-    suffix charge is built, so both routes pass UNtempered log-liks."""
+    suffix charge is built, so both routes pass UNtempered log-liks.
+
+    ``lookahead_proposal`` (default OFF = bit-identical certified path; needs ``lookahead`` or
+    ``lookahead_lp``) also folds that charge into the candidate proposal with the matching weight
+    correction (planning/OFF_ARM_INFERENCE_FIX.md sec 5) -- without it the twist decides which
+    particles survive but not which candidates are proposed, and the literal reading of an item
+    with a cheap posited-deletion opener can go unproposed at any particle count."""
     rejuv = _check_rejuv(rejuv)
     from genjax_port import pairhmm_rejuv as RJ
     # Channel selector (plan WORD_ACTION_REJUV_PLAN Phase 3): ``"word_action"`` is the model;
@@ -555,7 +562,8 @@ def run(observed, key, P=64, wdel=None, wins=None, slack=3, band=2,
                            bd_mode=bd_mode, bd_attempts=bd_attempts,
                            bd_funcword_ids=_funcword_ids() if bd_funcwords else None,
                            morph_lp=(morphology.MORPH_LP if morph else None),
-                           word_stats=word_stats, diag=diag, lookahead_lp=lookahead_lp)
+                           word_stats=word_stats, diag=diag, lookahead_lp=lookahead_lp,
+                           lookahead_proposal=lookahead_proposal)
 
 
 def decode(state, log_w, skip=1, key=jax.random.PRNGKey(0), top=3):

@@ -100,6 +100,7 @@ def config_slug(a):
     if a.bd_attempts != 1:                 parts.append(f"bdatt{a.bd_attempts}")
     if a.no_bd_funcwords:                  parts.append("nofw")
     if a.lookahead:                        parts.append("la")
+    if a.lookahead_proposal:               parts.append("lap")
     if not a.dedup:                        parts.append("nodedup")
     if a.n_seeds > 1:                      parts.append(f"nseed{a.n_seeds}")
     return "__".join(parts)
@@ -244,7 +245,7 @@ def _config_dict(a):
         "align_slope": a.align_slope, "action_alpha": a.action_alpha, "dedup": a.dedup,
         "bd_p_stay": a.bd_p_stay, "bd_mode": a.bd_mode, "bd_attempts": a.bd_attempts,
         "bd_funcwords": not a.no_bd_funcwords, "top": a.top, "n_seeds": a.n_seeds,
-        "lookahead": a.lookahead,
+        "lookahead": a.lookahead, "lookahead_proposal": a.lookahead_proposal,
     }
 
 
@@ -573,7 +574,8 @@ def _run_one(pwc, a, text, context, key, channel, action_alpha, want_viz):
             align_slope=a.align_slope, bd_p_stay=a.bd_p_stay, bd_mode=a.bd_mode,
             bd_attempts=a.bd_attempts, bd_funcwords=not a.no_bd_funcwords,
             prime=prime, word_stats=ws, diag=dg,
-            lookahead_lp=(None if lm_base is None else -lm_base["surprisal_lm"]))
+            lookahead_lp=(None if lm_base is None else -lm_base["surprisal_lm"]),
+            lookahead_proposal=a.lookahead_proposal)
         full = pwc.decode(st, lw, skip=sl, top=10 ** 9)   # full support: hypotheses + p_literal
         hyps = [{"sentence": s, "prob": float(p)} for s, p in full[:a.top]]
         p_literal = float(sum(p for s, p in full if s == text.strip()))
@@ -890,11 +892,20 @@ def build_parser():
                         "units each particle has not yet consumed, carrying the inverse as "
                         "residual (unbiased; fixes the leading-deletion inference failure). "
                         "Adds one plain-LM forward per item, reused by the words block.")
+    p.add_argument("--lookahead-proposal", action="store_true",
+                   help="also fold the lookahead charge into the candidate PROPOSAL with the "
+                        "matching weight correction (planning/OFF_ARM_INFERENCE_FIX.md sec 5; "
+                        "requires --lookahead). Without it the twist decides which particles "
+                        "survive but not which candidates are proposed, so the literal parse "
+                        "of a posited-deletion item can go unproposed at any particle count.")
     return p
 
 
 def main():
     a = build_parser().parse_args()
+    if a.lookahead_proposal and not a.lookahead:
+        raise SystemExit("--lookahead-proposal requires --lookahead (it folds that charge "
+                         "into the proposal)")
     if a.print_output_dir:
         do_print_output_dir(a)
     elif a.manifest:

@@ -217,7 +217,7 @@ def _rejuv_pool_from_inventory(emit_first, emit_surf, emit_mtidx, mt_span, mt_le
 
 def _caprop_scores(log_alpha, lmlog, mt_chain, emit_first, emit_surf, emit_mtidx, mt_span, mt_len,
                    emit_full, offs, J, M, band_mask, t_new, eos_id, emit_vocab, wdel, wins,
-                   word_mask, lm_temp, T_max, n_mt, lp_copy, lp_sub, copy_mask):
+                   word_mask, lm_temp, T_max, n_mt, lp_copy, lp_sub, copy_mask, la_C=None):
     """Channel-aware (fully-adapted) candidate scores: [word(Kw), EOS(1)], plus the chosen word's
     token span for the kernel to splice.
 
@@ -232,9 +232,22 @@ def _caprop_scores(log_alpha, lmlog, mt_chain, emit_first, emit_surf, emit_mtidx
     ``logsumexp(scores)`` (independent of the draw). EOS reads the terminal full-consumption mass
     ``alpha[M]``.
 
-    Returns ``(cand_span [Kw, T_max], cand_len [Kw], emit_cols [M, Kw], scores [Kw+1])``. With
-    ``n_mt == 0`` and ``T_max == 1`` this reduces exactly to the certified single-token scoring (the
-    span is just ``[first_token]``, len 1, ``surf == token``), so the exact-enumeration gates hold.
+    Returns ``(cand_span [Kw, T_max], cand_len [Kw], emit_cols [M, Kw], scores [Kw+1],
+    twist [Kw+1])``. With ``n_mt == 0`` and ``T_max == 1`` this reduces exactly to the certified
+    single-token scoring (the span is just ``[first_token]``, len 1, ``surf == token``), so the
+    exact-enumeration gates hold.
+
+    ``la_C`` (default ``None`` -- OFF, ``twist`` identically 0, certified path) folds the lookahead
+    charge (see :func:`run`'s ``lookahead_lp``) into the PROPOSAL, not just the resampling
+    (planning/OFF_ARM_INFERENCE_FIX.md sec 5). Without it a "bridge" candidate that explains none
+    of the observation (a posited-deletion opener like a bare newline) is scored on its immediate
+    cost only -- deferring the unexplained units' cost for free -- and the literal reading, which
+    pays its LM cost up front, can be proposed ZERO times even at P=1024. ``twist[i]`` is the
+    candidate's unpaid literal-LM cost estimate ``logsumexp(row_i + la_C) - logsumexp(row_i)``
+    (the same psi the resample block reads off the particle's row, but per CANDIDATE, from the
+    row ``cand_dZ`` already computes; 0 for EOS -- full consumption has no unpaid units). The
+    kernel then samples from ``scores + twist`` and corrects the incremental weight by
+    ``-twist[action]`` so every estimator stays unbiased (the APF arrangement at proposal level).
 
     ``lm_temp`` (lambda) tempers the LM PRIOR (target ``P_LM^lm_temp * P_channel``); ``word_mask``
     restricts the top-J LM bridge pool to lexical words. There is no explicit INSERT action -- a
@@ -273,10 +286,19 @@ def _caprop_scores(log_alpha, lmlog, mt_chain, emit_first, emit_surf, emit_mtidx
     is_copy = copy_mask[jnp.arange(M)[:, None], cand_surf_c[None, :]]     # (M, Kw)
     emit_cols = emit_cols + lp_sub + (lp_copy - lp_sub) * is_copy
 
-    def cand_dZ(col):
-        return logsumexp(band_mask(_word_row_update(log_alpha, col, wdel, wins), t_new)) - Z
+    def cand_row(col):
+        return band_mask(_word_row_update(log_alpha, col, wdel, wins), t_new)
 
-    dZ = jax.vmap(cand_dZ, in_axes=1)(emit_cols)
+    if la_C is None:                                  # certified path: no twist, untouched scoring
+        dZ = jax.vmap(lambda col: logsumexp(cand_row(col)) - Z, in_axes=1)(emit_cols)
+        tw_word = jnp.zeros_like(dZ)
+    else:                                             # lookahead-in-proposal: per-candidate psi from
+        def cand_dZ_tw(col):                          # the SAME row (one extra logsumexp, no LM cost)
+            row = cand_row(col)
+            rZ = logsumexp(row)
+            return rZ - Z, logsumexp(row + la_C) - rZ
+        dZ, tw_word = jax.vmap(cand_dZ_tw, in_axes=1)(emit_cols)
+        tw_word = jnp.where(jnp.isfinite(tw_word), tw_word, 0.0)   # dead rows: -inf - -inf -> 0
     cand_first_c = jnp.clip(cand_first, 0, emit_vocab - 1)
     if n_mt > 0:
         lm_part = jnp.where(cand_mt >= 0, mt_chain[jnp.clip(cand_mt, 0, n_mt - 1)],
@@ -286,6 +308,7 @@ def _caprop_scores(log_alpha, lmlog, mt_chain, emit_first, emit_surf, emit_mtidx
     score_word = jnp.where(valid, lm_temp * lm_part + dZ, -jnp.inf)
     score_eos = lm_temp * lmlog[eos_id] + (log_alpha[M] - Z)
     scores = jnp.concatenate([score_word, score_eos[None]])
+    twist = jnp.concatenate([tw_word, jnp.zeros((1,), tw_word.dtype)])   # EOS: no unpaid units
 
     single_span = jnp.zeros((kw, T_max), jnp.int32).at[:, 0].set(cand_first_c.astype(jnp.int32))
     single_len = jnp.ones((kw,), jnp.int32)
@@ -296,7 +319,7 @@ def _caprop_scores(log_alpha, lmlog, mt_chain, emit_first, emit_surf, emit_mtidx
     else:
         cand_span, cand_len = single_span, single_len
     cand_surf_out = cand_surf_c.astype(jnp.int32)        # surface id of each candidate (for word_surf)
-    return cand_span, cand_len, cand_surf_out, emit_cols, scores
+    return cand_span, cand_len, cand_surf_out, emit_cols, scores, twist
 
 
 def _make_kernel(seed_len, M, band, T_max, LCTX, Wmax):
@@ -308,10 +331,15 @@ def _make_kernel(seed_len, M, band, T_max, LCTX, Wmax):
         return jnp.where(jnp.abs(ks - t) <= band, log_alpha, -jnp.inf)
 
     @genjax.gen
-    def kernel(state, cand_span, cand_len, cand_surf, emit_cols, scores, wdel, wins):
+    def kernel(state, cand_span, cand_len, cand_surf, emit_cols, scores, twist, wdel, wins):
         ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done = state
-        action = genjax.categorical(scores) @ "action"
-        incr = logsumexp(scores)
+        # ``twist`` (all-zero unless lookahead-in-proposal is on -- then +0.0 keeps every value
+        # bit-identical) tilts the DRAW toward candidates with less unpaid lookahead cost; the
+        # incremental weight subtracts the chosen candidate's twist so the target is unchanged:
+        # q(i) ∝ e^{s_i+t_i}  =>  proper weight e^{s_i}/q(i) = e^{-t_i} * Σ_j e^{s_j+t_j}.
+        tscores = scores + twist
+        action = genjax.categorical(tscores) @ "action"
+        incr = logsumexp(tscores) - twist[action]
         incr = jnp.where(done, 0.0, incr)
         incr = jnp.where(jnp.isnan(incr), -jnp.inf, incr)                # -inf - -inf (dead) -> -inf
         _ = factor(incr) @ "ev"
@@ -476,7 +504,7 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
         rejuv="off", rejuv_pool=None, rejuv_lookback=3, rejuv_stats=None, trace=None, rejuv_dedup=False,
         lm_temp=1.0, action_alpha=None, channel=None, bd_min_done=0.0, bd_bridge_j=0, bd_pool_cap=None,
         bd_p_stay=0.0, bd_mode="gibbs", bd_attempts=1, bd_funcword_ids=None, morph_lp=None,
-        word_stats=None, diag=None, lookahead_lp=None):
+        word_stats=None, diag=None, lookahead_lp=None, lookahead_proposal=False):
     """Sequential RB-SMC over intended words; the word alignment ``alpha`` is marginalized.
 
     Returns ``(state, log_w, logZ, seed_len)``. ``proposal="caprop"`` is the fully-adapted kernel;
@@ -577,6 +605,17 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     impossible parses (non-finite alpha total; they carry -inf weight anyway). Requires
     ``proposal="caprop"`` (bootstrap's done particles have NOT paid the terminal term, so the
     done-guard would be wrong there).
+
+    ``lookahead_proposal`` (default ``False`` -- OFF, bit-identical certified path; requires
+    ``lookahead_lp``) additionally folds the SAME charge into the candidate PROPOSAL
+    (planning/OFF_ARM_INFERENCE_FIX.md sec 5). The resample twist alone decides which particles
+    survive but has no say in which candidates are proposed, so a cheap posited-deletion bridge
+    (score = immediate cost only, unexplained units deferred for free) can crowd the literal
+    reading out of the proposal entirely -- it was proposed zero times at P up to 1024 on the
+    canonical artifact item. With the flag on, each candidate's score is tilted by its own unpaid
+    cost estimate (``_caprop_scores``'s ``twist``) and the incremental weight carries the matching
+    ``-twist[action]`` correction, so logZ and every posterior estimator stay unbiased (the
+    fully-adapted APF arrangement, now at both levels).
     """
     # Channel selector (plan WORD_ACTION_REJUV_PLAN Phase 3): ``"word_action"`` is THE model -- the
     # per-word Dirichlet action channel; ``"char_copy"`` is the deprecated bundled char channel, kept
@@ -692,6 +731,9 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
     # log_alpha at each resample event. None => la_C is None => the resample block below is the
     # certified path unchanged.
     la_C = None
+    if lookahead_proposal and lookahead_lp is None:
+        raise ValueError("lookahead_proposal requires lookahead_lp (it folds that charge into "
+                         "the candidate proposal)")
     if lookahead_lp is not None:
         if proposal != "caprop":
             raise ValueError("lookahead_lp requires proposal='caprop' (bootstrap's done particles "
@@ -703,6 +745,7 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                              f"{lk.shape[0]}, M={M}")
         la_C = jnp.concatenate([jnp.cumsum((lm_temp * lk)[::-1])[::-1],
                                 jnp.zeros((1,), jnp.float32)])            # (M+1,), C[M]=0
+    la_prop_C = la_C if lookahead_proposal else None    # None => _caprop_scores twist path is off
 
     # Multi-token LM scorer (Phase D): the injected KV/uncached chain-rule over a candidate's tokens.
     tail_fn = None
@@ -813,22 +856,23 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
             lambda la, lm, mtc, nw, lpc, lps, wd, wn: _caprop_scores(
                 la, lm, mtc, emit_first, emit_surf, emit_mtidx, mt_span, mt_len, emit_full, offs, J, M,
                 band_mask, nw + 1, eos_id, Vc, wd, wn, word_mask, lm_temp, T_max, n_mt,
-                lpc, lps, copy_mask),
+                lpc, lps, copy_mask, la_C=la_prop_C),
             in_axes=(0, 0, 0, 0, 0, 0, 0, 0))(log_alpha, lmlog, mt_chain, n_words,
                                               lp_copy, lp_sub, wdel_p, wins_p)
 
     @jax.jit
     def extend_caprop(keys, ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done,
-                      cand_span, cand_len, cand_surf, emit_cols, scores, wdel_p, wins_p):
-        def one(k, cb, cl, nw, wl, ws_, la, dn, csp, cln, csf, ec, sc, wd, wn):
+                      cand_span, cand_len, cand_surf, emit_cols, scores, twist, wdel_p, wins_p):
+        def one(k, cb, cl, nw, wl, ws_, la, dn, csp, cln, csf, ec, sc, tw, wd, wn):
             tr, w = kernel.importance(k, constraint,
-                                      ((cb, cl, nw, wl, ws_, la, dn), csp, cln, csf, ec, sc, wd, wn))
+                                      ((cb, cl, nw, wl, ws_, la, dn), csp, cln, csf, ec, sc, tw,
+                                       wd, wn))
             rv = tr.get_retval()
             return rv[0], rv[1], rv[2], rv[3], rv[4], rv[5], rv[6], w
 
         cb, cl, nw, wl, ws2, la, dn, ws = jax.vmap(one)(
             keys, ctx_buf, ctx_len, n_words, word_len, word_surf, log_alpha, done,
-            cand_span, cand_len, cand_surf, emit_cols, scores, wdel_p, wins_p)
+            cand_span, cand_len, cand_surf, emit_cols, scores, twist, wdel_p, wins_p)
         return (cb, cl, nw, wl, ws2, la, dn), ws
 
     @jax.jit
@@ -869,11 +913,11 @@ def run(observed, key, model, P=4000, wdel=jnp.log(0.1), wins=jnp.log(0.05), sla
                 mt_chain = tail_fn(ctx_buf, ctx_len, mt_span_b, mt_len_b)
             else:
                 mt_chain = jnp.zeros((P, 1))
-            cand_span, cand_len, cand_surf, emit_cols, scores = _assemble(
+            cand_span, cand_len, cand_surf, emit_cols, scores, twist = _assemble(
                 n_words, log_alpha, lmlog, mt_chain, lp_copy, lp_sub, wdel_p, wins_p)
             state, incr = extend_caprop(keys, ctx_buf, ctx_len, n_words, word_len, word_surf,
                                         log_alpha, done, cand_span, cand_len, cand_surf, emit_cols,
-                                        scores, wdel_p, wins_p)
+                                        scores, twist, wdel_p, wins_p)
         else:
             state, incr = extend_bootstrap(keys, ctx_buf, ctx_len, n_words, word_len, word_surf,
                                            log_alpha, done, lmlog, lp_copy, lp_sub, wdel_p, wins_p)

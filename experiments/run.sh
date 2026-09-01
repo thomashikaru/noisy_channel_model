@@ -56,7 +56,7 @@ need_master() {
 #: sizing). Used both to compose the remote env line and to check the off/bd arm parity.
 CFG_VARS=(CHANNEL REJUV PARTICLES N_SEEDS REJUV_LOOKBACK BAND MAX_DIST SEED LM_TEMP INS_RATE TOP
           WDEL WINS ALIGN_SLOPE ACTION_ALPHA UNIFORM_INS NO_DEDUP BD_P_STAY BD_MODE BD_ATTEMPTS
-          NO_BD_FUNCWORDS LOOKAHEAD WRITE_VIZ SORT_BY_LENGTH)
+          NO_BD_FUNCWORDS LOOKAHEAD LA_PROPOSAL WRITE_VIZ SORT_BY_LENGTH)
 
 resolve_config() {                       # print VAR=VAL lines for configs/<name>.env, sorted
     local name="$1"

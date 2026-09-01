@@ -75,6 +75,7 @@ BD_MODE="${BD_MODE:-gibbs}"
 BD_ATTEMPTS="${BD_ATTEMPTS:-1}"
 NO_BD_FUNCWORDS="${NO_BD_FUNCWORDS:-0}"
 LOOKAHEAD="${LOOKAHEAD:-0}"     # 1 -> lookahead charge at resampling (planning/LOOKAHEAD_CHARGE_PLAN.md)
+LA_PROPOSAL="${LA_PROPOSAL:-0}" # 1 -> also fold the charge into the proposal (planning/OFF_ARM_INFERENCE_FIX.md; needs LOOKAHEAD=1)
 
 # ============================================================================================
 # 3. BATCH / SLURM EXECUTION
@@ -122,6 +123,7 @@ EXTRA=""
 [ "$BD_ATTEMPTS" != "1" ] && EXTRA="$EXTRA --bd-attempts $BD_ATTEMPTS"
 [ "$NO_BD_FUNCWORDS" = 1 ] && EXTRA="$EXTRA --no-bd-funcwords"
 [ "$LOOKAHEAD" = 1 ]    && EXTRA="$EXTRA --lookahead"
+[ "$LA_PROPOSAL" = 1 ]  && EXTRA="$EXTRA --lookahead-proposal"
 [ "$WRITE_VIZ" = 1 ] || EXTRA="$EXTRA --no-viz"
 [ "$OVERWRITE" = 1 ]    && EXTRA="$EXTRA --overwrite"
 [ "$SKIP_ERRORS" = 1 ]  && EXTRA="$EXTRA --skip-errors"
