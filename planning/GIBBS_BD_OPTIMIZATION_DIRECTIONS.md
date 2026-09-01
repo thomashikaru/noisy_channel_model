@@ -89,3 +89,25 @@ A flagged "perf win" is a HYPOTHESIS to MEASURE, not automatically a debt to pay
 comment-flagged as "the Phase-2 perf win" and re-raised as the slowdown report's #1 fix, but
 `REJUV_BIRTH_DEATH_PLAN.md` §12 had already warned it was "aimed at the wrong cost." A forward-count / FLOP
 cost model does not capture framework per-call overhead. Measure on a representative case before building.
+
+## 2026-09-01 addendum — USER DIRECTIVE: targeted allocation BEFORE main_bd
+
+Explore next session, before any `main_bd` run (user decision 2026-09-01). Extends the
+"surprisal-gated insertion gaps" item above with two refinements:
+
+1. **Trigger on RELATIVE surprisal:** gate rejuvenation on a unit's contextual LM surprisal being
+   high **relative to its unigram surprisal** (the word-specific baseline — a rare word is allowed
+   to be contextually surprising; the same decomposition the frequency-aware insertion cost uses).
+   Both signals are already computed per item (`lm_word_surprisals` runs for LOOKAHEAD anyway;
+   `unigram_surprisal` exists), so the gate is one subtraction at run time.
+2. **Target the proposal:** propose rejuvenations at reanalysis-likely locations (the spike
+   profile / alignment strain), not across the whole sentence — cuts the dominant O(Wmax×Kc)
+   indel grid, and matches bd's actual remaining job now that the off arm is clean post
+   lookahead_proposal: localized structural repairs (chen2023 passive↔active, tabor2004/huang2024
+   "who was") at identifiable disambiguation points.
+
+Correctness note: gating computed from the OBSERVED sentence is a constant of the target, so a
+position-selection mixture built from it keeps every Gibbs component invariant. Gating on the
+particle's current parse makes the kernel state-dependent — needs SMCP3/MH, avoid unless
+deliberate. Validation rule unchanged: A/B any gated variant against the exact full sweep on a
+battery subset first, and measure before building (the KV meta-lesson above).
