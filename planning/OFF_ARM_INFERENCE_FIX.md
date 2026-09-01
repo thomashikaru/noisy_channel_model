@@ -93,24 +93,34 @@ The lookahead charge (`la_C`, `psi`) is exactly this deferred-cost estimate.
 So the twist decides which particles *survive* but has no say in which candidates are *proposed*.
 In a fully-adapted auxiliary particle filter the twist belongs in both. That asymmetry is the bug.
 
-### 3.4 Scope — read this before estimating the payoff
+### 3.4 Scope — how much of the off arm this reaches
 
-| | value |
-|---|---|
-| Items with opening artifact (`del_before[0] > 0.5`) | **351 of 2336 = 15%** |
-| Edit rate, items WITH the artifact | 50.4% |
-| Edit rate, items WITHOUT it | 47.8% |
-| Overall edited | 1126 of 2336 = 48% |
-| Overall `p_literal == 0` | 731 of 2336 = 31% |
-| Share of all posited-deletion mass sitting at unit 0 | 42% |
+The loitering incentive operates at **every** position, not just the opening: unit 0 holds 42% of
+all posited-deletion mass, the other 58% is spread through the sentence. Scoping by unit 0 alone
+badly understates the reach. Splitting all 2336 items by whether ANY unit carries substantial
+posited-deletion mass (`del_before > 0.5`):
 
-**Fixing this will not move the 48% overall edit rate.** It cleans up a 15% contamination that
-matters because phantom leading words corrupt the LM context for every downstream word's
-`surprisal_nc` — the experiment's main output. Over-editing at large is a separate, signal-side
-problem.
+| | items | edited | edit rate | `p_literal == 0` |
+|---|---|---|---|---|
+| **affected** | 857 (36.7%) | 681 | **79.5%** | **58.7%** |
+| not affected | 1479 (63.3%) | 445 | 30.1% | 15.4% |
+| all | 2336 | 1126 | 48.2% | 31.3% |
 
-Per-dataset artifact rate: ryskin2021 35%, tabor2004 27%, gibson2013 21%, chen2023 10%,
-huang2024 5%, qian2023 5%, clark2026 3%.
+- **60% of all edited items (681/1126) carry substantial posited deletions.**
+- **69% of all `p_literal == 0` items (503/731) do.**
+
+Per-dataset share affected: ryskin2021 64%, gibson2013 49%, tabor2004 49%, huang2024 45%,
+clark2026 29%, chen2023 26%, qian2023 12%.
+
+**Caveat — this is an upper bound on the fix's reach, not a predicted improvement.** Some posited
+deletions are correct: genuine missing-word items (the candle "to" restoration) legitimately carry
+`del_before > 0`, and ryskin2021's high share partly reflects deliberately corrupted stimuli where
+deletions are the right answer. The fix must remove spurious deletions while preserving genuine
+ones — that is exactly what §6 decision 1's criteria (a) and (b) are for.
+
+For comparison, the narrower opening-only signature (`del_before[0] > 0.5`) is 351 items = 15%,
+edit rate 50.4%. That figure describes the leading-deletion artifact specifically, NOT the reach
+of this fix.
 
 ---
 
@@ -182,10 +192,12 @@ unbiased. The existing gates must stay bit-identical with the flag off.
    `lookahead` — the exact-enumeration gates depend on the certified path being bit-identical.
 3. **Whether `band=1` rides along or is tested separately.** It is an independent +5.5-nat win;
    confounding the two would make the A/B unreadable. Recommend separately.
-4. **The big one: does `main_off` get re-run if this lands?** The current 2337-item results carry
-   the artifact on 15% of items, and `surprisal_nc` on those is contaminated beyond unit 0.
-   Re-running costs ~114.5 CPU-hours. Alternatives: re-run only affected items, or ship with the
-   contamination documented.
+4. **The big one: does `main_off` get re-run if this lands?** 37% of the current 2337-item results
+   carry substantial posited-deletion mass, and where those are spurious, `surprisal_nc` is
+   contaminated for every downstream word (the phantom word changes the LM context, not just its
+   own slot). Re-running costs ~114.5 CPU-hours, which is cheap next to `main_bd`. Given §3.4,
+   re-running is probably the right call rather than the fallback — but decide it after the
+   battery A/B, not before.
 
 ---
 
