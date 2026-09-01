@@ -261,4 +261,61 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
 - slug: `lm-pythia-70m__ch-align__rej-gibbsbd__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 1
 - env: `INPUT=experiments/stimuli/moses.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=gibbs+bd REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=32G SECONDS_PER_ITEM=1320 SENTENCES_PER_SHARD=2`
 - job id: 21678765
-- outcome: (append when finished)
+- outcome: **COMPLETED** (21678765_0, 1:15:23, exit 0). 1/1 merged. The single-item bd/off
+  runtime ratio here is 75.4 min vs 3.8 min = 20x; the 8-item smoke A/B gives 240.2 min vs
+  19.0 min = 12.6x. Use 12.6x-20x when sizing the remaining bd datasets.
+
+### 2026-09-01T14:18:02Z — huang2024 × main_off
+- commit: `dc84b5a` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__nseed4`  remaining before submit: 1
+- env: `INPUT=experiments/stimuli/huang2024.input.jsonl BAND=2 CHANNEL=align LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=1800 SENTENCES_PER_SHARD=1`
+- job id: 21746380
+- outcome: **COMPLETED** (21746380_143, 1:37, exit 0) -> huang2024 144/144. Repairs the ONE
+  Phase-5 casualty: 21676499_20 hit TIMEOUT at 1:19:24, exactly its auto-sized --time of
+  900 + 8*4*120 = 4740 s, after finishing 7 of 8 items plus 3 of 4 seeds on sentence_id 136
+  ("After the contestant lost, the money became unavailable ...", 17 words, the longest in
+  huang2024). At 1:37 for the re-run the item is NOT intrinsically slow -- the shard simply ran
+  out of budget carrying 8 long items x 4 seeds. Lesson for sizing: SECONDS_PER_ITEM=120 is too
+  thin for datasets whose p90 length is 15+ words; huang2024 and tabor2004 are the two.
+
+### 2026-09-01T14:30:00Z — PHASE-5 `main_off` COMPLETE (8/8 datasets) + verification
+
+- commit: `dc84b5a`; config `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__nseed4`
+- **2337/2337 items ok, 0 error, 0 missing** across moses/tabor2004/huang2024/gibson2013/
+  clark2026/qian2023/ryskin2021/chen2023. All pulled into `results_nc/` and collected into
+  `experiments/outputs/`; `status.md` regenerated over all 8 datasets in ONE collect call
+  (a per-dataset collect rewrites status.md with only that dataset -- always pass them together).
+- cost actually spent: 322 array tasks, 114.5 CPU-hours (chen 17.1 / clark 18.3 / gibson 7.9 /
+  huang 11.0 / moses 0.1 / qian 25.6 / ryskin 26.4 / tabor 8.1).
+- verification (plan section 8, gates 1-5):
+  - 154,695 word rows, **zero non-finite** surprisal_nc or surprisal_lm.
+  - p_copy + p_sub + p_ins == 1 on every row (max deviation < 1e-4).
+  - identity sum(S_k) + S_end == -logZ holds on all 2337 merged records, **worst 2.84e-14**.
+  - gibson2013 grammaticality contrast is in the right direction: ungrammatical items edited
+    51% of the time vs grammatical 25%.
+- MAP behaviour of the off arm across the 7 real datasets (2335 items): 52% keep the literal
+  MAP, 48% edited (sub 606 / multi 286 / ins 226 / del 8); **731 items (31%) have p_literal
+  exactly 0**. Per dataset the edited rate runs ryskin2021 72% / clark2026 56% / huang2024 52% /
+  gibson2013 41% / tabor2004 42% / qian2023 38% / chen2023 32%. Median 4-seed logZ spread 7.11.
+- **spot-checks (plan gate 5) -- the off arm misses 2 of 3.** Comparing the smoke set off vs bd,
+  both at LOOKAHEAD=1:
+  - candle/daughter -> "to": PASSES on both arms, but only on the context-primed item
+    (p_map 0.603 off, 0.809 bd). The uncontexted copy stays literal on both.
+  - inflection -> infection: bd gives the clean 'Medics cleaned and bandaged the wound to
+    prevent an infection.' (p_map 0.994, edit=sub); **off corrupts the start** to 'This article
+    medic cleaned and bandaged ...' -- the known step-1 proposal-support failure.
+  - licked -> kicked: **FAILS ON BOTH ARMS.** off emits junk ('The boy looked licked from the
+    big round ball into the net.'); bd stays literal. This gate is not met by either
+    configuration and is a real open item, not a sizing problem.
+  - more broadly on the smoke set the off arm leaves 4 of 8 items at p_literal 0 with junk
+    multi-edit MAPs, where bd holds 5 of 8 literal. The rejuvenation arm is visibly the
+    better-behaved one.
+- **user decision (2026-09-01): HOLD OFF on the `main_bd` arm** for the remaining 7 datasets;
+  decide after inspecting the off results. When it does run, the agreed sizing is
+  SENTENCES_PER_SHARD=2 everywhere (--time 3:11:00, MEM=32G), dataset by dataset -- 1164 tasks
+  total exceeds the account's MaxSubmit=500, so it CANNOT go in as one batch. Estimated cost
+  ~1440 CPU-hours at 12.6x, up to ~2300 at 20x.
+- housekeeping: two stray editor backup files sit untracked on the cluster checkout,
+  `slurm/#cluster.env#` and `slurm/cluster.env~`. Harmless, but they are the only thing making
+  the cluster tree dirty.
+
