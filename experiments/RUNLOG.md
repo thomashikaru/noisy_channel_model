@@ -439,3 +439,14 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
 - The old `...__la__nseed4` outputs stay on disk for reference but are SUPERSEDED for analysis.
 - OPEN: `main_bd` (not yet run; inherits LA_PROPOSAL=1 from main.env; sizing per the 08-31 12.6–20×
   estimate).
+
+### 2026-09-01T20:13:02Z — band=1 RULED OUT by static reachability (OFF_ARM_INFERENCE_FIX.md §11)
+- `planning/band_requirement_check.py` (model unit segmentation + difflib drift) over all
+  `stimuli/*.repairs.csv` + the battery: **209 stimuli have NO band-1-representable intended
+  repair** — chen2023 all 120 active↔passive rows ("kicked" ↔ "was kicked by"), tabor2004 64/64
+  and huang2024 25/72 reduced-relative "who was" insertions; each changes length by 2 words ⇒
+  terminal alignment drift 2. Everything else (battery, clark, gibson, qian, ryskin) is ≤ 1.
+- BAND=2 stays. The §4 "+5.5 nats / ~17% faster" band=1 observation was smoke-local and
+  pre-lookahead_proposal — moot. Note for method: the battery is 100% band-1-safe, so battery
+  A/Bs cannot adjudicate band/support questions; use dataset-level reachability probes.
+- offenders: `planning/band_requirement_offenders.csv`.

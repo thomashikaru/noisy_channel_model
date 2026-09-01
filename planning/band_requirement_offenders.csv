@@ -1,0 +1,210 @@
+dataset,stim_uid,edit_type,observed,intended,band
+chen2023,chen2023/active_passive/1/active_implausible.none,multi,The ball kicked the girl.,The ball was kicked by the girl.,2
+chen2023,chen2023/active_passive/1/passive_implausible.none,multi,The girl was kicked by the ball.,The girl kicked the ball.,2
+chen2023,chen2023/active_passive/2/active_implausible.none,multi,The watch bought the plumber.,The watch was bought by the plumber.,2
+chen2023,chen2023/active_passive/2/passive_implausible.none,multi,The plumber was bought by the watch.,The plumber bought the watch.,2
+chen2023,chen2023/active_passive/3/active_implausible.none,sub,The truck drove the man.,The truck was driven by the man.,2
+chen2023,chen2023/active_passive/3/passive_implausible.none,sub,The man was driven by the truck.,The man drove the truck.,2
+chen2023,chen2023/active_passive/4/active_implausible.none,multi,The stamp licked the secretary.,The stamp was licked by the secretary.,2
+chen2023,chen2023/active_passive/4/passive_implausible.none,multi,The secretary was licked by the stamp.,The secretary licked the stamp.,2
+chen2023,chen2023/active_passive/5/active_implausible.none,multi,The table set the mother.,The table was set by the mother.,2
+chen2023,chen2023/active_passive/5/passive_implausible.none,multi,The mother was set by the table.,The mother set the table.,2
+chen2023,chen2023/active_passive/6/active_implausible.none,multi,The blanket folded the daughter.,The blanket was folded by the daughter.,2
+chen2023,chen2023/active_passive/6/passive_implausible.none,multi,The daughter was folded by the blanket.,The daughter folded the blanket.,2
+chen2023,chen2023/active_passive/7/active_implausible.none,multi,The saw sharpened the father.,The saw was sharpened by the father.,2
+chen2023,chen2023/active_passive/7/passive_implausible.none,multi,The father was sharpened by the saw.,The father sharpened the saw.,2
+chen2023,chen2023/active_passive/8/active_implausible.none,multi,The door opened the niece.,The door was opened by the niece.,2
+chen2023,chen2023/active_passive/8/passive_implausible.none,multi,The niece was opened by the door.,The niece opened the door.,2
+chen2023,chen2023/active_passive/9/active_implausible.none,sub,The pizza ate the boy.,The pizza was eaten by the boy.,2
+chen2023,chen2023/active_passive/9/passive_implausible.none,sub,The boy was eaten by the pizza.,The boy ate the pizza.,2
+chen2023,chen2023/active_passive/10/active_implausible.none,sub,The bowl broke the grandfather.,The bowl was broken by the grandfather.,2
+chen2023,chen2023/active_passive/10/passive_implausible.none,sub,The grandfather was broken by the bowl.,The grandfather broke the bowl.,2
+chen2023,chen2023/active_passive/11/active_implausible.none,multi,The diamond lost the woman.,The diamond was lost by the woman.,2
+chen2023,chen2023/active_passive/11/passive_implausible.none,multi,The woman was lost by the diamond.,The woman lost the diamond.,2
+chen2023,chen2023/active_passive/12/active_implausible.none,multi,The oven cleaned the grandmother.,The oven was cleaned by the grandmother.,2
+chen2023,chen2023/active_passive/12/passive_implausible.none,multi,The grandmother was cleaned by the oven.,The grandmother cleaned the oven.,2
+chen2023,chen2023/active_passive/13/active_implausible.none,sub,The hammer stole the electrician.,The hammer was stolen by the electrician.,2
+chen2023,chen2023/active_passive/13/passive_implausible.none,sub,The electrician was stolen by the hammer.,The electrician stole the hammer.,2
+chen2023,chen2023/active_passive/14/active_implausible.none,multi,The window closed the sister.,The window was closed by the sister.,2
+chen2023,chen2023/active_passive/14/passive_implausible.none,multi,The sister was closed by the window.,The sister closed the window.,2
+chen2023,chen2023/active_passive/15/active_implausible.none,multi,The water sipped the grandson.,The water was sipped by the grandson.,2
+chen2023,chen2023/active_passive/15/passive_implausible.none,multi,The grandson was sipped by the water.,The grandson sipped the water.,2
+chen2023,chen2023/active_passive/16/active_implausible.none,multi,The train boarded the granddaughter.,The train was boarded by the granddaughter.,2
+chen2023,chen2023/active_passive/16/passive_implausible.none,multi,The granddaughter was boarded by the train.,The granddaughter boarded the train.,2
+chen2023,chen2023/active_passive/17/active_implausible.none,multi,The book purchased the aunt.,The book was purchased by the aunt.,2
+chen2023,chen2023/active_passive/17/passive_implausible.none,multi,The aunt was purchased by the book.,The aunt purchased the book.,2
+chen2023,chen2023/active_passive/18/active_implausible.none,multi,The boat sailed the uncle.,The boat was sailed by the uncle.,2
+chen2023,chen2023/active_passive/18/passive_implausible.none,multi,The uncle was sailed by the boat.,The uncle sailed the boat.,2
+chen2023,chen2023/active_passive/19/active_implausible.none,multi,The candle lit the wife.,The candle was lit by the wife.,2
+chen2023,chen2023/active_passive/19/passive_implausible.none,multi,The wife was lit by the candle.,The wife lit the candle.,2
+chen2023,chen2023/active_passive/20/active_implausible.none,sub,The letter wrote the husband.,The letter was written by the husband.,2
+chen2023,chen2023/active_passive/20/passive_implausible.none,sub,The husband was written by the letter.,The husband wrote the letter.,2
+chen2023,chen2023/active_passive/1/active_implausible.supportive,multi,The ball kicked the girl.,The ball was kicked by the girl.,2
+chen2023,chen2023/active_passive/1/passive_implausible.supportive,multi,The girl was kicked by the ball.,The girl kicked the ball.,2
+chen2023,chen2023/active_passive/2/active_implausible.supportive,multi,The watch bought the plumber.,The watch was bought by the plumber.,2
+chen2023,chen2023/active_passive/2/passive_implausible.supportive,multi,The plumber was bought by the watch.,The plumber bought the watch.,2
+chen2023,chen2023/active_passive/3/active_implausible.supportive,sub,The truck drove the man.,The truck was driven by the man.,2
+chen2023,chen2023/active_passive/3/passive_implausible.supportive,sub,The man was driven by the truck.,The man drove the truck.,2
+chen2023,chen2023/active_passive/4/active_implausible.supportive,multi,The stamp licked the secretary.,The stamp was licked by the secretary.,2
+chen2023,chen2023/active_passive/4/passive_implausible.supportive,multi,The secretary was licked by the stamp.,The secretary licked the stamp.,2
+chen2023,chen2023/active_passive/5/active_implausible.supportive,multi,The table set the mother.,The table was set by the mother.,2
+chen2023,chen2023/active_passive/5/passive_implausible.supportive,multi,The mother was set by the table.,The mother set the table.,2
+chen2023,chen2023/active_passive/6/active_implausible.supportive,multi,The blanket folded the daughter.,The blanket was folded by the daughter.,2
+chen2023,chen2023/active_passive/6/passive_implausible.supportive,multi,The daughter was folded by the blanket.,The daughter folded the blanket.,2
+chen2023,chen2023/active_passive/7/active_implausible.supportive,multi,The saw sharpened the father.,The saw was sharpened by the father.,2
+chen2023,chen2023/active_passive/7/passive_implausible.supportive,multi,The father was sharpened by the saw.,The father sharpened the saw.,2
+chen2023,chen2023/active_passive/8/active_implausible.supportive,multi,The door opened the niece.,The door was opened by the niece.,2
+chen2023,chen2023/active_passive/8/passive_implausible.supportive,multi,The niece was opened by the door.,The niece opened the door.,2
+chen2023,chen2023/active_passive/9/active_implausible.supportive,sub,The pizza ate the boy.,The pizza was eaten by the boy.,2
+chen2023,chen2023/active_passive/9/passive_implausible.supportive,sub,The boy was eaten by the pizza.,The boy ate the pizza.,2
+chen2023,chen2023/active_passive/10/active_implausible.supportive,sub,The bowl broke the grandfather.,The bowl was broken by the grandfather.,2
+chen2023,chen2023/active_passive/10/passive_implausible.supportive,sub,The grandfather was broken by the bowl.,The grandfather broke the bowl.,2
+chen2023,chen2023/active_passive/11/active_implausible.supportive,multi,The diamond lost the woman.,The diamond was lost by the woman.,2
+chen2023,chen2023/active_passive/11/passive_implausible.supportive,multi,The woman was lost by the diamond.,The woman lost the diamond.,2
+chen2023,chen2023/active_passive/12/active_implausible.supportive,multi,The oven cleaned the grandmother.,The oven was cleaned by the grandmother.,2
+chen2023,chen2023/active_passive/12/passive_implausible.supportive,multi,The grandmother was cleaned by the oven.,The grandmother cleaned the oven.,2
+chen2023,chen2023/active_passive/13/active_implausible.supportive,sub,The hammer stole the electrician.,The hammer was stolen by the electrician.,2
+chen2023,chen2023/active_passive/13/passive_implausible.supportive,sub,The electrician was stolen by the hammer.,The electrician stole the hammer.,2
+chen2023,chen2023/active_passive/14/active_implausible.supportive,multi,The window closed the sister.,The window was closed by the sister.,2
+chen2023,chen2023/active_passive/14/passive_implausible.supportive,multi,The sister was closed by the window.,The sister closed the window.,2
+chen2023,chen2023/active_passive/15/active_implausible.supportive,multi,The water sipped the grandson.,The water was sipped by the grandson.,2
+chen2023,chen2023/active_passive/15/passive_implausible.supportive,multi,The grandson was sipped by the water.,The grandson sipped the water.,2
+chen2023,chen2023/active_passive/16/active_implausible.supportive,multi,The train boarded the granddaughter.,The train was boarded by the granddaughter.,2
+chen2023,chen2023/active_passive/16/passive_implausible.supportive,multi,The granddaughter was boarded by the train.,The granddaughter boarded the train.,2
+chen2023,chen2023/active_passive/17/active_implausible.supportive,multi,The book purchased the aunt.,The book was purchased by the aunt.,2
+chen2023,chen2023/active_passive/17/passive_implausible.supportive,multi,The aunt was purchased by the book.,The aunt purchased the book.,2
+chen2023,chen2023/active_passive/18/active_implausible.supportive,multi,The boat sailed the uncle.,The boat was sailed by the uncle.,2
+chen2023,chen2023/active_passive/18/passive_implausible.supportive,multi,The uncle was sailed by the boat.,The uncle sailed the boat.,2
+chen2023,chen2023/active_passive/19/active_implausible.supportive,multi,The candle lit the wife.,The candle was lit by the wife.,2
+chen2023,chen2023/active_passive/19/passive_implausible.supportive,multi,The wife was lit by the candle.,The wife lit the candle.,2
+chen2023,chen2023/active_passive/20/active_implausible.supportive,sub,The letter wrote the husband.,The letter was written by the husband.,2
+chen2023,chen2023/active_passive/20/passive_implausible.supportive,sub,The husband was written by the letter.,The husband wrote the letter.,2
+chen2023,chen2023/active_passive/1/active_implausible.non_supportive,multi,The ball kicked the girl.,The ball was kicked by the girl.,2
+chen2023,chen2023/active_passive/1/passive_implausible.non_supportive,multi,The girl was kicked by the ball.,The girl kicked the ball.,2
+chen2023,chen2023/active_passive/2/active_implausible.non_supportive,multi,The watch bought the plumber.,The watch was bought by the plumber.,2
+chen2023,chen2023/active_passive/2/passive_implausible.non_supportive,multi,The plumber was bought by the watch.,The plumber bought the watch.,2
+chen2023,chen2023/active_passive/3/active_implausible.non_supportive,sub,The truck drove the man.,The truck was driven by the man.,2
+chen2023,chen2023/active_passive/3/passive_implausible.non_supportive,sub,The man was driven by the truck.,The man drove the truck.,2
+chen2023,chen2023/active_passive/4/active_implausible.non_supportive,multi,The stamp licked the secretary.,The stamp was licked by the secretary.,2
+chen2023,chen2023/active_passive/4/passive_implausible.non_supportive,multi,The secretary was licked by the stamp.,The secretary licked the stamp.,2
+chen2023,chen2023/active_passive/5/active_implausible.non_supportive,multi,The table set the mother.,The table was set by the mother.,2
+chen2023,chen2023/active_passive/5/passive_implausible.non_supportive,multi,The mother was set by the table.,The mother set the table.,2
+chen2023,chen2023/active_passive/6/active_implausible.non_supportive,multi,The blanket folded the daughter.,The blanket was folded by the daughter.,2
+chen2023,chen2023/active_passive/6/passive_implausible.non_supportive,multi,The daughter was folded by the blanket.,The daughter folded the blanket.,2
+chen2023,chen2023/active_passive/7/active_implausible.non_supportive,multi,The saw sharpened the father.,The saw was sharpened by the father.,2
+chen2023,chen2023/active_passive/7/passive_implausible.non_supportive,multi,The father was sharpened by the saw.,The father sharpened the saw.,2
+chen2023,chen2023/active_passive/8/active_implausible.non_supportive,multi,The door opened the niece.,The door was opened by the niece.,2
+chen2023,chen2023/active_passive/8/passive_implausible.non_supportive,multi,The niece was opened by the door.,The niece opened the door.,2
+chen2023,chen2023/active_passive/9/active_implausible.non_supportive,sub,The pizza ate the boy.,The pizza was eaten by the boy.,2
+chen2023,chen2023/active_passive/9/passive_implausible.non_supportive,sub,The boy was eaten by the pizza.,The boy ate the pizza.,2
+chen2023,chen2023/active_passive/10/active_implausible.non_supportive,sub,The bowl broke the grandfather.,The bowl was broken by the grandfather.,2
+chen2023,chen2023/active_passive/10/passive_implausible.non_supportive,sub,The grandfather was broken by the bowl.,The grandfather broke the bowl.,2
+chen2023,chen2023/active_passive/11/active_implausible.non_supportive,multi,The diamond lost the woman.,The diamond was lost by the woman.,2
+chen2023,chen2023/active_passive/11/passive_implausible.non_supportive,multi,The woman was lost by the diamond.,The woman lost the diamond.,2
+chen2023,chen2023/active_passive/12/active_implausible.non_supportive,multi,The oven cleaned the grandmother.,The oven was cleaned by the grandmother.,2
+chen2023,chen2023/active_passive/12/passive_implausible.non_supportive,multi,The grandmother was cleaned by the oven.,The grandmother cleaned the oven.,2
+chen2023,chen2023/active_passive/13/active_implausible.non_supportive,sub,The hammer stole the electrician.,The hammer was stolen by the electrician.,2
+chen2023,chen2023/active_passive/13/passive_implausible.non_supportive,sub,The electrician was stolen by the hammer.,The electrician stole the hammer.,2
+chen2023,chen2023/active_passive/14/active_implausible.non_supportive,multi,The window closed the sister.,The window was closed by the sister.,2
+chen2023,chen2023/active_passive/14/passive_implausible.non_supportive,multi,The sister was closed by the window.,The sister closed the window.,2
+chen2023,chen2023/active_passive/15/active_implausible.non_supportive,multi,The water sipped the grandson.,The water was sipped by the grandson.,2
+chen2023,chen2023/active_passive/15/passive_implausible.non_supportive,multi,The grandson was sipped by the water.,The grandson sipped the water.,2
+chen2023,chen2023/active_passive/16/active_implausible.non_supportive,multi,The train boarded the granddaughter.,The train was boarded by the granddaughter.,2
+chen2023,chen2023/active_passive/16/passive_implausible.non_supportive,multi,The granddaughter was boarded by the train.,The granddaughter boarded the train.,2
+chen2023,chen2023/active_passive/17/active_implausible.non_supportive,multi,The book purchased the aunt.,The book was purchased by the aunt.,2
+chen2023,chen2023/active_passive/17/passive_implausible.non_supportive,multi,The aunt was purchased by the book.,The aunt purchased the book.,2
+chen2023,chen2023/active_passive/18/active_implausible.non_supportive,multi,The boat sailed the uncle.,The boat was sailed by the uncle.,2
+chen2023,chen2023/active_passive/18/passive_implausible.non_supportive,multi,The uncle was sailed by the boat.,The uncle sailed the boat.,2
+chen2023,chen2023/active_passive/19/active_implausible.non_supportive,multi,The candle lit the wife.,The candle was lit by the wife.,2
+chen2023,chen2023/active_passive/19/passive_implausible.non_supportive,multi,The wife was lit by the candle.,The wife lit the candle.,2
+chen2023,chen2023/active_passive/20/active_implausible.non_supportive,sub,The letter wrote the husband.,The letter was written by the husband.,2
+chen2023,chen2023/active_passive/20/passive_implausible.non_supportive,sub,The husband was written by the letter.,The husband wrote the letter.,2
+huang2024,huang2024//1/MVRR_AMB,ins,The suspect sent the file deserved further investigation given the new evidence.,The suspect who was sent the file deserved further investigation given the new evidence.,2
+huang2024,huang2024//2/MVRR_AMB,ins,The corrupt politician handed the bill received unwelcome attention from southern voters.,The corrupt politician who was handed the bill received unwelcome attention from southern voters.,2
+huang2024,huang2024//3/MVRR_AMB,ins,The woman brought the mail disappeared mysteriously after reading the bad news in it.,The woman who was brought the mail disappeared mysteriously after reading the bad news in it.,2
+huang2024,huang2024//4/MVRR_AMB,ins,The boy fed the chicken stayed surprisingly happy despite having a mild allergic reaction.,The boy who was fed the chicken stayed surprisingly happy despite having a mild allergic reaction.,2
+huang2024,huang2024//5/MVRR_AMB,ins,The new doctor offered the operation appeared increasingly likely to succeed in her career.,The new doctor who was offered the operation appeared increasingly likely to succeed in her career.,2
+huang2024,huang2024//6/MVRR_AMB,ins,The professor awarded the grant gained more attention from marine biologists.,The professor who was awarded the grant gained more attention from marine biologists.,2
+huang2024,huang2024//7/MVRR_AMB,ins,The technician refused the service stopped working almost immediately after the argument.,The technician who was refused the service stopped working almost immediately after the argument.,2
+huang2024,huang2024//8/MVRR_AMB,ins,The mechanic brought the truck needed several more hours to fully repair it.,The mechanic who was brought the truck needed several more hours to fully repair it.,2
+huang2024,huang2024//9/MVRR_AMB,ins,The guitarist assigned the song failed dramatically because he never practiced enough.,The guitarist who was assigned the song failed dramatically because he never practiced enough.,2
+huang2024,huang2024//10/MVRR_AMB,ins,The player paid the bonus remained essentially the same despite his sudden fame and wealth.,The player who was paid the bonus remained essentially the same despite his sudden fame and wealth.,2
+huang2024,huang2024//11/MVRR_AMB,ins,The recent hire offered the job prepared many students for careers in media.,The recent hire who was offered the job prepared many students for careers in media.,2
+huang2024,huang2024//12/MVRR_AMB,ins,The assistant manager assigned the training seemed unnecessarily demanding to new staff.,The assistant manager who was assigned the training seemed unnecessarily demanding to new staff.,2
+huang2024,huang2024//13/MVRR_AMB,ins,The mayor sent the document provided sufficient evidence that it was simply blackmail.,The mayor who was sent the document provided sufficient evidence that it was simply blackmail.,2
+huang2024,huang2024//14/NPZ_AMB,multi,After the basketball player signed the contract created another controversy in the NBA.,"After the basketball player signed, the contract created another political controversy in the NBA.",2
+huang2024,huang2024//14/MVRR_AMB,ins,The basketball player handed the contract created another controversy in the NBA.,The basketball player who was handed the contract created another controversy in the NBA.,2
+huang2024,huang2024//15/MVRR_AMB,ins,The engineer brought the equipment required constant supervision from senior technicians.,The engineer who was brought the equipment required constant supervision from senior technicians.,2
+huang2024,huang2024//16/MVRR_AMB,ins,The little girl fed the lamb remained relatively calm despite having asked for beef.,The little girl who was fed the lamb remained relatively calm despite having asked for beef.,2
+huang2024,huang2024//17/MVRR_AMB,ins,The yoga instructor offered the position demanded immense physical effort from everyone.,The yoga instructor who was offered the position demanded immense physical effort from everyone.,2
+huang2024,huang2024//18/MVRR_AMB,ins,The governor awarded the contract received sweeping support across the entire state.,The governor who was awarded the contract received sweeping support across the entire state.,2
+huang2024,huang2024//19/MVRR_AMB,ins,The patient refused the treatment continued causing uncomfortable scenes in the ER.,The patient who was refused the treatment continued causing uncomfortable scenes in the ER.,2
+huang2024,huang2024//20/MVRR_AMB,ins,The operator brought the machine started working efficiently with the added automation.,The operator who was brought the machine started working efficiently with the added automation.,2
+huang2024,huang2024//21/MVRR_AMB,ins,The dancer assigned the ballet achieved incredible success for a new performer.,The dancer who was assigned the ballet achieved incredible success for a new performer.,2
+huang2024,huang2024//22/MVRR_AMB,ins,The contestant paid the money became unavailable and suddenly terminated his contract.,The contestant who was paid the money became unavailable and suddenly terminated his contract.,2
+huang2024,huang2024//23/MVRR_AMB,ins,The new chef offered the restaurant separated mediocre cooks from gifted ones.,The new chef who was offered the restaurant separated mediocre cooks from gifted ones.,2
+huang2024,huang2024//24/MVRR_AMB,ins,The apprentice baker assigned the oven produced smaller cakes because he lacked experience.,The apprentice baker who was assigned the oven produced smaller cakes because he lacked experience.,2
+tabor2004,tabor2004//e1_1/reduced_global,ins,The kindergartners liked the little girl chosen a toy by her parents.,The kindergartners liked the little girl who was chosen a toy by her parents.,2
+tabor2004,tabor2004//e1_1/reduced_local,ins,The kindergartners liked the little girl brought a toy by her parents.,The kindergartners liked the little girl who was brought a toy by her parents.,2
+tabor2004,tabor2004//e1_2/reduced_global,ins,We saw a movie about an artist drawn a picture by her father.,We saw a movie about an artist who was drawn a picture by her father.,2
+tabor2004,tabor2004//e1_2/reduced_local,ins,We saw a movie about an artist painted a picture by her father.,We saw a movie about an artist who was painted a picture by her father.,2
+tabor2004,tabor2004//e1_3/reduced_global,ins,The health officials pounced on a restaurant flown a shipment of salmon by a company.,The health officials pounced on a restaurant which was flown a shipment of salmon by a company.,2
+tabor2004,tabor2004//e1_3/reduced_local,ins,The health officials pounced on a restaurant sent a shipment of salmon by a company.,The health officials pounced on a restaurant which was sent a shipment of salmon by a company.,2
+tabor2004,tabor2004//e1_4/reduced_global,ins,"At the dinner party, I met a man forbidden the pleasure of eating sweets by his doctor.","At the dinner party, I met a man who was forbidden the pleasure of eating sweets by his doctor.",2
+tabor2004,tabor2004//e1_4/reduced_local,ins,"At the dinner party, I met a man allowed the pleasure of eating sweets by his doctor.","At the dinner party, I met a man who was allowed the pleasure of eating sweets by his doctor.",2
+tabor2004,tabor2004//e1_5/reduced_global,ins,One should respect a man forgiven his sins by his own god.,One should respect a man who is forgiven his sins by his own god.,2
+tabor2004,tabor2004//e1_5/reduced_local,ins,One should respect a man told his sins by his own god.,One should respect a man who is told his sins by his own god.,2
+tabor2004,tabor2004//e1_6/reduced_global,ins,An elderly gentleman addressed the woman given a beer by the hostess.,An elderly gentleman addressed the woman who was given a beer by the hostess.,2
+tabor2004,tabor2004//e1_6/reduced_local,ins,An elderly gentleman addressed the woman offered a beer by the hostess.,An elderly gentleman addressed the woman who was offered a beer by the hostess.,2
+tabor2004,tabor2004//e1_8/reduced_global,ins,The manager watched a waiter given pea soup by a trainee.,The manager watched a waiter who was given pea soup by a trainee.,2
+tabor2004,tabor2004//e1_8/reduced_local,ins,The manager watched a waiter served pea soup by a trainee.,The manager watched a waiter who was served pea soup by a trainee.,2
+tabor2004,tabor2004//e1_10/reduced_global,ins,The foreman yelled at a carpenter sawn a board by his buddy.,The foreman yelled at a carpenter who was sawn a board by his buddy.,2
+tabor2004,tabor2004//e1_10/reduced_local,ins,The foreman yelled at a carpenter cut a board by his buddy.,The foreman yelled at a carpenter who was cut a board by his buddy.,2
+tabor2004,tabor2004//e1_11/reduced_global,ins,The preschool teacher congratulated the little boy sewn a hat by his grandmother.,The preschool teacher congratulated the little boy who was sewn a hat by his grandmother.,2
+tabor2004,tabor2004//e1_11/reduced_local,ins,The preschool teacher congratulated the little boy knitted a hat by his grandmother.,The preschool teacher congratulated the little boy who was knitted a hat by his grandmother.,2
+tabor2004,tabor2004//e1_12/reduced_global,ins,The janitor chatted with the young man shown an apartment by his uncle.,The janitor chatted with the young man who was shown an apartment by his uncle.,2
+tabor2004,tabor2004//e1_12/reduced_local,ins,The janitor chatted with the young man rented an apartment by his uncle.,The janitor chatted with the young man who was rented an apartment by his uncle.,2
+tabor2004,tabor2004//e1_14/reduced_global,ins,The play centered around an innkeeper sung a verse by a traveling monk.,The play centered around an innkeeper who was sung a verse by a traveling monk.,2
+tabor2004,tabor2004//e1_14/reduced_local,ins,The play centered around an innkeeper recited a verse by a traveling monk.,The play centered around an innkeeper who was recited a verse by a traveling monk.,2
+tabor2004,tabor2004//e1_15/reduced_global,ins,The hotel owner questioned a guest taken a drink by the bellboy.,The hotel owner questioned a guest who was taken a drink by the bellboy.,2
+tabor2004,tabor2004//e1_15/reduced_local,ins,The hotel owner questioned a guest brought a drink by the bellboy.,The hotel owner questioned a guest who was brought a drink by the bellboy.,2
+tabor2004,tabor2004//e1_16/reduced_global,ins,The coach smiled at the player thrown a frisbee by the opposing team.,The coach smiled at the player who was thrown a frisbee by the opposing team.,2
+tabor2004,tabor2004//e1_16/reduced_local,ins,The coach smiled at the player tossed a frisbee by the opposing team.,The coach smiled at the player who was tossed a frisbee by the opposing team.,2
+tabor2004,tabor2004//e1_17/reduced_global,ins,The anthropologist interviewed a woman woven a shawl by her mother.,The anthropologist interviewed a woman who was woven a shawl by her mother.,2
+tabor2004,tabor2004//e1_17/reduced_local,ins,The anthropologist interviewed a woman knitted a shawl by her mother.,The anthropologist interviewed a woman who was knitted a shawl by her mother.,2
+tabor2004,tabor2004//e1_18/reduced_global,ins,The FBI questioned a congressman written a letter by the activist.,The FBI questioned a congressman who was written a letter by the activist.,2
+tabor2004,tabor2004//e1_18/reduced_local,ins,The FBI questioned a congressman mailed a letter by the activist.,The FBI questioned a congressman who was mailed a letter by the activist.,2
+tabor2004,tabor2004//e1_19/reduced_global,ins,The deliveryman teased the accountant given a coupon by her boss.,The deliveryman teased the accountant who was given a coupon by her boss.,2
+tabor2004,tabor2004//e1_19/reduced_local,ins,The deliveryman teased the accountant saved a coupon by her boss.,The deliveryman teased the accountant who was saved a coupon by her boss.,2
+tabor2004,tabor2004//e2_1/reduced_global,ins,The man reminded us of the evidence examined the previous day by the lawyer.,The man reminded us of the evidence that was examined the previous day by the lawyer.,2
+tabor2004,tabor2004//e2_1/reduced_local,ins,The man reminded us of the defendant examined the previous day by the lawyer.,The man reminded us of the defendant who was examined the previous day by the lawyer.,2
+tabor2004,tabor2004//e2_2/reduced_global,ins,The bandit talked remorsefully of the gold transported the whole way by the guards.,The bandit talked remorsefully of the gold that was transported the whole way by the guards.,2
+tabor2004,tabor2004//e2_2/reduced_local,ins,The bandit talked remorsefully of the prisoner transported the whole way by the guards.,The bandit talked remorsefully of the prisoner who was transported the whole way by the guards.,2
+tabor2004,tabor2004//e2_4/reduced_global,ins,The foreman worried about the bricks lifted the whole way by the crane.,The foreman worried about the bricks that were lifted the whole way by the crane.,2
+tabor2004,tabor2004//e2_4/reduced_local,ins,The foreman worried about the workers lifted the whole way by the crane.,The foreman worried about the workers who were lifted the whole way by the crane.,2
+tabor2004,tabor2004//e2_6/reduced_global,ins,The master of ceremonies discussed the recipe selected the third time by the judges.,The master of ceremonies discussed the recipe that was selected the third time by the judges.,2
+tabor2004,tabor2004//e2_6/reduced_local,ins,The master of ceremonies discussed the contestant selected the third time by the judges.,The master of ceremonies discussed the contestant who was selected the third time by the judges.,2
+tabor2004,tabor2004//e2_7/reduced_global,ins,The doctor spoke highly of the equipment requested the second time by the hospital.,The doctor spoke highly of the equipment that was requested the second time by the hospital.,2
+tabor2004,tabor2004//e2_7/reduced_local,ins,The doctor spoke highly of the specialist requested the second time by the hospital.,The doctor spoke highly of the specialist who was requested the second time by the hospital.,2
+tabor2004,tabor2004//e2_8/reduced_global,ins,The police took pictures of the jewelry identified the first night by the victim.,The police took pictures of the jewelry that was identified the first night by the victim.,2
+tabor2004,tabor2004//e2_8/reduced_local,ins,The police took pictures of the thief identified the first night by the victim.,The police took pictures of the thief who was identified the first night by the victim.,2
+tabor2004,tabor2004//e2_9/reduced_global,ins,The general thought about the valley captured the previous day by the troops.,The general thought about the valley that was captured the previous day by the troops.,2
+tabor2004,tabor2004//e2_9/reduced_local,ins,The general thought about the soldier captured the previous day by the troops.,The general thought about the soldier who was captured the previous day by the troops.,2
+tabor2004,tabor2004//e2_10/reduced_global,ins,The governor sent reinforcements to the power plant attacked the previous week by the terrorists.,The governor sent reinforcements to the power plant that was attacked the previous week by the terrorists.,2
+tabor2004,tabor2004//e2_10/reduced_local,ins,The governor sent reinforcements to the troops attacked the previous week by the terrorists.,The governor sent reinforcements to the troops who were attacked the previous week by the terrorists.,2
+tabor2004,tabor2004//e2_11/reduced_global,ins,The curator criticized the painting studied the previous term by the students.,The curator criticized the painting that was studied the previous term by the students.,2
+tabor2004,tabor2004//e2_11/reduced_local,ins,The curator criticized the artist studied the previous term by the students.,The curator criticized the artist who was studied the previous term by the students.,2
+tabor2004,tabor2004//e2_12/reduced_global,ins,The governess identified the necklace described the first time by the lady.,The governess identified the necklace that was described the first time by the lady.,2
+tabor2004,tabor2004//e2_12/reduced_local,ins,The governess identified the boy described the first time by the lady.,The governess identified the boy who was described the first time by the lady.,2
+tabor2004,tabor2004//e2_14/reduced_global,ins,The children were worried about the sofa scratched the first day by the cat.,The children were worried about the sofa that was scratched the first day by the cat.,2
+tabor2004,tabor2004//e2_14/reduced_local,ins,The children were worried about the woman scratched the first day by the cat.,The children were worried about the woman who was scratched the first day by the cat.,2
+tabor2004,tabor2004//e2_15/reduced_global,ins,The agent photographed the van recognized the previous day by the spy.,The agent photographed the van that was recognized the previous day by the spy.,2
+tabor2004,tabor2004//e2_15/reduced_local,ins,The agent photographed the man recognized the previous day by the spy.,The agent photographed the man who was recognized the previous day by the spy.,2
+tabor2004,tabor2004//e2_16/reduced_global,ins,The manager was concerned about the account observed the previous month by the agents.,The manager was concerned about the account that was observed the previous month by the agents.,2
+tabor2004,tabor2004//e2_16/reduced_local,ins,The manager was concerned about the client observed the previous month by the agents.,The manager was concerned about the client who was observed the previous month by the agents.,2
+tabor2004,tabor2004//e2_17/reduced_global,ins,The activist admired the solution proposed the first time by the group.,The activist admired the solution that was proposed the first time by the group.,2
+tabor2004,tabor2004//e2_17/reduced_local,ins,The activist admired the speaker proposed the first time by the group.,The activist admired the speaker who was proposed the first time by the group.,2
+tabor2004,tabor2004//e2_18/reduced_global,ins,The congresswoman was referring to the package sent the first time by the governor.,The congresswoman was referring to the package that was sent the first time by the governor.,2
+tabor2004,tabor2004//e2_18/reduced_local,ins,The congresswoman was referring to the lawyer sent the first time by the governor.,The congresswoman was referring to the lawyer who was sent the first time by the governor.,2
+tabor2004,tabor2004//e2_19/reduced_global,ins,The board was concerned about the awards accepted the first year by the school.,The board was concerned about the awards that were accepted the first year by the school.,2
+tabor2004,tabor2004//e2_19/reduced_local,ins,The board was concerned about the students accepted the first year by the school.,The board was concerned about the students who were accepted the first year by the school.,2

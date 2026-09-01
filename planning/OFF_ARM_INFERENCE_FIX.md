@@ -328,4 +328,27 @@ the phantom-deletion artifact, and the remaining edits discriminate implausible 
 inputs far more sharply. The old outputs stay on disk for reference but are superseded.
 
 **Still open:** `main_bd` (never run beyond moses; inherits `LA_PROPOSAL=1` from main.env;
-sizing per the 08-31 12.6–20× estimate), and the separate `band=1` question.
+sizing per the 08-31 12.6–20× estimate). The `band=1` question is CLOSED — see §11.
+
+## 11. Decision 3 resolved: band=1 is RULED OUT for the experiment (2026-09-01)
+
+Static capability probe `planning/band_requirement_check.py`: for every (stimulus, intended
+repair) row in `experiments/stimuli/*.repairs.csv` plus the battery, the required band = the
+maximum word-alignment drift between observed and intended (model unit segmentation, difflib
+block boundaries). Result, 1541 repair rows:
+
+| dataset | needs band ≥ 2 | why |
+|---|---|---|
+| chen2023 | **120/240** (all active↔passive rows) | "kicked" ↔ "was kicked by": ±2 words |
+| tabor2004 | **64/64** | reduced relative repaired by inserting "who was" |
+| huang2024 | **25/72** (the MVRR ambiguous items) | same "who was" insertion |
+| battery_v0, clark2026, gibson2013, qian2023, ryskin2021 | 0 | all repairs are ≤ 1 drift |
+
+**209 stimuli have NO band-1-representable intended repair** (none has an alternative that
+fits). A length change of two words alone forces terminal drift 2, so no alignment placement
+can save these. Consequences: (1) `BAND=2` stays — band=1 would silently amputate the very
+repair readings chen2023/tabor2004/huang2024 exist to study; (2) the §4 "+5.5 nats, ~17%
+faster" observation was smoke-local, measured in the broken-proposal regime, and is now moot;
+(3) the calibration battery is 100% band-1-safe, so no battery A/B could ever have caught
+this — dataset-level reachability probes, not battery runs, are the right gate for support
+questions. Offender list: `planning/band_requirement_offenders.csv`.
