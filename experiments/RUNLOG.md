@@ -319,3 +319,42 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
   `slurm/#cluster.env#` and `slurm/cluster.env~`. Harmless, but they are the only thing making
   the cluster tree dirty.
 
+
+### 2026-09-01T17:43:49Z — battery A/B for the lookahead-IN-PROPOSAL fix (OFF_ARM_INFERENCE_FIX.md §6 decision 1), off arm × {la, la+lap}
+- commit: `4e61c50` (local == cluster; pushed + ff-pulled this session). The fix = `lookahead_proposal`
+  (`--lookahead-proposal` / `LA_PROPOSAL=1`, slug part `lap`), default OFF; 4 new exact gates, suite 121 passed.
+- input: `planning/calibration_battery_v0.txt` (87 items), P=64, **N_SEEDS=4** (the real main.env count this
+  time), band 2, lb 6, align, rejuv=off, LOOKAHEAD=1 on BOTH arms — identical except LA_PROPOSAL.
+- sizing: MEM=24G SENTENCES_PER_SHARD=8 (13 shards/arm, auto --time 2:23:00), MAX_PARALLEL=20.
+- baseline slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__nseed4` — job id 21752588
+- fix slug:      `...__s0__la__lap__nseed4` (LA_PROPOSAL=1) — job id 21752596
+- purpose: the pre-committed criteria (a) unit-0 del_before>0.5 artifact items cleared, (b) genuine repairs
+  (expected==edit) retained, (c) edit rate not worse, (d) logZ up on the same model. Report:
+  `planning/lap_vs_la_diff.py` → `planning/calibration_lap_vs_la.csv`. Decides LA_PROPOSAL in main.env and
+  whether Phase-5 main_off is re-run (§6 decision 4).
+- local smoke before submit: Medics p(target) 0.000/0.213/0.000 → 1.000/0.984/0.968 (keys 0-2), logZ −91.7 → −79.7;
+  candle item identical between arms.
+- run: all 26 shards were RUNNING within 1 min of submission; the queue was EMPTY ~27 min after submit (both
+  arms finished). Results NOT yet pulled: the ORCD login nodes (orcd-login, 001–004) went unreachable
+  (connection refused / handshake timeout) right after — cluster-side outage, no public notice; the SSH master
+  dropped with it. Records are on the shared FS (atomic writes). Pull + diff pending the login nodes' return.
+
+### 2026-09-01T17:58:10Z — battery A/B OUTCOME (la vs la+lap), jobs 21752588 / 21752596
+- **both COMPLETED**: 26/26 shards COMPLETED, per-shard 6:15–26:28, MaxRSS 6.1–9.9 GB (24G generous; wall ≈ 27 min
+  submit → queue empty). 87/87 merged + 0 errors on both arms; pulled to `results_nc/calibrationbatteryv0/`;
+  diff `planning/lap_vs_la_diff.py` → `planning/calibration_lap_vs_la.csv`. (Pull was delayed ~1.5 h by an
+  unannounced ORCD login-node outage — all of orcd-login/001/002/003 refused or timed out, then flapped back.)
+- **HEADLINE — all four pre-committed criteria pass (OFF_ARM_INFERENCE_FIX.md §6 decision 1):**
+  (a) unit-0 del_before>0.5 artifact items la **4 → 0**; any-unit del_before>0.5 (the §3.4 signature) 13 → 9.
+  (b) genuine repairs (expected==edit, n=43) **14/43 → 14/43** — retained, none lost.
+  (c) edited MAPs **28 → 26**/87 — not worse.
+  (d) logZ (lap − la): **mean +1.04**, median +0.14, up 31 / down 14 / ~flat 42; the biggest movers are +7 to
+  +9.8 nats and every one is an artifact clear (SUBW-01a, DELFROM-01b, CTRL-04, DELFOR-01a, SUBW-04a).
+- matches-expected **48 → 54**/87 exact (+6), 54 → 58 case-insensitive (+4). MAP changed on 17 items:
+  **8 newly-correct vs 2 newly-wrong** (lost: SUBW-02a 'medic'→'media' substitution; LADDER-send-2 spurious
+  'Clerk' capital + dropped 'to'). Gains are the junk-MAP class from the 08-31 entry cleaned up
+  ('The Bakerite the children the cake.' → 'The baker iced…', 'The tailor seed…' → 'sewed', 'The chef seasoned
+  the author.' → 'the soup.').
+- **4-seed logZ spread 6.70 → 1.34** (lap spread larger on only 13/87): the seeds now agree — the P=64
+  heavy-tail collapse flagged on 08-31 is largely gone. Same model, same particle count, same cost/item.
+- open with the user (§6 decisions 2 and 4): LA_PROPOSAL=1 in main.env? re-run Phase-5 main_off (~115 CPU-h)?

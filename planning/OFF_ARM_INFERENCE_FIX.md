@@ -213,3 +213,97 @@ unbiased. The existing gates must stay bit-identical with the flag off.
 - **Recommended next diagnostic before building anything:** score literal vs MAP directly on a
   sample of the 731 `p_literal == 0` items. Nobody knows the inference/signal split across that
   set; it determines whether §5 or a model-side change is where the effort belongs.
+
+---
+
+## 8. Execution log (2026-09-01)
+
+### 8.1 The §7 diagnostic — the split is known now
+
+Stratified sample of 84 of the 731 `p_literal == 0` items (12/dataset), each scored literal vs
+MAP via `pwc.lm_word_surprisals` (deployed prime, EOS term included), with a conservative
+channel lower bound of 4.5 nats per case-insensitive word-level edit op (every op — sub form
+`K*d`, del, ins — costs the MAP at least that against the all-copy literal, so the classifier
+under-counts inference failures, never over-counts).
+
+- **61/84 (73%) are inference failures** — the model's TOTAL score prefers the literal parse the
+  sampler never proposed. For 38/84 the **LM alone** prefers the literal, before channel costs.
+- By the §3.4 affected flag: 58/75 of `del_before > 0.5` items are inference failures vs 3/9 of
+  the rest. Per dataset: chen 10/12, clark 6/12, gibson 10/12, huang 10/12, qian 8/12,
+  ryskin 7/12, tabor 10/12.
+- The signal-limited residue is dominated by **genuine repairs** (umpire→empire, migraine→brain,
+  enigeering→engineering) — items where the edit is correct and wanted.
+- Verdict: the effort belongs in §5, not model-side. Scripts/CSV in the session scratchpad
+  (`p0_diagnostic.py` / `.csv`); rerunnable from `experiments/outputs/` alone.
+
+### 8.2 The §5 fix — BUILT (commit `4e61c50`)
+
+`lookahead_proposal` (default OFF; requires `lookahead_lp`): `_caprop_scores` computes a
+per-candidate twist `logsumexp(row + la_C) − logsumexp(row)` from the row `cand_dZ` already
+builds (one extra vector add, no new LM forwards, no new parameter); the kernel samples from
+`scores + twist` and corrects the incremental weight by `−twist[action]` — select ∝ e^twist,
+carry e^−twist, the §5 correctness requirement. EOS twist = 0 (full consumption has no unpaid
+units), matching the resample block's done-guard. Wired end-to-end: `pythia_word_caprop.run`,
+`run_nc_batch.py --lookahead-proposal` (slug part `lap`), `submit_nc_batch.sh LA_PROPOSAL=1`,
+`experiments/run.sh` CFG_VARS. `main.env` deliberately NOT changed (§6 decision 2: default OFF
+pending this A/B).
+
+Gates: 4 new exact-enumeration tests mirroring the lookahead ones — zero-charge bit-identical
+(certifies the tilt arithmetic), logZ + posterior match exact enumeration with the twist ON
+(the gate on the weight correction), align+gibbs end-to-end, input contract. Full suite
+**121 passed** (117 + 4).
+
+Smoke (local, P=64, keys 0–2, la vs la+lap):
+
+| | key 0 | key 1 | key 2 |
+|---|---|---|---|
+| Medics p(target), la | 0.000 | 0.213 | 0.000 |
+| Medics p(target), **la+lap** | **1.000** | **0.984** | **0.968** |
+| Medics logZ, la → la+lap | −91.70 → −79.68 | −91.55 → −79.96 | −92.17 → −79.57 |
+
+The ~12-nat logZ jump lands on the best any same-model config achieved (§4's gibbs-sub-only
+one-off −78.90). The candle item is IDENTICAL between arms on these keys (no restoration
+either way single-seed; logZ +0.6 to +1.6 under lap) — no regression signal; the 4-seed
+battery merge is the pre-committed judge for criterion (b).
+
+### 8.3 Battery A/B (§6 decision 1) — submitted
+
+87-item battery, off arm, P=64, N_SEEDS=4, both arms fresh at commit `4e61c50`:
+baseline `...__la__nseed4` job 21752588, fix `...__la__lap__nseed4` job 21752596 (13 shards
+each, MEM=24G; 26/26 COMPLETED, 87/87 merged, 0 errors on both). Report:
+`planning/lap_vs_la_diff.py` → `planning/calibration_lap_vs_la.csv`.
+
+**All four pre-committed criteria pass:**
+
+| criterion | la (deployed) | la + lap (fix) |
+|---|---|---|
+| (a) unit-0 `del_before > 0.5` artifact items | 4 | **0** |
+| (a') any-unit `del_before > 0.5` (the §3.4 signature) | 13 | 9 |
+| (b) genuine repairs retained (`expected == edit`, n=43, case-insens.) | 14/43 | **14/43** |
+| (c) edited MAPs (`MAP != observed`) | 28/87 | **26/87** |
+| (d) logZ, lap − la | — | **mean +1.04**, median +0.14; up 31 / down 14 / flat 42 |
+| matches-expected exact / case-insensitive | 48 / 54 | **54 / 58** |
+| MAP changed | — | 17 items: **8 newly-correct, 2 newly-wrong** |
+| 4-seed logZ spread (mean) | 6.70 | **1.34** |
+
+- The biggest logZ movers (+7 to +9.8 nats) are all artifact clears (SUBW-01a, DELFROM-01b,
+  CTRL-04, DELFOR-01a, SUBW-04a). Gains are the junk-MAP class cleaned up: 'The Bakerite the
+  children the cake.' → 'The baker iced the children the cake.', 'The tailor seed…' → 'sewed',
+  'The chef seasoned the author.' → 'the soup.'. Losses: SUBW-02a 'medic'→'media' (an LM-favoured
+  substitution) and LADDER-send-2 (spurious 'Clerk' capital + dropped 'to').
+- **The spread collapse (6.70 → 1.34) is the most important line.** Same model, same P=64, same
+  cost per item, but the four seeds now agree: the "P=64 heavy-tail collapse" flagged in the
+  08-31 battery entry was mostly this proposal-support failure, not a particle-count problem.
+- Fix cost: no measurable runtime change (per-shard elapsed and MaxRSS overlap across arms).
+
+## 9. Recommendation on the remaining §6 decisions
+
+- **Decision 2 (default):** turn it on — `LA_PROPOSAL=1` in `experiments/configs/main.env`, both
+  arms (keeps the off-vs-bd contrast single-variable). The code default stays OFF so the
+  exact-enumeration anchor is untouched. Not done yet — this is the user's call.
+- **Decision 3 (`band=1`):** still untested and still separate; nothing here changes that.
+- **Decision 4 (re-run `main_off`):** yes. The current 2337-item results carry the artifact on
+  37% of items and 60% of edits (§3.4), the fix clears the canonical class outright, and the
+  seed spread drops 5×, so `surprisal_nc` in the current outputs is contaminated in exactly the
+  way §6 feared. Cost ≈ 115 CPU-hours (the previous run), ~1.5 h wall at the Phase-5 fan-out.
+  `main_bd` has not been run, so nothing is wasted there; it inherits `LA_PROPOSAL=1` for free.
