@@ -296,14 +296,36 @@ each, MEM=24G; 26/26 COMPLETED, 87/87 merged, 0 errors on both). Report:
   08-31 battery entry was mostly this proposal-support failure, not a particle-count problem.
 - Fix cost: no measurable runtime change (per-shard elapsed and MaxRSS overlap across arms).
 
-## 9. Recommendation on the remaining §6 decisions
+## 9. The remaining §6 decisions — DECIDED (user, 2026-09-01)
 
-- **Decision 2 (default):** turn it on — `LA_PROPOSAL=1` in `experiments/configs/main.env`, both
-  arms (keeps the off-vs-bd contrast single-variable). The code default stays OFF so the
-  exact-enumeration anchor is untouched. Not done yet — this is the user's call.
+- **Decision 2 (default): DONE.** `LA_PROPOSAL=1` in `experiments/configs/main.env`, both arms.
+  The code default stays OFF so the exact-enumeration anchor is untouched.
 - **Decision 3 (`band=1`):** still untested and still separate; nothing here changes that.
-- **Decision 4 (re-run `main_off`):** yes. The current 2337-item results carry the artifact on
-  37% of items and 60% of edits (§3.4), the fix clears the canonical class outright, and the
-  seed spread drops 5×, so `surprisal_nc` in the current outputs is contaminated in exactly the
-  way §6 feared. Cost ≈ 115 CPU-hours (the previous run), ~1.5 h wall at the Phase-5 fan-out.
-  `main_bd` has not been run, so nothing is wasted there; it inherits `LA_PROPOSAL=1` for free.
+- **Decision 4 (re-run `main_off`): DONE — see §10.**
+
+## 10. The Phase-5 `main_off` re-run under the fix (decision 4 executed, 2026-09-01)
+
+Slug `...__la__lap__nseed4`, commit `fdbb354`, 322/322 shards COMPLETED, 2337/2337 stimulus rows
+ok (= 2329 model inputs), 0 errors. Cost 120.6 task-hours vs the original 114.5 — runtime-free.
+All Phase-5 verification gates pass (124,695 word rows all finite; `p_copy+p_sub+p_ins = 1`;
+`Σ S_k + S_end = −logZ` to 1.4e-14). Against the superseded `...__la__nseed4` outputs
+(`planning/lap_rerun_vs_phase5.py` → `planning/phase5_lap_vs_la_summary.csv`, 2328 joined inputs):
+
+| | old (la) | new (la+lap) |
+|---|---|---|
+| unit-0 `del_before > 0.5` (the artifact) | 350 (15.0%) | **2 (0.1%)** |
+| any-unit `del_before > 0.5` (§3.4 signature) | 853 (36.6%) | **115 (4.9%)** |
+| `p_literal == 0` | 728 (31.3%) | **209 (9.0%)** |
+| edited MAPs | 1122 (48.2%) | **694 (29.8%)** |
+| logZ (new − old) | — | **mean +3.81**, median +1.24; 1424 up / 265 down |
+| … on the 853 old-affected items | — | **mean +8.98** |
+| median 4-seed logZ spread | 7.09 | **0.65** |
+| MAP changed | — | 999: 544 → literal, 339 edit → different edit, 116 → edited |
+| gibson2013 edited, implausible vs plausible | 47% vs 35% | **33% vs 10%** |
+
+The §3.4 scoping held up: the artifact class collapses, roughly a third of former "edits" were
+the phantom-deletion artifact, and the remaining edits discriminate implausible from plausible
+inputs far more sharply. The old outputs stay on disk for reference but are superseded.
+
+**Still open:** `main_bd` (never run beyond moses; inherits `LA_PROPOSAL=1` from main.env;
+sizing per the 08-31 12.6–20× estimate), and the separate `band=1` question.

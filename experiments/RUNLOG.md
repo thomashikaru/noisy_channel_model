@@ -358,3 +358,84 @@ the first submit of each config, since they are what `MEM` and `SECONDS_PER_ITEM
 - **4-seed logZ spread 6.70 → 1.34** (lap spread larger on only 13/87): the seeds now agree — the P=64
   heavy-tail collapse flagged on 08-31 is largely gone. Same model, same particle count, same cost/item.
 - open with the user (§6 decisions 2 and 4): LA_PROPOSAL=1 in main.env? re-run Phase-5 main_off (~115 CPU-h)?
+
+### 2026-09-01T18:03:05Z — moses × main_off
+- commit: `fdbb354` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__lap__nseed4`  remaining before submit: 1
+- env: `INPUT=experiments/stimuli/moses.input.jsonl BAND=2 CHANNEL=align LA_PROPOSAL=1 LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21763736
+- outcome: (append when finished)
+
+### 2026-09-01T18:03:07Z — tabor2004 × main_off
+- commit: `fdbb354` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__lap__nseed4`  remaining before submit: 128
+- env: `INPUT=experiments/stimuli/tabor2004.input.jsonl BAND=2 CHANNEL=align LA_PROPOSAL=1 LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=240`
+- job id: 21763737
+- outcome: (append when finished)
+
+### 2026-09-01T18:03:08Z — huang2024 × main_off
+- commit: `fdbb354` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__lap__nseed4`  remaining before submit: 144
+- env: `INPUT=experiments/stimuli/huang2024.input.jsonl BAND=2 CHANNEL=align LA_PROPOSAL=1 LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=240`
+- job id: 21763738
+- outcome: (append when finished)
+
+### 2026-09-01T18:03:10Z — gibson2013 × main_off
+- commit: `fdbb354` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__lap__nseed4`  remaining before submit: 240
+- env: `INPUT=experiments/stimuli/gibson2013.input.jsonl BAND=2 CHANNEL=align LA_PROPOSAL=1 LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21763740
+- outcome: (append when finished)
+
+### 2026-09-01T18:03:11Z — clark2026 × main_off
+- commit: `fdbb354` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__lap__nseed4`  remaining before submit: 360
+- env: `INPUT=experiments/stimuli/clark2026.input.jsonl BAND=2 CHANNEL=align LA_PROPOSAL=1 LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21763803
+- outcome: (append when finished)
+
+### 2026-09-01T18:03:13Z — qian2023 × main_off
+- commit: `fdbb354` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__lap__nseed4`  remaining before submit: 472
+- env: `INPUT=experiments/stimuli/qian2023.input.jsonl BAND=2 CHANNEL=align LA_PROPOSAL=1 LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21763805
+- outcome: (append when finished)
+
+### 2026-09-01T18:03:16Z — ryskin2021 × main_off
+- commit: `fdbb354` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__lap__nseed4`  remaining before submit: 504
+- env: `INPUT=experiments/stimuli/ryskin2021.input.jsonl BAND=2 CHANNEL=align LA_PROPOSAL=1 LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21763806
+- outcome: (append when finished)
+
+### 2026-09-01T18:27:07Z — chen2023 × main_off
+- commit: `fdbb354` (local == cluster)
+- slug: `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__lap__nseed4`  remaining before submit: 480
+- env: `INPUT=experiments/stimuli/chen2023.input.jsonl BAND=2 CHANNEL=align LA_PROPOSAL=1 LOOKAHEAD=1 MAX_DIST=2 N_SEEDS=4 PARTICLES=64 REJUV=off REJUV_LOOKBACK=6 SEED=0 SORT_BY_LENGTH=1 TOP=20 WRITE_VIZ=0  MEM=24G SECONDS_PER_ITEM=120`
+- job id: 21764690
+- outcome: (append when finished)
+
+### 2026-09-01T20:02:26Z — PHASE-5 `main_off` RE-RUN COMPLETE under LA_PROPOSAL=1 (OFF_ARM_INFERENCE_FIX.md §6 decision 4 executed)
+- commit `fdbb354`; slug `lm-pythia-70m__ch-align__rej-off__P64__b2__d2__lb6__s0__la__lap__nseed4`;
+  jobs 21763736–21763806 (7 datasets) + 21764690 (chen2023, auto-submitted at queue 184).
+- **2337/2337 stimulus rows ok (= 2329/2329 model inputs — qian2023 maps 480 rows onto 472 inputs;
+  count item files against the INPUT jsonl, not stim rows), 0 error, 0 missing; 322/322 shards
+  COMPLETED.** Cost 120.6 task-hours (482.5 core-hours @ 4 cores) vs the original 114.5 — the
+  proposal twist is runtime-free. Wall ≈ 2:00 h. QOS note: the per-user submit cap counts EXPANDED
+  array tasks and sits just under 256 (246 refused, 244 accepted) — keep the queue ≤ ~190 before
+  submitting a 60-shard array.
+- verification gates (same as Phase 5): 124,695 word rows, zero non-finite surprisals;
+  p_copy+p_sub+p_ins = 1 (max dev 2e-14); Σ S_k + S_end = −logZ to 1.4e-14 on all merged records.
+- **vs the superseded `...__la__nseed4` outputs** (`planning/lap_rerun_vs_phase5.py` →
+  `planning/phase5_lap_vs_la_summary.csv`; 2328 joined inputs):
+  - unit-0 del_before>0.5 artifact: **350 → 2** (0.1%); any-unit signature **853 → 115** (4.9%).
+  - p_literal == 0: **728 (31.3%) → 209 (9.0%)**; edited MAPs **48.2% → 29.8%**.
+  - logZ: mean **+3.81**, median +1.24; 1424 up / 265 down / 639 flat; on the 853 old-affected
+    items the mean gain is **+8.98** nats (ryskin2021 median +8.15).
+  - median 4-seed logZ spread **7.09 → 0.65** — the seeds agree now.
+  - MAP changed on 999/2328 items: 544 became literal, 339 edit→different edit, 116 became edited.
+  - gibson2013 plausibility contrast: edited implausible 33% vs plausible 10% (was 47% vs 35%) —
+    same direction, much sharper discrimination.
+- The old `...__la__nseed4` outputs stay on disk for reference but are SUPERSEDED for analysis.
+- OPEN: `main_bd` (not yet run; inherits LA_PROPOSAL=1 from main.env; sizing per the 08-31 12.6–20×
+  estimate).
